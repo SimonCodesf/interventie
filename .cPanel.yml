@@ -1,0 +1,10 @@
+---
+deployment:
+  targets:
+    public_html:
+      domain: interventie.org
+      path: /
+      pre_deploy_actions:
+        - /bin/bash -c "test -f config.php || echo 'Config file needed on server'"
+      post_deploy_actions:
+        - /bin/bash -c "find . -name '*.php' -type f -exec php -l {} \\;"

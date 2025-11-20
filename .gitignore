@@ -2,6 +2,12 @@
 .DS_Store
 Thumbs.db
 
+# Security: NEVER commit these files with secrets!
+config.php
+security.php
+api_utils.php
+poster_controller.php
+
 # User content & Database (Do not overwrite live data)
 uploads/
 posters.db
