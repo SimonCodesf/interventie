@@ -16,10 +16,11 @@ jobs:
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
-        server: ${{ secrets.FTP_SERVER }}
+        server: interventie.org
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        # server-dir: public_html/  <-- Pas dit aan als je in een submap zit!
+        local-dir: ./
+        server-dir: /home/beelkstc/interventie.org/
         exclude: |
           **/.git*
           **/.git*/**
@@ -30,6 +31,9 @@ jobs:
           ADMIN_SETUP.md
           AR-MARKER-SETUP.md
           BEVEILIGING.md
+          .cPanel.yml
+          nodemon.json
+          package.json
           uploads/**
           posters.db
           ar-markers.db
