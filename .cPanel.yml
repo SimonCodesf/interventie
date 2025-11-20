@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/beelkstc/interventie.org/
-    - /bin/cp -R * $DEPLOYPATH
+    - export DEPLOYPATH=/home/beelkstc/interventie.org
+    - /bin/cp -r * $DEPLOYPATH
