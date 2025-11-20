@@ -1,0 +1,42 @@
+# Admin folder protection - cPanel Password Protection
+# Dit bestand zorgt voor dubbele beveiliging van de admin sectie
+
+# Basic Authentication (cPanel Password Protection)
+AuthType Basic
+AuthName "Admin Area - Restricted Access"
+AuthUserFile /home/beelkstc/.htpasswds/interventie.org/admin/passwd
+Require valid-user
+
+# Extra security headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always append X-Frame-Options DENY
+    
+    # Prevent MIME type sniffing
+    Header always append X-Content-Type-Options nosniff
+    
+    # XSS Protection
+    Header always append X-XSS-Protection "1; mode=block"
+    
+    # Strict Transport Security (force HTTPS)
+    Header always append Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Hide sensitive files
+<FilesMatch "\.(log|json|db|bak|backup)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Rate limiting for admin area (more restrictive)
+<IfModule mod_evasive.c>
+    DOSHashTableSize    2048
+    DOSPageCount        5
+    DOSPageInterval     1
+    DOSSiteCount        20
+    DOSSiteInterval     1
+    DOSBlockingPeriod   3600
+</IfModule>

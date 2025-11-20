@@ -1,0 +1,82 @@
+# PHP Poster Website
+RewriteEngine On
+
+# PHP Upload Limits for high-quality posters
+php_value upload_max_filesize 120M
+php_value post_max_size 350M
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 256M
+
+# Redirect API calls to api.php
+RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
+
+# Security: Protect sensitive files from direct access
+<FilesMatch "(config\.php|security\.php|admin_activity\.log|login_attempts\.json|posters\.db|\.md|\.bak|\.backup)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Security: Redirect old admin.html to secure admin folder
+RewriteRule ^admin\.html$ /admin/ [R=301,L]
+
+# Enable CORS for all resources (AR/MindAR compatibility)
+<IfModule mod_headers.c>
+    # Allow all origins (or specify your domain)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    Header set Access-Control-Allow-Credentials "true"
+    
+    # DISABLE CACHING for development - remove this in production!
+    <FilesMatch "\.(html|css|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+    
+    # Specific CORS for images and AR resources
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|mind|fset|fset3|iset)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Cross-Origin-Resource-Policy "cross-origin"
+        Header set Cross-Origin-Embedder-Policy "require-corp"
+    </FilesMatch>
+</IfModule>
+
+# Protect config and database files
+<FilesMatch "(config\.php|posters\.db)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# CRITICAL: Disable gzip compression for binary AR marker files
+# They get corrupted when gzip-compressed during HTTP transfer
+<IfModule mod_deflate.c>
+    # Prevent deflate on binary files
+    SetEnvIfNoCase Request_URI "\.mind$" no-gzip=1
+    SetEnvIfNoCase Request_URI "\.fset$" no-gzip=1
+    SetEnvIfNoCase Request_URI "\.fset3$" no-gzip=1
+    SetEnvIfNoCase Request_URI "\.iset$" no-gzip=1
+    
+    # Only compress text-based files
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Also disable gzip via brotli/mod_brotli if present
+<IfModule mod_brotli.c>
+    SetEnvIfNoCase Request_URI "\.mind$" no-brotli=1
+    SetEnvIfNoCase Request_URI "\.fset$" no-brotli=1
+    SetEnvIfNoCase Request_URI "\.fset3$" no-brotli=1
+    SetEnvIfNoCase Request_URI "\.iset$" no-brotli=1
+</IfModule>
+
+# Cache static files
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 year"
+</IfModule>

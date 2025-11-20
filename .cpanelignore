@@ -1,0 +1,19 @@
+# Exclude development files
+node_modules/
+.DS_Store
+*.log
+.env
+
+# Test uploads - don't upload test files
+uploads/*.jpg
+uploads/*.jpeg
+uploads/*.png
+uploads/*.pdf
+uploads/thumbnails/*
+
+# Keep the folders but not the content
+!uploads/.gitkeep
+!uploads/thumbnails/.gitkeep
+
+# Development only
+nodemon.json

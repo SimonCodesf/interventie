@@ -1,0 +1,23 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# User content & Database (Do not overwrite live data)
+uploads/
+posters.db
+ar-markers.db
+admin_activity.log
+login_attempts.json
+ar-settings.json
+
+# Backups & Editor History
+*.bak
+*.old
+*.trash/
+.history/
+
+# IDE
+.vscode/
+.idea/
+node_modules/
+*.log

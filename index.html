@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Posters AR</title>
+    
+    <!-- Fonts & Style -->
+    <link rel="stylesheet" href="https://use.typekit.net/yjx5bkv.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- AR Libraries -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="js/vendor/mindar-image-aframe.prod.js"></script>
+    
+    <!-- App Logic -->
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+    <!-- Desktop / Gallery View -->
+    <div id="desktop-view">
+        <header>
+            <img src="img/Artboard 1logo.svg" alt="Logo" class="logo">
+        </header>
+        <main>
+            <div id="poster-grid" class="poster-grid"></div>
+        </main>
+    </div>
+
+    <!-- AR View (Mobile) -->
+    <div id="ar-view" style="display: none;">
+        <!-- Scanning Overlay -->
+        <div id="scanning-overlay" class="scanning-overlay">
+            <div class="scan-guide">
+                <div class="scan-frame"></div>
+                <p>Richt je camera op een poster</p>
+            </div>
+        </div>
+
+        <!-- AR Scene -->
+        <a-scene mindar-image="imageTargetSrc: assets/all-posters.mind; filterMinCF:0.003; filterBeta: 0.025;" 
+                 color-space="sRGB" 
+                 renderer="colorManagement: true, physicallyCorrectLights" 
+                 vr-mode-ui="enabled: false" 
+                 device-orientation-permission-ui="enabled: false">
+            
+            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+            
+            <a-assets>
+                <!-- Assets worden dynamisch geladen in js/modules/ar.js -->
+            </a-assets>
+            
+            <!-- Targets worden dynamisch toegevoegd -->
+        </a-scene>
+    </div>
+
+    <!-- Gallery Overlay (Dynamic) -->
+    <div id="gallery-overlay" class="gallery-overlay" style="display: none;"></div>
+</body>
+</html>

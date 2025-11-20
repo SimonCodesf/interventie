@@ -1,0 +1,37 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v3
+
+    - name: 📂 Sync files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        # server-dir: public_html/  <-- Pas dit aan als je in een submap zit!
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .gitignore
+          .github/**
+          README.md
+          ADMIN_SETUP.md
+          AR-MARKER-SETUP.md
+          BEVEILIGING.md
+          uploads/**
+          posters.db
+          ar-markers.db
+          admin_activity.log
+          login_attempts.json
