@@ -1,7 +1,6 @@
 ---
 deployment:
   targets:
-    public_html:
+    - deployment_target: interventie.org
       domain: interventie.org
-      path: /public_html
-
+      path: /
