@@ -1,6 +1,5 @@
 ---
 deployment:
-  targets:
-    - deployment_target: interventie.org
-      domain: interventie.org
-      path: /
+  tasks:
+    - export DEPLOYPATH=/home/beelkstc/public_html/
+    - /bin/cp -R * $DEPLOYPATH
