@@ -52,19 +52,19 @@ require_once 'config.php';
 require_once 'security.php';
 
 // Ensure database schema has all required columns for AR markers
-try {
-    global $db;
-    // Add ar_marker_hq column if it doesn't exist
-    $db->exec("ALTER TABLE posters ADD COLUMN ar_marker_hq TEXT");
-} catch (Exception $e) {
-    // Column likely exists already
-}
-try {
-    global $db;
-    // Add ar_marker_lq column if it doesn't exist
-    $db->exec("ALTER TABLE posters ADD COLUMN ar_marker_lq TEXT");
-} catch (Exception $e) {
-    // Column likely exists already
+if (isset($db)) {
+    try {
+        // Add ar_marker_hq column if it doesn't exist
+        $db->exec("ALTER TABLE posters ADD COLUMN ar_marker_hq TEXT");
+    } catch (PDOException $e) {
+        // Column likely exists already, ignore
+    }
+    try {
+        // Add ar_marker_lq column if it doesn't exist
+        $db->exec("ALTER TABLE posters ADD COLUMN ar_marker_lq TEXT");
+    } catch (PDOException $e) {
+        // Column likely exists already, ignore
+    }
 }
 
 header('Content-Type: application/json');
