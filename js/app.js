@@ -136,6 +136,11 @@ let isARSupported = false;
 window.allPosters = []; // Global array for AR tracking
 let currentTrackedPoster = null;
 
+// Featured Poster Management (voor gescande poster in galerij)
+let featuredPoster = null; // Momenteel geselecteerde gescande poster
+let isFeaturedPosterOpen = false; // Of de galerij is geopend voor featured poster
+let autoResetFeaturedPosterTimer = null; // Timer voor auto-reset als poster uit-gescanned
+
 // Rotating scanner system - cycles through preloaded .mind data
 // HIDDEN SCANNER: AR runs behind a static camera feed, revealed when poster found
 let scannerInterval = null;
@@ -2197,6 +2202,9 @@ function addMindARTargets(scene) {
             currentTrackedPoster = matchedPoster;
             document.getElementById('detected-poster-title').textContent = matchedPoster.title;
             console.log('📝 Updated footer title to:', matchedPoster.title);
+            
+            // Set featured poster voor galerij weergave
+            setFeaturedPoster(matchedPoster);
         }
         
         // Make ALL layers visible (dynamic 1-8)
@@ -2223,10 +2231,48 @@ function addMindARTargets(scene) {
         
         // Switch back to state 1 (gallery button)
         showSwipeState(1);
+        
+        // Reset featured poster ALLEEN als galerij niet geopend is
+        if (!isFeaturedPosterOpen) {
+            console.log('📋 Galerij gesloten: featured poster reset');
+            featuredPoster = null;
+        } else {
+            console.log('📋 Galerij geopend: featured poster blijft getoond');
+        }
+
         currentTrackedPoster = null;
     });
     
     console.log('✅ MindAR target added');
+}
+
+// Setup AR Event Listeners (legacy, kept for compatibility)
+
+// ==================== FEATURED POSTER MANAGEMENT ====================
+// Wanneer een poster wordt gescand, toont de galerij die poster in 1-kolom groot
+// De galerij blijft deze poster tonen totdat gebruiker sluit of poster uit-scanned
+
+function setFeaturedPoster(poster) {
+    featuredPoster = poster;
+    console.log('⭐ Featured poster set:', poster.title);
+    
+    // Clear any existing auto-reset timer
+    if (autoResetFeaturedPosterTimer) {
+        clearTimeout(autoResetFeaturedPosterTimer);
+        autoResetFeaturedPosterTimer = null;
+    }
+}
+
+function resetFeaturedPoster() {
+    featuredPoster = null;
+    isFeaturedPosterOpen = false;
+    console.log('🔄 Featured poster reset');
+    
+    // Clear timer
+    if (autoResetFeaturedPosterTimer) {
+        clearTimeout(autoResetFeaturedPosterTimer);
+        autoResetFeaturedPosterTimer = null;
+    }
 }
 
 // Setup AR Event Listeners (legacy, kept for compatibility)
@@ -2255,6 +2301,11 @@ function setupSwipeBarControls() {
             setTimeout(() => {
                 const galleryContent = document.getElementById('gallery-content');
                 delete galleryContent.dataset.loaded;
+                isFeaturedPosterOpen = false; // Galerij dicht
+                // Reset featured poster als die niet meer gescanned is
+                if (!currentTrackedPoster) {
+                    resetFeaturedPoster();
+                }
             }, 400);
         });
     }
@@ -2334,25 +2385,37 @@ function setupSwipeBarControls() {
                 swipeBar.classList.remove('detected-mode');
                 loadGalleryOverlay();
                 galleryContent.dataset.loaded = 'true';
+                isFeaturedPosterOpen = true; // Mark galerij als geopend
             } else if (!isExpanded && state2Active && currentTrackedPoster) {
                 // Expand footer to show detected poster details
                 swipeBar.classList.add('expanded');
                 swipeBar.classList.add('detected-mode');
                 showDetectedPosterDetails(currentTrackedPoster);
+                isFeaturedPosterOpen = true; // Mark galerij als geopend
             } else if (isExpanded) {
                 // Collapse footer
                 swipeBar.classList.remove('expanded');
                 swipeBar.classList.remove('detected-mode');
+                isFeaturedPosterOpen = false; // Galerij dicht
                 setTimeout(() => {
                     delete galleryContent.dataset.loaded;
+                    // Reset featured poster als die niet meer gescanned is
+                    if (!currentTrackedPoster) {
+                        resetFeaturedPoster();
+                    }
                 }, 400);
             }
         }
         // Dragged down while expanded - collapse
         else if (dragPercent < -10 && isExpanded) {
             swipeBar.classList.remove('expanded');
+            isFeaturedPosterOpen = false; // Galerij dicht
             setTimeout(() => {
                 delete galleryContent.dataset.loaded;
+                // Reset featured poster als die niet meer gescanned is
+                if (!currentTrackedPoster) {
+                    resetFeaturedPoster();
+                }
             }, 400);
         }
         // Didn't drag far enough - snap to current state
@@ -2372,89 +2435,186 @@ function loadGalleryOverlay() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
     
-    // DEBUG: Log aantal posters
-    console.log('🎬 loadGalleryOverlay() called. Posters array:', window.allPosters.length, 'items');
+    console.log('🎬 loadGalleryOverlay() called. Featured poster:', featuredPoster?.title, 'Posters array:', window.allPosters.length, 'items');
     
-    // Remove old override styles if they exist (we want to use the CSS file styles now)
+    // Remove old override styles if they exist
     const oldStyle = document.getElementById('gallery-override-styles');
     if (oldStyle) oldStyle.remove();
     
-    grid.innerHTML = window.allPosters.map(poster => {
-        const imageUrl = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : 'img/placeholder.png';
-        // Check if this poster has a valid AR marker
-        const hasAR = window.arPosters && window.arPosters.some(p => p.id == poster.id);
+    // FEATURED POSTER MODE: Als een poster is gescand, toon die groot in 1 kolom
+    if (featuredPoster) {
+        console.log('⭐ Rendering featured poster mode:', featuredPoster.title);
+        const imageUrl = featuredPoster.thumbnail ? `${BASE_URL}${featuredPoster.thumbnail}` : 'img/placeholder.png';
+        const hasAR = window.arPosters && window.arPosters.some(p => p.id == featuredPoster.id);
         const arBadge = hasAR ? '<span class="ar-badge">AR</span>' : '';
-        return `
-        <div class="overlay-poster-card" data-poster-id="${poster.id}" data-has-ar="${hasAR}">
-            <img src="${imageUrl}" alt="${poster.title}" onerror="this.src='img/placeholder.png'">
-            <div class="card-info">
-                <h3>${poster.title} ${arBadge}</h3>
+        
+        // Featured poster in 1 kolom (groot)
+        grid.innerHTML = `
+        <div class="overlay-poster-card featured-mode" data-poster-id="${featuredPoster.id}" data-has-ar="${hasAR}">
+            <img src="${imageUrl}" alt="${featuredPoster.title}" onerror="this.src='img/placeholder.png'">
+            <div class="card-info featured-info">
+                <h3>${featuredPoster.title} ${arBadge}</h3>
                 <div class="card-meta">
-                    <span>>> DOWNLOADS: ${poster.downloads || 0}</span>
-                    <span>>> ID: ${poster.id.substring(0, 6)}</span>
+                    <span>>> DOWNLOADS: ${featuredPoster.downloads || 0}</span>
+                    <span>>> ID: ${featuredPoster.id.substring(0, 6)}</span>
                 </div>
             </div>
         </div>
-    `;
-    }).join('');
-    
-    // DEBUG: Log HTML result
-    console.log('📊 Grid innerHTML length:', grid.innerHTML.length, 'chars');
-    console.log('📝 Cards generated:', grid.querySelectorAll('.overlay-poster-card').length);
-    
-    // FORCE gallery styles via JavaScript (CSS caching issue workaround)
-    if (!document.getElementById('gallery-card-styles')) {
-        const galleryStyle = document.createElement('style');
-        galleryStyle.id = 'gallery-card-styles';
-        galleryStyle.textContent = `
-            #gallery-overlay-grid {
-                display: grid !important;
-                grid-template-columns: repeat(2, 1fr) !important;
-                gap: 2px !important;
-                padding: 8px !important;
-                padding-bottom: 1rem !important;
-                background: var(--black) !important;
-            }
-            
-            .overlay-poster-card {
-                background: var(--black) !important;
-                overflow: hidden !important;
-                cursor: pointer !important;
-                position: relative !important;
-                aspect-ratio: 1 / 1.4142 !important;
-                border: 1px solid var(--white) !important;
-                transition: all 0.1s ease !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                display: block !important;
-            }
-            
-            .overlay-poster-card:active {
-                opacity: 0.7 !important;
-                border-color: var(--white) !important;
-            }
-            
-            .overlay-poster-card img {
-                width: 100% !important;
-                height: 100% !important;
-                display: block !important;
-                object-fit: cover !important;
-            }
-            
-            .overlay-poster-card .card-info {
-                position: absolute !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                padding: 4px !important;
-                background: rgba(0, 0, 0, 0.85) !important;
-                border-top: 1px solid var(--dim) !important;
-            }
-            
-            .overlay-poster-card h3 {
-                padding: 0 !important;
-                margin: 0 !important;
-                font-size: 0.6rem !important;
+        `;
+        
+        // Featured poster styles (1 kolom, groot)
+        if (!document.getElementById('featured-poster-styles')) {
+            const featuredStyle = document.createElement('style');
+            featuredStyle.id = 'featured-poster-styles';
+            featuredStyle.textContent = `
+                #gallery-overlay-grid.featured-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 0 !important;
+                    padding: 0 !important;
+                    background: var(--black) !important;
+                }
+                
+                .overlay-poster-card.featured-mode {
+                    background: var(--black) !important;
+                    overflow: hidden !important;
+                    cursor: pointer !important;
+                    position: relative !important;
+                    aspect-ratio: 1 / 1.4142 !important;
+                    border: none !important;
+                    transition: all 0.1s ease !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    display: block !important;
+                    max-height: 75vh !important;
+                }
+                
+                .overlay-poster-card.featured-mode:active {
+                    opacity: 0.9 !important;
+                }
+                
+                .overlay-poster-card.featured-mode img {
+                    width: 100% !important;
+                    height: 100% !important;
+                    display: block !important;
+                    object-fit: cover !important;
+                }
+                
+                .overlay-poster-card.featured-mode .card-info.featured-info {
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    padding: 8px !important;
+                    background: rgba(0, 0, 0, 0.9) !important;
+                    border-top: 1px solid var(--dim) !important;
+                }
+                
+                .overlay-poster-card.featured-mode h3 {
+                    padding: 0 !important;
+                    margin: 0 0 4px 0 !important;
+                    font-size: 0.9rem !important;
+                    font-weight: 400 !important;
+                    color: var(--white) !important;
+                    letter-spacing: 0.05em !important;
+                    text-transform: uppercase !important;
+                    font-family: var(--font-data) !important;
+                }
+                
+                .overlay-poster-card.featured-mode .card-meta {
+                    display: block !important;
+                }
+                
+                .overlay-poster-card.featured-mode .card-meta span {
+                    display: block !important;
+                    font-size: 0.65rem !important;
+                    color: var(--dim) !important;
+                    line-height: 1.4 !important;
+                    font-family: var(--font-data) !important;
+                }
+            `;
+            document.head.appendChild(featuredStyle);
+        }
+        
+        // Add grid class
+        grid.classList.add('featured-grid');
+        
+    } else {
+        // NORMAL GALLERY MODE: Toon alle posters in 2 kolommen
+        console.log('📊 Rendering normal gallery mode (alle posters)');
+        grid.classList.remove('featured-grid');
+        
+        grid.innerHTML = window.allPosters.map(poster => {
+            const imageUrl = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : 'img/placeholder.png';
+            const hasAR = window.arPosters && window.arPosters.some(p => p.id == poster.id);
+            const arBadge = hasAR ? '<span class="ar-badge">AR</span>' : '';
+            return `
+            <div class="overlay-poster-card" data-poster-id="${poster.id}" data-has-ar="${hasAR}">
+                <img src="${imageUrl}" alt="${poster.title}" onerror="this.src='img/placeholder.png'">
+                <div class="card-info">
+                    <h3>${poster.title} ${arBadge}</h3>
+                    <div class="card-meta">
+                        <span>>> DOWNLOADS: ${poster.downloads || 0}</span>
+                        <span>>> ID: ${poster.id.substring(0, 6)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        }).join('');
+        
+        // FORCE gallery styles via JavaScript (CSS caching issue workaround)
+        if (!document.getElementById('gallery-card-styles')) {
+            const galleryStyle = document.createElement('style');
+            galleryStyle.id = 'gallery-card-styles';
+            galleryStyle.textContent = `
+                #gallery-overlay-grid {
+                    display: grid !important;
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    gap: 2px !important;
+                    padding: 8px !important;
+                    padding-bottom: 1rem !important;
+                    background: var(--black) !important;
+                }
+                
+                .overlay-poster-card {
+                    background: var(--black) !important;
+                    overflow: hidden !important;
+                    cursor: pointer !important;
+                    position: relative !important;
+                    aspect-ratio: 1 / 1.4142 !important;
+                    border: 1px solid var(--white) !important;
+                    transition: all 0.1s ease !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    display: block !important;
+                }
+                
+                .overlay-poster-card:active {
+                    opacity: 0.7 !important;
+                    border-color: var(--white) !important;
+                }
+                
+                .overlay-poster-card img {
+                    width: 100% !important;
+                    height: 100% !important;
+                    display: block !important;
+                    object-fit: cover !important;
+                }
+                
+                .overlay-poster-card .card-info {
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    padding: 4px !important;
+                    background: rgba(0, 0, 0, 0.85) !important;
+                    border-top: 1px solid var(--dim) !important;
+                }
+                
+                .overlay-poster-card h3 {
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    font-size: 0.6rem !important;
                 font-weight: 400 !important;
                 color: var(--white) !important;
                 letter-spacing: 0.05em !important;
