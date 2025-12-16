@@ -62,3 +62,4 @@ We kunnen nu terugkeren naar **Fase 1 (Bugfixes)** of **Fase 2 (Admin)**.
 2. **Goedkeuring verplaatsen**: Ben je akkoord met de voorgestelde mappenstructuur in "Stap 2b"?
 ✅ Fase 4 voltooid - Auto-deploy actief
 🚀 Deploy test met correct FTP server (ftp.beelsimon.com)
+🚀 Fase 4 - Cleanup voltooid op cPanel, sync-state reset
