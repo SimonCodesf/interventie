@@ -36,3 +36,8 @@ jobs:
             FASE-4-PLAN.md
             .cpanel.yml
             FASE-4-INVENTARISATIE.md
+            .DS_Store
+            .history
+            .specstory
+            .vscode
+          dangerous-delete-force: true
