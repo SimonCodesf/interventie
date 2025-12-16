@@ -1416,7 +1416,7 @@ video {
     display: flex;
     flex-direction: column;
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 999998;
+    z-index: 999999; /* MUST be above logger z-index 99999 */
     border-top: 1px solid var(--white);
     overflow: hidden;
     touch-action: none;
@@ -1425,8 +1425,9 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: 90vh;
-    height: 90dvh;
+    height: 95vh;
+    height: 95dvh;
+    bottom: 0;
 }
 
 .footer-header {
@@ -1551,7 +1552,6 @@ video {
 }
 
 .close-btn:active {
-    background: rgba(255, 255, 255
     background: rgba(0, 0, 0, 0.1);
     transform: scale(0.95);
 }
@@ -1562,11 +1562,13 @@ video {
     -webkit-overflow-scrolling: touch;
     opacity: 0;
     padding-top: 1rem;
-    padding-bottom: 100px; /* Extra padding for scrolling */
+    padding-bottom: 2rem;
     touch-action: pan-y;
+    height: 0; /* Start hidden/collapsed */
 }
 
 #ar-footer-swipe-bar.expanded #gallery-content {
+    height: auto; /* Allow content when expanded */
     opacity: 1;
 }
 
@@ -1631,15 +1633,15 @@ video {
 
 #gallery-overlay-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: 1fr !important; /* 1 kolom op mobile */
     gap: 1rem !important;
     padding: 1rem !important;
-    padding-bottom: 100px !important;
+    padding-bottom: 2rem !important;
 }
 
-@media (max-width: 500px) {
+@media (min-width: 768px) {
     #gallery-overlay-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
@@ -1689,45 +1691,40 @@ video {
 }
 
 .overlay-poster-card {
-    display: flex !important;
-    flex-direction: column !important;
-    background: var(--black) !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    -webkit-tap-highlight-color: transparent !important;
-    border: 1px solid var(--white) !important;
-    overflow: hidden !important;
-    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    background: var(--black);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    border: 1px solid var(--white);
+    overflow: hidden;
+    padding: 0;
 }
 
 .overlay-poster-card:active {
-    transform: scale(0.95) !important;
-    opacity: 0.8 !important;
+    transform: scale(0.95);
+    opacity: 0.8;
 }
 
-.overlay-poster-card:active {
-    opacity: 0.7 !important;
-    transform: scale(0.98) !important;
-}
-
-.overlay-poster-var(--black) !important;
+.overlay-poster-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    min-height: 120px;
 }
 
 .overlay-poster-card h3 {
-    padding: 14px 12px !important;
-    font-size: 0.85rem !important;
-    font-weight: 400 !important;
-    color: var(--white) !important;
-    margin: 0 !important;
-    letter-spacing: 0.05em !important;
-    text-transform: uppercase !important;
-    background: var(--black) !important;
-    font-family: var(--font-data) !important;
-    color: #000 !important;
-    margin: 0 !important;
-    letter-spacing: 0.05em !important;
-    text-transform: uppercase !important;
-    background: #fff !important;
+    padding: 12px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--white);
+    margin: 0;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--black);
+    font-family: var(--font-data);
 }
 
 #gallery-overlay-grid .poster-item {
