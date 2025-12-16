@@ -60,3 +60,4 @@ We kunnen nu terugkeren naar **Fase 1 (Bugfixes)** of **Fase 2 (Admin)**.
 ## Actiepunten voor Gebruiker
 1. **Goedkeuring verwijderen**: Mag ik de lijst onder "Stap 2a" verwijderen?
 2. **Goedkeuring verplaatsen**: Ben je akkoord met de voorgestelde mappenstructuur in "Stap 2b"?
+✅ Fase 4 voltooid - Auto-deploy actief
