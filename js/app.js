@@ -491,6 +491,12 @@ function setupChunkEventListeners(scene, chunk) {
             currentTrackedPoster = poster;
             showDetectedPosterState(poster);
             
+            // Set featured poster voor galerij weergave (KRITIEK!)
+            if (poster) {
+                setFeaturedPoster(poster);
+                console.log('⭐ Featured poster set in rotating scanner:', poster.title);
+            }
+            
             // Check if we need to show loader for GIFs
             checkAndShowLoader(poster);
         });
