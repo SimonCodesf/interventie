@@ -166,7 +166,7 @@ function validateUploadedFile($file, $allowedTypes, $maxSize = 10485760) { // 10
 
 // Log admin activities for security monitoring
 function logAdminActivity($action, $details = '') {
-    $logFile = __DIR__ . '/../admin_activity.log'; // Adjusted path
+    $logFile = dirname(__DIR__) . '/data/admin_activity.log'; // Adjusted path
     $timestamp = date('Y-m-d H:i:s');
     $ip = getClientIP();
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';

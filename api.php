@@ -30,8 +30,8 @@ ini_set('session.use_strict_mode', 1);
 session_start();
 
 // Dependencies
-require_once 'config.php';
-require_once 'security.php';
+require_once 'includes/config.php';
+require_once 'includes/security.php';
 require_once 'includes/api_utils.php';
 require_once 'includes/poster_controller.php';
 
