@@ -2387,10 +2387,11 @@ function setupSwipeBarControls() {
                 galleryContent.dataset.loaded = 'true';
                 isFeaturedPosterOpen = true; // Mark galerij als geopend
             } else if (!isExpanded && state2Active && currentTrackedPoster) {
-                // Expand footer to show detected poster details
+                // Expand footer to show gallery with featured poster (gescande poster in 1 kolom)
                 swipeBar.classList.add('expanded');
-                swipeBar.classList.add('detected-mode');
-                showDetectedPosterDetails(currentTrackedPoster);
+                swipeBar.classList.remove('detected-mode');
+                loadGalleryOverlay();
+                galleryContent.dataset.loaded = 'true';
                 isFeaturedPosterOpen = true; // Mark galerij als geopend
             } else if (isExpanded) {
                 // Collapse footer
