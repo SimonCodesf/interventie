@@ -1408,19 +1408,20 @@ video {
 
 #ar-footer-swipe-bar {
     position: fixed;
-    bottom: 30px; /* Sit directly on top of System Loader (30px) */
+    bottom: 0;
     left: 0;
     right: 0;
     height: 40px; /* Reduced from 6vh */
-    background: #af1d1f;
+    background: var(--black);
     display: flex;
     flex-direction: column;
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 999999;
-    border-radius: 20px 20px 0 0;
+    border-radius: 0;
+    border-top: 1px solid var(--white);
     overflow: hidden;
     touch-action: none;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
     pointer-events: auto;
 }
 
@@ -1472,16 +1473,17 @@ video {
 }
 
 .swipe-text {
+    font-family: var(--font-data);
     font-size: 0.8rem; /* Slightly smaller text */
-    font-weight: 700;
-    color: #000;
+    font-weight: 400;
+    color: var(--white);
     letter-spacing: 0.15em;
     text-transform: uppercase;
     line-height: 1; /* Ensure vertical centering */
 }
 
 .chevron-icon {
-    color: #000;
+    color: var(--white);
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     opacity: 0.9;
     width: 12px;
@@ -1494,9 +1496,10 @@ video {
 }
 
 .footer-text {
+    font-family: var(--font-data);
     font-size: 0.85rem;
-    font-weight: 700;
-    color: #000;
+    font-weight: 400;
+    color: var(--white);
     margin: 0;
     text-align: center;
     letter-spacing: 0.2em;
@@ -1529,8 +1532,7 @@ video {
 }
 
 .close-btn {
-    background: transparent;
-    color: #000;
+    backgrovar(--white);
     border: none;
     font-size: 2.8rem;
     line-height: 1;
@@ -1550,6 +1552,7 @@ video {
 }
 
 .close-btn:active {
+    background: rgba(255, 255, 255
     background: rgba(0, 0, 0, 0.1);
     transform: scale(0.95);
 }
@@ -1596,9 +1599,10 @@ video {
 }
 
 #detected-poster-details h2 {
+    font-family: var(--font-klassiek);
     font-size: 2.5rem;
-    font-weight: 800;
-    color: #000;
+    font-weight: 400;
+    color: var(--white);
     margin: 0 0 2rem 0;
     letter-spacing: -0.02em;
     line-height: 1.1;
@@ -1606,8 +1610,9 @@ video {
 }
 
 #detected-poster-details p {
+    font-family: var(--font-body);
     font-size: 0.95rem;
-    color: #000;
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.7;
     margin: 0 0 1.5rem 0;
     font-weight: 400;
@@ -1616,11 +1621,12 @@ video {
 #detected-poster-details p strong {
     display: block;
     font-size: 0.7rem;
-    font-weight: 800;
-    color: rgba(0, 0, 0, 0.5);
+    font-weight: 400;
+    color: var(--dim);
     text-transform: uppercase;
     letter-spacing: 0.15em;
     margin-bottom: 0.4rem;
+    font-family: var(--font-data);
 }
 
 #gallery-overlay-grid {
@@ -1634,22 +1640,24 @@ video {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 20px;
-    position: sticky;
-    top: 0;
-    background: #D60024;
+    padding: 14pvar(--black);
     z-index: 100;
-    border-radius: 20px 20px 0 0;
+    border-bottom: 1px solid var(--white);
+    border-radius: 0;
 }
 
 .overlay-title {
+    font-family: var(--font-data);
     font-size: 1rem;
-    font-weight: 500;
-    color: #000;
+    font-weight: 400;
+    color: var(--white);
     letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
+.close-overlay-btn {
+    background: transparent;
+    color: var(--white)
 .close-overlay-btn {
     background: transparent;
     color: #000;
@@ -1685,18 +1693,19 @@ video {
     transform: scale(0.98) !important;
 }
 
-.overlay-poster-card img {
-    width: 100% !important;
-    height: auto !important;
-    display: block !important;
-    border: none !important;
-    background: #fff !important;
+.overlay-poster-var(--black) !important;
 }
 
 .overlay-poster-card h3 {
     padding: 14px 12px !important;
     font-size: 0.85rem !important;
-    font-weight: 700 !important;
+    font-weight: 400 !important;
+    color: var(--white) !important;
+    margin: 0 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    background: var(--black) !important;
+    font-family: var(--font-data) !important;
     color: #000 !important;
     margin: 0 !important;
     letter-spacing: 0.05em !important;

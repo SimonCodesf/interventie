@@ -5,8 +5,8 @@
 Focus: Immediate visual bugs and usability issues.
 
 - [x] **Desktop**: Fix download count bug (currently concatenates strings instead of adding numbers).
-- [ ] **Mobile/AR**: Adjust Camera feed position (center vertically between logo and bottom).
-- [ ] **Mobile/AR**: Fix Gallery UI/Swipe up (style like desktop, fix overlap with logo).
+- [x] **Mobile/AR**: Adjust Camera feed position (center vertically between logo and bottom).
+- [x] **Mobile/AR**: Fix Gallery UI/Swipe up (style like desktop, fix overlap with logo).
 - [ ] **Desktop**: Improve Log integration (make it stick to bottom/integrate better).
 - [ ] **Desktop**: Fix Table header spacing.
 - [ ] **General**: Translate and cleanup frontend logs (English -> Dutch, remove debug noise).
