@@ -2561,15 +2561,14 @@ function loadGalleryOverlay() {
             </div>
         `;
         }).join('');
-        
-        // FORCE gallery styles via JavaScript (CSS caching issue workaround)
-        if (!document.getElementById('gallery-card-styles')) {
-            const galleryStyle = document.createElement('style');
-            galleryStyle.id = 'gallery-card-styles';
-            galleryStyle.textContent = `
-                #gallery-overlay-grid {
-                    display: grid !important;
-                    grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    // FORCE gallery styles via JavaScript (CSS caching issue workaround)
+    // Deze styles gelden voor BEIDE featured en normale modus
+    if (!document.getElementById('gallery-card-styles')) {
+        const galleryStyle = document.createElement('style');
+        galleryStyle.id = 'gallery-card-styles';
+        galleryStyle.textContent = `
                     gap: 2px !important;
                     padding: 8px !important;
                     padding-bottom: 1rem !important;
@@ -2615,17 +2614,17 @@ function loadGalleryOverlay() {
                     padding: 0 !important;
                     margin: 0 !important;
                     font-size: 0.6rem !important;
-                font-weight: 400 !important;
-                color: var(--white) !important;
-                letter-spacing: 0.05em !important;
-                text-transform: uppercase !important;
-                font-family: var(--font-data) !important;
-                line-height: 1.1 !important;
-            }
-            
-            .card-meta {
-                display: none !important;
-            }
+                    font-weight: 400 !important;
+                    color: var(--white) !important;
+                    letter-spacing: 0.05em !important;
+                    text-transform: uppercase !important;
+                    font-family: var(--font-data) !important;
+                    line-height: 1.1 !important;
+                }
+                
+                .card-meta {
+                    display: none !important;
+                }
             
             @media (min-width: 768px) {
                 #gallery-overlay-grid {
