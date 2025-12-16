@@ -1425,10 +1425,10 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: 88vh;
-    height: 88dvh;
+    height: 75vh;
+    height: 75dvh;
     bottom: 0;
-    /* Logger (30px) visible below at bottom */
+    /* Logger (30px) is visible at bottom */
 }
 
 .footer-header {
@@ -1635,16 +1635,15 @@ video {
 #gallery-overlay-grid {
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 6px !important;
-    padding: 10px !important;
-    padding-bottom: 1rem !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    padding-bottom: 1.5rem !important;
 }
 
 @media (min-width: 768px) {
     #gallery-overlay-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 12px !important;
-        padding: 12px !important;
     }
 }
 
@@ -1694,18 +1693,16 @@ video {
 }
 
 .overlay-poster-card {
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
     background: var(--black);
     cursor: pointer;
     transition: all 0.15s ease;
     -webkit-tap-highlight-color: transparent;
     border: 1px solid var(--white);
     overflow: hidden;
-    padding: 8px;
-    align-items: center;
-    min-height: 80px;
+    padding: 0;
+    border-radius: 2px;
 }
 
 .overlay-poster-card:active {
@@ -1716,31 +1713,27 @@ video {
 
 .overlay-poster-card img {
     width: 100%;
-    height: 80px;
+    height: 140px;
     display: block;
     object-fit: cover;
-    border: 1px solid var(--dim);
 }
 
 .overlay-poster-card .card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 0;
-    border-top: 0;
+    padding: 8px;
+    background: var(--black);
+    border-top: 1px solid var(--dim);
 }
 
 .overlay-poster-card h3 {
     padding: 0;
-    margin: 0;
+    margin: 0 0 4px 0;
     font-size: 0.7rem;
     font-weight: 400;
     color: var(--white);
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    background: transparent;
     font-family: var(--font-data);
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .card-meta {
@@ -1750,7 +1743,7 @@ video {
 }
 
 .card-meta span {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--dim);
     font-family: var(--font-data);
     letter-spacing: 0.02em;
