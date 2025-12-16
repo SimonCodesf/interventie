@@ -2436,7 +2436,10 @@ function loadGalleryOverlay() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
     
-    console.log('🎬 loadGalleryOverlay() called. Featured poster:', featuredPoster?.title, 'Posters array:', window.allPosters.length, 'items');
+    console.log('🎬 loadGalleryOverlay() called');
+    console.log('📋 Featured poster:', featuredPoster?.title || 'NONE');
+    console.log('📋 Posters array length:', window.allPosters.length);
+    console.log('🔍 currentTrackedPoster:', currentTrackedPoster?.title || 'NONE');
     
     // Remove old override styles if they exist
     const oldStyle = document.getElementById('gallery-override-styles');
@@ -2444,7 +2447,7 @@ function loadGalleryOverlay() {
     
     // FEATURED POSTER MODE: Als een poster is gescand, toon die groot in 1 kolom
     if (featuredPoster) {
-        console.log('⭐ Rendering featured poster mode:', featuredPoster.title);
+        console.log('⭐ FEATURED MODE ACTIVE - Rendering poster:', featuredPoster.title);
         const imageUrl = featuredPoster.thumbnail ? `${BASE_URL}${featuredPoster.thumbnail}` : 'img/placeholder.png';
         const hasAR = window.arPosters && window.arPosters.some(p => p.id == featuredPoster.id);
         const arBadge = hasAR ? '<span class="ar-badge">AR</span>' : '';
@@ -2462,87 +2465,18 @@ function loadGalleryOverlay() {
             </div>
         </div>
         `;
+        console.log('📝 Featured HTML set. Grid innerHTML length:', grid.innerHTML.length);
         
-        // Featured poster styles (1 kolom, groot)
-        if (!document.getElementById('featured-poster-styles')) {
-            const featuredStyle = document.createElement('style');
-            featuredStyle.id = 'featured-poster-styles';
-            featuredStyle.textContent = `
-                #gallery-overlay-grid.featured-grid {
-                    display: grid !important;
-                    grid-template-columns: 1fr !important;
-                    gap: 0 !important;
-                    padding: 0 !important;
-                    background: var(--black) !important;
-                }
-                
-                .overlay-poster-card.featured-mode {
-                    background: var(--black) !important;
-                    overflow: hidden !important;
-                    cursor: pointer !important;
-                    position: relative !important;
-                    aspect-ratio: 1 / 1.4142 !important;
-                    border: none !important;
-                    transition: all 0.1s ease !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    display: block !important;
-                    max-height: 75vh !important;
-                }
-                
-                .overlay-poster-card.featured-mode:active {
-                    opacity: 0.9 !important;
-                }
-                
-                .overlay-poster-card.featured-mode img {
-                    width: 100% !important;
-                    height: 100% !important;
-                    display: block !important;
-                    object-fit: cover !important;
-                }
-                
-                .overlay-poster-card.featured-mode .card-info.featured-info {
-                    position: absolute !important;
-                    bottom: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    padding: 8px !important;
-                    background: rgba(0, 0, 0, 0.9) !important;
-                    border-top: 1px solid var(--dim) !important;
-                }
-                
-                .overlay-poster-card.featured-mode h3 {
-                    padding: 0 !important;
-                    margin: 0 0 4px 0 !important;
-                    font-size: 0.9rem !important;
-                    font-weight: 400 !important;
-                    color: var(--white) !important;
-                    letter-spacing: 0.05em !important;
-                    text-transform: uppercase !important;
-                    font-family: var(--font-data) !important;
-                }
-                
-                .overlay-poster-card.featured-mode .card-meta {
-                    display: block !important;
-                }
-                
-                .overlay-poster-card.featured-mode .card-meta span {
-                    display: block !important;
-                    font-size: 0.65rem !important;
-                    color: var(--dim) !important;
-                    line-height: 1.4 !important;
-                    font-family: var(--font-data) !important;
-                }
-            `;
-            document.head.appendChild(featuredStyle);
-        }
+        // Featured poster styles (1 kolom, groot) - VERWIJDERD, deze gaan nu in gallery-card-styles
+        // Alle CSS is nu gecentraliseerd in gallery-card-styles
         
         // Add grid class
         grid.classList.add('featured-grid');
+        console.log('🎨 Added featured-grid class. Grid classes now:', grid.className);
         
     } else {
         // NORMAL GALLERY MODE: Toon alle posters in 2 kolommen
-        console.log('📊 Rendering normal gallery mode (alle posters)');
+        console.log('📊 NORMAL MODE - Rendering all posters (featured=null)');
         grid.classList.remove('featured-grid');
         
         grid.innerHTML = window.allPosters.map(poster => {
@@ -2562,6 +2496,8 @@ function loadGalleryOverlay() {
             </div>
         `;
         }).join('');
+        console.log('📝 Normal HTML set. Grid item count:', window.allPosters.length);
+    }
     }
     
     // FORCE gallery styles via JavaScript (CSS caching issue workaround)
