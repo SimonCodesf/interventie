@@ -998,6 +998,13 @@ main {
     }
 }
 
+/* MOBILE ONLY - Hide AR footer on desktop */
+@media (min-width: 769px) {
+    #ar-footer-swipe-bar {
+        display: none !important;
+    }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
@@ -1408,15 +1415,15 @@ video {
 
 #ar-footer-swipe-bar {
     position: fixed;
-    bottom: 0;
+    bottom: 30px; /* Above logger (30px height) */
     left: 0;
     right: 0;
-    height: 40px; /* Reduced from 6vh */
+    height: 40px;
     background: var(--black);
     display: flex;
     flex-direction: column;
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 999999; /* MUST be above logger z-index 99999 */
+    z-index: 999999;
     border-top: 1px solid var(--white);
     overflow: hidden;
     touch-action: none;
@@ -1425,10 +1432,9 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: 75vh;
-    height: 75dvh;
-    bottom: 0;
-    /* Logger (30px) is visible at bottom */
+    height: calc(100vh - 70px); /* Full height except header (75px) and logger (30px) */
+    height: calc(100dvh - 70px);
+    bottom: 30px; /* Keep above logger */
 }
 
 .footer-header {
