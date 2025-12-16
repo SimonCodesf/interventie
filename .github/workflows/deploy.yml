@@ -39,4 +39,4 @@ jobs:
             .specstory
             .vscode
             *.py
-          dangerous-delete-force: false
+            assets/nft/AR_test_01/**
