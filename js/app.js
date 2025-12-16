@@ -508,6 +508,15 @@ function setupChunkEventListeners(scene, chunk) {
             currentTrackedPoster = null;
             showScanButton('↻ Scan een andere poster');
             hideGifLoader(); // Always hide loader when target lost
+            
+            // Reset featured poster ALLEEN als galerij NIET geopend is
+            // Anders blijft featured poster zichtbaar totdat galerij sluit
+            if (!isFeaturedPosterOpen) {
+                console.log('📋 Galerij gesloten: featured poster reset');
+                featuredPoster = null;
+            } else {
+                console.log('📋 Galerij geopend: featured poster blijft getoond totdat galerij sluit');
+            }
         });
     });
 }
@@ -2408,9 +2417,13 @@ function setupSwipeBarControls() {
                 isFeaturedPosterOpen = false; // Galerij dicht
                 setTimeout(() => {
                     delete galleryContent.dataset.loaded;
-                    // Reset featured poster als die niet meer gescanned is
+                    // Reset featured poster wanneer galerij sluit
+                    // TENZIJ poster nog steeds gescand is (currentTrackedPoster is ingesteld)
                     if (!currentTrackedPoster) {
-                        resetFeaturedPoster();
+                        featuredPoster = null;
+                        console.log('📋 Galerij gesloten & poster niet gescand: featured poster reset');
+                    } else {
+                        console.log('📋 Galerij gesloten maar poster NOG gescand: featured poster bijgehouden voor volgende open');
                     }
                 }, 400);
             }
