@@ -2713,18 +2713,18 @@ async function showPosterWindow(posterId) {
             
             <!-- DATA: 2 KOLOMMEN GRID -->
             <div style="font-family: Roboto Mono; font-size: 0.6rem; color: #888; line-height: 1.4; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 6px;">
-                ${poster.location_description ? `<div style="grid-column: 1 / -1;"><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LOCATIE</span><br><span style="color: #888; font-size: 0.58rem;">${poster.location_description}</span></div>` : ''}
-                ${poster.photographer_credit ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">FOTOGRAAF</span><br><span style="color: #888; font-size: 0.58rem;">${poster.photographer_credit}</span></div>` : ''}
+                ${poster.location_description ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LOCATIE</span><br><span style="color: #888; font-size: 0.58rem;">${poster.location_description}</span></div>` : ''}
                 ${poster.downloads !== undefined && poster.downloads !== null ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DL</span><br><span style="color: #888; font-size: 0.58rem;">${poster.downloads}</span></div>` : ''}
+                ${poster.photographer_credit ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">FOTOGRAAF</span><br><span style="color: #888; font-size: 0.58rem;">${poster.photographer_credit}</span></div>` : ''}
                 ${poster.artikel_link ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LINK</span><br><a href="${poster.artikel_link}" style="color: #fff; text-decoration: underline; font-size: 0.58rem;" target="_blank">artikel</a></div>` : ''}
                 ${poster.description ? `<div style="grid-column: 1 / -1;"><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DESC</span><br><span style="color: #888; font-size: 0.58rem;">${poster.description}</span></div>` : ''}
             </div>
             
-            <!-- DOWNLOAD BUTTONS - 3 RIJEN -->
-            <div style="display: grid; grid-template-columns: 1fr; gap: 2px; margin-top: 2px;">
-                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ JPEG</button>
-                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ A3 PDF</button>
-                <button onclick="window.location.href='/uploads/${poster.pdf_large_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ A0 PDF</button>
+            <!-- DOWNLOAD BUTTONS - 3 KOLOMMEN HORIZONTAAL -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 2px;">
+                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 2px; font-family: Roboto Mono; font-size: 0.55rem; cursor: pointer; text-align: center; font-weight: bold;">↓<br>JPEG</button>
+                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 2px; font-family: Roboto Mono; font-size: 0.55rem; cursor: pointer; text-align: center; font-weight: bold;">↓<br>A3</button>
+                <button onclick="window.location.href='/uploads/${poster.pdf_large_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 2px; font-family: Roboto Mono; font-size: 0.55rem; cursor: pointer; text-align: center; font-weight: bold;">↓<br>A0</button>
             </div>
         </div>
     `;
