@@ -2569,9 +2569,22 @@ function loadGalleryOverlay() {
         const galleryStyle = document.createElement('style');
         galleryStyle.id = 'gallery-card-styles';
         galleryStyle.textContent = `
+                /* NORMALE GALERIJ MODE - 2 KOLOMMEN */
+                #gallery-overlay-grid:not(.featured-grid) {
+                    display: grid !important;
+                    grid-template-columns: repeat(2, 1fr) !important;
                     gap: 2px !important;
                     padding: 8px !important;
                     padding-bottom: 1rem !important;
+                    background: var(--black) !important;
+                }
+                
+                /* FEATURED POSTER MODE - 1 KOLOM */
+                #gallery-overlay-grid.featured-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 0 !important;
+                    padding: 0 !important;
                     background: var(--black) !important;
                 }
                 
@@ -2588,9 +2601,18 @@ function loadGalleryOverlay() {
                     display: block !important;
                 }
                 
+                #gallery-overlay-grid.featured-grid .overlay-poster-card {
+                    border: none !important;
+                    max-height: 75vh !important;
+                }
+                
                 .overlay-poster-card:active {
                     opacity: 0.7 !important;
                     border-color: var(--white) !important;
+                }
+                
+                #gallery-overlay-grid.featured-grid .overlay-poster-card:active {
+                    opacity: 0.9 !important;
                 }
                 
                 .overlay-poster-card img {
@@ -2610,6 +2632,11 @@ function loadGalleryOverlay() {
                     border-top: 1px solid var(--dim) !important;
                 }
                 
+                #gallery-overlay-grid.featured-grid .card-info {
+                    padding: 8px !important;
+                    background: rgba(0, 0, 0, 0.9) !important;
+                }
+                
                 .overlay-poster-card h3 {
                     padding: 0 !important;
                     margin: 0 !important;
@@ -2622,17 +2649,34 @@ function loadGalleryOverlay() {
                     line-height: 1.1 !important;
                 }
                 
+                #gallery-overlay-grid.featured-grid .overlay-poster-card h3 {
+                    font-size: 0.9rem !important;
+                    margin: 0 0 4px 0 !important;
+                }
+                
                 .card-meta {
                     display: none !important;
                 }
-            
-            @media (min-width: 768px) {
-                #gallery-overlay-grid {
-                    grid-template-columns: repeat(3, 1fr) !important;
-                    gap: 2px !important;
-                    padding: 10px !important;
+                
+                #gallery-overlay-grid.featured-grid .card-meta {
+                    display: block !important;
                 }
-            }
+                
+                #gallery-overlay-grid.featured-grid .card-meta span {
+                    display: block !important;
+                    font-size: 0.65rem !important;
+                    color: var(--dim) !important;
+                    line-height: 1.4 !important;
+                    font-family: var(--font-data) !important;
+                }
+                
+                @media (min-width: 768px) {
+                    #gallery-overlay-grid:not(.featured-grid) {
+                        grid-template-columns: repeat(3, 1fr) !important;
+                        gap: 2px !important;
+                        padding: 10px !important;
+                    }
+                }
         `;
         document.head.appendChild(galleryStyle);
         console.log('✅ Gallery card styles injected');
