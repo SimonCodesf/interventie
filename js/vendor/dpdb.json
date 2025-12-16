@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "devices": [
+    {
+      "type": "android",
+      "rules": []
+    }
+  ]
+}

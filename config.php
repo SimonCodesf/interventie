@@ -87,7 +87,7 @@ function initDatabase() {
         // Kolom bestaat al, negeer error
     }
     
-    // Add HQ and LQ marker columns for quality-based switching
+    // Add HQ and LQ marker columns (for legacy backwards compatibility if needed)
     try {
         $db->exec("ALTER TABLE posters ADD COLUMN ar_marker_hq TEXT");
     } catch (PDOException $e) {
@@ -100,9 +100,9 @@ function initDatabase() {
         // Kolom bestaat al, negeer error
     }
     
-    // Migrate existing ar_marker data to ar_marker_hq (for backwards compatibility)
+    // Migrate existing ar_marker_hq data to ar_marker (consolidation to single marker)
     try {
-        $db->exec("UPDATE posters SET ar_marker_hq = ar_marker WHERE ar_marker IS NOT NULL AND ar_marker_hq IS NULL");
+        $db->exec("UPDATE posters SET ar_marker = ar_marker_hq WHERE ar_marker_hq IS NOT NULL AND ar_marker IS NULL");
     } catch (PDOException $e) {
         // Migration might fail if data doesn't exist, which is fine
     }

@@ -1,0 +1,12 @@
+# Force .mind files to be served as binary/application data
+# This prevents server from treating them as text and transforming line endings
+AddType application/octet-stream .mind
+
+# Ensure proper Content-Length header and CORS
+<IfModule mod_headers.c>
+    <FilesMatch "\.mind$">
+        Header set Content-Type "application/octet-stream"
+        Header set Content-Disposition "inline"
+        Header always set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>

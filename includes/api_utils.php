@@ -65,6 +65,64 @@ function createThumbnail($source, $dest, $width = 400, $height = 566) {
     return true;
 }
 
+// Smart image resizing with transparency support (PNG/JPG)
+function resizeImage($source, $dest, $maxWidth, $maxHeight, $quality = 85) {
+    if (!file_exists($source)) return false;
+    
+    list($width, $height, $type) = getimagesize($source);
+    if (!$width || !$height) return false;
+    
+    // Calculate new dimensions
+    $ratio = $width / $height;
+    if ($width > $maxWidth || $height > $maxHeight) {
+        if ($width / $maxWidth > $height / $maxHeight) {
+            $newWidth = $maxWidth;
+            $newHeight = $newWidth / $ratio;
+        } else {
+            $newHeight = $maxHeight;
+            $newWidth = $newHeight * $ratio;
+        }
+    } else {
+        // No resize needed, just copy if source != dest
+        if ($source !== $dest) {
+            copy($source, $dest);
+        }
+        return true;
+    }
+    
+    $newImage = imagecreatetruecolor($newWidth, $newHeight);
+    
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $sourceImage = imagecreatefromjpeg($source);
+            if (!$sourceImage) return false;
+            imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            imagejpeg($newImage, $dest, $quality);
+            break;
+            
+        case IMAGETYPE_PNG:
+            $sourceImage = imagecreatefrompng($source);
+            if (!$sourceImage) return false;
+            // Preserve transparency
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+            
+            imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            // PNG quality is compression level (0-9), not 0-100
+            imagepng($newImage, $dest, 6); 
+            break;
+            
+        default:
+            return false;
+    }
+    
+    if (isset($sourceImage)) imagedestroy($sourceImage);
+    if (isset($newImage)) imagedestroy($newImage);
+    return true;
+}
+
 // File upload security validation
 function validateUploadedFile($file, $allowedTypes, $maxSize = 10485760) { // 10MB default
     // Check if file was uploaded without errors

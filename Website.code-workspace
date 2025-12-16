@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../website backup 4:12"
+		}
+	],
+	"settings": {
+		"github.copilot.enable": {
+			"*": true
+		}
+	}
+}

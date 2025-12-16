@@ -1,3 +1,14 @@
+/* ==================== FONTS ==================== */
+/* Playfair Display - Krant/Klassiek - TITELS */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+/* Bebas Neue - KNOPPEN/UI */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+/* Roboto - LEESTEKST */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
+/* Roboto Mono - DATA/CODE */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap');
+
+
 /* ==================== ALGEMENE STIJLEN ==================== */
 * {
     margin: 0;
@@ -5,21 +16,37 @@
     box-sizing: border-box;
 }
 
+html, html body {
+    height: auto !important;
+    overflow: auto !important;
+    overflow-y: scroll !important;
+    position: static !important;
+}
+
 :root {
     --black: #000000;
     --white: #ffffff;
-    --border: #000000;
+    --dim: rgba(255,255,255,0.5);
+    
+    /* Font Families */
+    --font-klassiek: 'Playfair Display', Georgia, serif;
+    --font-ui: 'Bebas Neue', Impact, sans-serif;
+    --font-body: 'Roboto', Arial, sans-serif;
+    --font-data: 'Roboto Mono', monospace;
 }
 
 body {
-    font-family: "roboto", sans-serif;
+    font-family: var(--font-body);
     background-color: var(--black);
     color: var(--white);
     line-height: 1.4;
-    font-weight: 300;
+    font-weight: 400;
+    min-height: 100vh;
+    height: auto !important;
+    overflow: auto !important;
 }
 
-/* When AR is active, make body transparent */
+
 body.ar-active {
     background-color: transparent !important;
 }
@@ -27,114 +54,142 @@ body.ar-active {
 /* ==================== HEADER ==================== */
 header {
     background: var(--black);
-    padding: 3rem 2rem;
+    padding: 1.5rem 0;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .logo {
-    max-width: 200px;
+    width: 80px;
     height: auto;
 }
 
 /* ==================== MAIN CONTENT ==================== */
 main {
-    max-width: 1800px;
-    margin: 0 auto;
-    padding: 2rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#desktop-view {
+    display: block;
+    position: relative;
+    min-height: 100vh;
+    overflow: visible !important;
 }
 
 /* ==================== POSTER GRID ==================== */
 .poster-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: transparent;
 }
 
 .poster-card {
     background: var(--black);
     overflow: hidden;
-    transition: all 0.2s ease;
     cursor: pointer;
     position: relative;
     aspect-ratio: 1 / 1.4142;
-    border: 1px solid var(--black);
-}
-
-.poster-card:hover {
-    border-color: var(--white);
-}
-
-.poster-card:hover .poster-image {
-    opacity: 0.9;
 }
 
 .poster-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: opacity 0.3s ease;
     display: block;
 }
 
+/* Hover Info */
 .poster-info {
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
-    padding: 1.5rem;
-    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 70%, transparent 100%);
+    bottom: 0;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.1s ease;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }
 
 .poster-card:hover .poster-info {
     opacity: 1;
 }
 
+/* TITEL - 90° gedraaid, links boven - GROOT */
 .poster-title {
-    font-size: 1.1rem;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: auto;
+    height: auto;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-family: var(--font-klassiek);
+    font-size: clamp(3rem, 8vw, 6rem);
     font-weight: 400;
-    margin-bottom: 0.3rem;
-    color: var(--white);
-    letter-spacing: 0.02em;
+    padding: 0.2rem 0.15rem;
+    text-transform: uppercase;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    /* Random colors via JS */
 }
 
+/* Meta info - onderaan rechts */
+.poster-meta {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: row;
+}
+
+/* Roboto Mono voor data - hacker style */
 .poster-date {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 0.3rem;
-    font-weight: 300;
+    font-family: var(--font-data);
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+    letter-spacing: 0.05em;
+    /* Random colors via JS */
+}
+
+.poster-date::before {
+    content: "{";
+    opacity: 0.6;
+    margin-right: 0.2em;
+}
+
+.poster-date::after {
+    content: "}";
+    opacity: 0.6;
+    margin-left: 0.2em;
 }
 
 .poster-downloads {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.4);
-    margin: 0;
-    font-weight: 300;
+    font-family: var(--font-data);
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+    letter-spacing: 0.05em;
+    /* Random colors via JS */
+}
+
+.poster-downloads::before {
+    content: ">> ";
+    opacity: 0.7;
 }
 
 .poster-description {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 0.8rem;
-    line-height: 1.4;
-    font-weight: 300;
+    display: none;
 }
 
 .download-count {
-    display: inline-block;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.5);
-    font-weight: 300;
-    padding: 0;
-    letter-spacing: 0.1em;
-}
-
-.download-count::before {
-    content: "↓";
-    margin-right: 0.3rem;
+    display: none;
 }
 
 /* ==================== MODAL ==================== */
@@ -147,8 +202,7 @@ main {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.95);
-    animation: fadeIn 0.2s ease;
+    background-color: var(--black);
 }
 
 @keyframes fadeIn {
@@ -158,97 +212,284 @@ main {
 
 .modal-content {
     background-color: var(--black);
-    margin: 2% auto;
-    padding: 3rem;
-    border: 1px solid var(--white);
-    width: 90%;
-    max-width: 700px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: slideIn 0.3s ease;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
+/* SLUITEN knop - Terminal style */
 .close {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-family: var(--font-data);
     color: var(--white);
-    float: right;
-    font-size: 2rem;
-    font-weight: 300;
+    font-size: 0.8rem;
     cursor: pointer;
-    transition: opacity 0.3s;
+    transition: all 0.1s;
     line-height: 1;
+    z-index: 1001;
+    background: var(--black);
+    padding: 0.6rem 1rem;
+    border: none;
+    letter-spacing: 0.1em;
+}
+
+.close::before {
+    content: "[ ";
+    opacity: 0.5;
+}
+
+.close::after {
+    content: " ]";
+    opacity: 0.5;
 }
 
 .close:hover {
-    opacity: 0.6;
+    color: var(--dim);
+}
+
+/* Modal Layout - DOSSIER */
+.modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.modal-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: #020202;
+    position: relative;
+}
+
+/* Fotokopie/xerox effect */
+.modal-image-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background: 
+        radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.02) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.3) 0%, transparent 50%);
+}
+
+.modal-info {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: var(--black);
+    overflow-y: auto;
+    max-height: 100vh;
+    position: relative;
+}
+
+/* Terminal header bovenaan modal-info */
+.modal-info::before {
+    content: "┌──[ DOSSIER_VIEWER.exe ]──────────────────────────────────────────┐";
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 0;
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.modal-info::after {
+    content: "└─────────────────────────────────────────────────────────────────────┘";
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 0;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    display: block;
+}
+
+/* Roboto Mono voor data/database info */
+.meta-info {
+    font-family: var(--font-data);
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.05em;
+}
+
+.meta-info::before {
+    content: "$ ";
+    color: var(--dim);
+}
+
+.article-link {
+    margin: 1rem 0;
+}
+
+.article-link a {
+    font-family: var(--font-body);
+    color: var(--white);
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+
+.article-link a:hover {
+    color: rgba(255,255,255,0.6);
+}
+
+.download-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+}
+
+/* Terminal style voor section headers */
+.download-section h3 {
+    font-family: var(--font-data);
+    font-size: 0.8rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+}
+
+.download-section h3::before {
+    content: "├── ";
+}
+
+/* Roboto Mono voor downloads stat */
+.download-stat {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+}
+
+.download-stat::before {
+    content: "├─ downloads: ";
+    color: var(--dim);
+}
+
+.download-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 #poster-info {
-    text-align: center;
-    margin: 2rem 0 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--white);
+    text-align: left;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 #modal-poster-img {
-    max-width: 250px;
-    width: 100%;
+    max-width: 100%;
+    max-height: 85vh;
+    width: auto;
     height: auto;
-    margin-bottom: 1rem;
-    border: 1px solid var(--white);
 }
 
+/* Playfair voor titels */
 #modal-poster-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    font-family: var(--font-klassiek);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    margin-bottom: 1rem;
     color: var(--white);
-    font-weight: 400;
-    letter-spacing: 0.05em;
     text-transform: uppercase;
+    line-height: 1.1;
+    font-weight: 400;
+    padding-bottom: 0.8rem;
+    position: relative;
+}
+
+/* Dossier nummer - terminal style */
+#modal-poster-title::before {
+    content: '>> cat /dossiers/';
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+#modal-poster-title::after {
+    content: '────────────────────────────────────────────────';
+    font-family: var(--font-data);
+    font-size: 0.6rem;
+    color: var(--dim);
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Roboto voor leestekst */
+#modal-poster-description {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0.8rem 0;
+    line-height: 1.5;
+    font-weight: 400;
 }
 
 .modal-description {
-    font-size: 0.9rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.7);
     margin: 0.5rem 0;
-    line-height: 1.5;
-    font-weight: 300;
+    line-height: 1.6;
+    font-weight: 400;
 }
 
+/* Roboto Mono voor locatie/coordinaten/data */
 .modal-location,
 .modal-article,
 .modal-photographer {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--font-data);
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
     margin: 0.3rem 0;
     padding: 0;
     background: none;
     border: none;
     text-align: left;
     line-height: 1.6;
-    font-weight: 300;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+}
+
+.modal-location::before {
+    content: "├─ locatie: ";
+    color: var(--dim);
+}
+
+.modal-article::before {
+    content: "├─ bron: ";
+    color: var(--dim);
+}
+
+.modal-photographer::before {
+    content: "└─ fotograaf: ";
+    color: var(--dim);
 }
 
 .modal-location a,
 .modal-article a {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white);
     text-decoration: underline;
-    transition: color 0.2s;
 }
 
 .modal-location a:hover,
 .modal-article a:hover {
-    color: var(--white);
+    color: rgba(255,255,255,0.7);
 }
 
 .modal-photographer {
@@ -257,81 +498,102 @@ main {
 
 .download-options {
     margin-top: 1.5rem;
+    padding-top: 1rem;
 }
 
+/* Terminal style voor download section */
 .download-options h3 {
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-    color: var(--white);
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-family: var(--font-data);
+    font-size: 0.7rem;
+    margin-bottom: 1rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
+}
+
+.download-options h3::before {
+    content: "├─ ./download --formaat=";
 }
 
 .format-section {
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
+    margin-bottom: 0;
+    padding: 0;
     background: transparent;
-    border: 1px solid var(--white);
+    border: none;
 }
 
 .format-section h4 {
-    font-size: 0.8rem;
-    margin-bottom: 1rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    display: none;
 }
 
+/* Terminal style voor knoppen - alleen symbolen */
 .download-btn {
-    background: var(--black);
+    background: transparent;
     color: var(--white);
-    border: 1px solid var(--white);
-    padding: 0.7rem 1.2rem;
-    margin: 0.3rem;
-    font-size: 0.85rem;
-    font-weight: 400;
+    border: none;
+    padding: 0.5rem 0;
+    margin: 0;
+    font-family: var(--font-data);
+    font-size: 0.8rem;
     cursor: pointer;
-    transition: all 0.15s ease;
-    letter-spacing: 0.1em;
+    transition: all 0.1s ease;
+    text-align: left;
+    display: block;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+
+.download-btn::before {
+    content: "├─> ";
+    color: var(--dim);
+}
+
+.download-btn:last-child::before {
+    content: "└─> ";
 }
 
 .download-btn:hover {
-    background: var(--white);
-    color: var(--black);
+    color: var(--dim);
+}
+
+.download-btn:hover::before {
+    color: var(--white);
 }
 
 .download-btn:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
 }
 
 /* ==================== ADMIN LINK ==================== */
 .admin-link {
     position: fixed;
-    top: 2rem;
-    right: 2rem;
+    top: 1rem;
+    right: 1rem;
+    font-family: var(--font-data);
     color: var(--white);
     text-decoration: none;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid transparent;
-    transition: all 0.2s;
+    border: none;
+    transition: all 0.15s;
     z-index: 999;
     background: transparent;
     line-height: 1;
-    opacity: 0.3;
+    opacity: 0.2;
+}
+
+.admin-link::before {
+    content: "[ ";
+}
+
+.admin-link::after {
+    content: " ]";
 }
 
 .admin-link:hover {
     opacity: 1;
-    border-color: var(--white);
-    background: var(--white);
-    color: var(--black);
 }
 
 /* ==================== ADMIN STYLES ==================== */
@@ -630,39 +892,53 @@ main {
 }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width: 1200px) {
-    main {
-        padding: 2rem 1.5rem;
-    }
-
+@media (max-width: 1400px) {
     .poster-grid {
-        gap: 1.5rem;
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .poster-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .modal-body {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-image-container {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 }
 
 @media (max-width: 768px) {
-    main {
-        padding: 1.5rem 1rem;
-    }
-
     .poster-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .modal-content {
-        width: 95%;
-        padding: 2rem 1.5rem;
-        margin: 5% auto;
+    .modal-body {
+        flex-direction: column;
+        padding: 2rem 0;
     }
-
-    .download-btn {
-        width: 100%;
-        margin: 0.3rem 0;
-    }
-
-    .format-section {
+    
+    .modal-image-container {
+        flex: none;
         padding: 1rem;
+    }
+    
+    .modal-info {
+        padding: 2rem;
+    }
+
+    #modal-poster-title {
+        font-size: 2rem;
+    }
+
+    .close {
+        top: 1rem;
+        right: 1rem;
     }
 
     .admin-container header {
@@ -679,50 +955,45 @@ main {
     }
 
     .logo {
-        max-width: 150px;
+        max-width: 100px;
     }
 
-    .admin-link {
-        top: 1.5rem;
-        right: 1.5rem;
+    header {
+        padding: 1.5rem 0;
     }
 }
 
 @media (max-width: 480px) {
-    header {
-        padding: 2rem 1rem;
-    }
-
-    main {
-        padding: 1rem;
-    }
-
     .poster-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+    }
+
+    .poster-title {
+        font-size: 1.2rem;
+        padding: 0.8rem 0.5rem;
     }
 
     .logo {
-        max-width: 120px;
+        max-width: 80px;
     }
 
-    .modal-content {
-        padding: 1.5rem 1rem;
+    .modal-info {
+        padding: 1.5rem;
     }
 
-    .format-section {
-        padding: 1rem;
+    #modal-poster-title {
+        font-size: 1.5rem;
     }
 
     #modal-poster-img {
-        max-width: 200px;
+        max-height: 40vh;
     }
 
     .admin-link {
         top: 1rem;
         right: 1rem;
-        width: 35px;
-        height: 35px;
+        font-size: 1rem;
+        padding: 0.4rem 0.6rem;
         font-size: 1.3rem;
     }
 }
@@ -737,12 +1008,12 @@ main {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--grey);
-    border: 1px solid var(--border-grey);
+    background: #222;
+    border: 1px solid #111;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--light-grey);
+    background: #333;
 }
 
 /* ==================== UPLOAD PROGRESS BAR ==================== */
@@ -751,7 +1022,6 @@ main {
     padding: 1rem;
     border: 1px solid var(--black);
     background: var(--white);
-    border-radius: 0;
 }
 
 .progress-info {
@@ -974,30 +1244,37 @@ main {
 
 /* ==================== MOBILE AR VIEW ==================== */
 #mobile-ar-view {
-    display: none; /* Initially hidden, shown via JS on mobile */
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height for iOS Safari */
-    background: var(--black);
+    height: 100dvh;
+    background: transparent;
     z-index: 9999;
-    flex-direction: column;
+    pointer-events: none;
+    padding: 75px 0 150px 0; /* Top header margin, bottom footer margin */
 }
 
-/* AR Header - 10vh */
+#mobile-ar-view > #ar-header,
+#mobile-ar-view > #ar-footer-swipe-bar {
+    pointer-events: auto;
+}
+
 #ar-header {
     height: 10vh;
-    height: 10dvh; /* Dynamic viewport height */
+    height: 10dvh;
     min-height: 60px;
     background: var(--black);
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    z-index: 10001;
-    flex-shrink: 0;
+    z-index: 1000000;
+    position: fixed; /* Fixed to ensure full width and top positioning */
+    top: 0;
+    left: 0;
+    width: 100%;
 }
 
 #ar-header .logo,
@@ -1010,63 +1287,106 @@ main {
     object-fit: contain;
 }
 
-/* AR Camera Container - 90vh */
 #ar-camera-container {
     width: 100vw;
-    height: 90vh;
-    position: relative;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
     overflow: hidden;
-    background: #000;
+    background: transparent;
     display: block;
+    pointer-events: none;
 }
 
-/* A-Frame Scene */
 #ar-scene,
 a-scene {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: block;
-    z-index: 2;
-}
-
-/* Video feed - BEHIND canvas (z-index: 1) */
-#camera-feed,
-video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    z-index: 1;
-}
-
-/* Canvas for AR rendering - ON TOP of video (z-index: 10) */
-#ar-scene canvas,
-a-scene canvas {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    display: block !important;
-    z-index: 10 !important;
-    pointer-events: none !important;
+    z-index: 9996 !important;
+    overflow: hidden !important;
 }
 
-/* AR.js Loader */
-.arjs-loader {
-    position: absolute;
+#static-camera-feed {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 9997 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease !important;
+}
+
+#camera-feed,
+video {
+    display: block;
+}
+
+/* High contrast black/white camera feed */
+#ar-scene video,
+#static-camera-feed,
+a-scene video {
+    filter: grayscale(100%) contrast(2.5) brightness(1) !important;
+    height: 100% !important; /* Fill the container exactly */
+    width: 100% !important;
+    object-fit: cover !important;
+}
+
+#ar-scene canvas,
+a-scene canvas {
+    display: block;
+}
+
+.mindar-ui-overlay,
+.mindar-ui-scanning {
+    display: none !important;
+}
+
+#scanning-overlay,
+.scanning-overlay {
+    pointer-events: none;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 5;
+}
+
+.scan-frame {
+    position: fixed;
+    top: calc(10vh + 10px);
+    left: 30px;
+    right: 30px;
+    bottom: calc(6vh + 30px);
+    border: 1px solid #ffffff;
+    pointer-events: none;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 1);
+}
+
+.scan-frame.hidden {
+    opacity: 0;
+}
+
+.arjs-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.9);
-    z-index: 1000;
+    z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1081,22 +1401,17 @@ a-scene canvas {
     display: none;
 }
 
-/* AR Footer Swipe Bar - 10vh */
-
-/* Force ALL video elements to be visible */
 video {
     display: block !important;
     visibility: visible !important;
 }
 
-/* AR Footer Swipe Bar - 10vh */
-/* AR Footer Swipe Bar - Mobile */
 #ar-footer-swipe-bar {
     position: fixed;
-    bottom: 0;
+    bottom: 30px; /* Sit directly on top of System Loader (30px) */
     left: 0;
     right: 0;
-    height: 6vh;
+    height: 40px; /* Reduced from 6vh */
     background: #af1d1f;
     display: flex;
     flex-direction: column;
@@ -1106,30 +1421,32 @@ video {
     overflow: hidden;
     touch-action: none;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+    pointer-events: auto;
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: 94vh;
-    height: 94dvh;
+    height: 90vh;
+    height: 90dvh;
 }
 
-/* Footer Header - Always visible at top */
 .footer-header {
-    height: 6vh;
-    height: 6dvh;
-    min-height: 60px;
+    height: 40px; /* Match footer height */
     position: relative;
     flex-shrink: 0;
     cursor: pointer;
-    touch-action: none; /* Prevent pull-to-refresh */
+    touch-action: manipulation;
+    pointer-events: auto;
+    z-index: 1000000;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Swipe indicator - verborgen */
 .swipe-indicator {
     display: none;
 }
 
-/* Swipe states */
 .swipe-state {
     width: 100%;
     height: 100%;
@@ -1141,6 +1458,7 @@ video {
     transition: opacity 0.3s ease;
     padding: 0 24px;
     align-items: center;
+    pointer-events: auto;
 }
 
 .swipe-state.active {
@@ -1148,16 +1466,27 @@ video {
     opacity: 1;
 }
 
-/* State 1 - Gallery */
 #swipe-state-1 {
     justify-content: center;
     gap: 0.5rem;
+}
+
+.swipe-text {
+    font-size: 0.8rem; /* Slightly smaller text */
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    line-height: 1; /* Ensure vertical centering */
 }
 
 .chevron-icon {
     color: #000;
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     opacity: 0.9;
+    width: 12px;
+    height: 8px;
+    flex-shrink: 0;
 }
 
 #ar-footer-swipe-bar.expanded .chevron-icon {
@@ -1174,22 +1503,19 @@ video {
     text-transform: uppercase;
 }
 
-/* State 2 - Poster detected */
 #swipe-state-2 {
-    justify-content: space-between;
+    justify-content: center !important;
+    gap: 0.5rem !important;
 }
 
-.poster-info-footer {
-    flex: 1;
-}
-
-#detected-poster-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #000;
-    margin: 0;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+.detected-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 10px;
+    flex-direction: row;
+    transform: none !important;
 }
 
 #detected-poster-subtitle {
@@ -1202,7 +1528,6 @@ video {
     opacity: 0.85;
 }
 
-/* Close button - minimal */
 .close-btn {
     background: transparent;
     color: #000;
@@ -1229,21 +1554,19 @@ video {
     transform: scale(0.95);
 }
 
-/* Gallery Content - Hidden by default, shown when expanded */
 #gallery-content {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     opacity: 0;
     padding-top: 1rem;
-    touch-action: pan-y; /* Allow vertical scroll only */
+    touch-action: pan-y;
 }
 
 #ar-footer-swipe-bar.expanded #gallery-content {
     opacity: 1;
 }
 
-/* Detected Poster Content - Single poster view */
 #detected-poster-content {
     flex: 1;
     overflow-y: auto;
@@ -1307,11 +1630,6 @@ video {
     padding: 0 1.5rem 1.5rem 1.5rem !important;
 }
 
-/* Gallery Overlay - Slides up from bottom */
-/* Gallery Overlay - Slides up from bottom */
-/* Poster card styles */
-.overlay-poster-card {
-
 .overlay-header {
     display: flex;
     justify-content: space-between;
@@ -1354,13 +1672,6 @@ video {
     transform: scale(0.9);
 }
 
-#gallery-overlay-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 2rem !important;
-    padding: 1.5rem !important;
-}
-
 .overlay-poster-card {
     display: block !important;
     background: transparent !important;
@@ -1391,39 +1702,6 @@ video {
     letter-spacing: 0.05em !important;
     text-transform: uppercase !important;
     background: #fff !important;
-}
-
-}
-
-/* Poster Modal Styles */
-
-.overlay-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-.close-overlay-btn {
-    background: var(--white);
-    color: var(--black);
-    border: none;
-    font-size: 1.8rem;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-weight: 700;
-    line-height: 1;
-}
-
-#gallery-overlay-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    padding-bottom: 2rem;
 }
 
 #gallery-overlay-grid .poster-item {
@@ -1465,19 +1743,19 @@ video {
     color: rgba(0, 0, 0, 0.7);
 }
 
-/* Desktop View - Default visibility */
 #desktop-view {
     display: block;
+    position: relative;
+    min-height: 100vh;
+    overflow: visible !important;
 }
 
-/* Media query for mobile devices */
 @media (max-width: 768px) {
     /* Desktop view will be hidden via JS on mobile */
     /* AR view will be shown via JS on mobile */
 }
 
 /* ==================== A4 FRAME GUIDE ==================== */
-/* A4 aspect ratio is 1:1.414 (width:height) */
 .a4-frame {
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
@@ -1489,28 +1767,13 @@ video {
 }
 
 .a4-frame-inner {
-    /* A4 dimensions: 210mm x 297mm = ratio 1:1.414 */
-    width: 85vw;  /* Larger responsive width */
-    aspect-ratio: 1 / 1.414;  /* A4 ratio */
-    border: 0.5px solid #ffffff;  /* Very thin pure white border */
-    box-shadow: none;  /* No glow effect */
-    border-radius: 0px;  /* Sharp corners for clean frame */
+    width: 85vw;
+    aspect-ratio: 1 / 1.414;
+    border: 0.5px solid #ffffff;
+    box-shadow: none;
+    border-radius: 0px;
     background: transparent;
     backdrop-filter: blur(0px);
-    margin-top: -5vh;  /* Move frame higher on screen */
-}
-
-/* No animation - keep frame clean and simple */
-@keyframes a4-frame-pulse {
-    0%, 100% {
-        border-color: #ffffff;
-    }
-    50% {
-        border-color: #ffffff;
-    }
-}
-
-.a4-frame-inner {
-    animation: none;  /* Disabled - no pulsing animation */
+    margin-top: -5vh;
 }
 
