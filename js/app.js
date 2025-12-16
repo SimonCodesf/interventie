@@ -2402,7 +2402,7 @@ function loadGalleryOverlay() {
     console.log('📊 Grid innerHTML length:', grid.innerHTML.length, 'chars');
     console.log('📝 Cards generated:', grid.querySelectorAll('.overlay-poster-card').length);
     
-    // Add AR badge styles
+    // Add AR badge styles (minimal)
     if (!document.getElementById('ar-badge-styles')) {
         const badgeStyle = document.createElement('style');
         badgeStyle.id = 'ar-badge-styles';
@@ -2410,28 +2410,17 @@ function loadGalleryOverlay() {
             .ar-badge { 
                 background: var(--white); 
                 color: var(--black); 
-                padding: 2px 6px; 
-                font-size: 0.65rem; 
-                margin-left: 6px;
-                vertical-align: middle;
+                padding: 2px 4px; 
+                font-size: 0.55rem; 
+                margin-left: 4px;
+                vertical-align: text-top;
                 font-family: var(--font-data);
-            }
-            .card-info {
-                padding: 14px 12px;
-                background: var(--black);
-                border-top: 1px solid var(--white);
-            }
-            .card-meta {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 8px;
-                font-family: var(--font-data);
-                font-size: 0.65rem;
-                color: var(--dim);
+                letter-spacing: 0.05em;
             }
         `;
         document.head.appendChild(badgeStyle);
     }
+
     
     // Add click handlers - Show modal for ALL posters (user requested info view)
     grid.querySelectorAll('.overlay-poster-card').forEach(card => {
