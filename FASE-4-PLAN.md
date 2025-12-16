@@ -64,3 +64,4 @@ We kunnen nu terugkeren naar **Fase 1 (Bugfixes)** of **Fase 2 (Admin)**.
 🚀 Deploy test met correct FTP server (ftp.beelsimon.com)
 🚀 Fase 4 - Cleanup voltooid op cPanel, sync-state reset
 ✅ FTP account home directory gecorrigeerd naar /home/beelkstc/interventie.org/
+✅ Server schoongemaakt - alleen essentiële mappen behouden (uploads, data, logs)
