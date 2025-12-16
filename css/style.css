@@ -1261,7 +1261,7 @@ main {
     background: transparent;
     z-index: 9999;
     pointer-events: none;
-    padding: 75px 16px 16px 16px; /* Equal spacing: top=75px (header), sides=16px, bottom=16px */
+    padding: 75px 0 0 0; /* Top header margin (footer is now outside this container) */
 }
 
 #mobile-ar-view > #ar-header,
@@ -1295,39 +1295,40 @@ main {
 }
 
 #ar-camera-container {
-    width: 100%;
+    width: 100vw;
     height: 100%;
     position: absolute;
     top: 0;
     left: 0;
-    overflow: hidden;
+    overflow: visible;
     background: transparent;
     display: block;
     pointer-events: none;
-    border-radius: 8px; /* Subtiele afrinding voor betere look */
+    padding: 16px;
+    box-sizing: border-box;
 }
 
 #ar-scene,
 a-scene {
     position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    top: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 16px !important;
+    width: calc(100% - 32px) !important;
+    height: calc(100% - 32px) !important;
     z-index: 9996 !important;
     overflow: hidden !important;
 }
 
 #static-camera-feed {
     position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    top: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 16px !important;
+    width: calc(100% - 32px) !important;
+    height: calc(100% - 32px) !important;
     object-fit: cover !important;
     z-index: 9997 !important;
     pointer-events: none !important;
@@ -1417,8 +1418,8 @@ video {
 #ar-footer-swipe-bar {
     position: fixed;
     bottom: 30px; /* Above logger (30px height) */
-    left: 16px; /* Match side padding from #mobile-ar-view */
-    right: 16px; /* Match side padding from #mobile-ar-view */
+    left: 0;
+    right: 0;
     height: 40px;
     background: var(--black);
     display: flex;
@@ -1426,7 +1427,6 @@ video {
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 999999;
     border-top: 1px solid var(--white);
-    border-radius: 8px 8px 0 0; /* Match camera container rounding */
     overflow: hidden;
     touch-action: none;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
@@ -1434,7 +1434,8 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: calc(100dvh - 75px - 30px - 32px); /* Full height minus header (75px), logger (30px), and top+bottom padding (16px*2) */
+    height: calc(100vh - 70px); /* Full height except header (75px) and logger (30px) */
+    height: calc(100dvh - 70px);
     bottom: 30px; /* Keep above logger */
 }
 
