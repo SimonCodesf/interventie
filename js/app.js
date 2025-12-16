@@ -2675,6 +2675,7 @@ async function showPosterWindow(posterId) {
     windowEl.style.overflow = 'hidden';
     windowEl.style.fontFamily = 'Roboto Mono, monospace';
     windowEl.style.color = '#fff';
+    windowEl.style.pointerEvents = 'auto'; // CRITICAL: Re-enable pointer events on the window itself
     
     // CRITICAL: Set z-index VERY high to be above AR scene and all other elements
     if (!window.nextWindowZIndex) window.nextWindowZIndex = 999999;
@@ -2710,10 +2711,10 @@ async function showPosterWindow(posterId) {
         </div>
     `;
 
-    document.body.appendChild(windowEl);
+    document.getElementById('popup-windows-container').appendChild(windowEl);
     window.posterWindows.set(posterId, windowEl);
 
-    console.log('✅ Window added to DOM. Check for element:', document.getElementById(`poster-window-${posterId}`) ? 'FOUND ✓' : 'NOT FOUND ✗');
+    console.log('✅ Window added to popup container. Check for element:', document.getElementById(`poster-window-${posterId}`) ? 'FOUND ✓' : 'NOT FOUND ✗');
 
     // Close button
     windowEl.querySelector('.window-close-btn').addEventListener('click', () => {
