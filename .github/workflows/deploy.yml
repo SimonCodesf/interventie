@@ -4,35 +4,32 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   web-deploy:
-    name: 🎉 Deploy
+    name: 🎉 Deploy to cPanel
     runs-on: ubuntu-latest
     steps:
-    - name: 🚚 Get latest code
-      uses: actions/checkout@v3
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v3
 
-    - name: 📂 Sync files
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        # server-dir: public_html/  <-- Pas dit aan als je in een submap zit!
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          .gitignore
-          .github/**
-          README.md
-          TODO.md
-          FASE-4-PLAN.md
-          scripts/**
-          backups/**
-          # Exclude data files that should not be overwritten on deploy
-          uploads/**
-          data/**
-          includes/config.php
-          includes/security.php
+      - name: 📂 Sync files to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /interventie.org/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/backups/**
+            **/scripts/**
+            .gitignore
+            README.md
+            TODO.md
+            FASE-4-PLAN.md
+            .cpanel.yml
+            FASE-4-INVENTARISATIE.md
