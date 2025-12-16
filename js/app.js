@@ -2661,8 +2661,20 @@ async function showPosterWindow(posterId) {
     // Create popup window
     const windowEl = document.createElement('div');
     windowEl.id = `poster-window-${posterId}`;
-    windowEl.className = 'poster-window';
+    // NO CLASS - use only inline styles
     windowEl.style.position = 'fixed';
+    windowEl.style.display = 'flex';
+    windowEl.style.flexDirection = 'column';
+    windowEl.style.background = '#000';
+    windowEl.style.border = '2px solid #fff';
+    windowEl.style.borderRadius = '2px';
+    windowEl.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.8)';
+    windowEl.style.minWidth = '280px';
+    windowEl.style.maxWidth = '90vw';
+    windowEl.style.maxHeight = '85vh';
+    windowEl.style.overflow = 'hidden';
+    windowEl.style.fontFamily = 'Roboto Mono, monospace';
+    windowEl.style.color = '#fff';
     
     // CRITICAL: Set z-index VERY high to be above AR scene and all other elements
     if (!window.nextWindowZIndex) window.nextWindowZIndex = 999999;
@@ -2677,31 +2689,23 @@ async function showPosterWindow(posterId) {
     windowEl.style.left = `${randomX}px`;
     windowEl.style.top = `${randomY}px`;
     
-    // VISUAL DEBUG: Add bright colors so we can see it
-    windowEl.style.background = '#000 !important';
-    windowEl.style.border = '2px solid #fff !important';
-    windowEl.style.padding = '10px !important';
-    windowEl.style.minWidth = '300px !important';
-    windowEl.style.maxWidth = '90vw !important';
-    windowEl.style.maxHeight = '85vh !important';
-    
     console.log(`🪟 Creating window at (${randomX}, ${randomY}) with z-index ${zIdx}`);
     
     windowEl.innerHTML = `
-        <div class="window-header" draggable="true">
-            <span class="window-title">${poster.title || 'Poster'}</span>
-            <button class="window-close-btn">[X]</button>
+        <div style="background: #000; border-bottom: 1px solid #fff; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; font-family: Roboto Mono; font-size: 0.75rem; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;" class="window-header">
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${poster.title || 'Poster'}</span>
+            <button style="background: transparent; border: none; color: #fff; font-family: Roboto Mono; font-size: 0.9rem; cursor: pointer; padding: 0 4px; margin-left: 8px;" class="window-close-btn">[X]</button>
         </div>
-        <div class="window-content">
-            <div class="window-image">
-                <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}" onerror="this.src='img/placeholder.png'">
+        <div style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 1px solid #fff;">
+                <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
             </div>
-            <div class="window-info">
-                <p><strong>LOCATIE:</strong> ${poster.location || poster.place || 'N/A'}</p>
-                <p><strong>BRON:</strong> ${poster.source || 'N/A'}</p>
-                <p><strong>FOTOGRAAF:</strong> ${poster.photographer || poster.author || 'N/A'}</p>
-                <p><strong>DOWNLOADS:</strong> ${poster.downloads || 0}</p>
-                <p><strong>ID:</strong> ${posterId.substring(0, 8)}</p>
+            <div style="font-size: 0.7rem; font-family: Roboto Mono; color: #fff; line-height: 1.6;">
+                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">LOCATIE:</span> ${poster.location || poster.place || 'N/A'}</p>
+                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">BRON:</span> ${poster.source || 'N/A'}</p>
+                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">FOTOGRAAF:</span> ${poster.photographer || poster.author || 'N/A'}</p>
+                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">DOWNLOADS:</span> ${poster.downloads || 0}</p>
+                <p style="margin: 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">ID:</span> ${posterId.substring(0, 8)}</p>
             </div>
         </div>
     `;
@@ -2719,7 +2723,12 @@ async function showPosterWindow(posterId) {
     });
 
     // Drag functionality
-    const header = windowEl.querySelector('.window-header');
+    const header = windowEl.querySelector('div[style*="border-bottom"]'); // Find the header div by its unique style
+    if (!header) {
+        console.error('❌ Header div not found!');
+        return;
+    }
+    
     let isDragging = false;
     let dragStartX = 0, dragStartY = 0, windowStartX = 0, windowStartY = 0;
 
