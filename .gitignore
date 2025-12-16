@@ -16,6 +16,13 @@ data/admin_activity.log
 data/login_attempts.json
 assets/ar-settings.json
 
+# AR Markers (Upload via admin system, not git!)
+assets/nft/
+assets/chunks/
+assets/*.mind
+assets/**/*.fset*
+assets/**/*.iset*
+
 # Backups & Editor History
 backups/
 *.bak
