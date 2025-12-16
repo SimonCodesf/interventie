@@ -27,11 +27,12 @@ jobs:
           .gitignore
           .github/**
           README.md
-          ADMIN_SETUP.md
-          AR-MARKER-SETUP.md
-          BEVEILIGING.md
+          TODO.md
+          FASE-4-PLAN.md
+          scripts/**
+          backups/**
+          # Exclude data files that should not be overwritten on deploy
           uploads/**
-          posters.db
-          ar-markers.db
-          admin_activity.log
-          login_attempts.json
+          data/**
+          includes/config.php
+          includes/security.php

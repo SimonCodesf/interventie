@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('Fout: ' + err.message);
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Upload Poster';
+            btn.textContent = 'Poster Uploaden';
         }
     };
     
@@ -57,11 +57,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshPosters();
     }
     
+    // Posters verversen
     async function refreshPosters() {
         const posters = await fetchPosters();
         renderPosterList(posters, authToken, refreshPosters);
     }
     
+    // Uitloggen
     document.getElementById('logout-btn').onclick = () => {
         sessionStorage.removeItem('auth_token');
         location.reload();

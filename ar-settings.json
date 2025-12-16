@@ -1,0 +1,6 @@
+{
+    "filterMinCF": 0.003,
+    "filterBeta": 0.025,
+    "warmupTolerance": 5,
+    "missTolerance": 5
+}

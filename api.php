@@ -100,7 +100,7 @@ if ($method === 'GET' && $path === '/posters') {
     jsonResponse(['message' => 'Uitgelogd']);
 } elseif ($path === '/settings/ar-tracking') {
     // Settings logic
-    $settingsFile = __DIR__ . '/ar-settings.json';
+    $settingsFile = __DIR__ . '/assets/ar-settings.json';
     if ($method === 'GET') {
         $settings = ['filterMinCF' => '0.003', 'filterBeta' => '0.025'];
         if (file_exists($settingsFile)) {

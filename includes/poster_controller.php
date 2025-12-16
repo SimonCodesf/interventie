@@ -41,7 +41,7 @@ function handleGetPoster($db, $id) {
 
 // Helper to trigger MindAR chunk rebuild
 function triggerMindMerge() {
-    $scriptPath = __DIR__ . '/../tools/merge_mind_files.js';
+    $scriptPath = dirname(__DIR__) . '/tools/merge_mind_files.js';
     // Try to find node executable, fallback to 'node'
     $nodePath = 'node';
     

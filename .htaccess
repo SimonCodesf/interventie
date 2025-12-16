@@ -17,6 +17,16 @@ RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
     Deny from all
 </FilesMatch>
 
+# Protect includes and data directories
+<Directory "includes">
+    Order allow,deny
+    Deny from all
+</Directory>
+<Directory "data">
+    Order allow,deny
+    Deny from all
+</Directory>
+
 # Security: Redirect old admin.html to secure admin folder
 RewriteRule ^admin\.html$ /admin/ [R=301,L]
 
@@ -44,6 +54,7 @@ RewriteRule ^admin\.html$ /admin/ [R=301,L]
 </IfModule>
 
 # Protect config and database files
+# (Redundant with Directory protection but kept for safety)
 <FilesMatch "(config\.php|posters\.db)$">
     Order allow,deny
     Deny from all

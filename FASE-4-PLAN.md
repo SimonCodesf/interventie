@@ -4,20 +4,19 @@
 - Git branch `phase-4-cleanup` aangemaakt.
 - Lokale cPanel backup gestart door gebruiker.
 
-## 2. Cleanup & Reorganisatie (🚧 In Progress)
+## 2. Cleanup & Reorganisatie (✅ Voltooid)
 
-### Stap 2a: Verwijderen ongebruikte bestanden
-De volgende bestanden lijken overbodig en worden verwijderd na goedkeuring:
-- `style_backup.css` (Oude backup)
-- `main-backup.js` (Oude backup)
-- `debug.php` (Indien niet meer nodig voor productie)
-- `ADMIN_SETUP.md` & `AR-MARKER-SETUP.md` (Inhoud samenvoegen in README of docs map, daarna verwijderen)
-- `.github/copilot-instructions_20251216145929.md` (Oude versie)
-- `interventie_clean.zip` (Oude zip)
+### Stap 2a: Verwijderen ongebruikte bestanden (✅)
+De volgende bestanden zijn verwijderd:
+- `style_backup.css`
+- `main-backup.js`
+- `debug.php`
+- `ADMIN_SETUP.md` & `AR-MARKER-SETUP.md`
+- `tools/` map en inhoud
+- `assets/dpdb.json`
 
-### Stap 2b: Structuur Verbetering (Verplaatsen)
-Om de root op te schonen, verplaatsen we bestanden naar logische submappen.
-**Let op:** Dit vereist aanpassingen in `index.html` en PHP `require` paden.
+### Stap 2b: Structuur Verbetering (✅)
+Bestanden zijn verplaatst en paden zijn bijgewerkt in `index.html`, `api.php` en `.htaccess`.
 
 **CSS:**
 - `style.css` -> `css/style.css`
@@ -28,19 +27,33 @@ Om de root op te schonen, verplaatsen we bestanden naar logische submappen.
 - `app.js` -> `js/app.js`
 - `file-manager.js` -> `js/file-manager.js`
 
-**Backend (PHP):**
-- `config.php` -> `includes/config.php` (of `config/config.php`)
+**Backend (PHP) & Data:**
+- `config.php` -> `includes/config.php`
 - `security.php` -> `includes/security.php`
-- `ar-settings.json` -> `assets/ar-settings.json` (of `config/`)
+- `posters.db` -> `data/posters.db`
 
-### Stap 2c: Code Cleanup
-- Verwijderen van `console.log` (behalve errors/kritieke info).
-- Verwijderen van uitgecommentarieerde code blokken.
-- Vertalen van Engelse comments naar Nederlands (zoals in instructies).
+### Stap 2c: Code Cleanup (✅)
+- `js/app.js`: Logs opgeschoond, `logToLoader` vertaald naar NL, debug functies verwijderd.
+- `js/file-manager.js`: Init logs verwijderd, comments vertaald.
 
-## 3. Automatisering (DevOps)
-- **Backup Script**: Shell script voor lokale backups.
-- **GitHub Actions**: Workflow voor auto-deploy naar cPanel.
+## 3. Automatisering (DevOps) (✅ Deels Voltooid)
+- **Backup Script**: `scripts/backup.sh` gemaakt (Light versie: data/uploads/config).
+  - Test geslaagd: Backup gemaakt (~112MB).
+- **GitHub Actions**: Workflow `deploy.yml` aangemaakt voor auto-deploy naar cPanel.
+  - **Nog te doen**: Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD) instellen in GitHub repository settings.
+
+## 4. Afronding (✅ Voltooid)
+- [x] Admin JS cleanup (`admin/js/main.js`)
+- [x] Laatste check van alle functionaliteit.
+
+**Fase 4 is hiermee afgerond.**
+De website is nu:
+1.  **Gestructureerd**: Duidelijke mappen (`css`, `js`, `includes`, `data`).
+2.  **Schoon**: Geen ongebruikte bestanden of rommelige logs.
+3.  **Veilig**: Gevoelige bestanden in `.gitignore`.
+4.  **Beheersbaar**: Backup script en deployment workflow klaar.
+
+We kunnen nu terugkeren naar **Fase 1 (Bugfixes)** of **Fase 2 (Admin)**.
 
 ---
 

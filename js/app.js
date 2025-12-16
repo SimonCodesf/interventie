@@ -71,7 +71,34 @@ function logToLoader(msg, type = 'info') {
     else if (msg.includes('Pre-compiling')) { msg = 'COMPILEREN...'; }
     else if (msg.includes('Target compiled')) { msg = 'TARGET GEREED'; }
     else if (msg.includes('Scanner rotation')) { return; } // Ignore verbose scanner logs
-    else if (msg.includes('Switching target')) { msg = 'DOEL WITSELEN'; }
+    else if (msg.includes('Switching target')) { msg = 'DOEL WISSELEN'; }
+    // New translations
+    else if (msg.includes('Starting scan')) { msg = 'SCAN STARTEN...'; }
+    else if (msg.includes('Scan stopped')) { msg = 'SCAN GESTOPT'; }
+    else if (msg.includes('Completed cycle')) { msg = 'CYCLUS VOLTOOID'; }
+    else if (msg.includes('All scan cycles complete')) { msg = 'ALLE CYCLI VOLTOOID'; }
+    else if (msg.includes('Created blob URL')) { return; } // Ignore
+    else if (msg.includes('Quick switch error')) { msg = 'WISSEL FOUT'; }
+    else if (msg.includes('Layer build')) { return; } // Ignore
+    else if (msg.includes('Fixed')) { return; } // Ignore aspect ratio logs
+    else if (msg.includes('MindAR ready')) { msg = 'AR ENGINE GEREED'; }
+    else if (msg.includes('TARGET FOUND')) { msg = 'DOEL GEVONDEN'; }
+    else if (msg.includes('TARGET LOST')) { msg = 'DOEL VERLOREN'; }
+    else if (msg.includes('Layers updated')) { msg = 'LAGEN BIJGEWERKT'; }
+    else if (msg.includes('Switching to poster')) { msg = 'WISSELEN NAAR POSTER'; }
+    else if (msg.includes('Requesting camera permission')) { msg = 'CAMERA TOEGANG VRAGEN...'; }
+    else if (msg.includes('Camera permission granted')) { msg = 'CAMERA TOEGANG VERLEEND'; }
+    else if (msg.includes('Applying lens distortion')) { msg = 'LENS CORRECTIE...'; }
+    else if (msg.includes('Adding MindAR image target')) { msg = 'AR DOEL TOEVOEGEN...'; }
+    else if (msg.includes('Creating layers')) { msg = 'LAGEN AANMAKEN...'; }
+    else if (msg.includes('MindAR target added')) { msg = 'AR DOEL TOEGEVOEGD'; }
+    else if (msg.includes('Gallery ready')) { msg = 'GALERIJ GEREED'; }
+    else if (msg.includes('Gallery CSS injected')) { return; }
+    else if (msg.includes('DOM Content Loaded')) { msg = 'DOM GELADEN'; }
+    else if (msg.includes('Detection Results')) { return; }
+    else if (msg.includes('Starting AR mode')) { msg = 'AR MODUS STARTEN...'; }
+    else if (msg.includes('Initializing Desktop Mode')) { msg = 'DESKTOP MODUS STARTEN...'; }
+    else if (msg.includes('Loaded')) { msg = 'GELADEN'; }
 
     // 3. Filter out empty or irrelevant logs
     if (msg.length < 2) return;
@@ -1492,29 +1519,7 @@ function buildLayersHTML(poster) {
                                layerData.filename.endsWith('.mp4') || 
                                layerData.filename.endsWith('.webm')) && !isGif;
 
-                // Debug: log how each layer is interpreted
-                console.log('🧱 Layer build', {
-                    index: i,
-                    filename: layerData.filename,
-                    isGif,
-                    isVideo,
-                    isVideoFlag: layerData.is_video,
-                    mediaPath,
-                    scale: baseScale,
-                    pos: `${posX} ${posY} ${posZ}`,
-                    rotZ,
-                    anim: {
-                        hasAnimation,
-                        duration: layerData.anim_duration,
-                        x: layerData.anim_x,
-                        y: layerData.anim_y,
-                        z: layerData.anim_z,
-                        rotX: layerData.anim_rot_x,
-                        rotY: layerData.anim_rot_y,
-                        rotZ: layerData.anim_rot_z,
-                        scale: layerData.anim_scale
-                    }
-                });
+
                 
                 // Build animation string
                 const animationStr = animAttrs.length > 0 ? animAttrs.join(' ') : '';
@@ -1636,48 +1641,7 @@ function fixLayerAspectRatios() {
     });
 }
 
-// Debug helper: log current AR layer DOM nodes and video readiness
-function logLayerElements(context = 'arReady') {
-    const layers = document.querySelectorAll('#ar-scene [id^="ar-layer-"]');
-    const summary = [];
 
-    layers.forEach((el) => {
-        const tag = el.tagName.toLowerCase();
-        const src = el.getAttribute('src') || el.getAttribute('data-image-src');
-        const isVideo = tag === 'a-video';
-        let videoState = null;
-
-        if (isVideo) {
-            const materialSrc = el.components?.material?.data?.src;
-            const videoEl = materialSrc?.el || document.querySelector(`#${el.id} video`);
-            if (videoEl) {
-                videoState = {
-                    readyState: videoEl.readyState,
-                    paused: videoEl.paused,
-                    currentTime: Number(videoEl.currentTime?.toFixed?.(2) || videoEl.currentTime || 0),
-                    autoplay: videoEl.autoplay,
-                    loop: videoEl.loop,
-                    muted: videoEl.muted,
-                    src: videoEl.currentSrc || videoEl.src
-                };
-            }
-        }
-
-        summary.push({
-            id: el.id,
-            tag,
-            src,
-            isVideo,
-            dataset: {
-                customScale: el.getAttribute('data-custom-scale'),
-                exclusion: el.dataset?.exclusion
-            },
-            videoState
-        });
-    });
-
-    console.log(`🧾 Layer DOM snapshot (${context})`, summary);
-}
 
 // Setup event listeners for AR scene
 function setupSceneEventListeners(scene, currentPoster) {
@@ -1693,8 +1657,7 @@ function setupSceneEventListeners(scene, currentPoster) {
         // Fix aspect ratios for all layers
         fixLayerAspectRatios();
 
-        // Log layer DOM + media readiness for debugging GIF → MP4 playback
-        logLayerElements('arReady');
+
         
         // Apply video filter to AR scene video (behind static feed)
         setTimeout(() => {
@@ -1892,19 +1855,12 @@ async function requestCameraPermission() {
     
     for (let i = 0; i < cameraConfigs.length; i++) {
         try {
-            console.log(`📸 Trying camera config ${i + 1}/${cameraConfigs.length}...`);
+            // console.log(`📸 Trying camera config ${i + 1}/${cameraConfigs.length}...`);
             const stream = await navigator.mediaDevices.getUserMedia(cameraConfigs[i]);
-            console.log('✅ Camera permission granted with config', i + 1);
-            console.log('📹 Stream:', stream);
+            // console.log('✅ Camera permission granted with config', i + 1);
             
             const track = stream.getVideoTracks()[0];
             const settings = track.getSettings();
-            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-            
-            console.log('📹 Track settings:', settings);
-            console.log('📹 Camera capabilities:', capabilities);
-            console.log('📹 Camera facing:', settings.facingMode || 'unknown');
-            console.log('📹 Resolution:', `${settings.width}x${settings.height}`);
             
             // Store default zoom (1x standard lens)
             // Ultrawide causes MindAR positioning errors
@@ -2409,10 +2365,7 @@ function setupSwipeBarControls() {
     }, { passive: true });
 }
 
-// Setup Gallery (no longer needed - integrated in footer)
-function setupGalleryOverlay() {
-    console.log('✅ Gallery ready');
-}
+
 
 // Load Gallery Overlay with all posters
 function loadGalleryOverlay() {
@@ -2565,8 +2518,7 @@ async function showDesktopView() {
         // Setup swipe controls for footer
         setupSwipeBarControls();
         
-        // Setup gallery overlay
-        setupGalleryOverlay();
+
         
     } else {
         // Desktop - show desktop view
@@ -2586,7 +2538,7 @@ function showGifLoader() {
     const loader = document.getElementById('hacker-loader');
     if (loader) {
         loader.classList.add('visible');
-        logToLoader('DECRYPTING_VISUALS...', 'warning');
+        logToLoader('VISUALS_DECRYPTEN...', 'warning');
     }
 }
 

@@ -1,16 +1,16 @@
 /**
- * Terminal File Manager - Window System
- * Retro terminal-style file browser with draggable, resizable windows
+ * Terminal Bestandsbeheer - Venster Systeem
+ * Retro terminal-stijl bestandsbrowser met sleepbare, schaalbare vensters
  */
 
-// Window management
+// Venster beheer
 let windowZIndex = 100;
 let openWindows = new Map();
 let activeWindowId = null;
 
 // Initialize file manager
 function initFileManager() {
-    console.log('📁 Initializing File Manager...');
+
     
     // Create main file manager structure
     createFileManagerUI();

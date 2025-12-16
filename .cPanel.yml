@@ -1,16 +1,13 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/beelkstc/interventie.org
+    - export DEPLOYPATH=/home/simon/public_html/
     - /bin/cp -R index.html $DEPLOYPATH
-    - /bin/cp -R main.js $DEPLOYPATH
-    - /bin/cp -R style.css $DEPLOYPATH
-    - /bin/cp -R api.php $DEPLOYPATH
-    - /bin/cp -R debug.php $DEPLOYPATH
+    - /bin/cp -R css $DEPLOYPATH
+    - /bin/cp -R js $DEPLOYPATH
+    - /bin/cp -R includes $DEPLOYPATH
     - /bin/cp -R assets $DEPLOYPATH
     - /bin/cp -R admin $DEPLOYPATH
-    - /bin/cp -R includes $DEPLOYPATH
-    - /bin/cp -R js $DEPLOYPATH
+    - /bin/cp -R api.php $DEPLOYPATH
     - /bin/cp -R img $DEPLOYPATH
-    - /bin/cp -R uploads $DEPLOYPATH
-    - /bin/cp -R posters.json $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH

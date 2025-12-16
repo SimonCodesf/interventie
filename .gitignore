@@ -3,20 +3,21 @@
 Thumbs.db
 
 # Security: NEVER commit these files with secrets!
-config.php
-security.php
-api_utils.php
-poster_controller.php
+includes/config.php
+includes/security.php
+includes/api_utils.php
+includes/poster_controller.php
 
 # User content & Database (Do not overwrite live data)
 uploads/
-posters.db
-ar-markers.db
-admin_activity.log
-login_attempts.json
-ar-settings.json
+data/posters.db
+data/ar-markers.db
+data/admin_activity.log
+data/login_attempts.json
+assets/ar-settings.json
 
 # Backups & Editor History
+backups/
 *.bak
 *.old
 *.trash/
