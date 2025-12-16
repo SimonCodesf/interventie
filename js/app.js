@@ -2678,15 +2678,22 @@ async function showPosterWindow(posterId) {
     windowEl.style.pointerEvents = 'auto'; // CRITICAL: Re-enable pointer events on the window itself
     
     // CRITICAL: Set z-index VERY high to be above AR scene and all other elements
-    if (!window.nextWindowZIndex) window.nextWindowZIndex = 999999;
+    if (!window.nextWindowZIndex) window.nextWindowZIndex = 1000001;
     const zIdx = window.nextWindowZIndex++;
     windowEl.style.zIndex = zIdx;
     
-    // Random position (within safe bounds)
-    const maxX = Math.max(300, window.innerWidth - 320);
-    const maxY = Math.max(200, window.innerHeight - 400);
-    const randomX = Math.max(10, Math.floor(Math.random() * maxX));
-    const randomY = Math.max(10, Math.floor(Math.random() * maxY));
+    // Random position - BOUNDED so 95% of window is ALWAYS visible
+    const windowWidth = 320;  // Approximate window width
+    const windowHeight = 400; // Approximate window height
+    
+    // Safe bounds: ensure 95% of window is visible (5% margin)
+    const minMargin = Math.min(windowWidth, windowHeight) * 0.05;
+    const maxX = Math.max(0, window.innerWidth - (windowWidth * 0.95));
+    const maxY = Math.max(0, window.innerHeight - (windowHeight * 0.95));
+    
+    const randomX = Math.max(minMargin, Math.floor(Math.random() * maxX));
+    const randomY = Math.max(minMargin, Math.floor(Math.random() * maxY));
+    
     windowEl.style.left = `${randomX}px`;
     windowEl.style.top = `${randomY}px`;
     
