@@ -2708,23 +2708,23 @@ async function showPosterWindow(posterId) {
         <div style="flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 6px;">
             <!-- FOTO -->
             <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 1px solid #fff; flex-shrink: 0; background: #111;">
-                <img src="${poster.jpeg_url || poster.image_url || poster.thumbnail_url || poster.jpeg_thumbnail || 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
+                <img src="${poster.jpeg_filename ? '/uploads/' + poster.jpeg_filename : 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
             </div>
             
-            <!-- DATA: LIST LAYOUT (not grid) -->
-            <div style="font-family: Roboto Mono; font-size: 0.65rem; color: #888; line-height: 1.5;">
-                ${poster.location_description ? `<p style="margin: 0 0 3px 0;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">LOCATIE:</span> ${poster.location_description}</p>` : ''}
-                ${poster.downloads !== undefined && poster.downloads !== null ? `<p style="margin: 0 0 3px 0;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">DOWNLOADS:</span> ${poster.downloads}</p>` : ''}
-                ${poster.photographer_credit ? `<p style="margin: 0 0 3px 0;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">FOTOGRAAF:</span> ${poster.photographer_credit}</p>` : ''}
-                ${poster.artikel_link ? `<p style="margin: 0 0 3px 0;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">LINK:</span> <a href="${poster.artikel_link}" style="color: #fff; text-decoration: underline;" target="_blank">artikel</a></p>` : ''}
-                ${poster.description ? `<p style="margin: 0 0 3px 0;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">DESC:</span> ${poster.description}</p>` : ''}
+            <!-- DATA: LIST LAYOUT (KOLOMMEN) -->
+            <div style="font-family: Roboto Mono; font-size: 0.65rem; color: #888; line-height: 1.5; display: block;">
+                ${poster.location_description ? `<p style="margin: 0 0 3px 0; display: block; width: 100%;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">LOCATIE:</span> ${poster.location_description}</p>` : ''}
+                ${poster.downloads !== undefined && poster.downloads !== null ? `<p style="margin: 0 0 3px 0; display: block; width: 100%;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">DOWNLOADS:</span> ${poster.downloads}</p>` : ''}
+                ${poster.photographer_credit ? `<p style="margin: 0 0 3px 0; display: block; width: 100%;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">FOTOGRAAF:</span> ${poster.photographer_credit}</p>` : ''}
+                ${poster.artikel_link ? `<p style="margin: 0 0 3px 0; display: block; width: 100%;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">LINK:</span> <a href="${poster.artikel_link}" style="color: #fff; text-decoration: underline;" target="_blank">artikel</a></p>` : ''}
+                ${poster.description ? `<p style="margin: 0 0 3px 0; display: block; width: 100%;"><span style="color: #fff; font-weight: bold; font-size: 0.6rem; letter-spacing: 0.05em;">DESC:</span> ${poster.description}</p>` : ''}
             </div>
             
-            <!-- DOWNLOAD BUTTONS - VERTICAL LAYOUT -->
-            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px;">
-                <button onclick="window.location.href='/api.php?action=download&id=${posterId}&format=jpeg'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ JPEG</button>
-                <button onclick="window.location.href='/api.php?action=download&id=${posterId}&format=pdf&size=a3'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ A3 PDF</button>
-                <button onclick="window.location.href='/api.php?action=download&id=${posterId}&format=pdf&size=a0'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ A0 PDF</button>
+            <!-- DOWNLOAD BUTTONS - KOLOMMEN -->
+            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px; width: 100%;">
+                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="display: block; width: 100%; background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ JPEG</button>
+                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="display: block; width: 100%; background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ A3 PDF</button>
+                <button onclick="window.location.href='/uploads/${poster.pdf_large_filename}'" style="display: block; width: 100%; background: #000; color: #fff; border: 1px solid #fff; padding: 3px 4px; font-family: Roboto Mono; font-size: 0.6rem; cursor: pointer; text-align: center; font-weight: bold;">↓ A0 PDF</button>
             </div>
         </div>
     `;
