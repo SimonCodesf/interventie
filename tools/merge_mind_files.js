@@ -47,13 +47,9 @@ async function mergeMindFiles() {
     let currentChunk = [];
     let chunkIndex = 0;
     
-    // Sort files by modification time (Newest First)
-    // This ensures Chunk 0 always contains the most recently uploaded posters
-    mindFiles.sort((a, b) => {
-        const statA = fs.statSync(a.path);
-        const statB = fs.statSync(b.path);
-        return statB.mtime.getTime() - statA.mtime.getTime();
-    });
+    // Sort files alphabetically by ID (deterministic, matches database order)
+    // This ensures targetIndex in .mind files always matches poster array order
+    mindFiles.sort((a, b) => a.id.localeCompare(b.id));
     
     const manifest = {
         generatedAt: new Date().toISOString(),
