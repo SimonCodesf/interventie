@@ -1640,16 +1640,18 @@ video {
 
 #gallery-overlay-grid {
     display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-    padding: 12px !important;
-    padding-bottom: 1.5rem !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* 2 kolommen op mobile */
+    gap: 2px !important;
+    padding: 8px !important;
+    padding-bottom: 1rem !important;
+    background: var(--black) !important;
 }
 
 @media (min-width: 768px) {
     #gallery-overlay-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px !important;
+        grid-template-columns: repeat(3, 1fr) !important; /* 3 kolommen op desktop */
+        gap: 2px !important;
+        padding: 10px !important;
     }
 }
 
@@ -1699,60 +1701,51 @@ video {
 }
 
 .overlay-poster-card {
-    display: flex;
-    flex-direction: column;
     background: var(--black);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-    border: 1px solid var(--white);
     overflow: hidden;
-    padding: 0;
-    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    aspect-ratio: 1 / 1.4142; /* Same as desktop poster-card */
+    border: 1px solid var(--dim);
+    transition: all 0.1s ease;
 }
 
 .overlay-poster-card:active {
-    transform: scale(0.98);
-    opacity: 0.85;
-    border-color: var(--dim);
+    opacity: 0.7;
+    border-color: var(--white);
 }
 
 .overlay-poster-card img {
     width: 100%;
-    height: 140px;
+    height: 100%;
     display: block;
     object-fit: cover;
 }
 
 .overlay-poster-card .card-info {
-    padding: 8px;
-    background: var(--black);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.85);
     border-top: 1px solid var(--dim);
 }
 
 .overlay-poster-card h3 {
     padding: 0;
-    margin: 0 0 4px 0;
-    font-size: 0.7rem;
+    margin: 0;
+    font-size: 0.6rem;
     font-weight: 400;
     color: var(--white);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     font-family: var(--font-data);
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.card-meta span {
-    font-size: 0.6rem;
-    color: var(--dim);
-    font-family: var(--font-data);
-    letter-spacing: 0.02em;
+    display: none; /* Hide meta on thumbnail view */
 }
 
 #gallery-overlay-grid .poster-item {
