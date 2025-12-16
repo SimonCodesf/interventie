@@ -196,7 +196,7 @@ main {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 1000000;
     left: 0;
     top: 0;
     width: 100%;
@@ -1416,8 +1416,7 @@ video {
     display: flex;
     flex-direction: column;
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 999999;
-    border-radius: 0;
+    z-index: 999998;
     border-top: 1px solid var(--white);
     overflow: hidden;
     touch-action: none;
@@ -1632,9 +1631,16 @@ video {
 
 #gallery-overlay-grid {
     display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 2rem !important;
-    padding: 0 1.5rem 1.5rem 1.5rem !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+    padding-bottom: 100px !important;
+}
+
+@media (max-width: 500px) {
+    #gallery-overlay-grid {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 .overlay-header {
@@ -1682,13 +1688,20 @@ video {
 }
 
 .overlay-poster-card {
-    display: block !important;
-    background: transparent !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--black) !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     -webkit-tap-highlight-color: transparent !important;
-    border: 1px solid var(--white);
-    margin-bottom: 1rem;
+    border: 1px solid var(--white) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+.overlay-poster-card:active {
+    transform: scale(0.95) !important;
+    opacity: 0.8 !important;
 }
 
 .overlay-poster-card:active {
