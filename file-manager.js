@@ -224,7 +224,7 @@ async function loadFilesFromPosters() {
         // Update stats
         document.getElementById('total-files').textContent = posters.length;
         document.getElementById('total-ar').textContent = posters.filter(p => p.ar_marker).length;
-        document.getElementById('total-downloads').textContent = posters.reduce((sum, p) => sum + (p.downloads || 0), 0);
+        document.getElementById('total-downloads').textContent = posters.reduce((sum, p) => sum + Number(p.downloads || 0), 0);
         
         // Update nav counts
         document.querySelector('[data-filter="all"] .nav-count').textContent = `[${posters.length}]`;

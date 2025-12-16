@@ -425,17 +425,46 @@ Laat me de file updaten met een communicatie-richtlijn sectie in het Nederlands.
 
 ---
 
-_**User (2025-12-16 14:00Z)**_
+_**User (2025-12-16 14:26Z)**_
 
-Zowel comments als frontend zouden eigenlijk ook wel in het nederlands moeten
+Zowel comments als frontend zouden eigenlijk ook wel in het nederlands moeten. /Users/simon/Library/CloudStorage/OneDrive-Persoonlijk/LUCA/Atelier/Interventie/Website/.github/copilot-instructions_20251216145929.md
 
 ---
 
 _**Agent (model copilot/claude-haiku-4.5)**_
 
-De user wil dat comments en frontend ook in het Nederlands zijn. Dit is eigenlijk een veel groter project dan ik dacht. Ze willen dat de instructies dit aangeven zodat AI agents ook weten dat ze code comments en frontend tekst in het Nederlands moeten schrijven/aanpassen.
+<tool-use data-tool-type="read" data-tool-name="copilot_readFile">
+<details>
+<summary>Tool use: **copilot_readFile** • Reading [](file:///Users/simon/Library/CloudStorage/OneDrive-Persoonlijk/LUCA/Atelier/Interventie/Website/.github/copilot-instructions_20251216145929.md#1-1), lines 1 to 80</summary>
 
-Ik kan de instructies updaten om dit duidelijk te maken. Dit is een eenvoudige update van het communicatie-gedeelte.
+
+Read [](file:///Users/simon/Library/CloudStorage/OneDrive-Persoonlijk/LUCA/Atelier/Interventie/Website/.github/copilot-instructions_20251216145929.md#1-1), lines 1 to 80
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="copilot_readFile">
+<details>
+<summary>Tool use: **copilot_readFile** • Reading [](file:///Users/simon/Library/CloudStorage/OneDrive-Persoonlijk/LUCA/Atelier/Interventie/Website/.github/copilot-instructions_20251216145929.md#80-80), lines 80 to 219</summary>
+
+
+Read [](file:///Users/simon/Library/CloudStorage/OneDrive-Persoonlijk/LUCA/Atelier/Interventie/Website/.github/copilot-instructions_20251216145929.md#80-80), lines 80 to 219
+
+</details>
+</tool-use>
+
+---
+
+De user wil dat zowel comments als frontend ook in het Nederlands zijn. Ik moet de copilot-instructions.md aanpassen om dit duidelijk te maken. Laat me het huidige bestand lezen om te zien wat er staat en dan aanpassen.
+
+Het pad dat de user geeft is: /Users/simon/Library/CloudStorage/OneDrive-Persoonlijk/LUCA/Atelier/Interventie/Website/.github/copilot-instructions_20251216145929.md
+
+Ik moet dit bestand lezen en de instructies aanpassen zodat ook code comments en frontend in het Nederlands zijn.Perfect, ik zie dat het bestand al is aangepast. Laat me nu de rest lezen en zeker maken dat alle punten goed staan: Uitstekend! ✅ Het bestand is al volledig in het Nederlands aangepasst. De instructies stellen nu duidelijk vast dat:
+
+1. **Code comments in Nederlands** dienen te zijn (geen Engels)
+2. **Frontend UI tekst in Nederlands** 
 
 ---
 
