@@ -33,11 +33,10 @@ jobs:
             .gitignore
             README.md
             TODO.md
-            FASE-4-PLAN.md
             .cpanel.yml
-            FASE-4-INVENTARISATIE.md
             .DS_Store
             .history
             .specstory
             .vscode
+            *.py
           dangerous-delete-force: false

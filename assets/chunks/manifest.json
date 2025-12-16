@@ -1,12 +1,13 @@
 {
-  "generatedAt": "2025-12-04T10:36:02.435Z",
-  "totalPosters": 1,
+  "generatedAt": "2025-12-16T17:30:00.000Z",
+  "totalPosters": 2,
   "chunkSize": 10,
   "chunks": [
     {
       "file": "chunk_0.mind",
       "posterIds": [
-        "AR_test_01"
+        "0a62f8cd-2fea-4144-82d2-37b0c3806414",
+        "48bd0500-ac65-41b7-bd47-9fba93a50881"
       ]
     }
   ]

@@ -146,8 +146,8 @@ gifLoader.load('path/to/image.gif', (texture) => {
 **Workflow**: 
 1. **Lokale wijzigingen** → Branch aanmaken (bijv. `phase-1-fixes`)
 2. **Commit + Push** → GitHub
-3. **Testing** → Website wordt automatisch/manually gedeployed naar cPanel
-4. **Live testen** → Wijzigingen direct zichtbaar op productie (via cPanel)
+3. **Auto-Deploy**: GitHub Actions (FTP-Deploy-Action) pusht automatisch naar `interventie.org`
+4. **Live testen** → Wijzigingen direct zichtbaar op productie
 
 **Branch naamgeving**:
 - `phase-1-fixes` - Mobile & Desktop UI fixes
@@ -162,37 +162,73 @@ git commit -m "Fix: beschrijving van wijziging"
 git push origin [branch-naam]
 ```
 
-### cPanel Auto-Deployment
+### Server Environment & AR Generation (CRITICAL)
 
-⚠️ **BELANGRIJK**: Website staat live op een cPanel server. Elke push/merge naar `main` **kan** direct zichtbaar zijn voor eindgebruikers.
+⚠️ **BELANGRIJK**: De AR-functionaliteit is afhankelijk van server-side Node.js scripts.
 
-- **Live URL**: (bijv. `http://website.nl/` - exact domein van Simon)
-- **Deploy methode**: Waarschijnlijk via Git pull of webhook (exact setup in cPanel)
-- **Testing**: Altijd eerst testen op dev-branch, dan naar main
-- **Cache**: Browser cache kan veroorzaken dat wijzigingen niet direct zichtbaar zijn (Ctrl+Shift+Del)
+- **Server Node Path**: `/opt/alt/alt-nodejs20/root/usr/bin/node` (CloudLinux environment)
+- **Tools Directory**: `/tools/` bevat `merge_mind_files.js`
+- **Node Modules**: `/tools/node_modules/` **MOET** op de server staan, maar **MAG NIET** in Git.
+    - Deze map bevat `@msgpack/msgpack` nodig voor AR-generatie.
+    - **NOOIT** de server "opschonen" door alles te verwijderen wat niet in Git staat, want dan verwijder je deze dependencies.
+    - Als AR stopt met werken (geen nieuwe posters), controleer of `tools/node_modules` bestaat op de server.
 
-**cPanel Bestanden Structuur**:
+**AR Update Flow**:
+1. PHP `poster_controller.php` roept `triggerMindMerge()` aan na upload/delete.
+2. `triggerMindMerge()` voert `node tools/merge_mind_files.js` uit via `exec()`.
+3. Node script scant `assets/nft/`, bouwt chunks, en update `assets/chunks/manifest.json`.
+4. Frontend laadt nieuwe manifest automatisch.
+
+### cPanel Bestanden Structuur
 - Public HTML root: `/public_html/` (waar live bestanden staan)
 - PHP moet draaien: Zorg dat api.php, config.php, security.php correct ingesteld zijn
 - Uploads directory: Zorg dat `/uploads/` directory schrijfbaar is (chmod 755)
 - Session/Temp files: Login_attempts.json en cache bestanden moeten schrijfbar zijn
 
-### Lokale Ontwikkeling
+### Lokale Ontwikkeling vs. Production
+
+**BELANGRIJK**: Dit project heeft **twee aparte omgevingen**:
+
+1. **Lokale ontwikkeling** (`/Users/simon/.../Website/`)
+   - Dient hoofdzakelijk als Git repository en code editor
+   - **Lokale databases/uploads/node_modules kunnen NIET voorkomen** (geen lokale server)
+   - Gebruik Git + GitHub voor samenwerking
+
+2. **Production server** (`interventie.org` via cPanel/FTP)
+   - Dit is waar de website **echt draait**
+   - Alle databases, uploads, en data staan hier
+   - Dit is waar eindgebruikers posters uploaden
+   - Dit is waar je moet testen of dingen werken
+
+**Workflow**:
+- **Code wijzigingen**: Lokaal aanpassen → Git commit → GitHub push
+- **Auto-deploy**: GitHub Actions ziet push → FTP upload naar server
+- **Testing**: Altijd op de **live server** (`interventie.org`) testen, niet lokaal
+- **Data/uploads**: Staan **ALLEEN op de server** (`/home/beelkstc/interventie.org/`)
+  
+**Dus**: Als je een bug onderzoekt met uploads of databases → Check altijd op `interventie.org`, nooit lokaal.
+
+### Lokale Setup (Code-only)
 ```bash
-# Dependencies installeren
-npm install
+# Repo klonen/updaten
+git pull origin main
 
-# Server starten (poort 3000)
-npm start
+# Code aanpassen in je editor (VS Code)
+# Commit wijzigingen
+git add .
+git commit -m "Fix: beschrijving"
+git push origin main
 
-# Watch modus (auto-reload)
-npm run dev
-
-# Admin panel toegang
-http://localhost:3000/admin
-
-# Standaard admin wachtwoord: 'BETA' (VERANDEREN IN config.php!)
+# WAARSCHUWING: NOOIT proberen een lokale server/database op te zetten
+# De website draait ALLEEN op interventie.org
 ```
+
+**Testing**: Altijd via `http://interventie.org/` (live server), nooit lokaal.
+
+**Admin Panel Testen**:
+- Live URL: http://interventie.org/admin
+- Default wachtwoord: 'BETA' (VERANDER DIT IN config.php!)
+- Database: /home/beelkstc/interventie.org/data/posters.db (server-side)
 
 ### Bestandsstructuur Conventies
 - **assets/nft/**: Individuele poster marker bestanden (.fset, .iset, .fset3)
@@ -251,13 +287,13 @@ Dit project wordt afgebouwd in 4 fasen. Zie `TODO.md` in de root voor gedetaille
 **Waarom later**: Nice-to-haves; niet kritiek voor basisfunctionaliteit.
 
 ### Fase 4: Maintenance & DevOps
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 **Focus**: Codebase gezondheid en automatisering
 
-- [ ] **Cleanup**: Ongebruikte bestanden verwijderen (backup_*.js, test files, etc.)
-- [ ] **Structure**: Bestanden beter organiseren (css/, js/, assets/ opschoning)
+- [x] **Cleanup**: Ongebruikte bestanden verwijderen (backup_*.js, test files, etc.)
+- [x] **Structure**: Bestanden beter organiseren (css/, js/, assets/ opschoning)
 - [ ] **Backup**: Lokaal backup systeem (dagelijks snapshots)
-- [ ] **DevOps**: GitHub Actions → Auto-push naar cPanel (CI/CD pipeline)
+- [x] **DevOps**: GitHub Actions → Auto-push naar cPanel (CI/CD pipeline)
 - [ ] **Docs**: README + API documentatie afmaken
 
 **Waarom last**: Ondersteunend; eerst features werkend krijgen.
@@ -343,64 +379,23 @@ Voordat je iets pusht naar `main`:
 
 ---
 
-## 📋 Huidig Fase-Plan (December 2025)
+## � Troubleshooting & Known Issues
 
-Dit project wordt afgebouwd in 4 fasen. Zie `TODO.md` in de root voor gedetailleerde voortgang.
+### AR Generatie Werkt Niet
+Als nieuwe posters wel uploaden maar AR niet werkt (geen nieuwe markers):
+1. **Check Node Modules op Server**: De map `tools/node_modules` MOET bestaan op de server.
+   - Deze staat in `.gitignore` dus wordt NIET meegepusht.
+   - Als deze ontbreekt: Upload handmatig via FTP (NIET via Git).
+2. **Check Server Node Path**: Het script gebruikt `/opt/alt/alt-nodejs20/root/usr/bin/node`.
+3. **Test Script**: Draai een test PHP script dat `exec('node tools/merge_mind_files.js')` doet om de output te zien.
 
-### Fase 1: Critical Fixes & UI Polish (Mobile & Desktop)
-**Status**: IN PROGRESS
-**Focus**: Zichtbare bugs en gebruiksvriendelijkheid
-
-- [x] **Desktop**: Download count bug fixen (string concat → numeric sum)
-- [ ] **Mobile/AR**: Camera feed positie centreren (tussen logo en bottom)
-- [ ] **Mobile/AR**: Gallery UI/Swipe up verbeteren (desktop stijl, logo overlap fixen)
-- [ ] **Desktop**: Log integratie beter maken (strakker aan onderkant pagina)
-- [ ] **Desktop**: Tabel header spacing optimaliseren
-- [ ] **General**: Frontend logs vertalen (EN → NL) en opschonen
-- [ ] **Mobile**: "Play" knop verwijderen op AR video's (autoplay policy issue)
-
-**Waarom eerst**: Gebruikers zien dit direct; kleine fixes, grote impact.
-
-### Fase 2: Admin Panel Overhaul & Security
-**Status**: NOT STARTED
-**Focus**: Backend bruikbaarheid en veiligheid
-
-- [ ] **Admin UI**: Gelijktrekken met "hacker" stijl (desktop terminal look)
-- [ ] **Admin**: Upload editing fixen (consistentie met uploaden)
-- [ ] **Security**: Beveiliging aanscherpen (review auth, headers, validatie)
-- [ ] **Analytics**: Cookie Consent + basis analytics (GDPR compliant)
-- [ ] **Analytics**: Gebruikerslokatie, download tracking, paginaviews
-
-**Waarom hierna**: Afhankelijk van fase 1 UI patterns; nodig voor betrouwbaarheid.
-
-### Fase 3: Advanced Features & AR Enhancements
-**Status**: NOT STARTED
-**Focus**: Nieuwe mogelijkheden
-
-- [ ] **AR Options**: Meer interactieve AR layers/effects
-- [ ] **Desktop**: Random tab opening bij startup (Welkom, Instructies, Manifest, etc.)
-- [ ] **Mobile**: Camera permission persistence onderzoeken (minder prompts)
-- [ ] **Mobile**: Better AR video handling (looping, controls)
-
-**Waarom later**: Nice-to-haves; niet kritiek voor basisfunctionaliteit.
-
-### Fase 4: Maintenance & DevOps
-**Status**: NOT STARTED
-**Focus**: Codebase gezondheid en automatisering
-
-- [ ] **Cleanup**: Ongebruikte bestanden verwijderen (backup_*.js, test files, etc.)
-- [ ] **Structure**: Bestanden beter organiseren (css/, js/, assets/ opschoning)
-- [ ] **Backup**: Lokaal backup systeem (dagelijks snapshots)
-- [ ] **DevOps**: GitHub Actions → Auto-push naar cPanel (CI/CD pipeline)
-- [ ] **Docs**: README + API documentatie afmaken
-
-**Waarom last**: Ondersteunend; eerst features werkend krijgen.
+### Deployment Issues
+- **FTP Errors**: Check GitHub Actions logs.
+- **Bestanden niet zichtbaar**: Leeg browser cache of Cloudflare cache.
 
 ---
 
-**Voortgang bijhouden**: `TODO.md` gebruiken voor dagelijks werk. Na elke fase checklist afmaken voordat naar volgende fase overgaan.
-
----
+## Veelvoorkomende Foutmeldingen
 
 1. **"Poster laadt niet"** → Controleer api.php routes, zorg dat posters.json bestaat
 2. **"AR detecteert niet"** → Verifieer .mind bestand, controleer targetIndex matcht poster volgorde, test met bekend marker
