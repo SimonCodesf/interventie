@@ -2666,12 +2666,12 @@ async function showPosterWindow(posterId) {
     windowEl.style.display = 'flex';
     windowEl.style.flexDirection = 'column';
     windowEl.style.background = '#000';
-    windowEl.style.border = '2px solid #fff';
+    windowEl.style.border = '1px solid #fff';
     windowEl.style.borderRadius = '2px';
     windowEl.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.8)';
-    windowEl.style.minWidth = '280px';
-    windowEl.style.maxWidth = '90vw';
-    windowEl.style.maxHeight = '85vh';
+    windowEl.style.minWidth = '260px';
+    windowEl.style.maxWidth = '280px';
+    windowEl.style.maxHeight = '70vh';
     windowEl.style.overflow = 'hidden';
     windowEl.style.fontFamily = 'Roboto Mono, monospace';
     windowEl.style.color = '#fff';
@@ -2683,8 +2683,8 @@ async function showPosterWindow(posterId) {
     windowEl.style.zIndex = zIdx;
     
     // Random position - BOUNDED so 95% of window is ALWAYS visible
-    const windowWidth = 320;  // Approximate window width
-    const windowHeight = 400; // Approximate window height
+    const windowWidth = 280;  // Match minWidth/maxWidth
+    const windowHeight = 350; // Approximate window height
     
     // Safe bounds: ensure 95% of window is visible (5% margin)
     const minMargin = Math.min(windowWidth, windowHeight) * 0.05;
@@ -2698,22 +2698,22 @@ async function showPosterWindow(posterId) {
     windowEl.style.top = `${randomY}px`;
     
     console.log(`🪟 Creating window at (${randomX}, ${randomY}) with z-index ${zIdx}`);
-    
+    console.log('📊 Poster data:', poster);
+
     windowEl.innerHTML = `
-        <div style="background: #000; border-bottom: 1px solid #fff; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; font-family: Roboto Mono; font-size: 0.75rem; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;" class="window-header">
-            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${poster.title || 'Poster'}</span>
-            <button style="background: transparent; border: none; color: #fff; font-family: Roboto Mono; font-size: 0.9rem; cursor: pointer; padding: 0 4px; margin-left: 8px;" class="window-close-btn">[X]</button>
+        <div style="background: #000; border-bottom: 1px solid #fff; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; font-family: Roboto Mono; font-size: 0.65rem; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;" class="window-header">
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.7rem;">${poster.title || 'Poster'}</span>
+            <button style="background: transparent; border: none; color: #fff; font-family: Roboto Mono; font-size: 0.8rem; cursor: pointer; padding: 0 4px; margin-left: 6px; flex-shrink: 0;" class="window-close-btn">[X]</button>
         </div>
-        <div style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 1px solid #fff;">
+        <div style="flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; font-size: 0.6rem;">
+            <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 1px solid #fff; flex-shrink: 0;">
                 <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
             </div>
-            <div style="font-size: 0.7rem; font-family: Roboto Mono; color: #fff; line-height: 1.6;">
-                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">LOCATIE:</span> ${poster.location || poster.place || 'N/A'}</p>
-                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">BRON:</span> ${poster.source || 'N/A'}</p>
-                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">FOTOGRAAF:</span> ${poster.photographer || poster.author || 'N/A'}</p>
-                <p style="margin: 0 0 6px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">DOWNLOADS:</span> ${poster.downloads || 0}</p>
-                <p style="margin: 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.65rem; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: bold;">ID:</span> ${posterId.substring(0, 8)}</p>
+            <div style="font-family: Roboto Mono; color: #fff; line-height: 1.4;">
+                ${poster.location || poster.place ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">LOCATIE</span> ${poster.location || poster.place}</p>` : ''}
+                ${poster.source ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">BRON</span> ${poster.source}</p>` : ''}
+                ${poster.photographer || poster.author ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">FOTOGRAAF</span> ${poster.photographer || poster.author}</p>` : ''}
+                <p style="margin: 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">ID</span> ${posterId.substring(0, 8)}</p>
             </div>
         </div>
     `;
