@@ -2402,6 +2402,83 @@ function loadGalleryOverlay() {
     console.log('📊 Grid innerHTML length:', grid.innerHTML.length, 'chars');
     console.log('📝 Cards generated:', grid.querySelectorAll('.overlay-poster-card').length);
     
+    // FORCE gallery styles via JavaScript (CSS caching issue workaround)
+    if (!document.getElementById('gallery-card-styles')) {
+        const galleryStyle = document.createElement('style');
+        galleryStyle.id = 'gallery-card-styles';
+        galleryStyle.textContent = `
+            #gallery-overlay-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 2px !important;
+                padding: 8px !important;
+                padding-bottom: 1rem !important;
+                background: var(--black) !important;
+            }
+            
+            .overlay-poster-card {
+                background: var(--black) !important;
+                overflow: hidden !important;
+                cursor: pointer !important;
+                position: relative !important;
+                aspect-ratio: 1 / 1.4142 !important;
+                border: 1px solid var(--dim) !important;
+                transition: all 0.1s ease !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block !important;
+            }
+            
+            .overlay-poster-card:active {
+                opacity: 0.7 !important;
+                border-color: var(--white) !important;
+            }
+            
+            .overlay-poster-card img {
+                width: 100% !important;
+                height: 100% !important;
+                display: block !important;
+                object-fit: cover !important;
+            }
+            
+            .overlay-poster-card .card-info {
+                position: absolute !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                padding: 4px !important;
+                background: rgba(0, 0, 0, 0.85) !important;
+                border-top: 1px solid var(--dim) !important;
+            }
+            
+            .overlay-poster-card h3 {
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 0.6rem !important;
+                font-weight: 400 !important;
+                color: var(--white) !important;
+                letter-spacing: 0.05em !important;
+                text-transform: uppercase !important;
+                font-family: var(--font-data) !important;
+                line-height: 1.1 !important;
+            }
+            
+            .card-meta {
+                display: none !important;
+            }
+            
+            @media (min-width: 768px) {
+                #gallery-overlay-grid {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 2px !important;
+                    padding: 10px !important;
+                }
+            }
+        `;
+        document.head.appendChild(galleryStyle);
+        console.log('✅ Gallery card styles injected');
+    }
+    
     // Add AR badge styles (minimal)
     if (!document.getElementById('ar-badge-styles')) {
         const badgeStyle = document.createElement('style');
