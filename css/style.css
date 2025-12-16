@@ -1254,7 +1254,7 @@ main {
     background: transparent;
     z-index: 9999;
     pointer-events: none;
-    padding: 75px 0 150px 0; /* Top header margin, bottom footer margin */
+    padding: 75px 0 0 0; /* Top header margin (footer is now outside this container) */
 }
 
 #mobile-ar-view > #ar-header,
@@ -1647,10 +1647,11 @@ video {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14pvar(--black);
+    padding: 14px;
     z-index: 100;
     border-bottom: 1px solid var(--white);
     border-radius: 0;
+    background: var(--black);
 }
 
 .overlay-title {

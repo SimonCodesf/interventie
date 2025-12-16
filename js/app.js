@@ -2372,6 +2372,9 @@ function loadGalleryOverlay() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
     
+    // DEBUG: Log aantal posters
+    console.log('🎬 loadGalleryOverlay() called. Posters array:', window.allPosters.length, 'items');
+    
     // Remove old override styles if they exist (we want to use the CSS file styles now)
     const oldStyle = document.getElementById('gallery-override-styles');
     if (oldStyle) oldStyle.remove();
@@ -2394,6 +2397,10 @@ function loadGalleryOverlay() {
         </div>
     `;
     }).join('');
+    
+    // DEBUG: Log HTML result
+    console.log('📊 Grid innerHTML length:', grid.innerHTML.length, 'chars');
+    console.log('📝 Cards generated:', grid.querySelectorAll('.overlay-poster-card').length);
     
     // Add AR badge styles
     if (!document.getElementById('ar-badge-styles')) {

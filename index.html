@@ -79,33 +79,33 @@
         <div id="arjs-loader" class="arjs-loader" style="display: none;">
             <div>Loading AR...</div>
         </div>
+    </div>
 
-        <!-- AR Footer / Swipe Bar -->
-        <div id="ar-footer-swipe-bar" class="ar-footer-swipe-bar">
-            <div class="footer-header" onclick="window.toggleFooter && window.toggleFooter()">
-                <div class="swipe-indicator"></div>
-                
-                <!-- State 1: Gallery Hint -->
-                <div id="swipe-state-1" class="swipe-state active">
-                    <span class="swipe-text">ALLE POSTERS</span>
-                    <svg class="chevron-icon" width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                
-                <!-- State 2: Detected Poster Info -->
-                <div id="swipe-state-2" class="swipe-state">
-                    <span class="swipe-text" id="detected-poster-title">Titel</span>
-                    <svg class="chevron-icon" width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
+    <!-- AR Footer / Swipe Bar - OUTSIDE #mobile-ar-view (z-index context fix) -->
+    <div id="ar-footer-swipe-bar" class="ar-footer-swipe-bar">
+        <div class="footer-header" onclick="window.toggleFooter && window.toggleFooter()">
+            <div class="swipe-indicator"></div>
+            
+            <!-- State 1: Gallery Hint -->
+            <div id="swipe-state-1" class="swipe-state active">
+                <span class="swipe-text">ALLE POSTERS</span>
+                <svg class="chevron-icon" width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
             
-            <!-- Expanded Content (Gallery) -->
-            <div id="gallery-content" class="gallery-content">
-                <div id="gallery-overlay-grid" class="gallery-grid"></div>
+            <!-- State 2: Detected Poster Info -->
+            <div id="swipe-state-2" class="swipe-state">
+                <span class="swipe-text" id="detected-poster-title">Titel</span>
+                <svg class="chevron-icon" width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
+        </div>
+        
+        <!-- Expanded Content (Gallery) -->
+        <div id="gallery-content" class="gallery-content">
+            <div id="gallery-overlay-grid" class="gallery-grid"></div>
         </div>
     </div>
 
