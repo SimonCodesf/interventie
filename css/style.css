@@ -1261,7 +1261,7 @@ main {
     background: transparent;
     z-index: 9999;
     pointer-events: none;
-    padding: 75px 0 0 0; /* Top header margin (footer is now outside this container) */
+    padding: 75px 16px 16px 16px; /* Equal spacing: top=75px (header), sides=16px, bottom=16px */
 }
 
 #mobile-ar-view > #ar-header,
@@ -1295,7 +1295,7 @@ main {
 }
 
 #ar-camera-container {
-    width: 100vw;
+    width: 100%;
     height: 100%;
     position: absolute;
     top: 0;
@@ -1304,6 +1304,7 @@ main {
     background: transparent;
     display: block;
     pointer-events: none;
+    border-radius: 8px; /* Subtiele afrinding voor betere look */
 }
 
 #ar-scene,
@@ -1416,8 +1417,8 @@ video {
 #ar-footer-swipe-bar {
     position: fixed;
     bottom: 30px; /* Above logger (30px height) */
-    left: 0;
-    right: 0;
+    left: 16px; /* Match side padding from #mobile-ar-view */
+    right: 16px; /* Match side padding from #mobile-ar-view */
     height: 40px;
     background: var(--black);
     display: flex;
@@ -1425,6 +1426,7 @@ video {
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 999999;
     border-top: 1px solid var(--white);
+    border-radius: 8px 8px 0 0; /* Match camera container rounding */
     overflow: hidden;
     touch-action: none;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
@@ -1432,8 +1434,7 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: calc(100vh - 70px); /* Full height except header (75px) and logger (30px) */
-    height: calc(100dvh - 70px);
+    height: calc(100dvh - 75px - 30px - 32px); /* Full height minus header (75px), logger (30px), and top+bottom padding (16px*2) */
     bottom: 30px; /* Keep above logger */
 }
 
