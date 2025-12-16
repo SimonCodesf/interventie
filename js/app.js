@@ -2498,7 +2498,6 @@ function loadGalleryOverlay() {
         }).join('');
         console.log('📝 Normal HTML set. Grid item count:', window.allPosters.length);
     }
-    }
     
     // FORCE gallery styles via JavaScript (CSS caching issue workaround)
     // Deze styles gelden voor BEIDE featured en normale modus
