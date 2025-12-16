@@ -2616,13 +2616,24 @@ window.posterWindows = window.posterWindows || new Map(); // Store open windows
 window.nextWindowZIndex = 1000;
 
 async function showPosterWindow(posterId) {
+    console.log('📍 showPosterWindow called with:', posterId);
+    console.log('🎯 window.allPosters:', window.allPosters?.length || 0);
+    console.log('🪟 posterWindows already open:', window.posterWindows?.size || 0);
+    
     // If window already open, bring to front
-    if (window.posterWindows.has(posterId)) {
+    if (window.posterWindows && window.posterWindows.has(posterId)) {
         const existing = document.getElementById(`poster-window-${posterId}`);
         if (existing) {
             existing.style.zIndex = window.nextWindowZIndex++;
+            console.log('↑ Window already open, bringing to front');
             return;
         }
+    }
+
+    // Initialize poster windows map if needed
+    if (!window.posterWindows) {
+        window.posterWindows = new Map();
+        window.nextWindowZIndex = 999999;
     }
 
     // Fetch poster data - try API first, fallback to window.allPosters
@@ -2630,17 +2641,20 @@ async function showPosterWindow(posterId) {
     try {
         const response = await fetch(`${API_URL}/posters/${posterId}`);
         if (response.ok) poster = await response.json();
+        console.log('✅ API fetch successful');
     } catch (e) {
-        console.log('API fetch failed, using cached data');
+        console.log('❌ API fetch failed:', e.message);
     }
     
     // Fallback to cached posters
-    if (!poster && window.allPosters) {
+    if (!poster && window.allPosters && Array.isArray(window.allPosters)) {
+        console.log('🔍 Looking in cached posters array...');
         poster = window.allPosters.find(p => p.id === posterId);
+        if (poster) console.log('✅ Found in cache:', poster.title);
     }
     
     if (!poster) {
-        console.error('Poster not found:', posterId);
+        console.error('❌ Poster not found:', posterId, 'Available posters:', window.allPosters);
         return;
     }
 
@@ -2652,7 +2666,8 @@ async function showPosterWindow(posterId) {
     
     // CRITICAL: Set z-index VERY high to be above AR scene and all other elements
     if (!window.nextWindowZIndex) window.nextWindowZIndex = 999999;
-    windowEl.style.zIndex = window.nextWindowZIndex++;
+    const zIdx = window.nextWindowZIndex++;
+    windowEl.style.zIndex = zIdx;
     
     // Random position (within safe bounds)
     const maxX = Math.max(300, window.innerWidth - 320);
@@ -2661,6 +2676,16 @@ async function showPosterWindow(posterId) {
     const randomY = Math.max(10, Math.floor(Math.random() * maxY));
     windowEl.style.left = `${randomX}px`;
     windowEl.style.top = `${randomY}px`;
+    
+    // VISUAL DEBUG: Add bright colors so we can see it
+    windowEl.style.background = '#000 !important';
+    windowEl.style.border = '2px solid #fff !important';
+    windowEl.style.padding = '10px !important';
+    windowEl.style.minWidth = '300px !important';
+    windowEl.style.maxWidth = '90vw !important';
+    windowEl.style.maxHeight = '85vh !important';
+    
+    console.log(`🪟 Creating window at (${randomX}, ${randomY}) with z-index ${zIdx}`);
     
     windowEl.innerHTML = `
         <div class="window-header" draggable="true">
@@ -2684,7 +2709,7 @@ async function showPosterWindow(posterId) {
     document.body.appendChild(windowEl);
     window.posterWindows.set(posterId, windowEl);
 
-    console.log('✅ Poster window opened:', posterId, 'at', randomX, randomY);
+    console.log('✅ Window added to DOM. Check for element:', document.getElementById(`poster-window-${posterId}`) ? 'FOUND ✓' : 'NOT FOUND ✗');
 
     // Close button
     windowEl.querySelector('.window-close-btn').addEventListener('click', () => {
