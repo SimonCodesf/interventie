@@ -2707,12 +2707,13 @@ async function showPosterWindow(posterId) {
         </div>
         <div style="flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; font-size: 0.6rem;">
             <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 1px solid #fff; flex-shrink: 0;">
-                <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
+                <img src="${poster.thumbnail_url || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
             </div>
             <div style="font-family: Roboto Mono; color: #fff; line-height: 1.4;">
-                ${poster.location || poster.place ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">LOCATIE</span> ${poster.location || poster.place}</p>` : ''}
-                ${poster.source ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">BRON</span> ${poster.source}</p>` : ''}
-                ${poster.photographer || poster.author ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">FOTOGRAAF</span> ${poster.photographer || poster.author}</p>` : ''}
+                ${poster.location_description ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">LOCATIE</span> ${poster.location_description}</p>` : ''}
+                ${poster.artikel_link ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">LINK</span> <a href="${poster.artikel_link}" style="color: #fff; text-decoration: underline;" target="_blank">artikel</a></p>` : ''}
+                ${poster.photographer_credit ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">FOTOGRAAF</span> ${poster.photographer_credit}</p>` : ''}
+                ${poster.description ? `<p style="margin: 0 0 4px 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">OMSCHRIJVING</span> ${poster.description}</p>` : ''}
                 <p style="margin: 0; color: #888;"><span style="color: #fff; display: block; font-size: 0.55rem; letter-spacing: 0.05em; margin-bottom: 1px; font-weight: bold;">ID</span> ${posterId.substring(0, 8)}</p>
             </div>
         </div>
