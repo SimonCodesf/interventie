@@ -154,3 +154,4 @@ Dit project is gemaakt voor persoonlijk gebruik.
 
 **Veel succes met je wekelijkse poster project! 🎨🚀**
 # Fase 4 Afgerond - 16 Dec 2025
+🚀 Force AR files sync to cPanel
