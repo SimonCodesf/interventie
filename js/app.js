@@ -2604,6 +2604,7 @@ function loadGalleryOverlay() {
     grid.querySelectorAll('.overlay-poster-card').forEach(card => {
         card.addEventListener('click', async () => {
             const posterId = card.dataset.posterId;
+            console.log('🖱️ Poster clicked:', posterId, 'Total posters:', window.allPosters?.length);
             // Show as draggable popup window (like desktop dossier system)
             showPosterWindow(posterId);
         });
@@ -2624,21 +2625,42 @@ async function showPosterWindow(posterId) {
         }
     }
 
-    // Fetch poster data
-    const poster = await fetch(`${API_URL}/posters/${posterId}`).then(r => r.json()).catch(() => null);
-    if (!poster) return;
+    // Fetch poster data - try API first, fallback to window.allPosters
+    let poster = null;
+    try {
+        const response = await fetch(`${API_URL}/posters/${posterId}`);
+        if (response.ok) poster = await response.json();
+    } catch (e) {
+        console.log('API fetch failed, using cached data');
+    }
+    
+    // Fallback to cached posters
+    if (!poster && window.allPosters) {
+        poster = window.allPosters.find(p => p.id === posterId);
+    }
+    
+    if (!poster) {
+        console.error('Poster not found:', posterId);
+        return;
+    }
 
     // Create popup window
     const windowEl = document.createElement('div');
     windowEl.id = `poster-window-${posterId}`;
     windowEl.className = 'poster-window';
+    windowEl.style.position = 'fixed';
+    
+    // CRITICAL: Set z-index VERY high to be above AR scene and all other elements
+    if (!window.nextWindowZIndex) window.nextWindowZIndex = 999999;
     windowEl.style.zIndex = window.nextWindowZIndex++;
     
-    // Random position
-    const randomX = Math.random() * (window.innerWidth - 280);
-    const randomY = Math.random() * (window.innerHeight - 300);
-    windowEl.style.left = `${Math.max(10, randomX)}px`;
-    windowEl.style.top = `${Math.max(10, randomY)}px`;
+    // Random position (within safe bounds)
+    const maxX = Math.max(300, window.innerWidth - 320);
+    const maxY = Math.max(200, window.innerHeight - 400);
+    const randomX = Math.max(10, Math.floor(Math.random() * maxX));
+    const randomY = Math.max(10, Math.floor(Math.random() * maxY));
+    windowEl.style.left = `${randomX}px`;
+    windowEl.style.top = `${randomY}px`;
     
     windowEl.innerHTML = `
         <div class="window-header" draggable="true">
@@ -2647,13 +2669,14 @@ async function showPosterWindow(posterId) {
         </div>
         <div class="window-content">
             <div class="window-image">
-                <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}">
+                <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}" onerror="this.src='img/placeholder.png'">
             </div>
             <div class="window-info">
-                <p><strong>LOCATIE:</strong> ${poster.location || 'N/A'}</p>
+                <p><strong>LOCATIE:</strong> ${poster.location || poster.place || 'N/A'}</p>
                 <p><strong>BRON:</strong> ${poster.source || 'N/A'}</p>
-                <p><strong>FOTOGRAAF:</strong> ${poster.photographer || 'N/A'}</p>
+                <p><strong>FOTOGRAAF:</strong> ${poster.photographer || poster.author || 'N/A'}</p>
                 <p><strong>DOWNLOADS:</strong> ${poster.downloads || 0}</p>
+                <p><strong>ID:</strong> ${posterId.substring(0, 8)}</p>
             </div>
         </div>
     `;
@@ -2661,10 +2684,13 @@ async function showPosterWindow(posterId) {
     document.body.appendChild(windowEl);
     window.posterWindows.set(posterId, windowEl);
 
+    console.log('✅ Poster window opened:', posterId, 'at', randomX, randomY);
+
     // Close button
     windowEl.querySelector('.window-close-btn').addEventListener('click', () => {
         windowEl.remove();
         window.posterWindows.delete(posterId);
+        console.log('✅ Poster window closed:', posterId);
     });
 
     // Drag functionality
@@ -2678,6 +2704,7 @@ async function showPosterWindow(posterId) {
         dragStartY = e.clientY;
         windowStartX = windowEl.offsetLeft;
         windowStartY = windowEl.offsetTop;
+        windowEl.style.zIndex = window.nextWindowZIndex++;
     });
 
     document.addEventListener('mousemove', (e) => {
