@@ -1563,6 +1563,7 @@ video {
     -webkit-overflow-scrolling: touch;
     opacity: 0;
     padding-top: 1rem;
+    padding-bottom: 100px; /* Extra padding for scrolling */
     touch-action: pan-y;
 }
 
@@ -1686,6 +1687,8 @@ video {
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     -webkit-tap-highlight-color: transparent !important;
+    border: 1px solid var(--white);
+    margin-bottom: 1rem;
 }
 
 .overlay-poster-card:active {

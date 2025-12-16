@@ -146,8 +146,11 @@ gifLoader.load('path/to/image.gif', (texture) => {
 **Workflow**: 
 1. **Lokale wijzigingen** → Branch aanmaken (bijv. `phase-1-fixes`)
 2. **Commit + Push** → GitHub
-3. **Auto-Deploy**: GitHub Actions (FTP-Deploy-Action) pusht automatisch naar `interventie.org`
-4. **Live testen** → Wijzigingen direct zichtbaar op productie
+3. **Direct Mergen**: Merge de branch direct naar `main` om te deployen.
+4. **Auto-Deploy**: GitHub Actions (FTP-Deploy-Action) pusht automatisch naar `interventie.org`
+5. **Live testen** → Wijzigingen direct zichtbaar op productie
+
+**BELANGRIJK**: Zorg dat er altijd direct naar de productie website wordt gepushed (via merge naar main).
 
 **Branch naamgeving**:
 - `phase-1-fixes` - Mobile & Desktop UI fixes

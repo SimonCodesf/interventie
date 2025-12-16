@@ -2372,24 +2372,9 @@ function loadGalleryOverlay() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
     
-    // Force CSS injection when gallery opens
-    if (!document.getElementById('gallery-override-styles')) {
-        const style = document.createElement('style');
-        style.id = 'gallery-override-styles';
-        style.textContent = `
-            #gallery-overlay { background: #af1d1f !important; }
-            .overlay-header { background: #af1d1f !important; border-radius: 20px 20px 0 0 !important; }
-            .overlay-title { color: #000 !important; text-transform: uppercase !important; font-weight: 700 !important; letter-spacing: 0.15em !important; font-size: 0.85rem !important; }
-            .close-overlay-btn { color: #000 !important; font-size: 2.5rem !important; }
-            #gallery-overlay-grid { display: grid !important; grid-template-columns: 1fr !important; gap: 2rem !important; padding: 2rem 1.5rem !important; }
-            .overlay-poster-card { display: block !important; background: #fff !important; cursor: pointer !important; transition: all 0.25s ease !important; border-radius: 8px !important; overflow: hidden !important; box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important; }
-            .overlay-poster-card:active { opacity: 0.85 !important; transform: scale(0.98) !important; }
-            .overlay-poster-card img { width: 100% !important; height: auto !important; display: block !important; border: none !important; background: #000 !important; }
-            .overlay-poster-card h3 { padding: 14px 12px !important; font-size: 0.85rem !important; font-weight: 700 !important; color: #000 !important; margin: 0 !important; letter-spacing: 0.05em !important; text-transform: uppercase !important; background: #fff !important; }
-        `;
-        document.head.appendChild(style);
-        console.log('✅ Gallery CSS injected');
-    }
+    // Remove old override styles if they exist (we want to use the CSS file styles now)
+    const oldStyle = document.getElementById('gallery-override-styles');
+    if (oldStyle) oldStyle.remove();
     
     grid.innerHTML = window.allPosters.map(poster => {
         const imageUrl = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : 'img/placeholder.png';
@@ -2399,7 +2384,13 @@ function loadGalleryOverlay() {
         return `
         <div class="overlay-poster-card" data-poster-id="${poster.id}" data-has-ar="${hasAR}">
             <img src="${imageUrl}" alt="${poster.title}" onerror="this.src='img/placeholder.png'">
-            <h3>${poster.title} ${arBadge}</h3>
+            <div class="card-info">
+                <h3>${poster.title} ${arBadge}</h3>
+                <div class="card-meta">
+                    <span>>> DOWNLOADS: ${poster.downloads || 0}</span>
+                    <span>>> ID: ${poster.id.substring(0, 6)}</span>
+                </div>
+            </div>
         </div>
     `;
     }).join('');
@@ -2410,32 +2401,37 @@ function loadGalleryOverlay() {
         badgeStyle.id = 'ar-badge-styles';
         badgeStyle.textContent = `
             .ar-badge { 
-                background: #af1d1f; 
-                color: #fff; 
+                background: var(--white); 
+                color: var(--black); 
                 padding: 2px 6px; 
-                border-radius: 4px; 
                 font-size: 0.65rem; 
                 margin-left: 6px;
                 vertical-align: middle;
+                font-family: var(--font-data);
+            }
+            .card-info {
+                padding: 14px 12px;
+                background: var(--black);
+                border-top: 1px solid var(--white);
+            }
+            .card-meta {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 8px;
+                font-family: var(--font-data);
+                font-size: 0.65rem;
+                color: var(--dim);
             }
         `;
         document.head.appendChild(badgeStyle);
     }
     
-    // Add click handlers - switch AR poster if available, otherwise show modal
+    // Add click handlers - Show modal for ALL posters (user requested info view)
     grid.querySelectorAll('.overlay-poster-card').forEach(card => {
         card.addEventListener('click', async () => {
             const posterId = card.dataset.posterId;
-            const hasAR = card.dataset.hasAr === 'true';
-            
-            if (hasAR && isMobileDevice) {
-                // Switch to this poster's AR marker
-                console.log('🎯 Switching AR to poster:', posterId);
-                await switchToPoster(posterId);
-            } else {
-                // Show poster details modal
-                showPosterModal(posterId);
-            }
+            // Always show modal first to see info/data
+            showPosterModal(posterId);
         });
     });
 }
