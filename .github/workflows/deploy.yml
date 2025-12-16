@@ -40,4 +40,4 @@ jobs:
             .history
             .specstory
             .vscode
-          dangerous-delete-force: true
+          dangerous-delete-force: false
