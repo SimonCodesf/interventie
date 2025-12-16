@@ -2422,7 +2422,7 @@ function loadGalleryOverlay() {
                 cursor: pointer !important;
                 position: relative !important;
                 aspect-ratio: 1 / 1.4142 !important;
-                border: 1px solid var(--dim) !important;
+                border: 1px solid var(--white) !important;
                 transition: all 0.1s ease !important;
                 padding: 0 !important;
                 margin: 0 !important;
@@ -2494,18 +2494,226 @@ function loadGalleryOverlay() {
                 font-family: var(--font-data);
                 letter-spacing: 0.05em;
             }
+            
+            /* Poster window system (draggable popups) */
+            .poster-window {
+                position: fixed;
+                background: var(--black);
+                border: 1px solid var(--white);
+                border-radius: 2px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+                min-width: 280px;
+                max-width: 90vw;
+                max-height: 85vh;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .window-header {
+                background: var(--black);
+                border-bottom: 1px solid var(--white);
+                padding: 8px 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: grab;
+                user-select: none;
+                font-family: var(--font-data);
+                font-size: 0.75rem;
+                font-weight: 400;
+                color: var(--white);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            
+            .window-header:active {
+                cursor: grabbing;
+            }
+            
+            .window-title {
+                flex: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .window-close-btn {
+                background: transparent;
+                border: none;
+                color: var(--white);
+                font-family: var(--font-data);
+                font-size: 0.9rem;
+                cursor: pointer;
+                padding: 0 4px;
+                margin-left: 8px;
+            }
+            
+            .window-close-btn:active {
+                opacity: 0.7;
+            }
+            
+            .window-content {
+                flex: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .window-image {
+                width: 100%;
+                aspect-ratio: 1 / 1.4142;
+                overflow: hidden;
+                border: 1px solid var(--white);
+            }
+            
+            .window-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            
+            .window-info {
+                font-size: 0.7rem;
+                font-family: var(--font-data);
+                color: var(--white);
+                line-height: 1.6;
+            }
+            
+            .window-info p {
+                margin: 0 0 6px 0;
+                color: var(--dim);
+            }
+            
+            .window-info strong {
+                color: var(--white);
+                display: block;
+                font-size: 0.65rem;
+                letter-spacing: 0.05em;
+                margin-bottom: 2px;
+            }
         `;
         document.head.appendChild(badgeStyle);
     }
 
     
-    // Add click handlers - Show modal for ALL posters (user requested info view)
+    // Add click handlers - Show popup dossier for ALL posters
     grid.querySelectorAll('.overlay-poster-card').forEach(card => {
         card.addEventListener('click', async () => {
             const posterId = card.dataset.posterId;
-            // Always show modal first to see info/data
-            showPosterModal(posterId);
+            // Show as draggable popup window (like desktop dossier system)
+            showPosterWindow(posterId);
         });
+    });
+}
+
+// Mobile window system - draggable popup dossiers (like desktop file manager)
+window.posterWindows = window.posterWindows || new Map(); // Store open windows
+window.nextWindowZIndex = 1000;
+
+async function showPosterWindow(posterId) {
+    // If window already open, bring to front
+    if (window.posterWindows.has(posterId)) {
+        const existing = document.getElementById(`poster-window-${posterId}`);
+        if (existing) {
+            existing.style.zIndex = window.nextWindowZIndex++;
+            return;
+        }
+    }
+
+    // Fetch poster data
+    const poster = await fetch(`${API_URL}/posters/${posterId}`).then(r => r.json()).catch(() => null);
+    if (!poster) return;
+
+    // Create popup window
+    const windowEl = document.createElement('div');
+    windowEl.id = `poster-window-${posterId}`;
+    windowEl.className = 'poster-window';
+    windowEl.style.zIndex = window.nextWindowZIndex++;
+    
+    // Random position
+    const randomX = Math.random() * (window.innerWidth - 280);
+    const randomY = Math.random() * (window.innerHeight - 300);
+    windowEl.style.left = `${Math.max(10, randomX)}px`;
+    windowEl.style.top = `${Math.max(10, randomY)}px`;
+    
+    windowEl.innerHTML = `
+        <div class="window-header" draggable="true">
+            <span class="window-title">${poster.title || 'Poster'}</span>
+            <button class="window-close-btn">[X]</button>
+        </div>
+        <div class="window-content">
+            <div class="window-image">
+                <img src="${poster.thumbnail || poster.image_url || 'img/placeholder.png'}" alt="${poster.title}">
+            </div>
+            <div class="window-info">
+                <p><strong>LOCATIE:</strong> ${poster.location || 'N/A'}</p>
+                <p><strong>BRON:</strong> ${poster.source || 'N/A'}</p>
+                <p><strong>FOTOGRAAF:</strong> ${poster.photographer || 'N/A'}</p>
+                <p><strong>DOWNLOADS:</strong> ${poster.downloads || 0}</p>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(windowEl);
+    window.posterWindows.set(posterId, windowEl);
+
+    // Close button
+    windowEl.querySelector('.window-close-btn').addEventListener('click', () => {
+        windowEl.remove();
+        window.posterWindows.delete(posterId);
+    });
+
+    // Drag functionality
+    const header = windowEl.querySelector('.window-header');
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0, windowStartX = 0, windowStartY = 0;
+
+    header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        windowStartX = windowEl.offsetLeft;
+        windowStartY = windowEl.offsetTop;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - dragStartX;
+        const deltaY = e.clientY - dragStartY;
+        windowEl.style.left = `${windowStartX + deltaX}px`;
+        windowEl.style.top = `${windowStartY + deltaY}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    // Touch drag (mobile)
+    let touchDragging = false;
+    let touchStartX = 0, touchStartY = 0;
+    header.addEventListener('touchstart', (e) => {
+        touchDragging = true;
+        windowEl.style.zIndex = window.nextWindowZIndex++;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        windowStartX = windowEl.offsetLeft;
+        windowStartY = windowEl.offsetTop;
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!touchDragging || windowEl !== document.getElementById(`poster-window-${posterId}`)) return;
+        const deltaX = e.touches[0].clientX - touchStartX;
+        const deltaY = e.touches[0].clientY - touchStartY;
+        windowEl.style.left = `${Math.max(0, windowStartX + deltaX)}px`;
+        windowEl.style.top = `${Math.max(0, windowStartY + deltaY)}px`;
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+        touchDragging = false;
     });
 }
 
