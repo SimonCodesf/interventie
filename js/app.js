@@ -2720,11 +2720,10 @@ async function showPosterWindow(posterId) {
                 ${poster.description ? `<div style="grid-column: 1 / -1;"><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DESC</span><br><span style="color: #888; font-size: 0.58rem;">${poster.description}</span></div>` : ''}
             </div>
             
-            <!-- DOWNLOAD BUTTONS - 3 KOLOMMEN HORIZONTAAL -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 2px;">
-                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 2px; font-family: Roboto Mono; font-size: 0.55rem; cursor: pointer; text-align: center; font-weight: bold;">↓<br>JPEG</button>
-                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 2px; font-family: Roboto Mono; font-size: 0.55rem; cursor: pointer; text-align: center; font-weight: bold;">↓<br>A3</button>
-                <button onclick="window.location.href='/uploads/${poster.pdf_large_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 3px 2px; font-family: Roboto Mono; font-size: 0.55rem; cursor: pointer; text-align: center; font-weight: bold;">↓<br>A0</button>
+            <!-- DOWNLOAD BUTTONS - 2 KOLOMMEN HORIZONTAAL -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 2px;">
+                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 4px 2px; font-family: Roboto Mono; font-size: 0.58rem; cursor: pointer; text-align: center; font-weight: bold;">JPEG</button>
+                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 4px 2px; font-family: Roboto Mono; font-size: 0.58rem; cursor: pointer; text-align: center; font-weight: bold;">PDF</button>
             </div>
         </div>
     `;
