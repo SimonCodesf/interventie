@@ -2204,7 +2204,9 @@ function addMindARTargets(scene) {
             console.log('📝 Updated footer title to:', matchedPoster.title);
             
             // Set featured poster voor galerij weergave
+            console.log('🔵 CALLING setFeaturedPoster with:', matchedPoster.title);
             setFeaturedPoster(matchedPoster);
+            console.log('🔵 AFTER setFeaturedPoster - featuredPoster is now:', featuredPoster?.title || 'null');
         }
         
         // Make ALL layers visible (dynamic 1-8)
@@ -2437,9 +2439,9 @@ function loadGalleryOverlay() {
     if (!grid || !window.allPosters) return;
     
     console.log('🎬 loadGalleryOverlay() called');
-    console.log('📋 Featured poster:', featuredPoster?.title || 'NONE');
+    console.log('� featuredPoster global variable:', featuredPoster?.title || 'null', 'Object:', featuredPoster);
+    console.log('🔵 currentTrackedPoster global variable:', currentTrackedPoster?.title || 'null', 'Object:', currentTrackedPoster);
     console.log('📋 Posters array length:', window.allPosters.length);
-    console.log('🔍 currentTrackedPoster:', currentTrackedPoster?.title || 'NONE');
     
     // Remove old override styles if they exist
     const oldStyle = document.getElementById('gallery-override-styles');
