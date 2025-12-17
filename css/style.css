@@ -607,7 +607,7 @@ main {
     justify-content: space-between;
     align-items: center;
     padding: 2rem 2rem;
-    border-bottom: 1px solid var(--black);
+    border-bottom: 0.5px solid var(--black);
 }
 
 .admin-container h1 {
@@ -909,7 +909,7 @@ main {
     
     .modal-image-container {
         border-right: none;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        border-bottom: 0.5px solid rgba(255,255,255,0.08);
     }
 }
 
@@ -1086,7 +1086,7 @@ main {
     margin: 0.5rem 0 0 0;
     padding: 0.3rem 0.5rem;
     background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
     font-weight: 400;
     letter-spacing: 0.05em;
     display: none;
@@ -1144,7 +1144,7 @@ main {
     font-weight: 500;
     color: var(--black);
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    border-top: 0.5px solid rgba(0, 0, 0, 0.2);
     margin-top: 0.5rem;
 }
 
@@ -1427,7 +1427,7 @@ video {
     flex-direction: column;
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 999999;
-    border-top: 1px solid var(--white);
+    border-top: 0.5px solid var(--white);
     overflow: hidden;
     touch-action: none;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
@@ -1664,7 +1664,7 @@ video {
     align-items: center;
     padding: 14px;
     z-index: 100;
-    border-bottom: 1px solid var(--white);
+    border-bottom: 0.5px solid var(--white);
     border-radius: 0;
     background: var(--black);
 }
@@ -1709,7 +1709,7 @@ video {
     cursor: pointer;
     position: relative;
     aspect-ratio: 1 / 1.4142; /* Same as desktop poster-card */
-    border: 1px solid var(--dim);
+    border: 0.5px solid var(--dim);
     transition: all 0.1s ease;
 }
 
@@ -1732,7 +1732,7 @@ video {
     right: 0;
     padding: 4px;
     background: rgba(0, 0, 0, 0.85);
-    border-top: 1px solid var(--dim);
+    border-top: 0.5px solid var(--dim);
 }
 
 .overlay-poster-card h3 {
@@ -1754,7 +1754,7 @@ video {
 #gallery-overlay-grid .poster-item {
     background: var(--white);
     color: var(--black);
-    border: 2px solid var(--white);
+    border: 0.5px solid var(--white);
     padding: 0;
     cursor: pointer;
     transition: all 0.15s;
@@ -1768,7 +1768,7 @@ video {
     width: 100%;
     height: auto;
     display: block;
-    border-bottom: 2px solid var(--black);
+    border-bottom: 0.5px solid var(--black);
 }
 
 #gallery-overlay-grid .poster-info {
