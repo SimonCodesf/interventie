@@ -20,6 +20,8 @@ html, body {
     height: 100vh !important;
     overflow: hidden !important;
     position: static !important;
+    margin: 0;
+    padding: 0;
 }
 
 :root {
@@ -74,7 +76,7 @@ main {
 #desktop-view {
     display: block;
     position: relative;
-    height: calc(100vh - 150px);
+    height: calc(100vh - 40px);
     overflow-y: auto;
     overflow-x: hidden;
 }

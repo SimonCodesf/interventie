@@ -4,21 +4,22 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 150px;
+    height: 40px;
     background: var(--black, #000000);
     border-top: 0.5px solid var(--white, #ffffff);
-    padding: 8px 15px;
+    padding: 4px 12px;
     color: var(--white, #ffffff);
     font-family: 'Roboto Mono', monospace;
-    font-size: 9px;
-    line-height: 1.4;
+    font-size: 8px;
+    line-height: 1.3;
     z-index: 99999;
     pointer-events: auto;
     display: none; /* Hidden by default */
     text-transform: uppercase;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
 }
 
 #hacker-loader.visible {
@@ -28,31 +29,15 @@
 #loader-content {
     display: flex;
     align-items: center;
-    gap: 10px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    white-space: pre-wrap;
-    word-break: break-all;
+    gap: 8px;
+    overflow: hidden;
+    white-space: nowrap;
     flex: 1;
-    max-height: 80px;
-    padding: 4px 0;
+    padding: 0;
 }
 
 #loader-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-#loader-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-#loader-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-}
-
-#loader-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+    display: none;
 }
 
 .log-line {
