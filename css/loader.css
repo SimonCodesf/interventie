@@ -92,9 +92,20 @@
     }
 }
 
-/* MOBILE: Hide logger on small screens */
+/* MOBILE: Keep logger visible but more compact */
 @media (max-width: 768px) {
     #hacker-loader {
-        display: none !important;
+        height: 30px;
+        padding: 2px 8px;
+        font-size: 7px;
+        border-top: 0.5px solid var(--white, #ffffff);
+    }
+    
+    #loader-content {
+        gap: 4px;
+    }
+    
+    .log-line {
+        font-size: 7px;
     }
 }
