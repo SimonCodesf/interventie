@@ -3069,45 +3069,11 @@ function hideGifLoader() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📄 DOM Content Loaded');
     
-    // 🎬 CAMERA SPACING: Pas de a-scene zelf aan in plaats van overlay
-    // Wacht tot de a-scene element beschikbaar is
-    const checkAndAdjustScene = () => {
-        const arScene = document.getElementById('ar-scene');
-        if (arScene) {
-            // Pas het a-scene element aan met spacing (margin = spacing effect)
-            arScene.style.cssText = `
-                position: absolute !important;
-                top: 75px !important;
-                left: 16px !important;
-                right: 16px !important;
-                bottom: 16px !important;
-                width: calc(100% - 32px) !important;
-                height: calc(100% - 91px) !important;
-                border: 1px solid rgba(255,255,255,0.1) !important;
-                box-sizing: border-box !important;
-            `;
-            console.log('✅ Camera spacing aangebracht: 16px op alle zijden (behalve top onder logo)');
-            
-            // Monitor canvas ook
-            setTimeout(() => {
-                const canvas = arScene.querySelector('canvas');
-                if (canvas) {
-                    console.log('📹 Canvas gevonden en aangepast met spacing');
-                    canvas.style.cssText = `
-                        width: 100% !important;
-                        height: 100% !important;
-                        display: block !important;
-                        object-fit: cover !important;
-                    `;
-                }
-            }, 200);
-        } else {
-            // Probeer later opnieuw
-            setTimeout(checkAndAdjustScene, 500);
-        }
-    };
+    // NOTE: Camera spacing is now handled in CSS (#ar-scene rules in style.css)
+    // with top: 75px, left/right: 16px, bottom: 16px
+    // No JavaScript workaround needed anymore!
     
-    checkAndAdjustScene();
+    console.log('✅ Camera spacing ingesteld via CSS (16px op alle zijden)');
     
     // Listen for GIF loaded events (optional logging)
     document.addEventListener('gif-loaded', (e) => {
