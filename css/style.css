@@ -16,10 +16,9 @@
     box-sizing: border-box;
 }
 
-html, html body {
-    height: auto !important;
-    overflow: auto !important;
-    overflow-y: scroll !important;
+html, body {
+    height: 100vh !important;
+    overflow: hidden !important;
     position: static !important;
 }
 
@@ -75,9 +74,9 @@ main {
 #desktop-view {
     display: block;
     position: relative;
-    min-height: 100vh;
-    overflow: visible !important;
-    padding-bottom: 130px; /* Space for logger at bottom */
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* ==================== POSTER GRID ==================== */
