@@ -1544,14 +1544,13 @@ function buildLayersHTML(poster) {
                 
                 const customScaleAttr = `data-custom-scale="${baseScale}"`;
 
-                // Dynamisch aspect ratio laden voor afbeeldingen
-                if (!isVideo) {
+                // Dynamisch aspect ratio laden voor STATIC images (niet GIF)
+                if (!isGif && !isVideo) {
                     const img = new Image();
                     img.onload = function() {
                         const aspectRatio = this.width / this.height;
                         
                         // Bereken width en height gebaseerd op aspect ratio
-                        // Zorg dat de langste zijde 1.4 * baseScale is
                         let width, height;
                         if (aspectRatio > 1) {
                             // Landscape
@@ -1583,14 +1582,16 @@ function buildLayersHTML(poster) {
 
                 if (isGif) {
                     // Use a-plane with GIF shader for GIF playback
-                    // Zet initial dimensions op placeholder, wordt dynamisch aangepast
+                    // GIFs zijn meestal landscape, dus use landscape ratio (1.5:1)
+                    const gifWidth = 1.5 * baseScale;
+                    const gifHeight = 1.0 * baseScale;
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
                             position="${posX} ${posY} ${posZ}" 
-                            height="1.4" 
-                            width="1.4" 
+                            height="${gifHeight.toFixed(3)}" 
+                            width="${gifWidth.toFixed(3)}" 
                             rotation="0 0 ${rotZ}"
                             material="shader: gif; src: url(${mediaPath}); transparent: true;"
                             ${customScaleAttr}
