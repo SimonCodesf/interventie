@@ -3069,33 +3069,45 @@ function hideGifLoader() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📄 DOM Content Loaded');
     
-    // Create a REAL overlay element (not pseudo-element, because a-scene is position: absolute)
-    const borderOverlay = document.createElement('div');
-    borderOverlay.id = 'camera-border-overlay';
-    borderOverlay.style.cssText = `
-        position: fixed;
-        top: 75px;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border-left: 16px solid #000;
-        border-right: 16px solid #000;
-        border-bottom: 16px solid #000;
-        pointer-events: none;
-        z-index: 9998;
-        box-sizing: border-box;
-    `;
+    // 🎬 CAMERA SPACING: Pas de a-scene zelf aan in plaats van overlay
+    // Wacht tot de a-scene element beschikbaar is
+    const checkAndAdjustScene = () => {
+        const arScene = document.getElementById('ar-scene');
+        if (arScene) {
+            // Pas het a-scene element aan met spacing (margin = spacing effect)
+            arScene.style.cssText = `
+                position: absolute !important;
+                top: 75px !important;
+                left: 16px !important;
+                right: 16px !important;
+                bottom: 16px !important;
+                width: calc(100% - 32px) !important;
+                height: calc(100% - 91px) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
+                box-sizing: border-box !important;
+            `;
+            console.log('✅ Camera spacing aangebracht: 16px op alle zijden (behalve top onder logo)');
+            
+            // Monitor canvas ook
+            setTimeout(() => {
+                const canvas = arScene.querySelector('canvas');
+                if (canvas) {
+                    console.log('📹 Canvas gevonden en aangepast met spacing');
+                    canvas.style.cssText = `
+                        width: 100% !important;
+                        height: 100% !important;
+                        display: block !important;
+                        object-fit: cover !important;
+                    `;
+                }
+            }, 200);
+        } else {
+            // Probeer later opnieuw
+            setTimeout(checkAndAdjustScene, 500);
+        }
+    };
     
-    // Wait for DOM to be fully ready, then insert
-    if (document.body) {
-        document.body.appendChild(borderOverlay);
-        console.log('✅ Camera border overlay element injected into DOM');
-    } else {
-        setTimeout(() => {
-            document.body.appendChild(borderOverlay);
-            console.log('✅ Camera border overlay element injected into DOM (delayed)');
-        }, 100);
-    }
+    checkAndAdjustScene();
     
     // Listen for GIF loaded events (optional logging)
     document.addEventListener('gif-loaded', (e) => {
