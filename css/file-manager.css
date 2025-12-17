@@ -445,6 +445,116 @@
     object-fit: contain;
 }
 
+/* ==================== TERMINAL OUTPUT STYLING ==================== */
+.window-terminal {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    overflow-y: auto;
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    color: var(--white);
+}
+
+.term-line {
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+}
+
+.term-prompt {
+    color: var(--white);
+    opacity: 0.7;
+    user-select: none;
+}
+
+.term-output {
+    margin-left: 1.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.term-row {
+    display: flex;
+    margin-bottom: 0.2rem;
+}
+
+.term-key {
+    color: var(--white);
+    opacity: 0.6;
+    min-width: 80px;
+    text-align: right;
+    margin-right: 0.5rem;
+}
+
+.term-val {
+    color: var(--white);
+    flex: 1;
+    word-break: break-word;
+}
+
+.term-val a {
+    color: var(--white);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.term-val a:hover {
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+.term-ok {
+    color: #00ff00;
+    opacity: 0.8;
+}
+
+.term-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.5rem 1.5rem;
+}
+
+.term-btn {
+    background: transparent;
+    border: 0.5px solid var(--white);
+    color: var(--white);
+    padding: 0.3rem 0.6rem;
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    opacity: 0.6;
+}
+
+.term-btn:hover {
+    background: var(--white);
+    color: var(--black);
+    opacity: 1;
+}
+
+.term-link {
+    color: var(--white);
+    text-decoration: underline;
+    margin-left: 1.5rem;
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.term-link:hover {
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+.term-cursor {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
+}
+
 .window-info {
     flex: 1;
     padding: 0.75rem 1rem;
