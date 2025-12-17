@@ -1620,6 +1620,7 @@ function buildLayersHTML(poster) {
                             ${exclusionAttr}></a-video>`;
                 } else {
                     // Use a-plane for static images
+                    // Zet initial dimensions op placeholder, wordt dynamisch aangepast via Image loader
                     const materialAttr = `material="transparent: true; alphaTest: 0.1; side: double;"`;
                     
                     layersHTML += `
@@ -1627,8 +1628,8 @@ function buildLayersHTML(poster) {
                             id="ar-layer-${i}"
                             src="${mediaPath}" 
                             position="${posX} ${posY} ${posZ}" 
-                            height="${height.toFixed(3)}" 
-                            width="${width.toFixed(3)}" 
+                            height="1.4" 
+                            width="1.4" 
                             rotation="0 0 ${rotZ}"
                             data-image-src="${mediaPath}"
                             data-preserve-aspect="true"
