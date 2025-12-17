@@ -187,11 +187,86 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         </div>
                     </div>
                 </div>
+                ${isEditForm ? `
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid #ddd;">
+                    <button type="button" onclick="deleteLayer(${layerNum})" style="background: #e74c3c; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%;">
+                        Verwijder Laag ${layerNum}
+                    </button>
+                </div>
+                ` : ''}
             </div>
         </details>
     `;
 }
 
+// Verwijder een AR laag (alleen in edit mode)
+function deleteLayer(layerNum) {
+    if (!confirm(`Weet je zeker dat je laag ${layerNum} wilt verwijderen?`)) {
+        return;
+    }
+    
+    // Reset al laag input velden
+    const inputIds = [
+        `edit-layer-${layerNum}-image`,
+        `edit-layer-${layerNum}-pos-x`,
+        `edit-layer-${layerNum}-pos-y`,
+        `edit-layer-${layerNum}-z`,
+        `edit-layer-${layerNum}-scale`,
+        `edit-layer-${layerNum}-rot-z`,
+        `edit-layer-${layerNum}-exclusion`,
+        `edit-layer-${layerNum}-enable-anim`,
+        `edit-layer-${layerNum}-anim-x`,
+        `edit-layer-${layerNum}-anim-y`,
+        `edit-layer-${layerNum}-anim-z`,
+        `edit-layer-${layerNum}-anim-rot-x`,
+        `edit-layer-${layerNum}-anim-rot-y`,
+        `edit-layer-${layerNum}-anim-rot-z`,
+        `edit-layer-${layerNum}-anim-scale`,
+        `edit-layer-${layerNum}-anim-opacity`,
+        `edit-layer-${layerNum}-anim-duration`,
+        `edit-layer-${layerNum}-anim-preset`
+    ];
+    
+    inputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.type === 'checkbox') {
+                el.checked = false;
+            } else if (el.type === 'file') {
+                el.value = '';
+            } else if (el.tagName === 'SELECT') {
+                el.value = '';
+            } else {
+                const defaultVal = LAYER_CONFIG.defaultLayers.find(l => l.num === layerNum)?.defaultZ?.toFixed(3) || '0.000';
+                el.value = id.includes('pos-x') || id.includes('pos-y') ? '0.000' : 
+                           id.includes('-z') && !id.includes('rot') ? defaultVal :
+                           id.includes('scale') ? '1.0' :
+                           '';
+            }
+        }
+    });
+    
+    // Reset animation container
+    const animContainer = document.getElementById(`edit-layer-${layerNum}-anim-container`);
+    if (animContainer) {
+        animContainer.style.display = 'none';
+    }
+    
+    // Update status badge
+    const statusBadge = document.getElementById(`edit-layer-${layerNum}-status`);
+    if (statusBadge) {
+        statusBadge.textContent = 'Leeg';
+    }
+    
+    // Update current file info
+    const currentFileInfo = document.getElementById(`edit-layer-${layerNum}-current`);
+    if (currentFileInfo) {
+        currentFileInfo.textContent = 'Geen afbeelding';
+        currentFileInfo.style.color = '#999';
+    }
+    
+    alert(`Laag ${layerNum} is verwijderd!`);
+}
 
 // API URL - Detect environment
 const API_URL = window.location.origin + '/api.php'; // cPanel with PHP backend
@@ -1529,6 +1604,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
 window.applyAnimPreset = applyAnimPreset;
+window.deleteLayer = deleteLayer;
 
 // Setup animation toggles for all layers
 // document.addEventListener('DOMContentLoaded', () => {
