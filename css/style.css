@@ -1374,10 +1374,10 @@ a-scene canvas {
 
 .scan-frame {
     position: fixed;
-    top: 11dvh;
-    left: 30px;
-    right: 30px;
-    bottom: 18dvh;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
     border: 1px solid #ffffff;
     pointer-events: none;
     z-index: 10;
