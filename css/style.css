@@ -1349,7 +1349,11 @@ a-scene video {
 
 #ar-scene canvas,
 a-scene canvas {
-    display: block;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
 }
 
 .mindar-ui-overlay,
