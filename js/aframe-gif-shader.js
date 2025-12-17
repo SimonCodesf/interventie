@@ -530,13 +530,9 @@
 	   */
 	  __draw: function __draw() {
 	    
-     this.__clearCanvas(); 
-	  },
-
-
-	  /*============================
-	  =            ready            =
-	  ============================*/
+    this.__clearCanvas(); 
+    this.__ctx.drawImage(this.__frames[this.__frameIdx], 0, 0, this.__width, this.__height); 
+    this.__texture.needsUpdate = true;
 
 	  /**
 	   * setup gif animation and play if autoplay is true
