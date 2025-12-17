@@ -3069,6 +3069,17 @@ function hideGifLoader() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📄 DOM Content Loaded');
     
+    // Inject camera spacing styles directly (cache busting)
+    const spacingStyle = document.createElement('style');
+    spacingStyle.id = 'camera-spacing-styles';
+    spacingStyle.textContent = `
+        #ar-camera-container {
+            box-shadow: inset 0 -16px 0 0 #000, inset 16px 0 0 0 #000, inset -16px 0 0 0 #000 !important;
+        }
+    `;
+    document.head.appendChild(spacingStyle);
+    console.log('🎨 Camera spacing styles injected');
+    
     // Listen for GIF loaded events (optional logging)
     document.addEventListener('gif-loaded', (e) => {
         console.log('🎞️ GIF Loaded Event Caught:', e.target.id);
