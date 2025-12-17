@@ -1296,13 +1296,14 @@ main {
 }
 
 #ar-camera-container {
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 32px);
+    height: calc(100% - 32px);
     position: relative;
     overflow: hidden;
     background: transparent;
     display: block;
     pointer-events: none;
+    margin: 0 16px 16px 16px;
 }
 
 #ar-scene,
