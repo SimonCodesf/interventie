@@ -5,20 +5,21 @@
     left: 0;
     width: 100%;
     background: var(--black, #000000);
-    border-top: 1px solid var(--white, #ffffff);
+    border-top: 0.5px solid var(--white, #ffffff);
     padding: 8px 15px;
     color: var(--white, #ffffff);
     font-family: 'Roboto Mono', monospace;
     font-size: 9px;
     line-height: 1.4;
     z-index: 99999;
-    pointer-events: none;
+    pointer-events: auto;
     display: none; /* Hidden by default */
     text-transform: uppercase;
-    height: 30px; /* Fixed height bar */
+    height: auto;
+    max-height: 100px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
 }
 
 #hacker-loader.visible {
@@ -29,15 +30,38 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    overflow: hidden;
-    white-space: nowrap;
+    overflow-y: auto;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
     flex: 1;
+    max-height: 80px;
+    padding: 4px 0;
+}
+
+#loader-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+#loader-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#loader-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+#loader-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .log-line {
     opacity: 0;
     animation: fadeIn 0.2s forwards;
     color: #888; /* Dimmed history */
+    flex-shrink: 0;
+    display: block;
 }
 
 .log-line:last-child {
@@ -66,4 +90,27 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(2px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* DESKTOP: Larger, scrollable logger */
+@media (min-width: 769px) {
+    #hacker-loader {
+        max-height: 120px;
+        padding: 12px 20px;
+    }
+    
+    #loader-content {
+        max-height: 100px;
+    }
+    
+    .log-line {
+        font-size: 10px;
+    }
+}
+
+/* MOBILE: Hide logger on small screens */
+@media (max-width: 768px) {
+    #hacker-loader {
+        display: none !important;
+    }
 }

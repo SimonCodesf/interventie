@@ -77,6 +77,7 @@ main {
     position: relative;
     min-height: 100vh;
     overflow: visible !important;
+    padding-bottom: 130px; /* Space for logger at bottom */
 }
 
 /* ==================== POSTER GRID ==================== */
