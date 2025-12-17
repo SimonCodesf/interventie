@@ -1306,12 +1306,12 @@ main {
 #ar-scene,
 a-scene {
     position: absolute !important;
-    top: 16px !important;
-    left: 16px !important;
-    right: 16px !important;
-    bottom: 16px !important;
-    width: calc(100% - 32px) !important;
-    height: calc(100% - 32px) !important;
+    top: 11vh !important;
+    left: 4vw !important;
+    right: 4vw !important;
+    bottom: 13vh !important;
+    width: calc(100% - 8vw) !important;
+    height: calc(100% - 24vh) !important;
     z-index: 9996 !important;
     overflow: hidden !important;
     border: 1px solid red !important;
@@ -1374,10 +1374,10 @@ a-scene canvas {
 
 .scan-frame {
     position: fixed;
-    top: 16px;
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
+    top: 11vh;
+    left: 4vw;
+    right: 4vw;
+    bottom: 13vh;
     border: 1px solid #ffffff;
     pointer-events: none;
     z-index: 10;
