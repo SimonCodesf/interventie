@@ -621,7 +621,7 @@ main {
     color: var(--black);
     text-decoration: none;
     padding: 0.6rem 1.2rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     transition: all 0.15s;
     font-size: 0.9rem;
     letter-spacing: 0.05em;
@@ -642,7 +642,7 @@ main {
 .login-section {
     background: var(--white);
     padding: 3rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     max-width: 500px;
     margin: 4rem auto;
     text-align: center;
@@ -664,7 +664,7 @@ main {
 #login-form input {
     padding: 1rem;
     font-size: 1rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     background: var(--white);
     color: var(--black);
     transition: border-color 0.3s;
@@ -679,7 +679,7 @@ main {
     padding: 1rem;
     background: var(--white);
     color: var(--black);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     font-size: 1rem;
     font-weight: 400;
     cursor: pointer;
@@ -697,7 +697,7 @@ main {
 .upload-card {
     background: var(--white);
     padding: 2rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     margin-bottom: 2rem;
 }
 
@@ -726,7 +726,7 @@ main {
     width: 100%;
     padding: 0.8rem;
     font-size: 1rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     background: var(--white);
     color: var(--black);
     font-family: inherit;
@@ -760,7 +760,7 @@ main {
 #preview-image {
     max-width: 100%;
     max-height: 300px;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
 }
 
 .upload-btn {
@@ -768,7 +768,7 @@ main {
     padding: 1rem;
     background: var(--white);
     color: var(--black);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     font-size: 1rem;
     font-weight: 400;
     cursor: pointer;
@@ -808,7 +808,7 @@ main {
 .posters-management {
     background: var(--white);
     padding: 2rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
 }
 
 .posters-management h2 {
@@ -829,7 +829,7 @@ main {
     gap: 1.5rem;
     padding: 1.5rem;
     background: var(--white);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     transition: all 0.15s;
 }
 
@@ -851,7 +851,7 @@ main {
     width: 80px;
     height: 113px;
     object-fit: cover;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
 }
 
 .admin-poster-item-info {
@@ -877,7 +877,7 @@ main {
 .delete-btn {
     background: transparent;
     color: var(--black);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     padding: 0.6rem 1.2rem;
     cursor: pointer;
     font-weight: 400;
@@ -1016,7 +1016,7 @@ main {
 
 ::-webkit-scrollbar-thumb {
     background: #222;
-    border: 1px solid #111;
+    border: 0.5px solid #111;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -1027,7 +1027,7 @@ main {
 .upload-progress {
     margin-top: 1rem;
     padding: 1rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     background: var(--white);
 }
 
@@ -1054,7 +1054,7 @@ main {
     width: 100%;
     height: 8px;
     background: rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     margin-bottom: 0.5rem;
     overflow: hidden;
 }
@@ -1118,7 +1118,7 @@ main {
     margin: 1.5rem 0;
     padding: 1rem;
     background: rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
 }
 
 .total-size-summary h4 {
@@ -1166,7 +1166,7 @@ main {
     background-color: var(--white);
     margin: 2% auto;
     padding: 2rem;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     width: 90%;
     max-width: 700px;
     max-height: 90vh;
@@ -1212,7 +1212,7 @@ main {
     cursor: pointer;
     transition: all 0.15s;
     letter-spacing: 0.05em;
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
 }
 
 .btn-primary {
@@ -1236,7 +1236,7 @@ main {
 .edit-btn {
     background: var(--white);
     color: var(--black);
-    border: 1px solid var(--black);
+    border: 0.5px solid var(--black);
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
     cursor: pointer;
@@ -1314,7 +1314,7 @@ a-scene {
     height: calc(100% - 24vh) !important;
     z-index: 9996 !important;
     overflow: hidden !important;
-    border: 1px solid red !important;
+    border: none !important;
     box-sizing: border-box !important;
 }
 
@@ -1378,7 +1378,7 @@ a-scene canvas {
     left: 4vw;
     right: 4vw;
     bottom: 13vh;
-    border: 1px solid #ffffff;
+    border: 0.5px solid #ffffff;
     pointer-events: none;
     z-index: 10;
     transition: opacity 0.3s ease;
