@@ -17,11 +17,17 @@
 }
 
 html, body {
-    height: 100vh !important;
-    overflow: hidden !important;
+    height: auto !important;
+    overflow: auto !important;
     position: static !important;
     margin: 0;
     padding: 0;
+}
+
+/* Main website layout - desktop view */
+body.main-website {
+    height: 100vh !important;
+    overflow: hidden !important;
 }
 
 :root {
