@@ -3069,6 +3069,13 @@ function hideGifLoader() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📄 DOM Content Loaded');
     
+    // DEBUG: Check if a-scene exists
+    const arScene = document.getElementById('ar-scene');
+    console.log('🔍 a-scene element exists?', !!arScene);
+    if (arScene) {
+        console.log('📊 a-scene computed style:', window.getComputedStyle(arScene).position);
+    }
+    
     // Inject camera spacing styles directly (cache busting)
     const spacingStyle = document.createElement('style');
     spacingStyle.id = 'camera-spacing-styles';
@@ -3088,10 +3095,25 @@ document.addEventListener('DOMContentLoaded', () => {
             pointer-events: none;
             z-index: 9998;
             box-sizing: border-box;
+            display: block !important;
         }
     `;
     document.head.appendChild(spacingStyle);
     console.log('🎨 Camera spacing styles injected');
+    console.log('📋 Style tag created:', document.getElementById('camera-spacing-styles') !== null);
+    
+    // DEBUG: Check if pseudo-element is rendered
+    setTimeout(() => {
+        const arSceneElement = document.getElementById('ar-scene');
+        if (arSceneElement) {
+            const beforeElement = window.getComputedStyle(arSceneElement, '::before');
+            console.log('🔵 a-scene::before computed styles:');
+            console.log('  - content:', beforeElement.content);
+            console.log('  - position:', beforeElement.position);
+            console.log('  - border-left:', beforeElement.borderLeft);
+            console.log('  - display:', beforeElement.display);
+        }
+    }, 500);
     
     // Listen for GIF loaded events (optional logging)
     document.addEventListener('gif-loaded', (e) => {
