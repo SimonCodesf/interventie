@@ -1490,10 +1490,8 @@ function buildLayersHTML(poster) {
                 const posY = parseFloat(layerData.pos_y) || 0;
                 const posZ = baseZ;
                 
-                // Base scale (applies to both width and height proportionally)
+                // Base scale (applies proportionally)
                 const baseScale = parseFloat(layerData.scale) || 1.0;
-                const width = 1.4 * baseScale;  // Default width 1.4 * scale
-                const height = 1.4 * baseScale;  // Default height 1.4 * scale (maintains ratio)
                 const rotZ = parseFloat(layerData.rot_z) || 0;
                 
                 // Animation data
@@ -1546,15 +1544,53 @@ function buildLayersHTML(poster) {
                 
                 const customScaleAttr = `data-custom-scale="${baseScale}"`;
 
+                // Dynamisch aspect ratio laden voor afbeeldingen
+                if (!isVideo) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const aspectRatio = this.width / this.height;
+                        
+                        // Bereken width en height gebaseerd op aspect ratio
+                        // Zorg dat de langste zijde 1.4 * baseScale is
+                        let width, height;
+                        if (aspectRatio > 1) {
+                            // Landscape
+                            width = 1.4 * baseScale;
+                            height = (1.4 * baseScale) / aspectRatio;
+                        } else {
+                            // Portrait
+                            height = 1.4 * baseScale;
+                            width = (1.4 * baseScale) * aspectRatio;
+                        }
+                        
+                        // Update plane dimensies
+                        const layer = document.getElementById(`ar-layer-${i}`);
+                        if (layer) {
+                            layer.setAttribute('width', width.toFixed(3));
+                            layer.setAttribute('height', height.toFixed(3));
+                        }
+                    };
+                    img.onerror = function() {
+                        // Fallback naar vierkant als afbeelding niet laadt
+                        const layer = document.getElementById(`ar-layer-${i}`);
+                        if (layer) {
+                            layer.setAttribute('width', (1.4 * baseScale).toFixed(3));
+                            layer.setAttribute('height', (1.4 * baseScale).toFixed(3));
+                        }
+                    };
+                    img.src = mediaPath;
+                }
+
                 if (isGif) {
                     // Use a-plane with GIF shader for GIF playback
+                    // Zet initial dimensions op placeholder, wordt dynamisch aangepast
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
                             position="${posX} ${posY} ${posZ}" 
-                            height="${height.toFixed(3)}" 
-                            width="${width.toFixed(3)}" 
+                            height="1.4" 
+                            width="1.4" 
                             rotation="0 0 ${rotZ}"
                             material="shader: gif; src: url(${mediaPath}); transparent: true;"
                             ${customScaleAttr}
@@ -1562,13 +1598,16 @@ function buildLayersHTML(poster) {
                             ${exclusionAttr}></a-plane>`;
                 } else if (isVideo) {
                     // Use a-video for MP4/WebM layers
+                    // Video: gebruik default aspect ratio 16:9
+                    const videoWidth = 1.4 * baseScale;
+                    const videoHeight = (1.4 * baseScale) / (16/9);
                     layersHTML += `
                         <a-video 
                             id="ar-layer-${i}"
                             src="${mediaPath}" 
                             position="${posX} ${posY} ${posZ}" 
-                            height="${height.toFixed(3)}" 
-                            width="${width.toFixed(3)}" 
+                            height="${videoHeight.toFixed(3)}" 
+                            width="${videoWidth.toFixed(3)}" 
                             rotation="0 0 ${rotZ}"
                             autoplay="true"
                             loop="true"
@@ -2826,7 +2865,7 @@ async function showPosterWindow(posterId) {
     windowEl.style.display = 'flex';
     windowEl.style.flexDirection = 'column';
     windowEl.style.background = '#000';
-    windowEl.style.border = '1px solid #fff';
+    windowEl.style.border = '0.5px solid #fff';
     windowEl.style.borderRadius = '2px';
     windowEl.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.8)';
     windowEl.style.minWidth = '240px';
