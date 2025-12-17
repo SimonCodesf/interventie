@@ -3073,8 +3073,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const spacingStyle = document.createElement('style');
     spacingStyle.id = 'camera-spacing-styles';
     spacingStyle.textContent = `
+        #ar-camera-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-left: 16px solid #000;
+            border-right: 16px solid #000;
+            border-bottom: 16px solid #000;
+            pointer-events: none;
+            z-index: 9998;
+            box-sizing: border-box;
+        }
+        
         #ar-camera-container {
-            box-shadow: inset 0 -16px 0 0 #000, inset 16px 0 0 0 #000, inset -16px 0 0 0 #000 !important;
+            position: relative !important;
         }
     `;
     document.head.appendChild(spacingStyle);
