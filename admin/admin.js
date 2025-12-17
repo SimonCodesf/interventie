@@ -110,7 +110,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         
                         <div style="margin-bottom: 1rem;">
                             <label style="font-size: 0.85rem; color: #666; display: block; margin-bottom: 0.5rem;">Snelle Preset Kiezen:</label>
-                            <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ddd;">
+                            <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 0.5px solid #ddd;">
                                 <option value="">-- Kies een animatie --</option>
                                 <option value="reset">Reset (Geen animatie)</option>
                                 <optgroup label="Rotatie">

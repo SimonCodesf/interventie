@@ -2551,7 +2551,7 @@ function loadGalleryOverlay() {
                     cursor: pointer !important;
                     position: relative !important;
                     aspect-ratio: 1 / 1.4142 !important;
-                    border: 1px solid var(--white) !important;
+                    border: 0.5px solid var(--white) !important;
                     transition: all 0.1s ease !important;
                     padding: 0 !important;
                     margin: 0 !important;
@@ -2586,7 +2586,7 @@ function loadGalleryOverlay() {
                     right: 0 !important;
                     padding: 4px !important;
                     background: rgba(0, 0, 0, 0.85) !important;
-                    border-top: 1px solid var(--dim) !important;
+                    border-top: 0.5px solid var(--dim) !important;
                 }
                 
                 #gallery-overlay-grid.featured-grid .card-info {
@@ -2659,7 +2659,7 @@ function loadGalleryOverlay() {
             .poster-window {
                 position: fixed;
                 background: var(--black);
-                border: 1px solid var(--white);
+                border: 0.5px solid var(--white);
                 border-radius: 2px;
                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
                 min-width: 280px;
@@ -2672,7 +2672,7 @@ function loadGalleryOverlay() {
             
             .window-header {
                 background: var(--black);
-                border-bottom: 1px solid var(--white);
+                border-bottom: 0.5px solid var(--white);
                 padding: 8px 12px;
                 display: flex;
                 justify-content: space-between;
@@ -2727,7 +2727,7 @@ function loadGalleryOverlay() {
                 width: 100%;
                 aspect-ratio: 1 / 1.4142;
                 overflow: hidden;
-                border: 1px solid var(--white);
+                border: 0.5px solid var(--white);
             }
             
             .window-image img {
@@ -2861,13 +2861,13 @@ async function showPosterWindow(posterId) {
     console.log('📊 Poster data:', poster);
 
     windowEl.innerHTML = `
-        <div style="background: #000; border-bottom: 1px solid #fff; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; font-family: Roboto Mono; font-size: 0.65rem; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;" class="window-header">
+        <div style="background: #000; border-bottom: 0.5px solid #fff; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; font-family: Roboto Mono; font-size: 0.65rem; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;" class="window-header">
             <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.7rem;">${poster.title || 'Poster'}</span>
             <button style="background: transparent; border: none; color: #fff; font-family: Roboto Mono; font-size: 0.8rem; cursor: pointer; padding: 0 3px; margin-left: 4px; flex-shrink: 0;" class="window-close-btn">[X]</button>
         </div>
         <div style="flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 6px;">
             <!-- FOTO -->
-            <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 1px solid #fff; flex-shrink: 0; background: #111;">
+            <div style="width: 100%; aspect-ratio: 1 / 1.4142; overflow: hidden; border: 0.5px solid #fff; flex-shrink: 0; background: #111;">
                 <img src="${poster.jpeg_filename ? '/uploads/' + poster.jpeg_filename : 'img/placeholder.png'}" alt="${poster.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='img/placeholder.png'">
             </div>
             
@@ -2882,8 +2882,8 @@ async function showPosterWindow(posterId) {
             
             <!-- DOWNLOAD BUTTONS - 2 KOLOMMEN HORIZONTAAL -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 2px;">
-                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 4px 2px; font-family: Roboto Mono; font-size: 0.58rem; cursor: pointer; text-align: center; font-weight: bold;">JPEG</button>
-                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 4px 2px; font-family: Roboto Mono; font-size: 0.58rem; cursor: pointer; text-align: center; font-weight: bold;">PDF</button>
+                <button onclick="window.location.href='/uploads/${poster.jpeg_filename}'" style="background: #000; color: #fff; border: 0.5px solid #fff; padding: 4px 2px; font-family: Roboto Mono; font-size: 0.58rem; cursor: pointer; text-align: center; font-weight: bold;">JPEG</button>
+                <button onclick="window.location.href='/uploads/${poster.pdf_medium_filename}'" style="background: #000; color: #fff; border: 0.5px solid #fff; padding: 4px 2px; font-family: Roboto Mono; font-size: 0.58rem; cursor: pointer; text-align: center; font-weight: bold;">PDF</button>
             </div>
         </div>
     `;
