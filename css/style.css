@@ -1301,8 +1301,6 @@ main {
     background: transparent;
     display: block;
     pointer-events: none;
-    /* Zwarte border overlay via inset shadow (16px aan de zijkanten en onderaan) */
-    box-shadow: inset 0 -16px 0 0 var(--black), inset 16px 0 0 0 var(--black), inset -16px 0 0 0 var(--black);
 }
 
 #ar-scene,

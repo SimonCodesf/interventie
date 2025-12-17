@@ -3073,10 +3073,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const spacingStyle = document.createElement('style');
     spacingStyle.id = 'camera-spacing-styles';
     spacingStyle.textContent = `
-        #ar-camera-container::before {
+        /* Border overlay op A-Frame scene zelf */
+        a-scene::before,
+        #ar-scene::before {
             content: '';
-            position: absolute;
-            top: 0;
+            position: fixed;
+            top: 75px;
             left: 0;
             right: 0;
             bottom: 0;
@@ -3086,10 +3088,6 @@ document.addEventListener('DOMContentLoaded', () => {
             pointer-events: none;
             z-index: 9998;
             box-sizing: border-box;
-        }
-        
-        #ar-camera-container {
-            position: relative !important;
         }
     `;
     document.head.appendChild(spacingStyle);
