@@ -10,9 +10,9 @@ Focus: Immediate visual bugs and usability issues.
 - [x] **Desktop**: Improve Log integration (make it stick to bottom/integrate better).
 - [x] **Desktop**: Fix Table header spacing.
 - [x] **General**: Translate and cleanup frontend logs (English -> Dutch, remove debug noise).
-- [ ] **General**: Remove every emoji from UI (consistency).
+- [x] **General**: Remove every emoji from UI (consistency).
 - [x] **Mobile**: Remove "Play" button on AR video textures (likely autoplay policy issue).
-- [ ] **AR**: Fix GIFs 
+- [ ] **AR**: Fix GIFs yes
 - [ ] **AR**: Make exclude layer work like before
 - [ ] **Desktop&mobile**: fotos buiten poster.jpg toevoegen, bv fotos van de poster in de stad. deze zijn dan in een slideshow in de popup te zien.
 

@@ -130,8 +130,17 @@ const originalLog = console.log;
 console.log = function(...args) {
     originalLog.apply(console, args);
     const msg = args.join(' ');
-    // Filter for relevant emojis or keywords
-    if (msg.match(/🚀|📡|✅|📦|📄|🔍|📊|🎯|🎨|🧹|👁️|🔄|🧱|🎬|🛑|🚫|🙈|⏳/)) {
+    // Filter for relevant keywords (replaced emoji check)
+    const keywords = [
+        'Fetching', 'Fetched', 'Switching', 'AR view', 'WebGL', 'Chunk', 'Legacy', 'Starting', 
+        'Poster', 'Target', 'Video filter', 'GIF', 'Hiding', 'SYSTEM_READY', 'static feed', 
+        'Applied grayscale', 'Camera', 'API', 'Cannot fetch', 'No manifest', 'Pre-compiling', 
+        'Scanner', 'Scan', 'Completed', 'Created blob', 'Quick switch', 'Layer', 'Fixed', 
+        'MindAR', 'TARGET', 'Layers', 'Requesting', 'Applying', 'Adding', 'Creating', 'Gallery', 
+        'DOM', 'Detection', 'Initializing', 'Loaded', 'Device', 'Upload'
+    ];
+    
+    if (keywords.some(k => msg.includes(k))) {
         logToLoader(msg);
     }
 };
@@ -188,7 +197,7 @@ function setupVideoFilterObserver() {
         if (!video.dataset.filterApplied) {
             video.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
             video.dataset.filterApplied = 'true';
-            console.log('🎨 Applied grayscale filter to video:', video.id || 'unnamed');
+            console.log(' Applied grayscale filter to video:', video.id || 'unnamed');
         }
     };
     
@@ -210,7 +219,7 @@ function setupVideoFilterObserver() {
     });
     
     observer.observe(document.body, { childList: true, subtree: true });
-    console.log('👁️ Video filter observer active');
+    console.log(' Video filter observer active');
 }
 
 // Force cleanup of WebGL contexts to prevent overflow
@@ -227,7 +236,7 @@ function cleanupWebGLContexts() {
     
     // Track context count
     webglContextCount = Math.max(0, webglContextCount - 1);
-    console.log(`🧹 WebGL cleanup (active contexts: ~${webglContextCount})`);
+    console.log(` WebGL cleanup (active contexts: ~${webglContextCount})`);
 }
 
 // Detect mobile device
@@ -236,7 +245,7 @@ function detectMobileDevice() {
     const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
     const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(userAgent);
     
-    console.log('🔍 Device Detection:', {
+    console.log(' Device Detection:', {
         userAgent,
         isMobile,
         isTablet,
@@ -266,17 +275,17 @@ function checkARSupport() {
         console.log('💡 Upload to HTTPS website for camera access');
     }
     
-    console.log('✅ AR Support: WebGL available');
+    console.log(' AR Support: WebGL available');
     return true;
 }
 
 // Initialize AR mode with AR.js
 async function initializeARMode() {
-    console.log('🚀 Starting AR.js initialization...');
+    console.log(' Starting AR.js initialization...');
     
     try {
         // Fetch all posters from API
-        console.log('📡 Fetching posters from API...');
+        console.log(' Fetching posters from API...');
         const response = await fetch(`${API_URL}/posters`);
         if (!response.ok) {
             const errorText = await response.text();
@@ -291,7 +300,7 @@ async function initializeARMode() {
         }
         
         window.allPosters = await response.json();
-        console.log('✅ Fetched', window.allPosters.length, 'posters');
+        console.log(' Fetched', window.allPosters.length, 'posters');
         console.log('📋 Poster AR markers:', window.allPosters.map(p => ({
             title: p.title,
             ar_marker: p.ar_marker || 'NO MARKER SET',
@@ -299,10 +308,10 @@ async function initializeARMode() {
         })));
         
         // Switch to AR view
-        console.log('🔄 Switching to AR view...');
+        console.log(' Switching to AR view...');
         document.getElementById('desktop-view').style.display = 'none';
         document.getElementById('mobile-ar-view').style.display = 'flex';
-        console.log('✅ AR view displayed');
+        console.log(' AR view displayed');
 
         // Initialize UI controls immediately
         setupSwipeBarControls();
@@ -316,7 +325,7 @@ async function initializeARMode() {
             const manifestResp = await fetch('assets/chunks/manifest.json');
             if (manifestResp.ok) {
                 const manifest = await manifestResp.json();
-                console.log('📦 Found Chunk Manifest:', manifest);
+                console.log(' Found Chunk Manifest:', manifest);
                 window.arManifest = manifest;
                 window.useChunkSystem = true;
                 
@@ -360,7 +369,7 @@ async function initializeARMode() {
         window.arPosters = validPosters;
         
         // PRELOAD all .mind files into memory for instant switching
-        console.log('📦 Preloading all .mind files...');
+        console.log(' Preloading all .mind files...');
         for (const poster of validPosters) {
             try {
                 const response = await fetch(poster.mindPath);
@@ -406,7 +415,7 @@ async function initializeARMode() {
 
 // Initialize AR with Chunk System
 async function initializeChunkAR() {
-    console.log('🚀 Initializing Chunk AR System');
+    console.log(' Initializing Chunk AR System');
     
     // Start with first chunk
     window.currentChunkIndex = 0;
@@ -427,7 +436,7 @@ function loadChunkScene(chunkIndex) {
     const chunk = window.arManifest.chunks[chunkIndex];
     if (!chunk) return;
     
-    console.log(`📦 Loading Chunk ${chunkIndex}: ${chunk.file}`);
+    console.log(` Loading Chunk ${chunkIndex}: ${chunk.file}`);
     
     // Remove existing scene
     const existingScene = document.getElementById('ar-scene');
@@ -472,7 +481,7 @@ function loadChunkScene(chunkIndex) {
 // Setup listeners for Chunk System
 function setupChunkEventListeners(scene, chunk) {
     scene.addEventListener('arReady', () => {
-        console.log('✅ Chunk AR Ready');
+        console.log(' Chunk AR Ready');
         fixLayerAspectRatios();
         
         // Hide loader
@@ -504,7 +513,7 @@ function setupChunkEventListeners(scene, chunk) {
         target.addEventListener('targetFound', (e) => {
             const posterId = target.getAttribute('data-poster-id');
             const poster = window.allPosters.find(p => p.id === posterId);
-            console.log(`🎯 Found poster: ${poster?.title}`);
+            console.log(` Found poster: ${poster?.title}`);
             
             revealARScene();
             stopScanCycles('found');
@@ -523,7 +532,7 @@ function setupChunkEventListeners(scene, chunk) {
         });
         
         target.addEventListener('targetLost', () => {
-            console.log('🚫 Target lost');
+            console.log(' Target lost');
             hideARScene();
             hideDetectedPosterState();
             currentTrackedPoster = null;
@@ -558,7 +567,7 @@ function checkAndShowLoader(poster) {
             
             if (!isLoaded) {
                 allGifsLoaded = false;
-                console.log(`⏳ Pending GIF: ${filename}`);
+                console.log(` Pending GIF: ${filename}`);
             }
         }
     }
@@ -568,7 +577,7 @@ function checkAndShowLoader(poster) {
         showGifLoader();
         
         if (allGifsLoaded) {
-            console.log('✅ All GIFs already ready. Hiding loader shortly...');
+            console.log(' All GIFs already ready. Hiding loader shortly...');
             // Give a small delay so the user sees the "Decrypting" effect
             setTimeout(() => {
                 // Only hide if we are still tracking the same poster
@@ -577,7 +586,7 @@ function checkAndShowLoader(poster) {
                 }
             }, 800);
         } else {
-            console.log('⏳ Waiting for GIFs to load...');
+            console.log(' Waiting for GIFs to load...');
         }
     }
 }
@@ -625,7 +634,7 @@ function startChunkScan() {
     
     // If only 1 chunk, just reload it once to "reset" and show progress
     if (totalChunks === 1) {
-        console.log('🔄 Single chunk reset/scan');
+        console.log(' Single chunk reset/scan');
         loadChunkScene(0);
         updateScanningIndicator(null, 0, 1);
         
@@ -708,7 +717,7 @@ async function initializeStaticCameraFeed() {
         document.body.appendChild(staticVideo);
         await staticVideo.play();
         
-        console.log('✅ Static camera feed ready (overlay for hidden AR scanner)');
+        console.log(' Static camera feed ready (overlay for hidden AR scanner)');
         arSceneHidden = true;
         
     } catch (error) {
@@ -746,7 +755,7 @@ function revealARScene() {
     }
     
     arSceneHidden = false;
-    console.log('🎬 AR scene revealed!');
+    console.log(' AR scene revealed!');
 }
 
 // Hide the AR scene (show static feed) - called when poster lost
@@ -767,7 +776,7 @@ function hideARScene() {
     });
     
     arSceneHidden = true;
-    console.log('🙈 AR scene hidden behind static feed');
+    console.log(' AR scene hidden behind static feed');
 }
 
 // Custom smoothing for AR content - reduces jitter significantly
@@ -841,13 +850,13 @@ function setupCustomSmoothing(target) {
     // Register tick handler
     scene.addEventListener('tick', tickHandler);
     
-    console.log('✅ Custom matrix smoothing enabled (factor: ' + smoothFactor + ')');
+    console.log(' Custom matrix smoothing enabled (factor: ' + smoothFactor + ')');
 }
 
 // Initialize AR Scene (MindAR) - Dynamic single-poster loading
 // HIDDEN SCANNER: Scene runs behind static camera feed until poster detected
 function initializeARScene() {
-    console.log('🎬 Initializing MindAR scene (hidden scanner mode)...');
+    console.log(' Initializing MindAR scene (hidden scanner mode)...');
     
     if (!window.arMarkerPath || !window.arPosters) {
         console.error('❌ No AR marker path or posters available!');
@@ -856,7 +865,7 @@ function initializeARScene() {
     
     // Get the current poster to display
     const currentPoster = window.arPosters[window.currentARPosterIndex || 0];
-    console.log('🎯 Loading AR for poster:', currentPoster.title);
+    console.log(' Loading AR for poster:', currentPoster.title);
     
     // Build layers HTML using helper function
     const layersHTML = buildLayersHTML(currentPoster);
@@ -884,7 +893,7 @@ function initializeARScene() {
     
     // Add scene to body
     document.body.insertAdjacentHTML('beforeend', sceneHTML);
-    console.log('✅ Hidden AR scene added for poster:', currentPoster.title);
+    console.log(' Hidden AR scene added for poster:', currentPoster.title);
     
     // Get reference to scene
     const scene = document.getElementById('ar-scene');
@@ -894,7 +903,7 @@ function initializeARScene() {
     
     // Additional setup for first load
     scene.addEventListener('arReady', () => {
-        console.log('✅ Hidden AR scanner ready');
+        console.log(' Hidden AR scanner ready');
         
         // Process exclusion filter layers
         setTimeout(() => {
@@ -922,7 +931,7 @@ function initializeARScene() {
     // Force gallery overlay styles
     injectGalleryStyles();
     
-    console.log('✅ AR scene initialized (hidden behind static feed)');
+    console.log(' AR scene initialized (hidden behind static feed)');
 }
 
 // Process exclusion filter layers (black→red, white→black)
@@ -959,7 +968,7 @@ function processExclusionFilters() {
             if (material) {
                 material.map = texture;
                 material.needsUpdate = true;
-                console.log('✅ Exclusion filter applied to:', layer.id);
+                console.log(' Exclusion filter applied to:', layer.id);
             }
         };
         img.src = imgSrc;
@@ -1168,7 +1177,7 @@ function stopRotatingScanner() {
     if (scannerInterval) {
         clearTimeout(scannerInterval); // Changed from clearInterval
         scannerInterval = null;
-        console.log('🛑 Scanner stopped');
+        console.log(' Scanner stopped');
     }
 }
 
@@ -1306,7 +1315,7 @@ function startScanCycles() {
 
     if (isScanning) return;
     
-    console.log('🔍 Starting scan...');
+    console.log(' Starting scan...');
     isScanning = true;
     currentScanCycle = 0;
     postersScannedInCycle = 0;
@@ -1323,7 +1332,7 @@ function startScanCycles() {
 
 // Stop scan cycles
 function stopScanCycles(reason = 'complete') {
-    console.log(`🛑 Scan stopped: ${reason}`);
+    console.log(` Scan stopped: ${reason}`);
     isScanning = false;
     currentScanCycle = 0;
     postersScannedInCycle = 0;
@@ -1342,11 +1351,11 @@ function checkScanCycleComplete() {
     if (postersScannedInCycle >= window.arPosters.length) {
         currentScanCycle++;
         postersScannedInCycle = 0;
-        console.log(`📊 Completed cycle ${currentScanCycle}/${totalScanCycles}`);
+        console.log(` Completed cycle ${currentScanCycle}/${totalScanCycles}`);
         
         // Check if all cycles are done
         if (currentScanCycle >= totalScanCycles) {
-            console.log('✅ All scan cycles complete!');
+            console.log(' All scan cycles complete!');
             stopScanCycles('complete');
         }
     }
@@ -1730,7 +1739,7 @@ function setupSceneEventListeners(scene, currentPoster) {
     const target = document.getElementById('ar-target-0');
     
     scene.addEventListener('arReady', () => {
-        console.log('✅ MindAR ready for:', currentPoster.title);
+        console.log(' MindAR ready for:', currentPoster.title);
         
         // Hide loader
         const loader = document.getElementById('arjs-loader');
@@ -1755,7 +1764,7 @@ function setupSceneEventListeners(scene, currentPoster) {
     
     if (target) {
         target.addEventListener('targetFound', () => {
-            console.log(`🎯 TARGET FOUND! ${currentPoster.title}`);
+            console.log(` TARGET FOUND! ${currentPoster.title}`);
             
             // REVEAL AR SCENE - fade out static camera feed
             revealARScene();
@@ -1774,7 +1783,7 @@ function setupSceneEventListeners(scene, currentPoster) {
         });
         
         target.addEventListener('targetLost', () => {
-            console.log(`🚫 TARGET LOST! ${currentPoster.title}`);
+            console.log(` TARGET LOST! ${currentPoster.title}`);
             
             // HIDE AR SCENE - show static camera feed again
             hideARScene();
@@ -1841,7 +1850,7 @@ function updateLayersForPoster(poster) {
 // Switch to a different poster's AR marker
 // This destroys the current scene and creates a new one with the selected poster
 async function switchToPoster(posterId) {
-    console.log('🔄 Switching to poster:', posterId);
+    console.log(' Switching to poster:', posterId);
     
     // Stop the rotating scanner during manual switch
     stopRotatingScanner();
@@ -1859,7 +1868,7 @@ async function switchToPoster(posterId) {
     }
     
     const newPoster = window.arPosters[posterIndex];
-    console.log('🎯 Switching to:', newPoster.title, '→', newPoster.mindPath);
+    console.log(' Switching to:', newPoster.title, '→', newPoster.mindPath);
     
     // Remove existing AR scene
     const existingScene = document.getElementById('ar-scene');
@@ -1895,7 +1904,7 @@ async function switchToPoster(posterId) {
         swipeBar.classList.remove('expanded');
     }
     
-    console.log('✅ Switched to poster:', newPoster.title);
+    console.log(' Switched to poster:', newPoster.title);
     return true;
 }
 
@@ -1939,7 +1948,7 @@ async function requestCameraPermission() {
         try {
             // console.log(`📸 Trying camera config ${i + 1}/${cameraConfigs.length}...`);
             const stream = await navigator.mediaDevices.getUserMedia(cameraConfigs[i]);
-            // console.log('✅ Camera permission granted with config', i + 1);
+            // console.log(' Camera permission granted with config', i + 1);
             
             const track = stream.getVideoTracks()[0];
             const settings = track.getSettings();
@@ -1947,7 +1956,7 @@ async function requestCameraPermission() {
             // Store default zoom (1x standard lens)
             // Ultrawide causes MindAR positioning errors
             window.cameraZoomLevel = 1.0;
-            console.log(`✅ Using 1.0x standard lens (MindAR compatible)`);
+            console.log(` Using 1.0x standard lens (MindAR compatible)`);
             
             // Apply distortion compensation with standard lens (minimal)
             applyLensDistortionCompensation(1.0);
@@ -2015,8 +2024,8 @@ function debugCameraElements() {
     const video = document.querySelector('a-scene video');
     const canvas = document.querySelector('a-scene canvas');
     
-    console.log('🎥 Video element:', video ? `Found (${video.videoWidth}x${video.videoHeight})` : 'NOT FOUND');
-    console.log('🖼️ Canvas element:', canvas ? `Found (${canvas.width}x${canvas.height})` : 'NOT FOUND');
+    console.log(' Video element:', video ? `Found (${video.videoWidth}x${video.videoHeight})` : 'NOT FOUND');
+    console.log(' Canvas element:', canvas ? `Found (${canvas.width}x${canvas.height})` : 'NOT FOUND');
     
     if (video) {
         console.log('📹 Video playing:', !video.paused);
@@ -2037,7 +2046,7 @@ function debugCameraElements() {
     }
     
     if (canvas) {
-        console.log('🎨 Canvas style:', {
+        console.log(' Canvas style:', {
             display: canvas.style.display || getComputedStyle(canvas).display,
             visibility: canvas.style.visibility || getComputedStyle(canvas).visibility,
             opacity: canvas.style.opacity || getComputedStyle(canvas).opacity,
@@ -2048,7 +2057,7 @@ function debugCameraElements() {
     
     // Check all video elements on page
     const allVideos = document.querySelectorAll('video');
-    console.log('🎥 Total video elements:', allVideos.length);
+    console.log(' Total video elements:', allVideos.length);
     allVideos.forEach((v, i) => {
         console.log(`Video ${i}:`, {
             width: v.videoWidth,
@@ -2096,7 +2105,7 @@ function addMindARTargets(scene) {
     let layerCount = 0;
     
     if (poster && poster.layers) {
-        console.log('🎨 Creating layers from poster data:', poster.layers);
+        console.log(' Creating layers from poster data:', poster.layers);
         
         // Loop through all 8 possible layers
         for (let i = 1; i <= 8; i++) {
@@ -2110,7 +2119,7 @@ function addMindARTargets(scene) {
             }
             
             layerCount++;
-            console.log(`🖼️ Layer ${i}:`, layerData);
+            console.log(` Layer ${i}:`, layerData);
             
             // Calculate Z position - use poster data, scale for ultrawide if needed
             let zPos = parseFloat(layerData.z) || 0.001; // Very small Z to be just above poster
@@ -2133,7 +2142,7 @@ function addMindARTargets(scene) {
             
             // Build image path - layers are stored in uploads/ar-layers/
             const imagePath = `uploads/ar-layers/${layerData.filename}`;
-            console.log(`📁 Layer ${i} image path:`, imagePath);
+            console.log(` Layer ${i} image path:`, imagePath);
             
             // Set the image source
             layer.setAttribute('src', imagePath);
@@ -2153,7 +2162,7 @@ function addMindARTargets(scene) {
             const animDuration = parseInt(layerData.anim_duration) || 2000;
             
             if (animX > 0 || animY > 0 || animZ > 0) {
-                console.log(`🎬 Layer ${i}: Adding animation (X:${animX}, Y:${animY}, Z:${animZ}, dur:${animDuration}ms)`);
+                console.log(` Layer ${i}: Adding animation (X:${animX}, Y:${animY}, Z:${animZ}, dur:${animDuration}ms)`);
                 
                 // Scale animation for ultrawide
                 const scaleFactor = isUltrawide ? 0.3 : 1.0;
@@ -2180,12 +2189,12 @@ function addMindARTargets(scene) {
     if (layerCount === 0) {
         console.warn('⚠️ No AR layers found for poster! AR overlay will be empty.');
     } else {
-        console.log(`✅ Created ${layerCount} AR layers from poster data`);
+        console.log(` Created ${layerCount} AR layers from poster data`);
     }
     
     scene.appendChild(target);
     
-    console.log(`✅ MindAR target with ${layerCount} image layers added`);
+    console.log(` MindAR target with ${layerCount} image layers added`);
     
     // Fix camera and renderer after scene is ready
     setTimeout(() => {
@@ -2197,7 +2206,7 @@ function addMindARTargets(scene) {
             camera.near = 0.01;
             camera.far = 10000;
             camera.updateProjectionMatrix();
-            console.log('✅ Camera near/far fixed:', camera.near, camera.far);
+            console.log(' Camera near/far fixed:', camera.near, camera.far);
         }
         
         if (renderer) {
@@ -2205,7 +2214,7 @@ function addMindARTargets(scene) {
             if (size.x === 0 || size.y === 0) {
                 const canvas = renderer.domElement;
                 renderer.setSize(canvas.width || 393, canvas.height || 556, false);
-                console.log('✅ Renderer size fixed');
+                console.log(' Renderer size fixed');
             }
         }
         
@@ -2219,18 +2228,18 @@ function addMindARTargets(scene) {
                     layer.object3D.visible = true;
                 }
             }
-            console.log('✅ Forced all elements visible');
+            console.log(' Forced all elements visible');
         }
     }, 500);
     
     // Event listeners
     target.addEventListener('targetFound', () => {
-        console.log('✅ Poster detected!');
+        console.log(' Poster detected!');
         
         // Get the marker path from scene attribute
         const mindarAttr = scene.getAttribute('mindar-image');
         const sceneMarker = mindarAttr?.imageTargetSrc || null;
-        console.log('🎯 Scene marker:', sceneMarker);
+        console.log(' Scene marker:', sceneMarker);
         
         // ULTRAWIDE LENS OFFSET COMPENSATION
         // MindAR anchors incorrectly with ultrawide - apply positional offset
@@ -2273,7 +2282,7 @@ function addMindARTargets(scene) {
                 console.warn('⚠️ No marker match found, using first poster as fallback');
                 matchedPoster = window.allPosters[0];
             } else {
-                console.log('✅ Matched poster:', matchedPoster.title, 'via ar_marker:', matchedPoster.ar_marker);
+                console.log(' Matched poster:', matchedPoster.title, 'via ar_marker:', matchedPoster.ar_marker);
             }
             
             currentTrackedPoster = matchedPoster;
@@ -2292,12 +2301,12 @@ function addMindARTargets(scene) {
             const layer = document.getElementById(`ar-layer-${i}`);
             if (layer && layer.object3D) {
                 layer.object3D.visible = true;
-                console.log(`📊 Layer ${i} visible:`, layer.object3D.visible, 'Position:', layer.object3D.position);
+                console.log(` Layer ${i} visible:`, layer.object3D.visible, 'Position:', layer.object3D.position);
             }
         }
         
         // Log target transform
-        console.log('🎯 Target transform:', {
+        console.log(' Target transform:', {
             position: target.object3D.position,
             rotation: target.object3D.rotation,
             scale: target.object3D.scale,
@@ -2322,7 +2331,7 @@ function addMindARTargets(scene) {
         currentTrackedPoster = null;
     });
     
-    console.log('✅ MindAR target added');
+    console.log(' MindAR target added');
 }
 
 // Setup AR Event Listeners (legacy, kept for compatibility)
@@ -2345,7 +2354,7 @@ function setFeaturedPoster(poster) {
 function resetFeaturedPoster() {
     featuredPoster = null;
     isFeaturedPosterOpen = false;
-    console.log('🔄 Featured poster reset');
+    console.log(' Featured poster reset');
     
     // Clear timer
     if (autoResetFeaturedPosterTimer) {
@@ -2519,7 +2528,7 @@ function loadGalleryOverlay() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
     
-    console.log('🎬 loadGalleryOverlay() called');
+    console.log(' loadGalleryOverlay() called');
     console.log('� featuredPoster global variable:', featuredPoster?.title || 'null', 'Object:', featuredPoster);
     console.log('🔵 currentTrackedPoster global variable:', currentTrackedPoster?.title || 'null', 'Object:', currentTrackedPoster);
     console.log('📋 Posters array length:', window.allPosters.length);
@@ -2555,11 +2564,11 @@ function loadGalleryOverlay() {
         
         // Add grid class
         grid.classList.add('featured-grid');
-        console.log('🎨 Added featured-grid class. Grid classes now:', grid.className);
+        console.log(' Added featured-grid class. Grid classes now:', grid.className);
         
     } else {
         // NORMAL GALLERY MODE: Toon alle posters in 2 kolommen
-        console.log('📊 NORMAL MODE - Rendering all posters (featured=null)');
+        console.log(' NORMAL MODE - Rendering all posters (featured=null)');
         grid.classList.remove('featured-grid');
         
         grid.innerHTML = window.allPosters.map(poster => {
@@ -2698,7 +2707,7 @@ function loadGalleryOverlay() {
                 }
         `;
         document.head.appendChild(galleryStyle);
-        console.log('✅ Gallery card styles injected');
+        console.log(' Gallery card styles injected');
     }
     
     // Add AR badge styles (minimal)
@@ -2839,7 +2848,7 @@ window.nextWindowZIndex = 1000;
 
 async function showPosterWindow(posterId) {
     console.log('📍 showPosterWindow called with:', posterId);
-    console.log('🎯 window.allPosters:', window.allPosters?.length || 0);
+    console.log(' window.allPosters:', window.allPosters?.length || 0);
     console.log('🪟 posterWindows already open:', window.posterWindows?.size || 0);
     
     // If window already open, bring to front
@@ -2863,16 +2872,16 @@ async function showPosterWindow(posterId) {
     try {
         const response = await fetch(`${API_URL}/posters/${posterId}`);
         if (response.ok) poster = await response.json();
-        console.log('✅ API fetch successful');
+        console.log(' API fetch successful');
     } catch (e) {
         console.log('❌ API fetch failed:', e.message);
     }
     
     // Fallback to cached posters
     if (!poster && window.allPosters && Array.isArray(window.allPosters)) {
-        console.log('🔍 Looking in cached posters array...');
+        console.log(' Looking in cached posters array...');
         poster = window.allPosters.find(p => p.id === posterId);
-        if (poster) console.log('✅ Found in cache:', poster.title);
+        if (poster) console.log(' Found in cache:', poster.title);
     }
     
     if (!poster) {
@@ -2920,7 +2929,7 @@ async function showPosterWindow(posterId) {
     windowEl.style.top = `${randomY}px`;
     
     console.log(`🪟 Creating window at (${randomX}, ${randomY}) with z-index ${zIdx}`);
-    console.log('📊 Poster data:', poster);
+    console.log(' Poster data:', poster);
 
     windowEl.innerHTML = `
         <div style="background: #000; border-bottom: 0.5px solid #fff; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; font-family: Roboto Mono; font-size: 0.65rem; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;" class="window-header">
@@ -2953,13 +2962,13 @@ async function showPosterWindow(posterId) {
     document.getElementById('popup-windows-container').appendChild(windowEl);
     window.posterWindows.set(posterId, windowEl);
 
-    console.log('✅ Window added to popup container. Check for element:', document.getElementById(`poster-window-${posterId}`) ? 'FOUND ✓' : 'NOT FOUND ✗');
+    console.log(' Window added to popup container. Check for element:', document.getElementById(`poster-window-${posterId}`) ? 'FOUND ✓' : 'NOT FOUND ✗');
 
     // Close button
     windowEl.querySelector('.window-close-btn').addEventListener('click', () => {
         windowEl.remove();
         window.posterWindows.delete(posterId);
-        console.log('✅ Poster window closed:', posterId);
+        console.log(' Poster window closed:', posterId);
     });
 
     // Drag functionality
@@ -3030,7 +3039,7 @@ function showDetectedPosterDetails(poster) {
     
     if (!poster) return;
     
-    console.log('🖼️ showDetectedPosterDetails called with:', {
+    console.log(' showDetectedPosterDetails called with:', {
         title: poster?.title,
         ar_marker: poster?.ar_marker,
         id: poster?.id
@@ -3047,7 +3056,7 @@ function showDetectedPosterDetails(poster) {
         ${poster.ar_marker ? `<p style="font-size: 0.8rem; color: #666;"><strong>AR Marker:</strong> ${poster.ar_marker}</p>` : ''}
     `;
     
-    console.log('✅ Detected poster details loaded:', poster.title);
+    console.log(' Detected poster details loaded:', poster.title);
 }
 
 // Show swipe bar state
@@ -3086,7 +3095,7 @@ async function showDesktopView() {
             const response = await fetch(`${API_URL}/posters`);
             if (response.ok) {
                 window.allPosters = await response.json();
-                console.log('✅ Loaded', window.allPosters.length, 'posters for gallery');
+                console.log(' Loaded', window.allPosters.length, 'posters for gallery');
             }
         } catch (error) {
             console.error('Error loading posters:', error);
@@ -3129,13 +3138,13 @@ function hideGifLoader() {
 
 // ==================== MAIN INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 DOM Content Loaded');
+    console.log(' DOM Content Loaded');
     
     // NOTE: Camera spacing is now handled in CSS (#ar-scene rules in style.css)
     // with top: 75px, left/right: 16px, bottom: 16px
     // No JavaScript workaround needed anymore!
     
-    console.log('✅ Camera spacing ingesteld via CSS (16px op alle zijden)');
+    console.log(' Camera spacing ingesteld via CSS (16px op alle zijden)');
     
     // Listen for GIF loaded events (optional logging)
     document.addEventListener('gif-loaded', (e) => {
@@ -3156,7 +3165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isMobileDevice = detectMobileDevice();
         isARSupported = checkARSupport();
         
-        console.log('📊 Detection Results:', {
+        console.log(' Detection Results:', {
             isMobileDevice,
             isARSupported,
             decision: (isMobileDevice && isARSupported) ? 'AR Mode' : 'Desktop Mode'
@@ -3168,7 +3177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isMobileDevice && isARSupported) {
             if (isHTTPS || isLocalhost) {
-                console.log('🎯 Starting AR mode with dynamic MindAR scene...');
+                console.log(' Starting AR mode with dynamic MindAR scene...');
                 
                 // Initialize AR mode - this will fetch posters and create the scene
                 initializeARMode().then(() => {

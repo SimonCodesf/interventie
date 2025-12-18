@@ -1576,7 +1576,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (xhr.status === 200) {
                         const progressContainer = document.getElementById('edit-upload-progress');
                         if (progressContainer) progressContainer.style.display = 'none';
-                        if (successMsg) successMsg.innerHTML = '<strong style="color: #4CAF50;">✅ Poster succesvol bijgewerkt!</strong>';
+                        if (successMsg) successMsg.innerHTML = '<strong style="color: #4CAF50;"> Poster succesvol bijgewerkt!</strong>';
                         setTimeout(() => {
                             closeEditModal();
                             loadAdminPosters();
