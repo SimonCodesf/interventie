@@ -52,6 +52,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <div class="form-group">
                     <label for="${prefix}layer-${layerNum}-image">${isEditForm ? 'Nieuwe afbeelding/video (optioneel)' : 'Afbeelding (.png/.jpg) of Video (.mp4/.webm, GIF geconverteerd naar MP4)'}:</label>
                     <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm">
+                    <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
                     ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-current" style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;"></p>` : ''}
                 </div>
                 
@@ -226,6 +227,12 @@ function deleteLayer(layerNum) {
         `edit-layer-${layerNum}-anim-duration`,
         `edit-layer-${layerNum}-anim-preset`
     ];
+    
+    // Set delete flag
+    const deleteInput = document.getElementById(`edit-layer-${layerNum}-delete`);
+    if (deleteInput) {
+        deleteInput.value = '1';
+    }
     
     inputIds.forEach(id => {
         const el = document.getElementById(id);
@@ -1296,6 +1303,9 @@ async function openEditModal(posterId) {
         for (let layerNum = 1; layerNum <= 8; layerNum++) {
             const fileInput = document.getElementById(`edit-layer-${layerNum}-image`);
             if (fileInput) fileInput.value = '';
+            
+            const deleteInput = document.getElementById(`edit-layer-${layerNum}-delete`);
+            if (deleteInput) deleteInput.value = '0';
         }
         
         // Clear messages
@@ -1431,9 +1441,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const exclusionEl = document.getElementById(`edit-layer-${i}-exclusion`);
                 const exclusion = exclusionEl ? (exclusionEl.checked ? '1' : '0') : '0';
                 
+                // Get delete flag
+                const deleteEl = document.getElementById(`edit-layer-${i}-delete`);
+                const deleteFlag = deleteEl ? deleteEl.value : '0';
+                
                 // Always send configuration (updates existing layer config)
                 formData.append(`layer_${i}_z`, layerZ || '0');
                 formData.append(`layer_${i}_exclusion`, exclusion);
+                formData.append(`layer_${i}_delete`, deleteFlag);
                 
                 // Base position and scale
                 formData.append(`layer_${i}_pos_x`, posXEl ? posXEl.value || '0' : '0');

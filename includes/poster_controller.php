@@ -364,6 +364,40 @@ function handleUpdatePoster($db, $id) {
         for ($i = 1; $i <= 8; $i++) {
             $existingLayer = $existingLayers["layer_$i"] ?? [];
             
+            // Check for delete flag
+            $shouldDelete = isset($_POST["layer_{$i}_delete"]) && (int)$_POST["layer_{$i}_delete"] === 1;
+            
+            if ($shouldDelete) {
+                // Delete old file if exists
+                if (!empty($existingLayer['filename'])) {
+                    @unlink(AR_LAYERS_DIR . '/' . $existingLayer['filename']);
+                }
+                
+                // Reset layer data
+                $layerData = [
+                    'z' => 0,
+                    'pos_x' => 0,
+                    'pos_y' => 0,
+                    'scale' => 1.0,
+                    'rot_z' => 0,
+                    'anim_x' => 0,
+                    'anim_y' => 0,
+                    'anim_z' => 0,
+                    'anim_rot_x' => 0,
+                    'anim_rot_y' => 0,
+                    'anim_rot_z' => 0,
+                    'anim_scale' => 1.0,
+                    'anim_opacity' => 1.0,
+                    'anim_duration' => 0,
+                    'exclusion_filter' => false,
+                    'filename' => null,
+                    'is_video' => false
+                ];
+                
+                $layersData["layer_$i"] = $layerData;
+                continue; // Skip upload processing
+            }
+            
             $layerData = [
                 'z' => isset($_POST["layer_{$i}_z"]) ? (float)$_POST["layer_{$i}_z"] : ($existingLayer['z'] ?? 0),
                 'pos_x' => isset($_POST["layer_{$i}_pos_x"]) ? (float)$_POST["layer_{$i}_pos_x"] : ($existingLayer['pos_x'] ?? 0),
