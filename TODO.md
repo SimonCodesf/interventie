@@ -7,16 +7,19 @@ Focus: Immediate visual bugs and usability issues.
 - [x] **Desktop**: Fix download count bug (currently concatenates strings instead of adding numbers).
 - [x] **Mobile/AR**: Adjust Camera feed position (center vertically between logo and bottom).
 - [x] **Mobile/AR**: Fix Gallery UI/Swipe up (style like desktop, fix overlap with logo).
-- [ ] **Desktop**: Improve Log integration (make it stick to bottom/integrate better).
-- [ ] **Desktop**: Fix Table header spacing.
+- [x] **Desktop**: Improve Log integration (make it stick to bottom/integrate better).
+- [x] **Desktop**: Fix Table header spacing.
 - [ ] **General**: Translate and cleanup frontend logs (English -> Dutch, remove debug noise).
 - [ ] **Mobile**: Remove "Play" button on AR video textures (likely autoplay policy issue).
+- [ ] **AR**: Fix GIFs 
+- [ ] **AR**: Make exclude layer work like before
+- [ ] **Desktop&mobile**: fotos buiten poster.jpg toevoegen, bv fotos van de poster in de stad. deze zijn dan in een slideshow in de popup te zien.
 
 ## Phase 2: Admin Panel Overhaul & Security
 **Status**: NOT STARTED
 Focus: Backend usability and data safety.
 
-- [ ] **Admin**: Improve UI/UX to match Desktop "hacker" style.
+- [ ] **Admin**: Improve UI/UX to match Desktop-website "hacker" style.
 - [ ] **Admin**: Fix Upload editing behavior (ensure consistency with upload).
 - [ ] **Security**: Improve security (review auth, headers).
 - [ ] **Analytics**: Add basic analytics with Cookie Consent (GDPR compliance).
@@ -26,6 +29,7 @@ Focus: Backend usability and data safety.
 Focus: New features and deeper AR integration.
 
 - [ ] **AR**: Expand AR options (more interactive elements).
+- [ ] **AR**: Speed up AR loading and overall performance.
 - [ ] **Desktop**: Implement "Random Tabs" on startup (Welcome, Instructions, Manifest, etc.).
 - [ ] **Mobile**: Investigate Camera permission persistence (reduce permission prompts).
 

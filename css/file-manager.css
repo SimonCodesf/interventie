@@ -200,16 +200,18 @@
 /* File List Header */
 .file-list-header {
     display: grid;
-    grid-template-columns: 20px 40px 1fr 90px 90px 100px;
-    gap: 0.5rem;
-    padding: 0.3rem 0.75rem;
-    font-size: 0.85rem;
+    grid-template-columns: 20px 50px 140px 2fr 100px 90px 100px;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
     color: var(--white);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 0.5px solid var(--white);
-    opacity: 0.6;
+    opacity: 0.7;
     align-items: center;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 /* File List */
@@ -221,12 +223,13 @@
 
 .file-row {
     display: grid;
-    grid-template-columns: 20px 40px 1fr 90px 90px 100px;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
+    grid-template-columns: 20px 50px 140px 2fr 100px 90px 100px;
+    gap: 0.75rem;
+    padding: 0.4rem 1rem;
     cursor: pointer;
     transition: none;
     align-items: center;
+    min-height: 50px;
 }
 
 .file-row:hover {
