@@ -202,7 +202,8 @@
     display: grid;
     grid-template-columns: 20px 50px 1fr 200px 90px 100px;
     gap: 0.75rem;
-    padding: 0.3rem 1rem;
+    padding: 0.2rem 1rem;
+    height: 24px;
     font-size: 0.8rem;
     color: var(--white);
     text-transform: uppercase;
@@ -211,7 +212,7 @@
     opacity: 0.7;
     align-items: center;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1;
 }
 
 /* File List */
