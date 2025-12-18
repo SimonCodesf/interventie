@@ -200,7 +200,7 @@
 /* File List Header */
 .file-list-header {
     display: grid;
-    grid-template-columns: 20px 50px 1fr 200px 90px 100px;
+    grid-template-columns: 20px 1fr 200px 90px 100px;
     gap: 0.5rem;
     padding: 0.15rem 1rem;
     font-size: 0.75rem;
