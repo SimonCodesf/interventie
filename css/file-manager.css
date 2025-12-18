@@ -202,8 +202,8 @@
     display: grid;
     grid-template-columns: 20px 50px 1fr 200px 90px 100px;
     gap: 0.5rem;
-    padding: 0.15rem 1rem;
-    font-size: 0.75rem;
+    padding: 0.1rem 1rem;
+    font-size: 0.65rem;
     color: var(--white);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -212,7 +212,9 @@
     align-items: center;
     font-weight: 600;
     line-height: 1;
-    height: 25px;
+    height: 20px;
+    overflow: hidden;
+    grid-auto-rows: 20px;
 }
 
 /* Hide thumbnail visual in header but keep grid alignment */
