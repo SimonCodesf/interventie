@@ -7,20 +7,25 @@ export function renderPosterList(posters, token, onRefresh) {
     list.innerHTML = '';
     posters.forEach(poster => {
         const item = document.createElement('div');
-        item.className = 'poster-item';
+        item.className = 'sidebar-poster-item';
         item.innerHTML = `
-            <img src="${poster.thumbnail}" alt="${poster.title}" width="50">
-            <span>${poster.title}</span>
-            <button class="delete-btn">Verwijder</button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="font-family: var(--font-data); font-size: 0.85rem; color: var(--white);">${poster.title}</h4>
+                <button class="delete-btn" style="background: none; border: none; color: #ff5555; cursor: pointer; font-family: var(--font-data); font-size: 0.7rem;">[DEL]</button>
+            </div>
+            <p style="font-family: var(--font-data); font-size: 0.7rem; color: var(--dim); margin-top: 0.2rem;">
+                ID: ${poster.id} | DL: ${poster.downloads || 0}
+            </p>
         `;
         
-        item.querySelector('.delete-btn').onclick = async () => {
-            if (confirm('Zeker weten?')) {
+        item.querySelector('.delete-btn').onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm('CONFIRM_DELETE: ' + poster.title + '?')) {
                 try {
                     await deletePoster(poster.id, token);
                     onRefresh();
                 } catch (e) {
-                    alert(e.message);
+                    alert('ERROR: ' + e.message);
                 }
             }
         };

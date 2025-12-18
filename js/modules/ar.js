@@ -1,7 +1,7 @@
 import { fetchARSettings } from './api.js';
 
 export async function startAR(posters) {
-    console.log('🚀 Starting AR...');
+    console.log(' Starting AR...');
     
     const settings = await fetchARSettings() || {
         filterMinCF: 0.003,

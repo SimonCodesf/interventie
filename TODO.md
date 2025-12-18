@@ -12,15 +12,15 @@ Focus: Immediate visual bugs and usability issues.
 - [x] **General**: Translate and cleanup frontend logs (English -> Dutch, remove debug noise).
 - [x] **General**: Remove every emoji from UI (consistency).
 - [x] **Mobile**: Remove "Play" button on AR video textures (likely autoplay policy issue).
-- [ ] **AR**: Fix GIFs yes
-- [ ] **AR**: Make exclude layer work like before
-- [ ] **Desktop&mobile**: fotos buiten poster.jpg toevoegen, bv fotos van de poster in de stad. deze zijn dan in een slideshow in de popup te zien.
+- [x] **AR**: Fix GIFs
+- [ ] **AR**: Make exclude layer work like before (SKIPPED)
+- [ ] **Desktop&mobile**: fotos buiten poster.jpg toevoegen, bv fotos van de poster in de stad. deze zijn dan in een slideshow in de popup te zien. (SKIPPED)
 
 ## Phase 2: Admin Panel Overhaul & Security
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 Focus: Backend usability and data safety.
 
-- [ ] **Admin**: Improve UI/UX to match Desktop-website "hacker" style.
+- [x] **Admin**: Improve UI/UX to match Desktop-website "hacker" style.
 - [ ] **Admin**: Fix Upload editing behavior (ensure consistency with upload).
 - [ ] **Security**: Improve security (review auth, headers).
 - [ ] **Analytics**: Add basic analytics with Cookie Consent (GDPR compliance).
