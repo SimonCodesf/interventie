@@ -108,6 +108,7 @@ function logToLoader(msg, type = 'info') {
     else if (msg.includes('Starting AR.js initialization')) { msg = 'AR ENGINE INITIALISEREN...'; }
     else if (msg.includes('Preloading all .mind files')) { msg = 'MARKERS VOORLADEN...'; }
     else if (msg.includes('Starting AR...')) { msg = 'AR STARTEN...'; }
+    else if (msg.includes('Chunk AR Ready')) { msg = 'AR CHUNK GEREED'; }
 
     // 3. Filter out empty or irrelevant logs
     if (msg.length < 2) return;
