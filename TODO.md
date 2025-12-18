@@ -9,7 +9,8 @@ Focus: Immediate visual bugs and usability issues.
 - [x] **Mobile/AR**: Fix Gallery UI/Swipe up (style like desktop, fix overlap with logo).
 - [x] **Desktop**: Improve Log integration (make it stick to bottom/integrate better).
 - [x] **Desktop**: Fix Table header spacing.
-- [ ] **General**: Translate and cleanup frontend logs (English -> Dutch, remove debug noise).
+- [x] **General**: Translate and cleanup frontend logs (English -> Dutch, remove debug noise).
+- [ ] **General**: Remove every emoji from UI (consistency).
 - [ ] **Mobile**: Remove "Play" button on AR video textures (likely autoplay policy issue).
 - [ ] **AR**: Fix GIFs 
 - [ ] **AR**: Make exclude layer work like before

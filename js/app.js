@@ -42,9 +42,9 @@ function logToLoader(msg, type = 'info') {
     msg = msg.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
 
     // 2. Translate & Simplify (Dutch)
-    if (msg.includes('Fetching posters')) { msg = 'POSTERS OPHALEN'; }
+    if (msg.includes('Fetching posters')) { msg = 'POSTERS OPHALEN...'; }
     else if (msg.includes('Fetched')) msg = 'DATA GELADEN';
-    else if (msg.includes('Switching to AR')) { msg = 'AR STARTEN'; }
+    else if (msg.includes('Switching to AR')) { msg = 'AR STARTEN...'; }
     else if (msg.includes('AR view displayed')) { msg = 'CAMERA ACTIEF'; }
     else if (msg.includes('WebGL available')) msg = 'GPU GEREED';
     else if (msg.includes('Found Chunk Manifest')) msg = 'MANIFEST GELADEN';
@@ -62,7 +62,7 @@ function logToLoader(msg, type = 'info') {
     else if (msg.includes('AR scene hidden')) { return; } 
     else if (msg.includes('static feed')) { return; }
     else if (msg.includes('Applied grayscale')) { msg = 'FILTER TOEGEPAST'; }
-    else if (msg.includes('Video filter observer')) { msg = 'OBSERVER ACTIEF'; }
+    else if (msg.includes('Video filter observer')) { return; } // Noise
     else if (msg.includes('Camera requires HTTPS')) { msg = 'HTTPS VEREIST'; }
     else if (msg.includes('API Error')) { msg = 'API FOUT'; }
     else if (msg.includes('Cannot fetch')) { msg = 'VERBINDINGSFOUT'; }
@@ -99,6 +99,15 @@ function logToLoader(msg, type = 'info') {
     else if (msg.includes('Starting AR mode')) { msg = 'AR MODUS STARTEN...'; }
     else if (msg.includes('Initializing Desktop Mode')) { msg = 'DESKTOP MODUS STARTEN...'; }
     else if (msg.includes('Loaded')) { msg = 'GELADEN'; }
+    // Additional translations
+    else if (msg.includes('Poster AR markers')) { return; } // Noise
+    else if (msg.includes('Device Detection')) { msg = 'APPARAAT ANALYSE'; }
+    else if (msg.includes('WebGL not supported')) { msg = 'GEEN WEBGL ONDERSTEUNING'; }
+    else if (msg.includes('Upload to HTTPS')) { msg = 'HTTPS NODIG'; }
+    else if (msg.includes('AR Support: WebGL available')) { msg = 'AR ONDERSTEUNING: OK'; }
+    else if (msg.includes('Starting AR.js initialization')) { msg = 'AR ENGINE INITIALISEREN...'; }
+    else if (msg.includes('Preloading all .mind files')) { msg = 'MARKERS VOORLADEN...'; }
+    else if (msg.includes('Starting AR...')) { msg = 'AR STARTEN...'; }
 
     // 3. Filter out empty or irrelevant logs
     if (msg.length < 2) return;
