@@ -479,10 +479,21 @@ function setupChunkEventListeners(scene, chunk) {
         const loader = document.getElementById('arjs-loader');
         if (loader) loader.classList.add('hidden');
         
-        // Apply video filter
+        // Apply video filter and force playsinline for iOS
         setTimeout(() => {
-            document.querySelectorAll('#ar-scene video').forEach((v) => {
+            document.querySelectorAll('video').forEach((v) => {
+                // Filter
                 v.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
+                
+                // Force iOS inline playback
+                v.setAttribute('playsinline', 'true');
+                v.setAttribute('webkit-playsinline', 'true');
+                v.muted = true;
+                
+                // Try to play if paused
+                if (v.paused) {
+                    v.play().catch(e => console.log('Autoplay prevented:', e));
+                }
             });
         }, 200);
     });
@@ -1624,8 +1635,8 @@ function buildLayersHTML(poster) {
                             autoplay="true"
                             loop="true"
                             muted="true"
-                            playsinline
-                            webkit-playsinline
+                            playsinline="true"
+                            webkit-playsinline="true"
                             crossorigin="anonymous"
                             ${customScaleAttr}
                             ${animationStr}
