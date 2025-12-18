@@ -1582,18 +1582,19 @@ function buildLayersHTML(poster) {
 
                 if (isGif) {
                     // Use a-plane with GIF shader for GIF playback
-                    // GIFs zijn meestal landscape, dus use landscape ratio (1.5:1)
-                    const gifWidth = 1.5 * baseScale;
-                    const gifHeight = 1.0 * baseScale;
+                    // Start with square, let fixLayerAspectRatios handle the rest
+                    const gifSize = 1.4 * baseScale;
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
                             position="${posX} ${posY} ${posZ}" 
-                            height="${gifHeight.toFixed(3)}" 
-                            width="${gifWidth.toFixed(3)}" 
+                            height="${gifSize.toFixed(3)}" 
+                            width="${gifSize.toFixed(3)}" 
                             rotation="0 0 ${rotZ}"
-                            material="shader: gif; src: url(${mediaPath}); transparent: true;"
+                            material="shader: gif; src: url(${mediaPath}); transparent: true; alphaTest: 0.5;"
+                            data-preserve-aspect="true"
+                            data-image-src="${mediaPath}"
                             ${customScaleAttr}
                             ${animationStr}
                             ${exclusionAttr}></a-plane>`;
@@ -1661,10 +1662,6 @@ function fixLayerAspectRatios() {
 
         const customScaleAttr = layer.getAttribute('data-custom-scale');
         const customScale = customScaleAttr ? parseFloat(customScaleAttr) : 1.0;
-        if (!Number.isNaN(customScale) && customScale !== 1.0) {
-            // Respect user-defined scale; skip auto aspect adjustment
-            return;
-        }
         
         // Create image to get dimensions
         const img = new Image();
@@ -1673,22 +1670,25 @@ function fixLayerAspectRatios() {
         img.onload = function() {
             try {
                 const imageRatio = img.width / img.height;
-                const maxHeight = 1.4;
+                // Base height is 1.4, multiplied by custom scale
+                const maxHeight = 1.4 * (Number.isNaN(customScale) ? 1.0 : customScale);
                 
                 let newWidth = maxHeight * imageRatio;
                 let newHeight = maxHeight;
                 
-                // Cap maximum width
-                if (newWidth > 2.0) {
-                    newWidth = 2.0;
-                    newHeight = 2.0 / imageRatio;
+                // Cap maximum width (relative to scale)
+                const maxAllowedWidth = 2.0 * (Number.isNaN(customScale) ? 1.0 : customScale);
+                
+                if (newWidth > maxAllowedWidth) {
+                    newWidth = maxAllowedWidth;
+                    newHeight = maxAllowedWidth / imageRatio;
                 }
                 
                 // Apply new dimensions
                 layer.setAttribute('width', newWidth.toFixed(3));
                 layer.setAttribute('height', newHeight.toFixed(3));
                 
-                console.log(`📐 Fixed ${layer.id}: ${newWidth.toFixed(2)}x${newHeight.toFixed(2)}`);
+                console.log(`📐 Fixed ${layer.id}: ${newWidth.toFixed(2)}x${newHeight.toFixed(2)} (Ratio: ${imageRatio.toFixed(2)})`);
             } catch (e) {
                 console.warn(`⚠️ Error fixing ${layer.id}:`, e);
             }
