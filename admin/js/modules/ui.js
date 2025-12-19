@@ -39,7 +39,8 @@ export function renderPosterList(posters, token, onRefresh) {
                 document.getElementById('poster-description').value = poster.description || '';
                 
                 // Scroll to top to show form
-                document.querySelector('.admin-main').scrollTop = 0;
+                const content = document.querySelector('.window-content');
+                if (content) content.scrollTop = 0;
                 
                 // Visual feedback
                 document.querySelectorAll('.sidebar-poster-item').forEach(el => el.style.background = 'transparent');

@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     function showUpload() {
         loginSection.style.display = 'none';
-        uploadSection.style.display = 'block';
+        uploadSection.style.display = 'flex';
         refreshPosters();
     }
     
