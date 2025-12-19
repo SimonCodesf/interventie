@@ -30,6 +30,23 @@ export function renderPosterList(posters, token, onRefresh) {
             }
         };
         
+        // Add click handler for editing
+        item.onclick = (e) => {
+            // Only trigger if not clicking delete button
+            if (!e.target.classList.contains('delete-btn')) {
+                // Populate form with poster data
+                document.getElementById('poster-title').value = poster.title;
+                document.getElementById('poster-description').value = poster.description || '';
+                
+                // Scroll to top to show form
+                document.querySelector('.admin-main').scrollTop = 0;
+                
+                // Visual feedback
+                document.querySelectorAll('.sidebar-poster-item').forEach(el => el.style.background = 'transparent');
+                item.style.background = 'rgba(255, 255, 255, 0.1)';
+            }
+        };
+        
         list.appendChild(item);
     });
 }
