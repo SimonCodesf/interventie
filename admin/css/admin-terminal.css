@@ -142,9 +142,10 @@ html {
 }
 
 .window-content form {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
+    width: 100% !important;
 }
 
 /* Form Styles - Terminal Look */
@@ -153,9 +154,11 @@ html {
 }
 
 .form-section {
-    border-bottom: 0.5px solid var(--dim);
+    border-bottom: 0.5px solid rgba(255,255,255,0.5);
     padding-bottom: 1.5rem;
     margin-bottom: 0;
+    width: 100%;
+    flex-shrink: 0;
 }
 
 .form-section:last-child {
@@ -165,8 +168,8 @@ html {
 .form-section h2 {
     font-size: 0.95rem;
     margin: 0 0 1rem 0;
-    color: var(--white);
-    font-family: var(--font-data);
+    color: #ffffff;
+    font-family: 'Roboto Mono', monospace;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
