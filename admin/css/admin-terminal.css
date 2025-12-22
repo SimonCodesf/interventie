@@ -122,8 +122,7 @@ html {
     overflow-y: scroll !important;
     overflow-x: hidden;
     padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
+    display: block;
     min-height: 0;
     position: relative;
 }
@@ -142,10 +141,8 @@ html {
 }
 
 .window-content form {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 2rem !important;
-    width: 100% !important;
+    display: block;
+    width: 100%;
 }
 
 /* Form Styles - Terminal Look */
