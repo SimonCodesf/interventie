@@ -1,15 +1,11 @@
-/* Import main styles */
-@import url('../../css/style.css');
-@import url('../../css/file-manager.css');
+/* Admin Terminal CSS - Terminal/Hacker Look */
 
-/* Admin Specific Overrides for Terminal Look */
-:root {
-    /* Fallback variables in case imports fail */
-    --black: #000000;
-    --white: #ffffff;
-    --dim: rgba(255,255,255,0.5);
-    --font-ui: 'Bebas Neue', Impact, sans-serif;
-    --font-data: 'Roboto Mono', monospace;
+* {
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
 }
 
 body {
@@ -24,354 +20,257 @@ body {
     flex-direction: column;
 }
 
-html {
-    height: 100%;
-}
-
-/* Layout Adjustments */
-.admin-wrapper {
-    display: flex;
-    height: 100%;
-    width: 100%;
-    flex: 1;
-}
-
-/* Sidebar overrides to match file-manager.css */
+/* Sidebar */
 .admin-sidebar {
     width: 260px;
-    border-right: 0.5px solid var(--white);
+    border-right: 0.5px solid #ffffff;
     padding: 0.75rem;
     display: flex;
     flex-direction: column;
-    background: var(--black);
+    background: #000000;
+    overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .sidebar-header {
     margin-bottom: 1.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 0.5px solid var(--white);
-}
-
-.sidebar-header h1 {
-    font-family: var(--font-ui);
-    font-size: 1.5rem;
-    letter-spacing: 1px;
-    margin: 0;
+    border-bottom: 0.5px solid #ffffff;
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.nav-item {
-    background: transparent;
-    border: 0.5px solid transparent;
-    color: var(--dim);
-    padding: 0.5rem;
-    text-align: left;
-    font-family: var(--font-data);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: block;
-}
-
-.nav-item:hover, .nav-item.active {
-    border-color: var(--white);
-    color: var(--white);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.admin-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-}
-
-.terminal-window {
-    flex: 1;
-    margin: 1rem;
-    border: 0.5px solid #ffffff;
-    display: flex;
-    flex-direction: column;
-    background: #000000;
-    box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2);
-    min-height: 0;
-}
-
-.window-header {
-    background: var(--white);
-    color: var(--black);
-    padding: 0.25rem 0.5rem;
-    font-family: var(--font-data);
-    font-size: 0.8rem;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-transform: uppercase;
-}
-
-.window-content {
-    flex: 1;
-    overflow-y: scroll !important;
-    overflow-x: hidden;
-    padding: 1.5rem;
-    display: block;
-    min-height: 0;
-    position: relative;
-}
-
-.window-content::-webkit-scrollbar {
-    width: 10px;
-}
-
-.window-content::-webkit-scrollbar-track {
-    background: #000000;
-}
-
-.window-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.window-content form {
-    display: block;
-    width: 100%;
-}
-
-/* Form Styles - Terminal Look */
-.form-group {
     margin-bottom: 1rem;
 }
 
-.form-section {
-    border-bottom: 0.5px solid rgba(255,255,255,0.5);
-    padding-bottom: 1.5rem;
-    margin-bottom: 0;
-    width: 100%;
-    flex-shrink: 0;
-}
-
-.form-section:last-child {
-    border-bottom: none;
-}
-
-.form-section h2 {
-    font-size: 0.95rem;
-    margin: 0 0 1rem 0;
-    color: #ffffff;
-    font-family: 'Roboto Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--white);
-    font-family: var(--font-data);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-}
-
-.form-control {
-    width: 100%;
-    background: #000000 !important;
-    border: 0.5px solid rgba(255,255,255,0.5) !important;
-    color: #ffffff !important;
-    padding: 0.75rem;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.9rem;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-}
-
-.form-control:focus {
-    outline: none;
+.sidebar-nav a:hover,
+.sidebar-nav button:hover {
     border-color: #ffffff !important;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-}
-
-textarea.form-control {
-    background: #000000 !important;
-    border: 0.5px solid rgba(255,255,255,0.5) !important;
     color: #ffffff !important;
-    resize: vertical;
+    background: rgba(255, 255, 255, 0.1) !important;
 }
 
-input[type="file"].form-control::file-selector-button {
-    background: #ffffff;
-    color: #000000;
-    border: none;
-    padding: 0.3rem 0.8rem;
-    cursor: pointer;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.85rem;
-}
-
-/* Buttons */
-.btn-terminal {
-    background: var(--black);
-    color: var(--white);
-    border: 0.5px solid var(--white);
-    padding: 0.75rem 1.5rem;
-    font-family: var(--font-ui);
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.btn-terminal:hover {
-    background: var(--white);
-    color: var(--black);
-}
-
-.btn-terminal.primary {
-    background: var(--white);
-    color: var(--black);
-}
-
-.btn-terminal.primary:hover {
-    background: var(--black);
-    color: var(--white);
-}
-
-/* Poster List in Sidebar */
-.poster-list-container {
-    margin-top: 2rem;
-    border-top: 0.5px solid var(--dim);
-    padding-top: 1rem;
-}
-
-.poster-list-title {
-    font-family: var(--font-data);
-    font-size: 0.75rem;
-    color: var(--dim);
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-}
-
+/* Poster List Items */
 .sidebar-poster-item {
     padding: 0.5rem;
     border: 0.5px solid transparent;
     cursor: pointer;
     margin-bottom: 0.25rem;
+    transition: all 0.2s;
 }
 
 .sidebar-poster-item:hover {
-    border-color: var(--dim);
+    border-color: rgba(255,255,255,0.5);
     background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-poster-item h4 {
     margin: 0;
     font-size: 0.85rem;
-    color: var(--white);
+    color: #ffffff;
     font-weight: normal;
 }
 
 .sidebar-poster-item p {
     margin: 0;
     font-size: 0.7rem;
-    color: var(--dim);
+    color: rgba(255,255,255,0.5);
+    margin-top: 0.2rem;
 }
 
-/* Layer Accordion - Terminal Style */
-.layer-accordion {
-    border: 0.5px solid var(--dim);
-    margin-bottom: 1rem;
-    background: transparent;
+/* Delete button */
+.delete-btn {
+    background: none !important;
+    border: none !important;
+    color: #ff5555 !important;
+    cursor: pointer !important;
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.7rem !important;
 }
 
-.layer-accordion summary {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--white);
-    padding: 0.75rem;
-    font-family: var(--font-data);
-    border-bottom: 0.5px solid var(--dim);
-    list-style: none;
-    cursor: pointer;
-}
-
-.layer-accordion[open] summary {
-    border-bottom: 0.5px solid var(--white);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.layer-content {
-    padding: 1rem;
-}
-
-/* Login Screen */
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100%;
-}
-
-.login-box {
-    width: 400px;
-    border: 0.5px solid var(--white);
-    background: var(--black);
-    box-shadow: 8px 8px 0px rgba(255, 255, 255, 0.2);
-}
-
-/* Scrollbar */
+/* Scrollbars */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--black);
-    border-left: 0.5px solid var(--dim);
+    background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--dim);
-    border: 1px solid var(--black);
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--white);
+    background: rgba(255, 255, 255, 0.5);
 }
 
-/* File Size Info */
-.file-size-info {
-    font-family: var(--font-data);
-    font-size: 0.75rem;
-    margin-top: 0.5rem;
-    padding: 0.25rem 0.5rem;
+/* Form styles */
+input[type="text"],
+input[type="password"],
+input[type="file"],
+textarea,
+select {
+    background: #000000 !important;
+    border: 0.5px solid rgba(255,255,255,0.5) !important;
+    color: #ffffff !important;
+    padding: 0.75rem !important;
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.9rem !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="file"]:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
+}
+
+input[type="file"]::file-selector-button {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    padding: 0.3rem 0.8rem !important;
+    cursor: pointer !important;
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.85rem !important;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+button {
+    cursor: pointer;
+}
+
+/* Utility classes for sidebar nav styling */
+.sidebar-nav a,
+.sidebar-nav button {
+    background: transparent;
     border: 0.5px solid transparent;
-    display: none;
+    color: rgba(255,255,255,0.5);
+    padding: 0.5rem;
+    text-align: left;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+    width: 100%;
 }
 
-.file-size-info.show { display: inline-block; }
-
-.file-size-info.small { 
-    color: #00ff00; 
-    border-color: #00ff00; 
-    background: rgba(0, 255, 0, 0.1);
+/* Layer accordion */
+details {
+    margin-bottom: 1rem;
 }
 
-.file-size-info.medium { 
-    color: #ffaa00; 
-    border-color: #ffaa00; 
-    background: rgba(255, 170, 0, 0.1);
+details summary {
+    cursor: pointer;
+    color: #ffffff;
+    padding: 0.5rem;
+    border: 0.5px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.05);
+    user-select: none;
+    font-family: 'Roboto Mono', monospace;
 }
 
-.file-size-info.large { 
-    color: #ff0000; 
-    border-color: #ff0000; 
-    background: rgba(255, 0, 0, 0.1);
+details[open] summary {
+    border-color: #ffffff;
+    background: rgba(255,255,255,0.1);
+}
+
+details .layer-content,
+details .anim-group {
+    padding: 1rem;
+    background: rgba(255,255,255,0.02);
+}
+
+details .layer-content {
+    border: 0.5px solid rgba(255,255,255,0.3);
+    border-top: none;
+}
+
+/* Animation group styles */
+.anim-inputs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.input-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-wrapper label {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 0.3rem;
+}
+
+.input-wrapper input {
+    width: 100%;
+}
+
+/* Toggle switch */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #ffffff;
+    margin: 1rem 0;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: 0.3s;
+    border: 0.5px solid rgba(255,255,255,0.5);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff;
+    transition: 0.3s;
+}
+
+input:checked + .toggle-slider {
+    background-color: #00ff00;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(16px);
 }
