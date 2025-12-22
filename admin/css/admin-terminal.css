@@ -750,4 +750,98 @@ input:checked + .toggle-slider:before {
 /* Make sure body can scroll */
 body {
     overflow-y: auto;
+}/* Position/Scale Section - Replaces yellow box */
+.position-scale-section {
+    background: rgba(0,0,0,0.8);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 0.5px solid rgba(255,255,255,0.5);
+}
+
+.section-subtitle {
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.5);
+    padding-bottom: 0.5rem;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: bold;
+}
+
+/* Animation Section */
+.animation-section {
+    margin-top: 1rem;
+    background: rgba(0,0,0,0.8);
+    padding: 1rem;
+    border: 0.5px solid rgba(255,255,255,0.5);
+}
+
+.anim-container-hidden {
+    display: none;
+    margin-top: 1rem;
+}
+
+.preset-selector {
+    margin-bottom: 1rem;
+}
+
+.preset-selector label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.7);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.terminal-select {
+    width: 100%;
+    padding: 0.75rem;
+    background: #000000 !important;
+    border: 0.5px solid rgba(255,255,255,0.5) !important;
+    color: #ffffff !important;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+}
+
+.terminal-select:focus {
+    outline: none;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.terminal-select option {
+    background: #000000;
+    color: #ffffff;
+    padding: 0.5rem;
+}
+
+.terminal-select optgroup {
+    background: #000000;
+    color: rgba(255,255,255,0.7);
+    font-weight: bold;
+}
+
+/* Input wrapper labels - make them smaller and positioned better */
+.input-wrapper label {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.4);
+    font-size: 0.65rem;
+    font-weight: 600;
+    pointer-events: none;
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.input-wrapper input {
+    padding-left: 60px;
+    text-align: right;
+    font-family: 'Roboto Mono', monospace;
 }

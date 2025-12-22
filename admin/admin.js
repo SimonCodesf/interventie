@@ -53,23 +53,23 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     <label for="${prefix}layer-${layerNum}-image">${isEditForm ? 'Nieuwe afbeelding/video (optioneel)' : 'Afbeelding (.png/.jpg) of Video (.mp4/.webm, GIF geconverteerd naar MP4)'}:</label>
                     <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm">
                     <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
-                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-current" style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;"></p>` : ''}
+                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-current" style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem; font-family: 'Roboto Mono', monospace;"></p>` : ''}
                 </div>
                 
-                <div style="background: #fff3cd; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;">
-                    <h5 style="margin: 0 0 0.5rem 0;">Basis Positie & Schaal</h5>
+                <div class="position-scale-section">
+                    <h5 class="section-subtitle">BASIS POSITIE & SCHAAL</h5>
                     <div class="anim-group">
                         <div class="anim-inputs">
                             <div class="input-wrapper">
-                                <label>X Offset (m)</label>
+                                <label>X OFFSET</label>
                                 <input type="number" id="${prefix}layer-${layerNum}-pos-x" name="layer_${layerNum}_pos_x" placeholder="0.000" step="0.001">
                             </div>
                             <div class="input-wrapper">
-                                <label>Y Offset (m)</label>
+                                <label>Y OFFSET</label>
                                 <input type="number" id="${prefix}layer-${layerNum}-pos-y" name="layer_${layerNum}_pos_y" placeholder="0.000" step="0.001">
                             </div>
                             <div class="input-wrapper">
-                                <label>Z-positie (m)</label>
+                                <label>Z-POS</label>
                                 <input type="number" id="${prefix}layer-${layerNum}-z" name="layer_${layerNum}_z" step="0.001" value="${defaultZ.toFixed(3)}" placeholder="${defaultZ.toFixed(3)}">
                             </div>
                         </div>
@@ -77,11 +77,11 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     <div class="anim-group">
                         <div class="anim-inputs">
                             <div class="input-wrapper">
-                                <label>Schaal (1.0 = default)</label>
+                                <label>SCALE</label>
                                 <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" placeholder="1.0" step="0.1" value="1.0">
                             </div>
                             <div class="input-wrapper">
-                                <label>Rotatie Z (°)</label>
+                                <label>ROT-Z</label>
                                 <input type="number" id="${prefix}layer-${layerNum}-rot-z" name="layer_${layerNum}_rot_z" placeholder="0" step="1" value="0">
                             </div>
                         </div>
@@ -98,20 +98,20 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     </label>
                 </div>
                 
-                <div style="margin-top: 1rem; background: #f8f9fa; padding: 1rem; border-radius: 4px;">
-                    <label class="toggle-label" style="font-weight: 600;">
+                <div class="animation-section">
+                    <label class="toggle-label">
                         <div class="toggle-switch">
                             <input type="checkbox" id="${prefix}layer-${layerNum}-enable-anim">
                             <span class="toggle-slider"></span>
                         </div>
-                        <span>Animatie inschakelen</span>
+                        <span>ANIMATIE INSCHAKELEN</span>
                     </label>
                     
-                    <div id="${prefix}layer-${layerNum}-anim-container" style="display: none; margin-top: 1rem;">
+                    <div id="${prefix}layer-${layerNum}-anim-container" class="anim-container-hidden">
                         
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.85rem; color: #666; display: block; margin-bottom: 0.5rem;">Snelle Preset Kiezen:</label>
-                            <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 0.5px solid #ddd;">
+                        <div class="preset-selector">
+                            <label>PRESET:</label>
+                            <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" class="terminal-select">
                                 <option value="">-- Kies een animatie --</option>
                                 <option value="reset">Reset (Geen animatie)</option>
                                 <optgroup label="Rotatie">
