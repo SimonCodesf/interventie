@@ -111,12 +111,40 @@ body {
 .window-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.window-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 /* Form Styles - Terminal Look */
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-section {
+    border-bottom: 0.5px solid var(--dim);
+    padding-bottom: 1.5rem;
+    margin-bottom: 0;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section h2 {
+    font-size: 0.95rem;
+    margin: 0 0 1rem 0;
+    color: var(--white);
+    font-family: var(--font-data);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .form-group label {
