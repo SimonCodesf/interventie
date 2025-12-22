@@ -683,7 +683,7 @@ function setupUploadForm() {
                     // Update progress bar
                     progressFill.style.width = percentage + '%';
                     progressPercentage.textContent = percentage + '%';
-                    progressText.textContent = `Uploaden ${formatFileSize(bytesUploaded)} van ${formatFileSize(totalBytes)}...`;
+                    progressText.textContent = `${formatFileSize(bytesUploaded)} / ${formatFileSize(totalBytes)}...`;
                     
                     // Calculate speed (bytes per second)
                     if (timeElapsed > 0) {
@@ -1548,7 +1548,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const progressText = document.getElementById('edit-progress-text');
                 progressBar.style.width = '0%';
                 progressBar.textContent = '0%';
-                progressText.textContent = 'Uploaden...';
+                progressText.textContent = 'BEZIG MET UPLOADEN...';
             }
             
             try {
