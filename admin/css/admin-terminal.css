@@ -84,8 +84,6 @@ body {
     flex-direction: column;
     overflow: hidden;
     position: relative;
-    height: 100%;
-    min-height: 100%;
 }
 
 .terminal-window {
@@ -96,8 +94,7 @@ body {
     flex-direction: column;
     background: #000000;
     box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2);
-    height: calc(100% - 2rem);
-    overflow: hidden;
+    min-height: 0;
 }
 
 .window-header {
@@ -120,8 +117,7 @@ body {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    max-height: 100%;
+    min-height: 0;
 }
 
 .window-content form {
