@@ -13,11 +13,13 @@
 }
 
 body {
-    background-color: var(--black);
-    color: var(--white);
-    font-family: var(--font-data);
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Roboto Mono', monospace;
     height: 100vh;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 /* Layout Adjustments */
@@ -158,19 +160,37 @@ body {
 
 .form-control {
     width: 100%;
-    background: var(--black);
-    border: 0.5px solid var(--dim);
-    color: var(--white);
+    background: #000000 !important;
+    border: 0.5px solid rgba(255,255,255,0.5) !important;
+    color: #ffffff !important;
     padding: 0.75rem;
-    font-family: var(--font-data);
+    font-family: 'Roboto Mono', monospace;
     font-size: 0.9rem;
     transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: var(--white);
+    border-color: #ffffff !important;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+textarea.form-control {
+    background: #000000 !important;
+    border: 0.5px solid rgba(255,255,255,0.5) !important;
+    color: #ffffff !important;
+    resize: vertical;
+}
+
+input[type="file"].form-control::file-selector-button {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
 }
 
 /* Buttons */
