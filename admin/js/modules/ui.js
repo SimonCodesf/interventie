@@ -10,10 +10,10 @@ export function renderPosterList(posters, token, onRefresh) {
         item.className = 'sidebar-poster-item';
         item.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h4 style="font-family: var(--font-data); font-size: 0.85rem; color: var(--white);">${poster.title}</h4>
-                <button class="delete-btn" style="background: none; border: none; color: #ff5555; cursor: pointer; font-family: var(--font-data); font-size: 0.7rem;">[DEL]</button>
+                <h4 style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #ffffff;">${poster.title}</h4>
+                <button class="delete-btn" style="background: none; border: none; color: #ff5555; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 0.7rem;">[DEL]</button>
             </div>
-            <p style="font-family: var(--font-data); font-size: 0.7rem; color: var(--dim); margin-top: 0.2rem;">
+            <p style="font-family: 'Roboto Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">
                 ID: ${poster.id} | DL: ${poster.downloads || 0}
             </p>
         `;
