@@ -451,6 +451,7 @@ input[type="file"]::file-selector-button:hover {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2);
+    max-width: 1000px;
 }
 
 .card h2 {
@@ -513,6 +514,19 @@ input[type="file"]::file-selector-button:hover {
 .btn-primary:hover {
     background: var(--black);
     color: var(--white);
+}
+
+/* Button Loading States */
+.btn-loader {
+    display: none;
+}
+
+.btn.loading .btn-text {
+    display: none;
+}
+
+.btn.loading .btn-loader {
+    display: inline;
 }
 
 /* Toggle Switch - Terminal Style */
