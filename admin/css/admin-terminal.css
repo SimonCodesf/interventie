@@ -20,6 +20,12 @@ body {
     overflow: hidden;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+html {
+    height: 100%;
 }
 
 /* Layout Adjustments */
@@ -27,6 +33,7 @@ body {
     display: flex;
     height: 100%;
     width: 100%;
+    flex: 1;
 }
 
 /* Sidebar overrides to match file-manager.css */
@@ -112,12 +119,26 @@ body {
 
 .window-content {
     flex: 1;
-    overflow-y: scroll;
+    overflow-y: scroll !important;
     overflow-x: hidden;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    position: relative;
+}
+
+.window-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.window-content::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+.window-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .window-content form {
