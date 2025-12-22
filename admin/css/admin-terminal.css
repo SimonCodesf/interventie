@@ -44,6 +44,11 @@ html {
     display: flex;
     flex-direction: column;
     background: var(--black);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
 }
 
 .sidebar-header {
@@ -87,6 +92,7 @@ html {
 
 .admin-main {
     flex: 1;
+    margin-left: 260px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
