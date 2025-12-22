@@ -186,7 +186,13 @@ html {
     text-transform: uppercase;
 }
 
-.form-control {
+.form-control, 
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="file"],
+textarea,
+select {
     width: 100%;
     background: #000000 !important;
     border: 0.5px solid rgba(255,255,255,0.5) !important;
@@ -198,10 +204,19 @@ html {
     box-sizing: border-box;
 }
 
-.form-control:focus {
+.form-control:focus,
+input:focus,
+textarea:focus,
+select:focus {
     outline: none;
     border-color: #ffffff !important;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color: rgba(255,255,255,0.4) !important;
 }
 
 textarea.form-control {
@@ -209,16 +224,25 @@ textarea.form-control {
     border: 0.5px solid rgba(255,255,255,0.5) !important;
     color: #ffffff !important;
     resize: vertical;
+    min-height: 100px;
 }
 
-input[type="file"].form-control::file-selector-button {
+input[type="file"]::file-selector-button {
     background: #ffffff;
     color: #000000;
-    border: none;
-    padding: 0.3rem 0.8rem;
+    border: 0.5px solid #ffffff;
+    padding: 0.5rem 1rem;
     cursor: pointer;
     font-family: 'Roboto Mono', monospace;
     font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-right: 1rem;
+    transition: all 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #000000;
+    color: #ffffff;
 }
 
 /* Buttons */
@@ -292,28 +316,37 @@ input[type="file"].form-control::file-selector-button {
 
 /* Layer Accordion - Terminal Style */
 .layer-accordion {
-    border: 0.5px solid var(--dim);
+    border: 0.5px solid rgba(255,255,255,0.5);
     margin-bottom: 1rem;
-    background: transparent;
+    background: rgba(0,0,0,0.5);
 }
 
 .layer-accordion summary {
     background: rgba(255, 255, 255, 0.05);
-    color: var(--white);
-    padding: 0.75rem;
-    font-family: var(--font-data);
-    border-bottom: 0.5px solid var(--dim);
+    color: #ffffff;
+    padding: 1rem;
+    font-family: 'Roboto Mono', monospace;
+    border-bottom: 0.5px solid rgba(255,255,255,0.3);
     list-style: none;
     cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
 }
 
-.layer-accordion[open] summary {
-    border-bottom: 0.5px solid var(--white);
+.layer-accordion summary:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
+.layer-accordion[open] summary {
+    border-bottom: 0.5px solid #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .layer-content {
-    padding: 1rem;
+    padding: 1.5rem;
+    background: #000000;
 }
 
 /* Login Screen */
@@ -431,18 +464,21 @@ input[type="file"].form-control::file-selector-button {
 
 /* Layer Status Badge */
 .layer-status {
-    font-family: var(--font-data);
+    font-family: 'Roboto Mono', monospace;
     font-size: 0.7rem;
-    padding: 2px 8px;
-    background: rgba(255,255,255,0.1);
-    color: var(--dim);
-    border: 0.5px solid var(--dim);
+    padding: 3px 10px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    border: 0.5px solid rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .layer-status.active {
-    background: rgba(0,255,0,0.2);
+    background: rgba(0,255,0,0.15);
     color: #00ff00;
     border-color: #00ff00;
+    font-weight: bold;
 }
 
 /* Buttons */
@@ -490,9 +526,9 @@ input[type="file"].form-control::file-selector-button {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(255,255,255,0.3);
+    background-color: #000000;
     transition: .4s;
-    border: 0.5px solid var(--dim);
+    border: 0.5px solid rgba(255,255,255,0.5);
 }
 
 .toggle-slider:before {
@@ -502,16 +538,17 @@ input[type="file"].form-control::file-selector-button {
     width: 16px;
     left: 2px;
     bottom: 1px;
-    background-color: var(--white);
+    background-color: rgba(255,255,255,0.5);
     transition: .4s;
 }
 
 input:checked + .toggle-slider {
-    background-color: rgba(0,255,0,0.3);
+    background-color: rgba(0,255,0,0.2);
     border-color: #00ff00;
 }
 
 input:checked + .toggle-slider:before {
+    background-color: #00ff00;
     transform: translateX(20px);
 }
 
@@ -587,21 +624,21 @@ input:checked + .toggle-slider:before {
 
 /* Animation Input Groups */
 .anim-group {
-    background: rgba(255,255,255,0.05);
+    background: rgba(0,0,0,0.8);
     padding: 1rem;
     margin-bottom: 1rem;
-    border: 0.5px solid var(--dim);
+    border: 0.5px solid rgba(255,255,255,0.5);
 }
 
 .anim-group h5 {
     margin: 0 0 0.8rem 0;
-    color: var(--white);
+    color: #ffffff;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-bottom: 0.5px solid var(--dim);
+    border-bottom: 0.5px solid rgba(255,255,255,0.5);
     padding-bottom: 0.5rem;
-    font-family: var(--font-data);
+    font-family: 'Roboto Mono', monospace;
 }
 
 .anim-inputs {
