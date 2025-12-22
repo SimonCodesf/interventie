@@ -1,11 +1,15 @@
-/* Admin Terminal CSS - Terminal/Hacker Look */
+/* Import main styles */
+@import url('../../css/style.css');
+@import url('../../css/file-manager.css');
 
-* {
-    box-sizing: border-box;
-}
-
-html {
-    height: 100%;
+/* Admin Specific Overrides for Terminal Look */
+:root {
+    /* Fallback variables in case imports fail */
+    --black: #000000;
+    --white: #ffffff;
+    --dim: rgba(255,255,255,0.5);
+    --font-ui: 'Bebas Neue', Impact, sans-serif;
+    --font-data: 'Roboto Mono', monospace;
 }
 
 body {
@@ -20,222 +24,451 @@ body {
     flex-direction: column;
 }
 
-/* Sidebar */
+html {
+    height: 100%;
+}
+
+/* Layout Adjustments */
+.admin-wrapper {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex: 1;
+}
+
+/* Sidebar overrides to match file-manager.css */
 .admin-sidebar {
     width: 260px;
-    border-right: 0.5px solid #ffffff;
+    border-right: 0.5px solid var(--white);
     padding: 0.75rem;
     display: flex;
     flex-direction: column;
-    background: #000000;
-    overflow-y: auto;
-    flex-shrink: 0;
+    background: var(--black);
 }
 
 .sidebar-header {
     margin-bottom: 1.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 0.5px solid #ffffff;
+    border-bottom: 0.5px solid var(--white);
+}
+
+.sidebar-header h1 {
+    font-family: var(--font-ui);
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    margin: 0;
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.nav-item {
+    background: transparent;
+    border: 0.5px solid transparent;
+    color: var(--dim);
+    padding: 0.5rem;
+    text-align: left;
+    font-family: var(--font-data);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+}
+
+.nav-item:hover, .nav-item.active {
+    border-color: var(--white);
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.terminal-window {
+    flex: 1;
+    margin: 1rem;
+    border: 0.5px solid #ffffff;
+    display: flex;
+    flex-direction: column;
+    background: #000000;
+    box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2);
+    min-height: 0;
+}
+
+.window-header {
+    background: var(--white);
+    color: var(--black);
+    padding: 0.25rem 0.5rem;
+    font-family: var(--font-data);
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-transform: uppercase;
+}
+
+.window-content {
+    flex: 1;
+    overflow-y: scroll !important;
+    overflow-x: hidden;
+    padding: 1.5rem;
+    display: block;
+    min-height: 0;
+    position: relative;
+}
+
+.window-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.window-content::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+.window-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.window-content form {
+    display: block;
+    width: 100%;
+}
+
+/* Form Styles - Terminal Look */
+.form-group {
     margin-bottom: 1rem;
 }
 
-.sidebar-nav a:hover,
-.sidebar-nav button:hover {
-    border-color: #ffffff !important;
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+.form-section {
+    border-bottom: 0.5px solid rgba(255,255,255,0.5);
+    padding-bottom: 1.5rem;
+    margin-bottom: 0;
+    width: 100%;
+    flex-shrink: 0;
 }
 
-/* Poster List Items */
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section h2 {
+    font-size: 0.95rem;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--white);
+    font-family: var(--font-data);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.form-control {
+    width: 100%;
+    background: #000000 !important;
+    border: 0.5px solid rgba(255,255,255,0.5) !important;
+    color: #ffffff !important;
+    padding: 0.75rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+textarea.form-control {
+    background: #000000 !important;
+    border: 0.5px solid rgba(255,255,255,0.5) !important;
+    color: #ffffff !important;
+    resize: vertical;
+}
+
+input[type="file"].form-control::file-selector-button {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+}
+
+/* Buttons */
+.btn-terminal {
+    background: var(--black);
+    color: var(--white);
+    border: 0.5px solid var(--white);
+    padding: 0.75rem 1.5rem;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-terminal:hover {
+    background: var(--white);
+    color: var(--black);
+}
+
+.btn-terminal.primary {
+    background: var(--white);
+    color: var(--black);
+}
+
+.btn-terminal.primary:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* Poster List in Sidebar */
+.poster-list-container {
+    margin-top: 2rem;
+    border-top: 0.5px solid var(--dim);
+    padding-top: 1rem;
+}
+
+.poster-list-title {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
 .sidebar-poster-item {
     padding: 0.5rem;
     border: 0.5px solid transparent;
     cursor: pointer;
     margin-bottom: 0.25rem;
-    transition: all 0.2s;
 }
 
 .sidebar-poster-item:hover {
-    border-color: rgba(255,255,255,0.5);
+    border-color: var(--dim);
     background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-poster-item h4 {
     margin: 0;
     font-size: 0.85rem;
-    color: #ffffff;
+    color: var(--white);
     font-weight: normal;
 }
 
 .sidebar-poster-item p {
     margin: 0;
     font-size: 0.7rem;
-    color: rgba(255,255,255,0.5);
-    margin-top: 0.2rem;
+    color: var(--dim);
 }
 
-/* Delete button */
-.delete-btn {
-    background: none !important;
-    border: none !important;
-    color: #ff5555 !important;
-    cursor: pointer !important;
-    font-family: 'Roboto Mono', monospace !important;
-    font-size: 0.7rem !important;
+/* Layer Accordion - Terminal Style */
+.layer-accordion {
+    border: 0.5px solid var(--dim);
+    margin-bottom: 1rem;
+    background: transparent;
 }
 
-/* Scrollbars */
+.layer-accordion summary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--white);
+    padding: 0.75rem;
+    font-family: var(--font-data);
+    border-bottom: 0.5px solid var(--dim);
+    list-style: none;
+    cursor: pointer;
+}
+
+.layer-accordion[open] summary {
+    border-bottom: 0.5px solid var(--white);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.layer-content {
+    padding: 1rem;
+}
+
+/* Login Screen */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+}
+
+.login-box {
+    width: 400px;
+    border: 0.5px solid var(--white);
+    background: var(--black);
+    box-shadow: 8px 8px 0px rgba(255, 255, 255, 0.2);
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-    width: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #000000;
+    background: var(--black);
+    border-left: 0.5px solid var(--dim);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: var(--dim);
+    border: 1px solid var(--black);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--white);
 }
 
-/* Form styles */
-input[type="text"],
-input[type="password"],
-input[type="file"],
-textarea,
-select {
-    background: #000000 !important;
-    border: 0.5px solid rgba(255,255,255,0.5) !important;
-    color: #ffffff !important;
-    padding: 0.75rem !important;
-    font-family: 'Roboto Mono', monospace !important;
-    font-size: 0.9rem !important;
-}
-
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="file"]:focus,
-textarea:focus,
-select:focus {
-    outline: none !important;
-    border-color: #ffffff !important;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
-}
-
-input[type="file"]::file-selector-button {
-    background: #ffffff !important;
-    color: #000000 !important;
-    border: none !important;
-    padding: 0.3rem 0.8rem !important;
-    cursor: pointer !important;
-    font-family: 'Roboto Mono', monospace !important;
-    font-size: 0.85rem !important;
-}
-
-textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-button {
-    cursor: pointer;
-}
-
-/* Utility classes for sidebar nav styling */
-.sidebar-nav a,
-.sidebar-nav button {
-    background: transparent;
+/* File Size Info */
+.file-size-info {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
     border: 0.5px solid transparent;
-    color: rgba(255,255,255,0.5);
-    padding: 0.5rem;
-    text-align: left;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: block;
-    width: 100%;
+    display: none;
 }
 
-/* Layer accordion */
-details {
-    margin-bottom: 1rem;
+.file-size-info.show { display: inline-block; }
+
+.file-size-info.small { 
+    color: #00ff00; 
+    border-color: #00ff00; 
+    background: rgba(0, 255, 0, 0.1);
 }
 
-details summary {
-    cursor: pointer;
-    color: #ffffff;
-    padding: 0.5rem;
-    border: 0.5px solid rgba(255,255,255,0.5);
-    background: rgba(255,255,255,0.05);
-    user-select: none;
-    font-family: 'Roboto Mono', monospace;
+.file-size-info.medium { 
+    color: #ffaa00; 
+    border-color: #ffaa00; 
+    background: rgba(255, 170, 0, 0.1);
 }
 
-details[open] summary {
-    border-color: #ffffff;
-    background: rgba(255,255,255,0.1);
+.file-size-info.large { 
+    color: #ff0000; 
+    border-color: #ff0000; 
+    background: rgba(255, 0, 0, 0.1);
 }
-
-details .layer-content,
-details .anim-group {
-    padding: 1rem;
-    background: rgba(255,255,255,0.02);
-}
-
-details .layer-content {
-    border: 0.5px solid rgba(255,255,255,0.3);
-    border-top: none;
-}
-
-/* Animation group styles */
-.anim-inputs {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.input-wrapper {
+/* Admin Main Content */
+.admin-main {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    padding: 2rem;
+    overflow-y: auto;
 }
 
-.input-wrapper label {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 0.3rem;
+.section-header {
+    margin-bottom: 2rem;
 }
 
-.input-wrapper input {
-    width: 100%;
+.section-header h2 {
+    font-family: var(--font-ui);
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    color: var(--white);
+    margin: 0;
 }
 
-/* Toggle switch */
-.toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Card/Form Styling */
+.card {
+    background: var(--black);
+    border: 0.5px solid var(--white);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2);
+}
+
+.card h2 {
+    font-family: var(--font-data);
+    font-size: 1rem;
+    color: var(--white);
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 0.5px solid var(--dim);
+    text-transform: uppercase;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-full {
+    grid-column: 1 / -1;
+}
+
+/* Layer Status Badge */
+.layer-status {
+    font-family: var(--font-data);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.1);
+    color: var(--dim);
+    border: 0.5px solid var(--dim);
+}
+
+.layer-status.active {
+    background: rgba(0,255,0,0.2);
+    color: #00ff00;
+    border-color: #00ff00;
+}
+
+/* Buttons */
+.btn {
+    font-family: var(--font-ui);
+    padding: 0.75rem 1.5rem;
+    border: 0.5px solid var(--white);
     cursor: pointer;
-    color: #ffffff;
-    margin: 1rem 0;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
+.btn-primary {
+    background: var(--white);
+    color: var(--black);
+    width: 100%;
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* Toggle Switch - Terminal Style */
 .toggle-switch {
     position: relative;
     display: inline-block;
     width: 40px;
-    height: 24px;
+    height: 20px;
+    margin-right: 10px;
 }
 
 .toggle-switch input {
@@ -251,26 +484,227 @@ details .layer-content {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #333;
-    transition: 0.3s;
-    border: 0.5px solid rgba(255,255,255,0.5);
+    background-color: rgba(255,255,255,0.3);
+    transition: .4s;
+    border: 0.5px solid var(--dim);
 }
 
 .toggle-slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 16px;
+    width: 16px;
     left: 2px;
-    bottom: 2px;
-    background-color: #ffffff;
-    transition: 0.3s;
+    bottom: 1px;
+    background-color: var(--white);
+    transition: .4s;
 }
 
 input:checked + .toggle-slider {
-    background-color: #00ff00;
+    background-color: rgba(0,255,0,0.3);
+    border-color: #00ff00;
 }
 
 input:checked + .toggle-slider:before {
-    transform: translateX(16px);
+    transform: translateX(20px);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-data);
+    color: var(--white);
+}
+
+/* Modal Terminal Style */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+}
+
+.modal-content {
+    background-color: var(--black);
+    border: 0.5px solid var(--white);
+    margin: 5% auto;
+    padding: 0;
+    width: 90%;
+    max-width: 900px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 8px 8px 0px rgba(255, 255, 255, 0.2);
+}
+
+.modal-header {
+    background: var(--white);
+    color: var(--black);
+    padding: 0.5rem 1rem;
+    border-bottom: 0.5px solid var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-data);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.modal-body {
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+    background: var(--black);
+}
+
+.modal-footer {
+    padding: 1rem;
+    border-top: 0.5px solid var(--dim);
+    background: var(--black);
+}
+
+.close-modal {
+    cursor: pointer;
+    color: var(--black);
+    font-weight: bold;
+}
+
+.close-modal:hover {
+    opacity: 0.7;
+}
+
+/* Animation Input Groups */
+.anim-group {
+    background: rgba(255,255,255,0.05);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 0.5px solid var(--dim);
+}
+
+.anim-group h5 {
+    margin: 0 0 0.8rem 0;
+    color: var(--white);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 0.5px solid var(--dim);
+    padding-bottom: 0.5rem;
+    font-family: var(--font-data);
+}
+
+.anim-inputs {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.input-wrapper label {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dim);
+    font-size: 0.7rem;
+    font-weight: 600;
+    pointer-events: none;
+    font-family: var(--font-data);
+}
+
+.input-wrapper input {
+    padding-left: 24px;
+    text-align: right;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Poster list in sidebar */
+.poster-list-container {
+    margin-top: 2rem;
+    border-top: 0.5px solid var(--dim);
+    padding-top: 1rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.poster-list-title {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+#admin-poster-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-poster-item {
+    padding: 0.5rem;
+    border: 0.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sidebar-poster-item:hover {
+    border-color: var(--dim);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-poster-item.active {
+    border-color: var(--white);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-poster-item h4 {
+    font-size: 0.85rem;
+    margin: 0 0 0.25rem 0;
+    color: var(--white);
+    font-family: var(--font-data);
+}
+
+.sidebar-poster-item p {
+    font-size: 0.7rem;
+    color: var(--dim);
+    margin: 0;
+    font-family: var(--font-data);
+}
+
+/* Hide upload success message by default */
+#upload-success {
+    display: none;
+    padding: 1rem;
+    background: rgba(0,255,0,0.2);
+    border: 0.5px solid #00ff00;
+    color: #00ff00;
+    margin-bottom: 1rem;
+    font-family: var(--font-data);
+}
+
+#upload-success.show {
+    display: block;
+}
+
+/* Login Error */
+#login-error {
+    color: #ff5555;
+    text-align: center;
+    margin-top: 1rem;
+    font-family: var(--font-data);
+    font-size: 0.85rem;
+}
+
+/* Make sure body can scroll */
+body {
+    overflow-y: auto;
 }

@@ -8,94 +8,263 @@
     <link rel="stylesheet" href="css/admin-terminal.css">
 </head>
 <body>
-    <!-- Login Section -->
-    <div id="login-section" style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; background: #000000;">
-        <div style="width: 400px; border: 0.5px solid #ffffff; background: #000000; box-shadow: 8px 8px 0px rgba(255, 255, 255, 0.2);">
-            <div style="background: #ffffff; color: #000000; padding: 0.25rem 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.8rem; font-weight: bold; display: flex; justify-content: space-between; text-transform: uppercase;">
-                <span>AUTHENTICATION REQUIRED</span>
-                <span>[SECURE]</span>
-            </div>
-            <div style="padding: 1.5rem;">
-                <form id="login-form">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; color: #ffffff; font-family: 'Roboto Mono', monospace; font-size: 0.9rem;">ACCESS CODE</label>
-                        <input type="password" id="admin-password" style="width: 100%; background: #000000; border: 0.5px solid rgba(255,255,255,0.5); color: #ffffff; padding: 0.75rem; font-family: 'Roboto Mono', monospace; box-sizing: border-box;" required autofocus>
-                    </div>
-                    <button type="submit" style="width: 100%; background: #ffffff; color: #000000; border: none; padding: 0.75rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; font-weight: bold;">LOGIN</button>
-                </form>
-                <p id="login-error" style="color: #ff5555; text-align: center; margin-top: 1rem; font-family: 'Roboto Mono', monospace; font-size: 0.8rem;"></p>
-            </div>
+
+    <!-- Login Screen -->
+    <div id="login-section" class="login-container">
+        <div class="login-box">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Admin Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Wachtwoord</label>
+                    <input type="password" id="admin-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Inloggen</button>
+            </form>
+            <p id="login-error" style="color: #e74c3c; text-align: center; margin-top: 1rem;"></p>
         </div>
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="upload-section" style="display: none; flex-direction: row; width: 100%; height: 100vh;">
+    <div id="upload-section" class="admin-wrapper" style="display: none;">
+        
         <!-- Sidebar -->
         <aside class="admin-sidebar">
-            <div class="sidebar-header">
-                <h1 style="font-family: 'Bebas Neue', Impact, sans-serif; font-size: 1.5rem; letter-spacing: 1px; margin: 0;">INTERVENTIE</h1>
-                <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">ADMINISTRATION CONSOLE v2.0</div>
-            </div>
+            <h1>INTERVENTIE</h1>
             
             <nav class="sidebar-nav">
-                <a href="../index.html" style="background: transparent; border: 0.5px solid transparent; color: rgba(255,255,255,0.5); padding: 0.5rem; text-align: left; font-family: 'Roboto Mono', monospace; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-decoration: none; display: block;">
-                    <span style="margin-right: 0.5rem;">&lt;</span> RETURN TO SITE
-                </a>
-                <button id="logout-btn" style="background: transparent; border: 0.5px solid transparent; color: rgba(255,255,255,0.5); padding: 0.5rem; text-align: left; font-family: 'Roboto Mono', monospace; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-decoration: none; display: block; width: 100%;">
-                    <span style="margin-right: 0.5rem;">x</span> TERMINATE SESSION
-                </button>
+                <a href="../index.html">← Terug naar website</a>
+                <button id="logout-btn">Uitloggen</button>
             </nav>
 
-            <div style="margin-top: 2rem; border-top: 0.5px solid #ffffff; padding-top: 1rem;">
-                <div style="font-family: 'Roboto Mono', monospace; font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; text-transform: uppercase;">DATABASE RECORDS</div>
-                <div id="admin-poster-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            <div class="poster-list-title">Bestaande Posters</div>
+            <div id="admin-poster-list">
+                <!-- Poster items injected here -->
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main style="flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;">
-            <div style="border: 0.5px solid #ffffff; display: flex; flex-direction: column; background: #000000; box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2); margin: 1rem; min-height: 0; flex: 1;">
-                <div style="background: #ffffff; color: #000000; padding: 0.25rem 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.8rem; font-weight: bold; display: flex; justify-content: space-between; text-transform: uppercase;">
-                    <span>UPLOAD_PROTOCOL.EXE</span>
-                    <span>STATUS: READY</span>
+        <main class="admin-main">
+            <div class="section-header">
+                <h2>Nieuwe Poster Uploaden</h2>
+            </div>
+
+            <form id="upload-form">
+                <!-- Metadata Card -->
+                <div class="card">
+                    <h2>Algemene Info</h2>
+                    <div class="form-grid">
+                        <div class="form-group form-full">
+                            <label for="poster-title">Titel</label>
+                            <input type="text" id="poster-title" required>
+                        </div>
+                        
+                        <div class="form-group form-full">
+                            <label for="poster-description">Beschrijving</label>
+                            <textarea id="poster-description" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="poster-coordinates">Coördinaten (Lat, Lng)</label>
+                            <input type="text" id="poster-coordinates" placeholder="51.0493, 3.7185">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="poster-location">Locatie Beschrijving</label>
+                            <input type="text" id="poster-location">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="poster-artikel-link">Artikel Link</label>
+                            <input type="text" id="poster-artikel-link">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="poster-photographer">Fotograaf Credit</label>
+                            <input type="text" id="poster-photographer">
+                        </div>
+                    </div>
                 </div>
-                <div style="flex: 1; overflow-y: scroll; overflow-x: hidden; padding: 1.5rem; display: block; min-height: 0; position: relative;">
-                    <form id="upload-form">
-                        <!-- Section: Metadata -->
-                        <div style="border-bottom: 0.5px solid rgba(255,255,255,0.5); padding-bottom: 1.5rem; margin-bottom: 2rem; width: 100%;">
-                            <h2 style="font-size: 0.95rem; margin: 0 0 1rem 0; color: #ffffff; font-family: 'Roboto Mono', monospace; text-transform: uppercase; letter-spacing: 1px;">// META_DATA</h2>
-                            
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; color: #ffffff; font-family: 'Roboto Mono', monospace;">TITLE_ID</label>
-                                <input type="text" id="upload-title" name="title" style="width: 100%; background: #000000; border: 0.5px solid rgba(255,255,255,0.5); color: #ffffff; padding: 0.75rem; font-family: 'Roboto Mono', monospace; box-sizing: border-box;" required>
+
+                <!-- Files Card -->
+                <div class="card">
+                    <h2>Bestanden</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="poster-jpeg">JPEG (Website)</label>
+                            <input type="file" id="poster-jpeg" accept="image/jpeg" required>
+                            <div id="jpeg-size-info" class="file-size-info"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ar-marker-file">AR Marker (.mind)</label>
+                            <input type="file" id="ar-marker-file" accept=".mind" required>
+                            <div id="mind-size-info" class="file-size-info"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="poster-pdf-medium">PDF (A3)</label>
+                            <input type="file" id="poster-pdf-medium" accept="application/pdf" required>
+                            <div id="pdf-medium-size-info" class="file-size-info"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="poster-pdf-large">PDF (A0)</label>
+                            <input type="file" id="poster-pdf-large" accept="application/pdf" required>
+                            <div id="pdf-large-size-info" class="file-size-info"></div>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div id="preview-container" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 0.5px solid #eee;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Preview</label>
+                        <img id="preview-image" style="max-width: 200px; border-radius: 4px; border: 0.5px solid #ddd;">
+                    </div>
+                </div>
+
+                <!-- Layers Card -->
+                <div class="card">
+                    <h2>AR Lagen (8)</h2>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Configureer hier de 8 lagen voor de AR ervaring. Laag 1 is de basislaag.</p>
+                    
+                    <div id="layers-container">
+                        <!-- Layers injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Submit Area -->
+                <div class="card">
+                    <div id="total-size-summary" style="margin-bottom: 1rem; display: none;">
+                        <div id="size-breakdown" style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #666; line-height: 1.5;"></div>
+                        <div id="size-total" style="font-weight: bold; border-top: 0.5px solid #eee; padding-top: 0.5rem;"></div>
+                    </div>
+
+                    <p id="upload-error" style="color: #e74c3c; font-weight: bold; margin-bottom: 1rem;"></p>
+                    <p id="upload-success" style="color: #27ae60; font-weight: bold; margin-bottom: 1rem;"></p>
+
+                    <div id="upload-progress" class="progress-container" style="display: none; margin-bottom: 1rem;">
+                        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 5px;">
+                            <span id="progress-text">Uploaden...</span>
+                            <span id="progress-percentage">0%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 2px; color: #666;">
+                            <span id="upload-speed"></span>
+                            <span id="upload-eta"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="upload-btn" class="btn btn-primary">
+                        <span class="btn-text">UPLOAD POSTER</span>
+                        <span class="btn-loader">BEZIG MET UPLOADEN...</span>
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Poster Bewerken</h2>
+                <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body" style="background: #f5f7fa;">
+                <form id="edit-form">
+                    <input type="hidden" id="edit-poster-id">
+                    
+                    <!-- Basic Info Card -->
+                    <div class="card">
+                        <h2>Basis Informatie</h2>
+                        <div class="form-grid">
+                            <div class="form-group form-full">
+                                <label>Titel</label>
+                                <input type="text" id="edit-title">
                             </div>
                             
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; color: #ffffff; font-family: 'Roboto Mono', monospace;">DESCRIPTION_TEXT</label>
-                                <textarea id="upload-description" name="description" style="width: 100%; background: #000000; border: 0.5px solid rgba(255,255,255,0.5); color: #ffffff; padding: 0.75rem; font-family: 'Roboto Mono', monospace; box-sizing: border-box; min-height: 100px;" rows="3"></textarea>
+                            <div class="form-group form-full">
+                                <label>Beschrijving</label>
+                                <textarea id="edit-description" rows="3"></textarea>
                             </div>
 
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; margin-bottom: 0.5rem; color: #ffffff; font-family: 'Roboto Mono', monospace;">SOURCE_FILE (JPG/PNG)</label>
-                                <input type="file" id="upload-file" name="image" accept="image/jpeg,image/png" style="width: 100%; background: #000000; border: 0.5px solid rgba(255,255,255,0.5); color: #ffffff; padding: 0.75rem; font-family: 'Roboto Mono', monospace; box-sizing: border-box;" required>
-                                <div id="upload-success" style="display: none; color: #00ff00; font-family: 'Roboto Mono', monospace; font-size: 0.85rem; margin-top: 0.5rem;"></div>
+                            <div class="form-group">
+                                <label>Coördinaten</label>
+                                <input type="text" id="edit-coordinates">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Locatie</label>
+                                <input type="text" id="edit-location">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Artikel Link</label>
+                                <input type="text" id="edit-artikel-link">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Fotograaf</label>
+                                <input type="text" id="edit-photographer">
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Section: AR Layers -->
-                        <div style="border-bottom: 0.5px solid rgba(255,255,255,0.5); padding-bottom: 1.5rem; margin-bottom: 2rem; width: 100%;">
-                            <h2 style="font-size: 0.95rem; margin: 0 0 1rem 0; color: #ffffff; font-family: 'Roboto Mono', monospace; text-transform: uppercase; letter-spacing: 1px;">// AR_LAYERS</h2>
-                            <div id="layers-container" style="display: flex; flex-direction: column;"></div>
+                    <!-- Files Card -->
+                    <div class="card">
+                        <h2>Bestanden Vervangen</h2>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Upload alleen bestanden die je wilt vervangen.</p>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nieuwe JPEG</label>
+                                <input type="file" id="edit-jpeg" accept="image/jpeg">
+                                <div id="edit-jpeg-size-info" class="file-size-info"></div>
+                                <div id="edit-preview-container" style="display: none; margin-top: 10px;">
+                                    <img id="edit-preview-image" style="max-width: 150px; border-radius: 4px; border: 0.5px solid #ddd;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Nieuwe Marker (.mind)</label>
+                                <input type="file" id="edit-ar-marker-file" accept=".mind">
+                                <p id="edit-ar-marker-current" class="file-info"></p>
+                                <div id="edit-ar-marker-file-size-info" class="file-size-info"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Nieuwe PDF (A3)</label>
+                                <input type="file" id="edit-pdf-medium" accept="application/pdf">
+                                <div id="edit-pdf-medium-size-info" class="file-size-info"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Nieuwe PDF (A0)</label>
+                                <input type="file" id="edit-pdf-large" accept="application/pdf">
+                                <div id="edit-pdf-large-size-info" class="file-size-info"></div>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Submit Button -->
-                        <div style="padding-top: 1rem; border-top: 0.5px solid #ffffff;">
-                            <button type="submit" style="width: 100%; background: #ffffff; color: #000000; border: none; padding: 0.75rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; font-weight: bold;">INITIATE_UPLOAD</button>
+                    <!-- Layers Card -->
+                    <div class="card">
+                        <h2>AR Lagen</h2>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Configureer hier de 8 lagen voor de AR ervaring.</p>
+                        <div id="edit-layers-container">
+                            <!-- Layers injected here -->
                         </div>
-                    </form>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <button type="button" id="delete-poster-btn" class="btn" style="background: #e74c3c; color: white;">VERWIJDER POSTER</button>
+                </div>
+                <div style="text-align: right;">
+                    <p id="edit-error" style="color: #e74c3c; margin-bottom: 0.5rem;"></p>
+                    <p id="edit-success" style="color: #27ae60; margin-bottom: 0.5rem;"></p>
+                    <button type="button" onclick="document.getElementById('edit-form').dispatchEvent(new Event('submit'))" class="btn btn-primary" style="width: auto;">WIJZIGINGEN OPSLAAN</button>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
     <script src="admin.js"></script>
