@@ -116,6 +116,8 @@ html {
     overflow: hidden;
     position: relative;
     padding: 1rem;
+    max-width: none !important; /* Override style.css */
+    margin-right: 0 !important;
 }
 
 .terminal-window {
@@ -883,8 +885,10 @@ body {
     right: 0;
     top: 0;
     bottom: 0;
-    width: auto;
+    width: auto !important;
     height: auto;
+    max-width: none !important; /* Force override style.css */
+    margin: 0 !important;       /* No auto margins */
     
     overflow: hidden; /* Main page no scroll, inner panels scroll */
     background: #0d0d0d;
