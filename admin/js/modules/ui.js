@@ -8,12 +8,13 @@ export function renderPosterList(posters, token, onRefresh) {
     posters.forEach(poster => {
         const item = document.createElement('div');
         item.className = 'sidebar-poster-item';
+        // Removed inline styles for CSS control
         item.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h4 style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #ffffff;">${poster.title}</h4>
-                <button class="delete-btn" style="background: none; border: none; color: #ff5555; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 0.7rem;">[DEL]</button>
+            <div class="poster-item-header">
+                <h4 class="poster-item-title">${poster.title}</h4>
+                <button class="delete-btn">[DEL]</button>
             </div>
-            <p style="font-family: 'Roboto Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">
+            <p class="poster-item-meta">
                 ID: ${poster.id} | DL: ${poster.downloads || 0}
             </p>
         `;

@@ -43,69 +43,216 @@ html {
 /* Sidebar overrides to match file-manager.css */
 .admin-sidebar {
     width: 260px;
-    border-right: 0.5px solid var(--white);
-    padding: 0.75rem;
+    border-right: 1px solid var(--white);
+    padding: 0;
     display: flex;
     flex-direction: column;
-    background: var(--black);
+    background: #050505;
     height: 100vh;
     position: fixed;
     left: 0;
     top: 0;
-    overflow-y: auto;
+    overflow-y: hidden; /* Scroll is on the list, not the whole bar */
+    z-index: 100;
 }
 
 .sidebar-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 0.5px solid var(--white);
-}
-
-.sidebar-header h1 {
-    font-family: var(--font-ui);
-    font-size: 1.5rem;
-    letter-spacing: 1px;
-    margin: 0;
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid var(--white);
+    text-align: center;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.02),
+        rgba(255, 255, 255, 0.02) 10px,
+        rgba(0, 0, 0, 0) 10px,
+        rgba(0, 0, 0, 0) 20px
+    );
+    flex-shrink: 0;
 }
 
 /* Logo styling */
 .admin-logo {
     width: 100%;
-    max-width: 120px;
+    max-width: 100px;
     height: auto;
     display: block;
+    margin: 0 auto 0.8rem auto;
+    filter: invert(1);
+    opacity: 0.9;
+}
+
+.system-status-indicator {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.65rem;
+    color: #00ff00;
+    border: 1px solid rgba(0,255,0,0.3);
+    background: rgba(0,255,0,0.05);
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #00ff00;
+    border-radius: 50%;
+    margin-right: 4px;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-bottom: 2rem;
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
 }
 
-.nav-item, 
-.sidebar-nav button,
-.sidebar-nav a {
-    background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.5);
+.nav-item-link, 
+.nav-item-btn {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid transparent;
     color: rgba(255,255,255,0.7);
-    padding: 0.75rem;
-    text-align: center;
+    padding: 0.75rem 1rem;
+    text-align: left;
     font-family: 'Roboto Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
     text-decoration: none;
-    display: block;
+    text-transform: uppercase;
+    position: relative;
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 95% 100%, 0 100%);
 }
 
-.nav-item:hover, 
-.nav-item.active,
-.sidebar-nav button:hover,
-.sidebar-nav a:hover {
-    border-color: #ffffff;
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.15);
+.nav-item-link::before,
+.nav-item-btn::before {
+    content: '> ';
+    margin-right: 8px;
+    color: var(--dim);
+}
+
+.nav-item-link:hover, 
+.nav-item-btn:hover {
+    border-color: var(--white);
+    color: var(--black);
+    background: var(--white);
+    padding-left: 1.25rem;
+}
+
+.nav-item-link:hover::before,
+.nav-item-btn:hover::before {
+    color: var(--black);
+}
+
+.poster-list-title {
+    padding: 1rem;
+    text-align: center;
+    font-family: var(--font-data);
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+.poster-list-title .bracket {
+    color: var(--white);
+    opacity: 0.3;
+}
+
+.scrollable-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 1rem 1rem 1rem;
+    margin-right: 2px; /* Prevent scrollbar overlap */
+}
+
+/* Poster List Items */
+.sidebar-poster-item {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+    cursor: default;
+}
+
+.sidebar-poster-item:hover {
+    border-color: var(--white);
+    background: rgba(255,255,255,0.05);
+}
+
+.poster-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.poster-item-title {
+    font-family: var(--font-data);
+    font-size: 0.8rem;
+    color: var(--white);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.sidebar-poster-item:hover .poster-item-title {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255,255,255,0.5);
+}
+
+.poster-item-meta {
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    color: var(--dim);
+    margin: 0;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff3333;
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    cursor: pointer;
+    opacity: 0.5;
+    padding: 2px 4px;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    opacity: 1;
+    background: rgba(255, 50, 50, 0.1);
+}
+
+/* Scrollbar for sidebar list */
+.scrollable-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scrollable-list::-webkit-scrollbar-track {
+    background: #000;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+    background: #333;
+}
+.scrollable-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .admin-main {

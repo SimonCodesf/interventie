@@ -31,15 +31,20 @@
         <aside class="admin-sidebar">
             <div class="sidebar-header">
                 <img src="../img/Artboard 1logo.svg" alt="INTERVENTIE" class="admin-logo">
+                <div class="system-status-indicator">
+                    <span class="status-dot"></span> ONLINE :: ADMIN_NODE
+                </div>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="../index.html">← Terug naar website</a>
-                <button id="logout-btn">Uitloggen</button>
+                <a href="../index.html" class="nav-item-link">Terug naar website</a>
+                <button id="logout-btn" class="nav-item-btn">Uitloggen</button>
             </nav>
 
-            <div class="poster-list-title">Bestaande Posters</div>
-            <div id="admin-poster-list">
+            <div class="poster-list-title">
+                <span class="bracket">[</span> ARCHIVED_POSTERS <span class="bracket">]</span>
+            </div>
+            <div id="admin-poster-list" class="scrollable-list">
                 <!-- Poster items injected here -->
             </div>
         </aside>
