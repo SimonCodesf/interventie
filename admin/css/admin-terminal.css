@@ -115,6 +115,7 @@ html {
     flex-direction: column;
     overflow: hidden;
     position: relative;
+    padding: 1rem;
 }
 
 .terminal-window {
@@ -432,14 +433,7 @@ input[type="file"]::file-selector-button:hover {
     border-color: #ff0000; 
     background: rgba(255, 0, 0, 0.1);
 }
-/* Admin Main Content */
-.admin-main {
-    flex: 1;
-    padding: 2rem;
-    padding-right: 3rem;
-    overflow-y: auto;
-    max-width: 950px;
-}
+/* Admin Main Content - REMOVED LEGACY BLOCK */
 
 .section-header {
     margin-bottom: 2rem;
