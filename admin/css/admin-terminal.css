@@ -879,7 +879,8 @@ body {
     box-sizing: border-box;
     padding: 1rem;
     /* Correction for fixed sidebar */
-    margin-left: 260px; 
+    margin-left: 260px;
+    width: calc(100% - 260px); /* Subtract sidebar width */
     height: 100vh;
     overflow: hidden; /* Main page no scroll, inner panels scroll */
     background: #0d0d0d;
@@ -916,8 +917,9 @@ body {
 .editor-grid {
     display: flex;
     gap: 1.5rem;
-    height: calc(100vh - 100px); /* Subtract header + margins */
+    height: calc(100vh - 130px); /* Subtract header + sidebar + margins */
     width: 100%;
+    flex: 1;
 }
 
 .editor-column {
@@ -927,17 +929,16 @@ body {
 }
 
 .left-panel {
-    flex: 2; /* 40% */
+    flex: 0 0 450px; /* Fixed width, don't grow/shrink */
     overflow-y: auto;
     padding-right: 5px; /* Scrollbar space */
-    min-width: 450px;
 }
 
 .right-panel {
-    flex: 3; /* 60% - More space for layers */
-    max-width: 800px;
+    flex: 1; /* Take remaining space */
     display: flex;
     flex-direction: column;
+    min-width: 0; /* Allow flex to shrink below content size */
 }
 
 /* Panel Box (Terminal Window style) */
