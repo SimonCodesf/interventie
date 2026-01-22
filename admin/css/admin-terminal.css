@@ -937,13 +937,14 @@ body {
 }
 
 .left-panel {
-    flex: 0 0 450px; /* Fixed width, don't grow/shrink */
+    flex: 1; /* Equal split */
+    min-width: 0;
     overflow-y: auto;
     padding-right: 5px; /* Scrollbar space */
 }
 
 .right-panel {
-    flex: 1; /* Take remaining space */
+    flex: 1; /* Equal split */
     display: flex;
     flex-direction: column;
     min-width: 0; /* Allow flex to shrink below content size */
