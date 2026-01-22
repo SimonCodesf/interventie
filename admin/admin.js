@@ -1001,8 +1001,10 @@ async function loadAdminPosters() {
         
         postersList.innerHTML = posters.map(poster => `
             <div class="sidebar-poster-item" data-id="${poster.id}" onclick="openEditModal('${poster.id}')">
-                <h4>${poster.title}</h4>
-                <p>${formatDate(poster.upload_date || poster.uploadDate)}</p>
+                <div class="poster-item-header">
+                    <h4 class="poster-item-title">${poster.title}</h4>
+                </div>
+                <p class="poster-item-meta">${formatDate(poster.upload_date || poster.uploadDate)}</p>
             </div>
         `).join('');
         
