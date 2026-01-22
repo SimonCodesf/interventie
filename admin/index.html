@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard // INTERVENTIE</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="css/admin-terminal.css?v=2.8">
+    <link rel="stylesheet" href="css/admin-terminal.css?v=2.10">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
         <!-- Main Content -->
         <main class="admin-main">
             <header class="section-header">
-                <h2>POSTER_CONFIG_EDITOR // V.2.9</h2>
+                <h2>POSTER_CONFIG_EDITOR // V.2.10</h2>
                 <div class="header-status">
                      <span id="upload-status-text">SYSTEM_READY</span>
                 </div>
@@ -134,23 +134,36 @@
                         </div>
                     </div>
 
-                    <!-- Status & Feedback Panel (Initially Hidden/Empty) -->
-                    <div class="panel-box status-panel">
-                        <div class="panel-content">
-                            <p id="upload-error" class="text-error"></p>
-                            <p id="upload-success" class="text-success"></p>
+                    <!-- Upload Action & Status Panel -->
+                    <div class="panel-box action-panel">
+                        <div class="panel-header"><span class="panel-title">SYSTEM_EXECUTION</span></div>
+                        <div class="panel-content" style="padding: 1.5rem;">
                             
-                            <div id="upload-progress" class="progress-bar-container" style="display:none;">
-                                <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
-                                <div class="progress-info">
-                                    <span id="progress-text">UPLOADING...</span>
-                                    <span id="progress-percentage">0%</span>
-                                </div>
-                                <div class="progress-details">
-                                    <span id="upload-speed"></span>
-                                    <span id="upload-eta"></span>
+                            <!-- Main Upload Button -->
+                            <button type="submit" id="upload-btn" class="btn btn-primary terminal-btn-large">
+                                <span class="btn-text">INITIALIZE_UPLOAD_SEQUENCE</span>
+                                <span class="btn-icon">>></span>
+                                <span class="btn-loader" style="display:none;">[...]</span>
+                            </button>
+
+                            <!-- Status Output -->
+                            <div class="status-output">
+                                <p id="upload-error" class="text-error"></p>
+                                <p id="upload-success" class="text-success"></p>
+                                
+                                <div id="upload-progress" class="progress-bar-container" style="display:none;">
+                                    <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+                                    <div class="progress-info">
+                                        <span id="progress-text">UPLOADING...</span>
+                                        <span id="progress-percentage">0%</span>
+                                    </div>
+                                    <div class="progress-details">
+                                        <span id="upload-speed"></span>
+                                        <span id="upload-eta"></span>
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -160,12 +173,6 @@
                     <div class="panel-box full-height">
                         <div class="panel-header">
                             <span class="panel-title">ar_layers_config.sys</span>
-                            <div class="panel-actions">
-                                <button type="submit" id="upload-btn" class="btn btn-primary action-btn">
-                                    <span class="btn-text">[ EXECUTE_UPLOAD ]</span>
-                                    <span class="btn-loader" style="display:none;">[...]</span>
-                                </button>
-                            </div>
                         </div>
                         <div class="panel-content scrollable">
                             <div id="layers-container">

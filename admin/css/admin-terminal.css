@@ -1230,3 +1230,39 @@ input[type="file"] {
     height: auto;
 }
 
+/* Large Action Button for V2.10 layout */
+.terminal-btn-large {
+    width: 100%;
+    background: #ffffff;
+    color: #000000;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 1rem;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+}
+
+.terminal-btn-large:hover {
+    background: #000000;
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.terminal-btn-large .btn-icon {
+    font-weight: bold;
+    letter-spacing: -2px;
+}
+
+.status-output {
+    min-height: 20px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+}
+
