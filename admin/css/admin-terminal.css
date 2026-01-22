@@ -917,9 +917,9 @@ body {
 .editor-grid {
     display: flex;
     gap: 1.5rem;
-    height: calc(100vh - 130px); /* Subtract header + sidebar + margins */
+    flex: 1; /* Automatically take remaining vertical space */
+    min-height: 0; /* Important for scrollable children */
     width: 100%;
-    flex: 1;
 }
 
 .editor-column {
