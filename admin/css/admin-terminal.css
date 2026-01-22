@@ -30,10 +30,11 @@ html {
 
 /* Layout Adjustments */
 .admin-wrapper {
-    display: flex;
+    display: block; /* Changed from flex for simplified absolute layout */
     height: 100%;
     width: 100%;
-    flex: 1;
+    position: relative;
+    overflow: hidden;
 }
 
 /* Sidebar overrides to match file-manager.css */
@@ -878,10 +879,16 @@ body {
 .admin-main {
     box-sizing: border-box;
     padding: 1rem;
-    /* Correction for fixed sidebar */
-    margin-left: 260px;
-    width: calc(100% - 260px); /* Subtract sidebar width */
-    height: 100vh;
+    
+    /* Robust Full Screen Layout */
+    position: absolute;
+    left: 260px; /* Sidebar width */
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    
     overflow: hidden; /* Main page no scroll, inner panels scroll */
     background: #0d0d0d;
     display: flex;
