@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard // INTERVENTIE</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="css/admin-terminal.css?v=2.12">
+    <link rel="stylesheet" href="css/admin-terminal.css?v=2.13">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
         <!-- Main Content -->
         <main class="admin-main">
             <header class="section-header">
-                <h2>POSTER_CONFIG_EDITOR // V.2.12</h2>
+                <h2>POSTER_CONFIG_EDITOR // V.2.13</h2>
                 <div class="header-status">
                      <span id="upload-status-text">SYSTEM_READY</span>
                 </div>
@@ -200,111 +200,142 @@
         </main>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Modal - Terminal Style (matching upload interface) -->
     <div id="edit-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-fullscreen">
             <div class="modal-header">
-                <h2>Poster Bewerken</h2>
+                <h2>POSTER_EDIT_MODE // <span id="edit-poster-title-header">...</span></h2>
                 <span class="close-modal" onclick="closeEditModal()">&times;</span>
             </div>
             
-            <div class="modal-body" style="background: #f5f7fa;">
-                <form id="edit-form">
+            <div class="modal-body">
+                <form id="edit-form" class="editor-grid">
                     <input type="hidden" id="edit-poster-id">
                     
-                    <!-- Basic Info Card -->
-                    <div class="card">
-                        <h2>Basis Informatie</h2>
-                        <div class="form-grid">
-                            <div class="form-group form-full">
-                                <label>Titel</label>
-                                <input type="text" id="edit-title">
-                            </div>
-                            
-                            <div class="form-group form-full">
-                                <label>Beschrijving</label>
-                                <textarea id="edit-description" rows="3"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Coördinaten</label>
-                                <input type="text" id="edit-coordinates">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Locatie</label>
-                                <input type="text" id="edit-location">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Artikel Link</label>
-                                <input type="text" id="edit-artikel-link">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Fotograaf</label>
-                                <input type="text" id="edit-photographer">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Files Card -->
-                    <div class="card">
-                        <h2>Bestanden Vervangen</h2>
-                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Upload alleen bestanden die je wilt vervangen.</p>
+                    <!-- Left Column: Metadata & Files -->
+                    <div class="editor-column left-panel">
                         
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Nieuwe JPEG</label>
-                                <input type="file" id="edit-jpeg" accept="image/jpeg">
-                                <div id="edit-jpeg-size-info" class="file-size-info"></div>
-                                <div id="edit-preview-container" style="display: none; margin-top: 10px;">
-                                    <img id="edit-preview-image" style="max-width: 150px; border-radius: 4px; border: 0.5px solid #ddd;">
+                        <!-- Metadata Panel -->
+                        <div class="panel-box">
+                            <div class="panel-header"><span class="panel-title">meta_data.json</span></div>
+                            <div class="panel-content form-grid">
+                                <div class="form-group form-full">
+                                    <label for="edit-title">TITEL_ID</label>
+                                    <input type="text" id="edit-title">
+                                </div>
+                                
+                                <div class="form-group form-full">
+                                    <label for="edit-description">BESCHRIJVING</label>
+                                    <textarea id="edit-description" rows="3"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-coordinates">GPS_COORDS</label>
+                                    <input type="text" id="edit-coordinates">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-location">LOCATIE_NAAM</label>
+                                    <input type="text" id="edit-location">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-artikel-link">EXT_LINK</label>
+                                    <input type="text" id="edit-artikel-link">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-photographer">FOTOGRAAF</label>
+                                    <input type="text" id="edit-photographer">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Nieuwe Marker (.mind)</label>
-                                <input type="file" id="edit-ar-marker-file" accept=".mind">
-                                <p id="edit-ar-marker-current" class="file-info"></p>
-                                <div id="edit-ar-marker-file-size-info" class="file-size-info"></div>
+                        </div>
+
+                        <!-- Files Panel -->
+                        <div class="panel-box">
+                            <div class="panel-header"><span class="panel-title">assets_replace.sh</span></div>
+                            <div class="panel-content">
+                                <p class="hint-text">Upload alleen bestanden die je wilt vervangen.</p>
+                                
+                                <div class="form-group">
+                                    <label for="edit-jpeg">JPEG (WEBSITE_DISPLAY)</label>
+                                    <input type="file" id="edit-jpeg" accept="image/jpeg">
+                                    <div id="edit-jpeg-size-info" class="file-size-info"></div>
+                                </div>
+
+                                <div class="form-group hl-zone">
+                                    <label for="edit-ar-marker-file">AR_MARKER_FILE (.mind)</label>
+                                    <input type="file" id="edit-ar-marker-file" accept=".mind">
+                                    <p id="edit-ar-marker-current" class="file-info"></p>
+                                    <div id="edit-ar-marker-file-size-info" class="file-size-info"></div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group half">
+                                        <label for="edit-pdf-medium">PDF (A3)</label>
+                                        <input type="file" id="edit-pdf-medium" accept="application/pdf">
+                                        <div id="edit-pdf-medium-size-info" class="file-size-info"></div>
+                                    </div>
+                                    <div class="form-group half">
+                                        <label for="edit-pdf-large">PDF (A0)</label>
+                                        <input type="file" id="edit-pdf-large" accept="application/pdf">
+                                        <div id="edit-pdf-large-size-info" class="file-size-info"></div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Nieuwe PDF (A3)</label>
-                                <input type="file" id="edit-pdf-medium" accept="application/pdf">
-                                <div id="edit-pdf-medium-size-info" class="file-size-info"></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Nieuwe PDF (A0)</label>
-                                <input type="file" id="edit-pdf-large" accept="application/pdf">
-                                <div id="edit-pdf-large-size-info" class="file-size-info"></div>
+                        </div>
+
+                        <!-- Changes Summary Panel -->
+                        <div class="panel-box action-panel">
+                            <div class="panel-header"><span class="panel-title">WIJZIGINGEN OVERZICHT</span></div>
+                            <div class="panel-content" style="padding: 1rem;">
+                                
+                                <!-- Changes Summary List -->
+                                <div id="edit-changes-summary" class="file-summary-container">
+                                    <div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen wijzigingen</div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="edit-actions">
+                                    <button type="submit" id="save-edit-btn" class="btn btn-primary terminal-btn-large">
+                                        <span class="btn-text">WIJZIGINGEN OPSLAAN</span>
+                                        <span class="btn-icon">>></span>
+                                    </button>
+                                    
+                                    <button type="button" id="delete-poster-btn" class="btn terminal-btn-danger">
+                                        <span class="btn-text">VERWIJDER POSTER</span>
+                                    </button>
+                                </div>
+
+                                <!-- Status Output -->
+                                <div class="status-output">
+                                    <p id="edit-error" class="text-error"></p>
+                                    <p id="edit-success" class="text-success"></p>
+                                </div>
+
                             </div>
                         </div>
                     </div>
 
-                    <!-- Layers Card -->
-                    <div class="card">
-                        <h2>AR Lagen</h2>
-                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">Configureer hier de 8 lagen voor de AR ervaring.</p>
-                        <div id="edit-layers-container">
-                            <!-- Layers injected here -->
+                    <!-- Right Column: AR Layers -->
+                    <div class="editor-column right-panel">
+                        <div class="panel-box full-height">
+                            <div class="panel-header">
+                                <span class="panel-title">ar_layers_config.sys</span>
+                            </div>
+                            <div class="panel-content scrollable">
+                                <div id="edit-layers-container">
+                                    <!-- Layers injected here by admin.js -->
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                 </form>
-            </div>
-
-            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <button type="button" id="delete-poster-btn" class="btn" style="background: #e74c3c; color: white;">VERWIJDER POSTER</button>
-                </div>
-                <div style="text-align: right;">
-                    <p id="edit-error" style="color: #e74c3c; margin-bottom: 0.5rem;"></p>
-                    <p id="edit-success" style="color: #27ae60; margin-bottom: 0.5rem;"></p>
-                    <button type="button" onclick="document.getElementById('edit-form').dispatchEvent(new Event('submit'))" class="btn btn-primary" style="width: auto;">WIJZIGINGEN OPSLAAN</button>
-                </div>
             </div>
         </div>
     </div>
 
-    <script src="admin.js?v=2.9"></script>
+    <script src="admin.js?v=2.13"></script>
 </body>
 </html>

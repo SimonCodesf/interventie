@@ -451,6 +451,69 @@ function setupLayerSummaryListeners() {
     }
 }
 
+// Track changes in edit modal
+function setupEditChangesSummary() {
+    const summaryContainer = document.getElementById('edit-changes-summary');
+    if (!summaryContainer) return;
+
+    const updateSummary = () => {
+        const changes = [];
+        
+        // Check file changes
+        const fileChecks = [
+            { id: 'edit-jpeg', label: 'Nieuwe JPEG' },
+            { id: 'edit-ar-marker-file', label: 'Nieuwe AR Marker' },
+            { id: 'edit-pdf-medium', label: 'Nieuwe PDF (A3)' },
+            { id: 'edit-pdf-large', label: 'Nieuwe PDF (A0)' }
+        ];
+        
+        fileChecks.forEach(check => {
+            const input = document.getElementById(check.id);
+            if (input && input.files && input.files[0]) {
+                const size = (input.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
+                changes.push({ label: check.label, value: `[OK] ${size}` });
+            }
+        });
+        
+        // Check layer changes
+        for (let i = 1; i <= 8; i++) {
+            const input = document.getElementById(`edit-layer-${i}-image`);
+            if (input && input.files && input.files[0]) {
+                const size = (input.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
+                changes.push({ label: `Laag ${i}`, value: `[OK] ${size}` });
+            }
+        }
+        
+        // Render summary
+        if (changes.length === 0) {
+            summaryContainer.innerHTML = '<div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen wijzigingen</div>';
+        } else {
+            summaryContainer.innerHTML = changes.map(c => `
+                <div class="summary-item completed">
+                    ${c.label}
+                    <span>${c.value}</span>
+                </div>
+            `).join('');
+        }
+    };
+
+    // Attach listeners to all edit inputs
+    const allInputs = ['edit-jpeg', 'edit-ar-marker-file', 'edit-pdf-medium', 'edit-pdf-large'];
+    allInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.addEventListener('change', updateSummary);
+    });
+    
+    // Layer inputs
+    for (let i = 1; i <= 8; i++) {
+        const input = document.getElementById(`edit-layer-${i}-image`);
+        if (input) input.addEventListener('change', updateSummary);
+    }
+    
+    // Initial state
+    updateSummary();
+}
+
 // Setup login form
 function setupLoginForm() {
     const form = document.getElementById('login-form');
@@ -1385,6 +1448,13 @@ async function openEditModal(posterId) {
         // Clear messages
         document.getElementById('edit-success').textContent = '';
         document.getElementById('edit-error').textContent = '';
+        
+        // Update header with poster title
+        const titleHeader = document.getElementById('edit-poster-title-header');
+        if (titleHeader) titleHeader.textContent = poster.title || posterId;
+        
+        // Setup changes summary tracking
+        setupEditChangesSummary();
         
         // Show modal
         document.getElementById('edit-modal').style.display = 'block';
