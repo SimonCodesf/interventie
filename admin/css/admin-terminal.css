@@ -757,10 +757,10 @@ input:checked + .toggle-slider:before {
 }
 
 .modal-content.modal-fullscreen {
-    max-width: 95vw;
-    width: 95vw;
-    height: 92vh;
-    margin: 2vh auto;
+    max-width: 85vw;
+    width: 85vw;
+    height: 85vh;
+    margin: 5vh auto;
 }
 
 .modal-header {
