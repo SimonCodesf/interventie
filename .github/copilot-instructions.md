@@ -62,10 +62,26 @@ if (isDesktop) {
 ```
 
 ### 2. **Loader Systeem** (Nederlandse lokalisatie)
-- Aangepaste hacker-stijl loader (#hacker-loader) met log queue
+- Aangepaste hacker-stijl loader (#hacker-loader) met log queue systeem
 - Alle UI-tekst vertaald naar Nederlands met emoji verwijdering
-- Patroon: `logToLoader('bericht')` voegt logs toe met willekeurige 20-400ms vertragingen
-- Loader verborgen na `SYSTEM_READY` bericht
+- **Queue mechanisme**: `logToLoader('bericht')` voegt berichten toe aan queue met willekeurige 20-400ms vertragingen tussen logs
+- **Status updates**: Loader toont real-time voortgang tijdens AR initialisatie, poster laden, camera setup
+- **Verbergen**: Loader automatisch verborgen na `SYSTEM_READY` bericht
+- **Kritiek**: Gebruikers zien dit als eerste → zorgt voor professionele UX tijdens lange AR initialisatie
+
+**Implementatie details** ([app.js](js/app.js)):
+```javascript
+// 1. Emoji removal (breed unicode bereik)
+msg = msg.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+
+// 2. Translate specifieke berichten naar Nederlands
+if (msg.includes('Fetching posters')) { msg = 'POSTERS OPHALEN...'; }
+else if (msg.includes('AR scene hidden')) { return; } // Filter noise
+
+// 3. Queue processing met random delay
+const randomDelay = Math.floor(Math.random() * 380) + 20;
+setTimeout(processLogQueue, randomDelay);
+```
 
 ### 3. **Module Structuur**
 - Client modules in `js/modules/`: api.js, ar.js, config.js, ui.js, utils.js
@@ -74,10 +90,29 @@ if (isDesktop) {
 - Gebruik ES6 imports: `import { functieNaam } from './config.js'`
 
 ### 4. **API Patronen**
-- **Posters ophalen**: GET `/api.php?action=posters` → Array van poster objecten met id, title, image, downloads, ar_marker
-- **Auth flow**: POST met wachtwoord → security.php rate limits & validatie → Returns token
-- **AR instellingen**: GET `/api.php?action=settings&type=ar-tracking` → JSON met filterMinCF, filterBeta, etc.
-- Alle responses zijn JSON; errors bevatten message veld
+REST API in [api.php](api.php) met path-based routing:
+
+```php
+// Route examples
+GET  /api.php/posters              → handleGetPosters()
+GET  /api.php/posters/{id}         → handleGetPoster($id)
+POST /api.php/admin/upload         → handleUploadPoster() [auth required]
+POST /api.php/admin/posters/{id}/update → handleUpdatePoster($id) [auth required]
+DELETE /api.php/admin/posters/{id} → handleDeletePoster($id) [auth required]
+POST /api.php/admin/login          → Login (rate limited)
+GET  /api.php/download/{id}        → Increment download counter
+```
+
+**Response format**: Altijd JSON met `message` veld bij errors
+**Auth**: Session-based met token in `$_SESSION['auth_token']`, gevalideerd via `isAdmin()`
+**Database**: SQLite in [data/posters.db](data/posters.db) (server-only, via PDO)
+
+**Client-side wrapper** [js/modules/api.js](js/modules/api.js):
+```javascript
+await fetchPosters()           // GET /posters
+await fetchPoster(id)          // GET /posters/:id
+await fetchARSettings()        // GET /settings?type=ar-tracking
+```
 
 ### 5. **Window/File Manager Systeem**
 - Windows zijn Map objecten met ID als key
@@ -116,7 +151,7 @@ if (isDesktop) {
 
 ### AR-Specifieke Code Patronen
 ```javascript
-// Typische AR target detectie
+// Typische AR target detectie (MindAR)
 scene.addEventListener('targetFound', (event) => {
     const targetIndex = event.detail.targetIndex;
     const poster = window.allPosters[targetIndex];
@@ -130,10 +165,16 @@ gifLoader.load('path/to/image.gif', (texture) => {
 });
 ```
 
+**Belangrijk**: `.mind` bestanden zijn MessagePack-geëncodeerde multi-target compilaties. De volgorde van targets MOET overeenkomen met de alfabetische sortering van poster IDs in de database (zie [merge_mind_files.js](tools/merge_mind_files.js#L51-53)):
+```javascript
+// Deterministische sortering: targetIndex = array positie
+mindFiles.sort((a, b) => a.id.localeCompare(b.id));
+```
+
 ### Bekende issues & TODOs
-- [ ] Dynamisch `.mind` bestanden genereren bij poster upload (momenteel handmatig)
-- [ ] Multi-chunk .mind laden (assets/chunks/ bestaat maar niet volledig geïntegreerd)
-- [ ] iOS AR sessie state beheer (wat WebGL cleanup nodig)
+- [ ] Multi-chunk .mind laden volledig testen (assets/chunks/ structuur bestaat)
+- [ ] iOS AR sessie state beheer verbeteren (WebGL cleanup)
+- [ ] AR performance optimalisatie (lazy loading van textures)
 
 ---
 
@@ -143,26 +184,35 @@ gifLoader.load('path/to/image.gif', (texture) => {
 
 **Repository**: `SimonCodesf/interventie` (public)
 **Huidige branch**: `main` (default branch)
+**Auto-Deploy**: GitHub Actions via [FTP-Deploy-Action](.github/workflows/deploy.yml)
+
 **Workflow**: 
-1. **Lokale wijzigingen** → Branch aanmaken (bijv. `phase-1-fixes`)
-2. **Commit + Push** → GitHub
-3. **Direct Mergen**: Merge de branch direct naar `main` om te deployen.
-4. **Auto-Deploy**: GitHub Actions (FTP-Deploy-Action) pusht automatisch naar `interventie.org`
-5. **Live testen** → Wijzigingen direct zichtbaar op productie
+1. **Lokale wijzigingen** → Commit naar main (of feature branch)
+2. **Push naar GitHub** → Trigger deployment workflow
+3. **Auto-Deploy** → FTP sync naar `interventie.org` (excludeert node_modules, backups, uploads, data)
+4. **Live testen** → Wijzigingen zichtbaar op productie binnen ~2 minuten
 
-**BELANGRIJK**: Zorg dat er altijd direct naar de productie website wordt gepushed (via merge naar main).
+⚠️ **Deployment exclusions** (zie [deploy.yml](.github/workflows/deploy.yml)):
+- `node_modules/`, `backups/`, `scripts/` - Lokaal/dev only
+- `uploads/`, `data/` - Server-side user data (NIET overschrijven)
+- Git bestanden, README, TODO - Documentatie
 
-**Branch naamgeving**:
-- `phase-1-fixes` - Mobile & Desktop UI fixes
-- `phase-2-admin-security` - Admin panel & beveiliging
-- `phase-3-features` - Nieuwe features
-- `phase-4-devops` - Backup & automatisering
+**Branch strategie**:
+- `main` - Direct deploy naar productie (gebruik met zorg)
+- Feature branches - Voor grotere wijzigingen, merge via PR
 
-**Push naar GitHub**:
+**Quick commands**:
 ```bash
+# Push naar main (direct deploy)
 git add .
-git commit -m "Fix: beschrijving van wijziging"
-git push origin [branch-naam]
+git commit -m "Fix: beschrijving"
+git push origin main
+
+# Feature branch workflow
+git checkout -b feature/nieuwe-functie
+# ... maak wijzigingen ...
+git push origin feature/nieuwe-functie
+# → Maak PR op GitHub, merge naar main
 ```
 
 ### Server Environment & AR Generation (CRITICAL)
@@ -248,58 +298,52 @@ git push origin main
 
 ---
 
-## 📋 Huidig Fase-Plan (December 2025)
+## 📋 Huidig Fase-Plan (Januari 2026)
 
-Dit project wordt afgebouwd in 4 fasen. Zie `TODO.md` in de root voor gedetailleerde voortgang.
+Dit project wordt afgebouwd in 4 fasen. Zie [TODO.md](TODO.md) in de root voor gedetailleerde voortgang.
 
 ### Fase 1: Critical Fixes & UI Polish (Mobile & Desktop)
-**Status**: IN PROGRESS
+**Status**: COMPLETED ✅
 **Focus**: Zichtbare bugs en gebruiksvriendelijkheid
 
 - [x] **Desktop**: Download count bug fixen (string concat → numeric sum)
-- [ ] **Mobile/AR**: Camera feed positie centreren (tussen logo en bottom)
-- [ ] **Mobile/AR**: Gallery UI/Swipe up verbeteren (desktop stijl, logo overlap fixen)
-- [ ] **Desktop**: Log integratie beter maken (strakker aan onderkant pagina)
-- [ ] **Desktop**: Tabel header spacing optimaliseren
-- [ ] **General**: Frontend logs vertalen (EN → NL) en opschonen
-- [ ] **Mobile**: "Play" knop verwijderen op AR video's (autoplay policy issue)
-
-**Waarom eerst**: Gebruikers zien dit direct; kleine fixes, grote impact.
+- [x] **Mobile/AR**: Camera feed positie centreren (tussen logo en bottom)
+- [x] **Mobile/AR**: Gallery UI/Swipe up verbeteren (desktop stijl, logo overlap fixen)
+- [x] **Desktop**: Log integratie beter maken (strakker aan onderkant pagina)
+- [x] **Desktop**: Tabel header spacing optimaliseren
+- [x] **General**: Frontend logs vertalen (EN → NL) en opschonen
+- [x] **General**: Remove every emoji from UI (consistency)
+- [x] **Mobile**: "Play" knop verwijderen op AR video's (autoplay policy issue)
+- [x] **AR**: Fix GIFs
 
 ### Fase 2: Admin Panel Overhaul & Security
-**Status**: NOT STARTED
+**Status**: IN PROGRESS 🚧
 **Focus**: Backend bruikbaarheid en veiligheid
 
-- [ ] **Admin UI**: Gelijktrekken met "hacker" stijl (desktop terminal look)
+- [x] **Admin UI**: Gelijktrekken met "hacker" stijl (desktop terminal look)
 - [ ] **Admin**: Upload editing fixen (consistentie met uploaden)
 - [ ] **Security**: Beveiliging aanscherpen (review auth, headers, validatie)
 - [ ] **Analytics**: Cookie Consent + basis analytics (GDPR compliant)
-- [ ] **Analytics**: Gebruikerslokatie, download tracking, paginaviews
-
-**Waarom hierna**: Afhankelijk van fase 1 UI patterns; nodig voor betrouwbaarheid.
 
 ### Fase 3: Advanced Features & AR Enhancements
-**Status**: NOT STARTED
+**Status**: NOT STARTED 📋
 **Focus**: Nieuwe mogelijkheden
 
-- [ ] **AR Options**: Meer interactieve AR layers/effects
+- [ ] **AR**: Expand AR options (more interactive elements)
+- [ ] **AR**: Speed up AR loading and overall performance
 - [ ] **Desktop**: Random tab opening bij startup (Welkom, Instructies, Manifest, etc.)
 - [ ] **Mobile**: Camera permission persistence onderzoeken (minder prompts)
-- [ ] **Mobile**: Better AR video handling (looping, controls)
-
-**Waarom later**: Nice-to-haves; niet kritiek voor basisfunctionaliteit.
 
 ### Fase 4: Maintenance & DevOps
-**Status**: IN PROGRESS
+**Status**: COMPLETED ✅
 **Focus**: Codebase gezondheid en automatisering
 
 - [x] **Cleanup**: Ongebruikte bestanden verwijderen (backup_*.js, test files, etc.)
 - [x] **Structure**: Bestanden beter organiseren (css/, js/, assets/ opschoning)
-- [ ] **Backup**: Lokaal backup systeem (dagelijks snapshots)
+- [x] **Backup**: Backup system geïmplementeerd
 - [x] **DevOps**: GitHub Actions → Auto-push naar cPanel (CI/CD pipeline)
-- [ ] **Docs**: README + API documentatie afmaken
-
-**Waarom last**: Ondersteunend; eerst features werkend krijgen.
+- [x] **AR System**: Fixed Node.js integration voor automatische .mind file generatie
+- [x] **Documentation**: copilot-instructions.md bijgewerkt met server setup en troubleshooting
 
 ---
 
@@ -348,7 +392,59 @@ Voordat je iets pusht naar `main`:
 
 ---
 
-## Voor wijzigingen controleren
+## 🔧 Veelvoorkomende Valkuilen & Oplossingen
+
+### 1. **"AR werkt niet na nieuwe poster upload"**
+**Oorzaak**: `tools/node_modules` ontbreekt op server (niet in Git)
+**Oplossing**: 
+- Check of `/tools/node_modules/@msgpack/msgpack` bestaat op server
+- Zo niet: Upload handmatig via FTP (NIET committen naar Git)
+- Test met: `ssh user@server "cd /path/to/tools && /opt/alt/alt-nodejs20/root/usr/bin/node merge_mind_files.js"`
+
+### 2. **"Download count toont rare waardes"**
+**Oorzaak**: Oude bug waar strings werden geconcateneerd i.p.v. opgeteld
+**Patroon**: Gebruik altijd `parseInt()` of Number() bij totaliseren:
+```javascript
+// ❌ FOUT
+let total = '0';
+posters.forEach(p => total += p.downloads); // "012345"
+
+// ✅ CORRECT
+let total = 0;
+posters.forEach(p => total += parseInt(p.downloads) || 0);
+```
+
+### 3. **"Loader logs niet in Nederlands"**
+**Oplossing**: Check [app.js](js/app.js) `logToLoader()` functie - alle English strings moeten vertaald + emojis verwijderd
+**Patroon**: Eerst `msg.replace(/(emoji-regex)/g, '')`, dan `if (msg.includes('English'))` → Nederlandse vertaling
+
+### 4. **"Desktop UI toont op mobile" of omgekeerd**
+**Oorzaak**: Media query breakpoint mismatch
+**Fix**: Check [style.css](css/style.css) - `max-width: 768px` voor mobile, anders desktop
+```css
+/* Desktop default */
+#desktop-view { display: block; }
+#mobile-ar-view { display: none; }
+
+/* Mobile override */
+@media (max-width: 768px) {
+    #desktop-view { display: none !important; }
+    #mobile-ar-view { display: block !important; }
+}
+```
+
+### 5. **"Rate limiting blokkeert legit users"**
+**Oplossing**: Controleer [security.php](includes/security.php) - `cleanupOldAttempts()` draait 1% van requests
+**Debug**: Check `login_attempts.json` op server, verwijder oude entries handmatig indien nodig
+
+### 6. **"GIFs niet geanimeerd in AR"**
+**Oorzaak**: `aframe-gif-shader.js` niet geladen of verkeerde material type
+**Fix**: Ensure A-Frame entity gebruikt `material="shader: gif; src: url(image.gif)"`
+**Dependency**: [js/aframe-gif-shader.js](js/aframe-gif-shader.js) + [js/vendor/gif.js](js/vendor/gif.js)
+
+---
+
+## 🚀 Voor wijzigingen controleren
 
 ### Check deze eerst
 1. **Is dit PHP of JS?** → Backend wijzigingen nodig `api.php`, `security.php`, `config.php` review
@@ -399,6 +495,16 @@ Als nieuwe posters wel uploaden maar AR niet werkt (geen nieuwe markers):
 ---
 
 ## Veelvoorkomende Foutmeldingen
+
+1. **"Poster laadt niet"** → Controleer api.php routes, zorg dat posters.json bestaat
+2. **"AR detecteert niet"** → Verifieer .mind bestand, controleer targetIndex matcht poster volgorde, test met bekend marker
+3. **"Admin login mislukt"** → Controleer rate limiting (login_attempts.json), verifieer ADMIN_PASSWORD in config.php
+4. **"UI rendert niet"** → Controleer desktop vs mobile detectie, bevestig element IDs matchen (#desktop-view, #mobile-ar-view)
+5. **"GIF animateert niet"** → Verifieer aframe-gif-shader.js geladen, controleer GIF MIME type is correct
+
+---
+
+**Laatst bijgewerkt**: Januari 2026 | **Taal**: Nederlands (UI en Comments), Engelse variable/function namen
 
 1. **"Poster laadt niet"** → Controleer api.php routes, zorg dat posters.json bestaat
 2. **"AR detecteert niet"** → Verifieer .mind bestand, controleer targetIndex matcht poster volgorde, test met bekend marker
