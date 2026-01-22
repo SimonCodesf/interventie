@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard // INTERVENTIE</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="css/admin-terminal.css?v=2.10">
+    <link rel="stylesheet" href="css/admin-terminal.css?v=2.11">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
         <!-- Main Content -->
         <main class="admin-main">
             <header class="section-header">
-                <h2>POSTER_CONFIG_EDITOR // V.2.10</h2>
+                <h2>POSTER_CONFIG_EDITOR // V.2.11</h2>
                 <div class="header-status">
                      <span id="upload-status-text">SYSTEM_READY</span>
                 </div>
@@ -136,12 +136,20 @@
 
                     <!-- Upload Action & Status Panel -->
                     <div class="panel-box action-panel">
-                        <div class="panel-header"><span class="panel-title">SYSTEM_EXECUTION</span></div>
+                        <div class="panel-header"><span class="panel-title">UPLOAD OVERZICHT</span></div>
                         <div class="panel-content" style="padding: 1.5rem;">
                             
+                            <!-- File Summary List -->
+                            <div id="file-summary-container" class="file-summary-container">
+                                <div id="summary-jpeg" class="summary-item pending">JPEG Afbeelding (Website) <span>...</span></div>
+                                <div id="summary-mind" class="summary-item pending">AR Marker (.mind) <span>...</span></div>
+                                <div id="summary-pdf-a3" class="summary-item pending">PDF (A3) <span>...</span></div>
+                                <div id="summary-pdf-a0" class="summary-item pending">PDF (A0) <span>...</span></div>
+                            </div>
+
                             <!-- Main Upload Button -->
                             <button type="submit" id="upload-btn" class="btn btn-primary terminal-btn-large">
-                                <span class="btn-text">INITIALIZE_UPLOAD_SEQUENCE</span>
+                                <span class="btn-text">UPLOAD POSTER</span>
                                 <span class="btn-icon">>></span>
                                 <span class="btn-loader" style="display:none;">[...]</span>
                             </button>

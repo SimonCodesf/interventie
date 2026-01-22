@@ -377,7 +377,37 @@ document.addEventListener('DOMContentLoaded', () => {
     setupUploadForm();
     setupFilePreview();
     setupLogoutButton();
+    setupFileSummaryListeners(); // Add listener for summary
 });
+
+function setupFileSummaryListeners() {
+    const inputs = [
+        { id: 'poster-jpeg', summaryId: 'summary-jpeg' },
+        { id: 'ar-marker-file', summaryId: 'summary-mind' },
+        { id: 'poster-pdf-medium', summaryId: 'summary-pdf-a3' },
+        { id: 'poster-pdf-large', summaryId: 'summary-pdf-a0' }
+    ];
+
+    inputs.forEach(input => {
+        const el = document.getElementById(input.id);
+        if (el) {
+            el.addEventListener('change', function() {
+                const summaryEl = document.getElementById(input.summaryId);
+                if (this.files && this.files[0]) {
+                    summaryEl.classList.add('completed');
+                    summaryEl.classList.remove('pending');
+                    // Format size
+                    const size = (this.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
+                    summaryEl.querySelector('span').textContent = `[OK] ${size}`;
+                } else {
+                    summaryEl.classList.remove('completed');
+                    summaryEl.classList.add('pending');
+                    summaryEl.querySelector('span').textContent = '...';
+                }
+            });
+        }
+    });
+}
 
 // Setup login form
 function setupLoginForm() {

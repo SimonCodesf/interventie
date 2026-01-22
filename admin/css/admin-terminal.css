@@ -1266,3 +1266,38 @@ input[type="file"] {
     font-size: 0.85rem;
 }
 
+/* File Summary List (V2.11) */
+.file-summary-container {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.75rem;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item.completed {
+    color: #ffffff;
+    background: rgba(0, 255, 0, 0.1);
+}
+
+.summary-item.completed span {
+    color: #00ff00;
+}
+
+.summary-item span {
+    font-weight: bold;
+}
+
