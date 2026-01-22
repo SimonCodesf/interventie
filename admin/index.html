@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard // INTERVENTIE</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="css/admin-terminal.css?v=2.11">
+    <link rel="stylesheet" href="css/admin-terminal.css?v=2.12">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
         <!-- Main Content -->
         <main class="admin-main">
             <header class="section-header">
-                <h2>POSTER_CONFIG_EDITOR // V.2.11</h2>
+                <h2>POSTER_CONFIG_EDITOR // V.2.12</h2>
                 <div class="header-status">
                      <span id="upload-status-text">SYSTEM_READY</span>
                 </div>
@@ -141,10 +141,16 @@
                             
                             <!-- File Summary List -->
                             <div id="file-summary-container" class="file-summary-container">
-                                <div id="summary-jpeg" class="summary-item pending">JPEG Afbeelding (Website) <span>...</span></div>
+                                <div class="summary-section-title">POSTER BESTANDEN</div>
+                                <div id="summary-jpeg" class="summary-item pending">JPEG Afbeelding <span>...</span></div>
                                 <div id="summary-mind" class="summary-item pending">AR Marker (.mind) <span>...</span></div>
                                 <div id="summary-pdf-a3" class="summary-item pending">PDF (A3) <span>...</span></div>
                                 <div id="summary-pdf-a0" class="summary-item pending">PDF (A0) <span>...</span></div>
+                                
+                                <div class="summary-section-title" style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">AR LAGEN</div>
+                                <div id="summary-layers-container">
+                                    <div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen lagen geselecteerd</div>
+                                </div>
                             </div>
 
                             <!-- Main Upload Button -->

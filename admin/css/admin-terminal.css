@@ -1270,10 +1270,18 @@ input[type="file"] {
 .file-summary-container {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.5rem;
+    padding: 0.75rem;
     margin-bottom: 1rem;
     font-family: 'Roboto Mono', monospace;
     font-size: 0.75rem;
+}
+
+.summary-section-title {
+    font-weight: bold;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
 }
 
 .summary-item {
@@ -1282,6 +1290,7 @@ input[type="file"] {
     padding: 0.25rem 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: rgba(255, 255, 255, 0.5);
+    transition: all 0.2s;
 }
 
 .summary-item:last-child {

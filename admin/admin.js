@@ -377,7 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setupUploadForm();
     setupFilePreview();
     setupLogoutButton();
-    setupFileSummaryListeners(); // Add listener for summary
+    setupFileSummaryListeners(); // Core files
+    
+    // Defer layer listeners slightly to ensure inputs exist
+    setTimeout(setupLayerSummaryListeners, 500);
 });
 
 function setupFileSummaryListeners() {
@@ -407,6 +410,45 @@ function setupFileSummaryListeners() {
             });
         }
     });
+}
+
+function setupLayerSummaryListeners() {
+    const layersContainer = document.getElementById('summary-layers-container');
+    const updateLayersSummary = () => {
+        const activeLayers = [];
+        
+        // Check all 8 possible layers
+        for (let i = 1; i <= 8; i++) {
+            const input = document.getElementById(`layer-${i}-image`);
+            if (input && input.files && input.files[0]) {
+                const size = (input.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
+                activeLayers.push({
+                    name: `Laag ${i}`,
+                    size: size,
+                    filename: input.files[0].name
+                });
+            }
+        }
+        
+        if (activeLayers.length === 0) {
+            layersContainer.innerHTML = '<div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen lagen geselecteerd</div>';
+        } else {
+            layersContainer.innerHTML = activeLayers.map(l => `
+                <div class="summary-item completed">
+                    ${l.name}
+                    <span>[OK] ${l.size}</span>
+                </div>
+            `).join('');
+        }
+    };
+
+    // Attach listeners to layer inputs
+    for (let i = 1; i <= 8; i++) {
+        const input = document.getElementById(`layer-${i}-image`);
+        if (input) {
+            input.addEventListener('change', updateLayersSummary);
+        }
+    }
 }
 
 // Setup login form
