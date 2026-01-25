@@ -41,6 +41,23 @@ function handleGetPoster($db, $id) {
 
 // Helper to trigger MindAR chunk rebuild
 function triggerMindMerge() {
+    global $db;
+    
+    // Schrijf alle poster IDs naar een JSON bestand zodat Node script weet welke geldig zijn
+    // Dit is een fallback voor als better-sqlite3 niet beschikbaar is
+    try {
+        if (!isset($db)) {
+            $db = initDatabaseWithMigrations();
+        }
+        $stmt = $db->query("SELECT id FROM posters");
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $jsonPath = dirname(__DIR__) . '/data/poster_ids.json';
+        file_put_contents($jsonPath, json_encode($ids));
+        error_log("Wrote " . count($ids) . " poster IDs to $jsonPath");
+    } catch (Exception $e) {
+        error_log("Could not write poster IDs: " . $e->getMessage());
+    }
+    
     $scriptPath = dirname(__DIR__) . '/tools/merge_mind_files.js';
     // Try to find node executable, fallback to 'node'
     $nodePath = 'node';

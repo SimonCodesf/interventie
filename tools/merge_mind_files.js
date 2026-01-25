@@ -4,8 +4,10 @@ const { decode, encode } = require('@msgpack/msgpack');
 
 const ASSETS_DIR = path.resolve(__dirname, '../assets/nft');
 const OUTPUT_DIR = path.resolve(__dirname, '../assets/chunks');
+const DB_PATH = path.resolve(__dirname, '../data/posters.db');
 console.log('ASSETS_DIR:', ASSETS_DIR);
 console.log('OUTPUT_DIR:', OUTPUT_DIR);
+console.log('DB_PATH:', DB_PATH);
 const CHUNK_SIZE = 10; // Number of targets per chunk
 
 // Ensure output directory exists
@@ -13,8 +15,41 @@ if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
+// Haal poster IDs op uit de database
+function getValidPosterIds() {
+    try {
+        // Gebruik better-sqlite3 als het beschikbaar is, anders lees JSON via PHP bridge
+        const Database = require('better-sqlite3');
+        const db = new Database(DB_PATH, { readonly: true });
+        const rows = db.prepare('SELECT id FROM posters').all();
+        db.close();
+        return rows.map(r => r.id);
+    } catch (e) {
+        // Fallback: lees alle poster IDs uit een tijdelijk JSON bestand
+        // Dit wordt aangemaakt door PHP voordat dit script draait
+        const tempFile = path.resolve(__dirname, '../data/poster_ids.json');
+        if (fs.existsSync(tempFile)) {
+            try {
+                const ids = JSON.parse(fs.readFileSync(tempFile, 'utf8'));
+                console.log('Using poster IDs from JSON fallback');
+                return ids;
+            } catch (e2) {
+                console.error('Error reading poster_ids.json:', e2.message);
+            }
+        }
+        console.warn('Could not read database, using all .mind files');
+        return null; // null = gebruik alle bestanden
+    }
+}
+
 async function mergeMindFiles() {
-    console.log('🔄 Starting MindAR file merge...');
+    console.log('Starting MindAR file merge...');
+    
+    // Haal geldige poster IDs op uit database
+    const validPosterIds = getValidPosterIds();
+    if (validPosterIds) {
+        console.log(`Database bevat ${validPosterIds.length} posters`);
+    }
     
     // 1. Find all .mind files
     const mindFiles = [];
@@ -24,6 +59,12 @@ async function mergeMindFiles() {
     for (const item of items) {
         const itemPath = path.join(ASSETS_DIR, item);
         if (fs.statSync(itemPath).isDirectory()) {
+            // Skip als poster niet in database staat
+            if (validPosterIds && !validPosterIds.includes(item)) {
+                console.log(`Skipping ${item} - niet in database`);
+                continue;
+            }
+            
             // Look for .mind file inside (usually same name as folder)
             const mindFile = path.join(itemPath, `${item}.mind`);
             if (fs.existsSync(mindFile)) {
@@ -35,13 +76,10 @@ async function mergeMindFiles() {
         }
     }
     
-    console.log(`found ${mindFiles.length} .mind files`);
+    console.log(`Gevonden: ${mindFiles.length} geldige .mind files`);
     
     if (mindFiles.length === 0) {
-        console.log('⚠️ No .mind files found to merge');
-        return;
-    }
-    
+        console.log('Geen .mind files gevonden om te mergen');
     // 2. Process in chunks
     const chunks = [];
     let currentChunk = [];
@@ -63,8 +101,8 @@ async function mergeMindFiles() {
         const chunkDataList = [];
         const chunkPosterIds = [];
         
-        console.log(`📦 Processing chunk ${chunkIndex} (${chunkFiles.length} files)...`);
-        
+console.log(`Processing chunk ${chunkIndex} (${chunkFiles.length} files)...`);
+
         for (const file of chunkFiles) {
             try {
                 const buffer = fs.readFileSync(file.path);
@@ -81,7 +119,7 @@ async function mergeMindFiles() {
                     chunkPosterIds.push(file.id);
                 }
             } catch (e) {
-                console.error(`❌ Error reading ${file.path}:`, e.message);
+                console.error(`Error reading ${file.path}:`, e.message);
             }
         }
         
@@ -98,7 +136,7 @@ async function mergeMindFiles() {
             const chunkPath = path.join(OUTPUT_DIR, chunkFilename);
             
             fs.writeFileSync(chunkPath, encoded);
-            console.log(`✅ Saved ${chunkFilename} (${(encoded.byteLength / 1024 / 1024).toFixed(2)} MB)`);
+            console.log(`Saved ${chunkFilename} (${(encoded.byteLength / 1024 / 1024).toFixed(2)} MB)`);
             
             // Add to manifest
             manifest.chunks.push({
@@ -112,7 +150,8 @@ async function mergeMindFiles() {
     
     // Save manifest
     fs.writeFileSync(path.join(OUTPUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    console.log('📋 Saved manifest.json');
+    console.log('Saved manifest.json');
+    console.log(`Klaar! ${manifest.totalPosters} posters verwerkt.`);
 }
 
 mergeMindFiles().catch(console.error);
