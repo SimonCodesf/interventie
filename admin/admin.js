@@ -801,6 +801,40 @@ async function logout(sessionExpired = false) {
 function setupLogoutButton() {
     const logoutBtn = document.getElementById('logout-btn');
     logoutBtn.onclick = () => logout(false);
+    
+    // Setup AR Rebuild button
+    const rebuildBtn = document.getElementById('rebuild-mind-btn');
+    if (rebuildBtn) {
+        rebuildBtn.onclick = async () => {
+            if (!confirm('AR tracking data herbouwen? Dit kan even duren.')) return;
+            
+            rebuildBtn.disabled = true;
+            rebuildBtn.textContent = 'Bezig...';
+            
+            try {
+                const token = sessionStorage.getItem('adminToken');
+                const response = await fetch(`${API_URL}/admin/rebuild-mind`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('AR rebuild gestart! Dit kan tot 30 seconden duren.');
+                } else {
+                    alert('Fout: ' + (result.message || 'Onbekende fout'));
+                }
+            } catch (err) {
+                alert('Fout bij rebuild: ' + err.message);
+            } finally {
+                rebuildBtn.disabled = false;
+                rebuildBtn.textContent = 'AR Rebuild';
+            }
+        };
+    }
 }
 
 // Toon upload sectie

@@ -99,6 +99,14 @@ if ($method === 'GET' && $path === '/posters') {
 } elseif ($method === 'POST' && $path === '/admin/logout') {
     session_destroy();
     jsonResponse(['message' => 'Uitgelogd']);
+} elseif ($method === 'POST' && $path === '/admin/rebuild-mind') {
+    // Handmatig .mind files herbouwen (admin only)
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    
+    // Trigger MindAR chunk rebuild
+    triggerMindMerge();
+    logAdminActivity('REBUILD_MIND', 'Handmatige rebuild getriggerd');
+    jsonResponse(['success' => true, 'message' => 'Mind rebuild gestart']);
 } elseif ($path === '/settings/ar-tracking') {
     // Settings logic
     $settingsFile = __DIR__ . '/assets/ar-settings.json';
