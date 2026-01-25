@@ -378,10 +378,116 @@ document.addEventListener('DOMContentLoaded', () => {
     setupFilePreview();
     setupLogoutButton();
     setupFileSummaryListeners(); // Core files
+    setupCreditsSection(); // Credits dynamic rows
     
     // Defer layer listeners slightly to ensure inputs exist
     setTimeout(setupLayerSummaryListeners, 500);
 });
+
+// ========== Credits Sectie - Dynamische rijen ==========
+
+function createCreditRow(item = '', owner = '') {
+    const row = document.createElement('div');
+    row.className = 'credit-row';
+    row.innerHTML = `
+        <input type="text" class="credit-item" placeholder="Item (bv. Foto)" value="${item}">
+        <input type="text" class="credit-owner" placeholder="Eigenaar" value="${owner}">
+        <button type="button" class="btn-remove-credit" title="Verwijder">&times;</button>
+    `;
+    
+    // Verwijder knop event
+    row.querySelector('.btn-remove-credit').addEventListener('click', () => {
+        row.remove();
+    });
+    
+    return row;
+}
+
+function setupCreditsSection() {
+    // Upload form
+    const addBtn = document.getElementById('add-credit-btn');
+    const container = document.getElementById('credits-container');
+    
+    if (addBtn && container) {
+        // Setup remove knop voor de eerste rij
+        const firstRemoveBtn = container.querySelector('.btn-remove-credit');
+        if (firstRemoveBtn) {
+            firstRemoveBtn.addEventListener('click', function() {
+                // Als er maar 1 rij is, leeg de velden i.p.v. verwijderen
+                const rows = container.querySelectorAll('.credit-row');
+                if (rows.length <= 1) {
+                    this.closest('.credit-row').querySelectorAll('input').forEach(inp => inp.value = '');
+                } else {
+                    this.closest('.credit-row').remove();
+                }
+            });
+        }
+        
+        addBtn.addEventListener('click', () => {
+            container.appendChild(createCreditRow());
+        });
+    }
+    
+    // Edit form
+    const editAddBtn = document.getElementById('edit-add-credit-btn');
+    if (editAddBtn) {
+        editAddBtn.addEventListener('click', () => {
+            const editContainer = document.getElementById('edit-credits-container');
+            if (editContainer) {
+                editContainer.appendChild(createCreditRow());
+            }
+        });
+    }
+}
+
+// Verzamel alle credits uit een container als JSON array
+function collectCredits(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    
+    const credits = [];
+    container.querySelectorAll('.credit-row').forEach(row => {
+        const item = row.querySelector('.credit-item').value.trim();
+        const owner = row.querySelector('.credit-owner').value.trim();
+        if (item || owner) {
+            credits.push({ item: item, owner: owner });
+        }
+    });
+    
+    return credits;
+}
+
+// Vul credits container met bestaande data
+function populateCredits(containerId, creditsData) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = ''; // Leeg de container
+    
+    let credits = [];
+    
+    // Parse credits als het een string is (JSON)
+    if (typeof creditsData === 'string' && creditsData) {
+        try {
+            credits = JSON.parse(creditsData);
+        } catch (e) {
+            console.warn('Credits JSON parse error:', e);
+            // Fallback: oude photographer_credit formaat
+            credits = [{ item: 'Foto', owner: creditsData }];
+        }
+    } else if (Array.isArray(creditsData)) {
+        credits = creditsData;
+    }
+    
+    if (credits.length === 0) {
+        // Voeg lege rij toe
+        container.appendChild(createCreditRow());
+    } else {
+        credits.forEach(c => {
+            container.appendChild(createCreditRow(c.item || '', c.owner || ''));
+        });
+    }
+}
 
 function setupFileSummaryListeners() {
     const inputs = [
@@ -690,11 +796,15 @@ function setupUploadForm() {
         if (longitude) formData.append('longitude', longitude);
         if (locationDescription) formData.append('location_description', locationDescription);
         
-        // Add article link and photographer credit
+        // Add article link
         const artikelLink = document.getElementById('poster-artikel-link').value;
-        const photographerCredit = document.getElementById('poster-photographer').value;
         if (artikelLink) formData.append('artikel_link', artikelLink);
-        if (photographerCredit) formData.append('photographer_credit', photographerCredit);
+        
+        // Add credits (JSON array)
+        const credits = collectCredits('credits-container');
+        if (credits.length > 0) {
+            formData.append('credits', JSON.stringify(credits));
+        }
         
         // Add AR marker file (single marker, required)
         const arMarkerFile = document.getElementById('ar-marker-file').files[0];
@@ -1365,7 +1475,10 @@ async function openEditModal(posterId) {
         
         document.getElementById('edit-location').value = poster.location_description || '';
         document.getElementById('edit-artikel-link').value = poster.artikel_link || '';
-        document.getElementById('edit-photographer').value = poster.photographer_credit || '';
+        
+        // Populate credits (nieuw systeem of fallback van photographer_credit)
+        const creditsData = poster.credits || poster.photographer_credit || '';
+        populateCredits('edit-credits-container', creditsData);
         
         // Show current .mind file
         const markerInfo = document.getElementById('edit-ar-marker-current');
@@ -1616,7 +1729,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const coordinatesEl = document.getElementById('edit-coordinates');
             const locationEl = document.getElementById('edit-location');
             const artikelLinkEl = document.getElementById('edit-artikel-link');
-            const photographerEl = document.getElementById('edit-photographer');
             
             let latitude = '';
             let longitude = '';
@@ -1631,7 +1743,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const location = locationEl ? locationEl.value : '';
             const artikelLink = artikelLinkEl ? artikelLinkEl.value : '';
-            const photographer = photographerEl ? photographerEl.value : '';
             
             console.log('📝 Edit form data:', {
                 title: titleEl ? titleEl.value : '',
@@ -1642,7 +1753,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (longitude) formData.append('longitude', longitude);
             if (location) formData.append('location_description', location);
             if (artikelLink) formData.append('artikel_link', artikelLink);
-            if (photographer) formData.append('photographer_credit', photographer);
+            
+            // Add credits (JSON array)
+            const credits = collectCredits('edit-credits-container');
+            formData.append('credits', JSON.stringify(credits));
             
             // AR Layers (8 layers with positioning and animation)
             for (let i = 1; i <= 8; i++) {

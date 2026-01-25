@@ -1409,3 +1409,72 @@ input[type="file"] {
     background: #e74c3c;
     color: #000;
 }
+
+/* Credits Sectie (V3.1) */
+.credits-section {
+    margin-top: 0.5rem;
+}
+
+.credits-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.credit-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 30px;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.credit-row input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.credit-item,
+.credit-owner {
+    font-size: 0.75rem;
+    padding: 0.4rem;
+}
+
+.btn-remove-credit {
+    background: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    width: 26px;
+    height: 26px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.btn-remove-credit:hover {
+    background: #e74c3c;
+    color: #000;
+}
+
+.btn-add-credit {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    color: var(--dim);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    font-family: 'Roboto Mono', monospace;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.btn-add-credit:hover {
+    border-color: #fff;
+    color: #fff;
+}

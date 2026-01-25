@@ -87,7 +87,7 @@ function handleUploadPoster($db) {
     $longitude = !empty($_POST['longitude']) ? (float)$_POST['longitude'] : null;
     $locationDescription = $_POST['location_description'] ?? '';
     $artikelLink = $_POST['artikel_link'] ?? '';
-    $photographerCredit = $_POST['photographer_credit'] ?? '';
+    $credits = $_POST['credits'] ?? ''; // JSON string: [{item: "Foto", owner: "Naam"}, ...]
     
     if (empty($title)) {
         logAdminActivity('UPLOAD_FAILED', 'Missing title');
@@ -236,14 +236,14 @@ function handleUploadPoster($db) {
         
         // Database insert
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, photographer_credit, ar_marker, layers_data, glb_model, audio_file)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $artikelLink, $photographerCredit, $arMarkerPath, json_encode($layersData), $glbModelFilename, $audioFilename
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), $glbModelFilename, $audioFilename
         ]);
         
         logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id)");
@@ -310,7 +310,9 @@ function handleUpdatePoster($db, $id) {
         $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$_POST['longitude'] : $poster['longitude'];
         $locationDescription = $_POST['location_description'] ?? $poster['location_description'];
         $artikelLink = $_POST['artikel_link'] ?? $poster['artikel_link'];
-        $photographerCredit = $_POST['photographer_credit'] ?? $poster['photographer_credit'];
+        
+        // Credits: gebruik nieuw veld of behoud bestaande waarde
+        $credits = isset($_POST['credits']) ? $_POST['credits'] : ($poster['credits'] ?? '');
         
         // File paths (keep existing unless new file uploaded)
         $jpegFilename = $poster['jpeg_filename'];
@@ -544,7 +546,7 @@ function handleUpdatePoster($db, $id) {
             UPDATE posters SET 
                 title = ?, description = ?, jpeg_filename = ?, pdf_medium_filename = ?, pdf_large_filename = ?,
                 thumbnail = ?, latitude = ?, longitude = ?, location_description = ?, 
-                artikel_link = ?, photographer_credit = ?, ar_marker = ?, layers_data = ?,
+                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?,
                 glb_model = ?, audio_file = ?
             WHERE id = ?
         ");
@@ -552,7 +554,7 @@ function handleUpdatePoster($db, $id) {
         $stmt->execute([
             $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             $thumbnailPath, $latitude, $longitude, $locationDescription,
-            $artikelLink, $photographerCredit, $arMarkerPath, json_encode($layersData),
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData),
             $glbModelFilename, $audioFilename, $id
         ]);
         

@@ -149,6 +149,40 @@ console.log = function(...args) {
 const API_URL = window.location.origin + '/api.php'; // cPanel with PHP backend
 const BASE_URL = window.location.origin; // Voor statische bestanden
 
+// ==================== CREDITS HELPER ====================
+// Parse credits en geef HTML terug voor weergave
+function formatCredits(poster) {
+    let credits = [];
+    
+    // Probeer nieuw credits veld (JSON)
+    if (poster.credits) {
+        try {
+            if (typeof poster.credits === 'string') {
+                credits = JSON.parse(poster.credits);
+            } else if (Array.isArray(poster.credits)) {
+                credits = poster.credits;
+            }
+        } catch (e) {
+            // Fallback: behandel als oude photographer_credit string
+            credits = [{ item: 'Foto', owner: poster.credits }];
+        }
+    }
+    // Fallback naar oud veld
+    else if (poster.photographer_credit) {
+        credits = [{ item: 'Foto', owner: poster.photographer_credit }];
+    }
+    
+    if (credits.length === 0) return '';
+    
+    // Genereer HTML voor elke credit
+    return credits.map(c => {
+        if (!c.item && !c.owner) return '';
+        const label = c.item || 'Credit';
+        const owner = c.owner || '-';
+        return `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">${label.toUpperCase()}</span><br><span style="color: #888; font-size: 0.58rem;">${owner}</span></div>`;
+    }).filter(html => html).join('');
+}
+
 // ==================== DEVICE DETECTION & AR INITIALIZATION ====================
 let isMobileDevice = false;
 let isARSupported = false;
@@ -3084,7 +3118,7 @@ async function showPosterWindow(posterId) {
             <div style="font-family: Roboto Mono; font-size: 0.6rem; color: #888; line-height: 1.4; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 6px;">
                 ${poster.location_description ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LOCATIE</span><br><span style="color: #888; font-size: 0.58rem;">${poster.location_description}</span></div>` : ''}
                 ${poster.downloads !== undefined && poster.downloads !== null ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DL</span><br><span style="color: #888; font-size: 0.58rem;">${poster.downloads}</span></div>` : ''}
-                ${poster.photographer_credit ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">FOTOGRAAF</span><br><span style="color: #888; font-size: 0.58rem;">${poster.photographer_credit}</span></div>` : ''}
+                ${formatCredits(poster)}
                 ${poster.artikel_link ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LINK</span><br><a href="${poster.artikel_link}" style="color: #fff; text-decoration: underline; font-size: 0.58rem;" target="_blank">artikel</a></div>` : ''}
                 ${poster.description ? `<div style="grid-column: 1 / -1;"><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DESC</span><br><span style="color: #888; font-size: 0.58rem;">${poster.description}</span></div>` : ''}
             </div>
@@ -3190,7 +3224,23 @@ function showDetectedPosterDetails(poster) {
         <h2>${poster.title}</h2>
         ${poster.description ? `<p><strong>Beschrijving:</strong> ${poster.description}</p>` : ''}
         ${poster.location ? `<p><strong>Locatie:</strong> ${poster.location}</p>` : ''}
-        ${poster.photographer ? `<p><strong>Fotograaf:</strong> ${poster.photographer}</p>` : ''}
+        ${(() => {
+            // Credits weergave
+            let credits = [];
+            if (poster.credits) {
+                try {
+                    credits = typeof poster.credits === 'string' ? JSON.parse(poster.credits) : poster.credits;
+                } catch (e) {
+                    credits = [{ item: 'Credit', owner: poster.credits }];
+                }
+            } else if (poster.photographer_credit || poster.photographer) {
+                credits = [{ item: 'Foto', owner: poster.photographer_credit || poster.photographer }];
+            }
+            if (credits.length === 0) return '';
+            return credits.filter(c => c.item || c.owner).map(c => 
+                `<p><strong>${c.item || 'Credit'}:</strong> ${c.owner || '-'}</p>`
+            ).join('');
+        })()}
         ${poster.ar_marker ? `<p style="font-size: 0.8rem; color: #666;"><strong>AR Marker:</strong> ${poster.ar_marker}</p>` : ''}
     `;
     
@@ -3450,8 +3500,31 @@ async function showPosterModal(posterId) {
         // Article link
         document.getElementById('modal-poster-article').innerHTML = poster.artikel_link ? `<a href="${poster.artikel_link}" target="_blank">Lees het originele artikel</a>` : '';
         
-        // Photographer credit
-        document.getElementById('modal-poster-photographer').textContent = poster.photographer_credit ? `Foto: ${poster.photographer_credit}` : '';
+        // Credits weergave (meerdere credits)
+        const creditsEl = document.getElementById('modal-poster-photographer');
+        if (creditsEl) {
+            let credits = [];
+            // Parse credits
+            if (poster.credits) {
+                try {
+                    credits = typeof poster.credits === 'string' ? JSON.parse(poster.credits) : poster.credits;
+                } catch (e) {
+                    credits = [{ item: 'Foto', owner: poster.credits }];
+                }
+            } else if (poster.photographer_credit) {
+                credits = [{ item: 'Foto', owner: poster.photographer_credit }];
+            }
+            
+            if (credits.length > 0) {
+                const creditsText = credits
+                    .filter(c => c.item || c.owner)
+                    .map(c => `${c.item || 'Credit'}: ${c.owner || '-'}`)
+                    .join(' | ');
+                creditsEl.textContent = creditsText;
+            } else {
+                creditsEl.textContent = '';
+            }
+        }
         
         // Download count
         document.getElementById('modal-download-count').textContent = poster.downloads || 0;

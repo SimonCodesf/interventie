@@ -92,9 +92,17 @@
                                 <input type="text" id="poster-artikel-link" placeholder="https://...">
                             </div>
 
-                            <div class="form-group">
-                                <label for="poster-photographer">FOTOGRAAF</label>
-                                <input type="text" id="poster-photographer" placeholder="Credit">
+                            <!-- Credits Sectie -->
+                            <div class="form-group credits-section">
+                                <label>CREDITS</label>
+                                <div id="credits-container" class="credits-container">
+                                    <div class="credit-row">
+                                        <input type="text" class="credit-item" placeholder="Item (bv. Foto)">
+                                        <input type="text" class="credit-owner" placeholder="Eigenaar">
+                                        <button type="button" class="btn-remove-credit" title="Verwijder">&times;</button>
+                                    </div>
+                                </div>
+                                <button type="button" id="add-credit-btn" class="btn-add-credit">+ Credit toevoegen</button>
                             </div>
                         </div>
                     </div>
@@ -268,9 +276,13 @@
                                     <input type="text" id="edit-artikel-link">
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="edit-photographer">FOTOGRAAF</label>
-                                    <input type="text" id="edit-photographer">
+                                <!-- Credits Sectie (Edit) -->
+                                <div class="form-group credits-section">
+                                    <label>CREDITS</label>
+                                    <div id="edit-credits-container" class="credits-container">
+                                        <!-- Wordt dynamisch ingevuld -->
+                                    </div>
+                                    <button type="button" id="edit-add-credit-btn" class="btn-add-credit">+ Credit toevoegen</button>
                                 </div>
                             </div>
                         </div>
