@@ -808,21 +808,12 @@ function setupLogoutButton() {
         rebuildBtn.onclick = async () => {
             console.log('AR Rebuild button clicked'); // Debug log
             
-            // Check if we should ask for confirmation (skip if shift key is pressed or just allow direct click if confirm blocked)
-            // Maar als de user confirm heeft geblokkeerd, gebruiken we een kleine fallback
-            let confirmed = false;
-            try {
-                confirmed = confirm('AR tracking data herbouwen? Dit kan even duren.');
-            } catch (e) {
-                console.warn('Confirm dialog blocked or failed', e);
-                // Als confirm faalt (bv. geblokkeerd), ga door
-                confirmed = true;
-            }
-            
-            if (!confirmed) return;
+            // Bypass confirm() - directe actie om blokkades te vermijden
+            // We tonen gewoon "Bezig..." en de gebruiker ziet wel wat er gebeurt
             
             rebuildBtn.disabled = true;
             rebuildBtn.innerHTML = 'Bezig... <span class="spinner"></span>';
+            console.log('Starting fetch request...');
             
             try {
                 const token = sessionStorage.getItem('adminToken');
@@ -834,6 +825,7 @@ function setupLogoutButton() {
                     }
                 });
                 
+                console.log('Response received', response.status);
                 const result = await response.json();
                 
                 // Show console output if available
@@ -846,12 +838,16 @@ function setupLogoutButton() {
                 }
                 
                 if (result.success) {
-                    alert('AR rebuild succesvol!\nCheck console voor details.');
+                    console.log('Success! Rebuild complete.');
+                    // Gebruik setTimeout om alert te ontkoppelen van de click event stack
+                    setTimeout(() => alert('AR rebuild succesvol!\nCheck console voor details.'), 100);
                 } else {
-                    alert('Fout: ' + (result.message || 'Onbekende fout'));
+                    console.error('Rebuild failed:', result.message);
+                    setTimeout(() => alert('Fout: ' + (result.message || 'Onbekende fout')), 100);
                 }
             } catch (err) {
-                alert('Fout bij rebuild: ' + err.message);
+                console.error('Fetch error:', err);
+                setTimeout(() => alert('Fout bij rebuild: ' + err.message), 100);
             } finally {
                 rebuildBtn.disabled = false;
                 rebuildBtn.textContent = 'AR Rebuild';
