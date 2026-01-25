@@ -103,10 +103,14 @@ if ($method === 'GET' && $path === '/posters') {
     // Handmatig .mind files herbouwen (admin only)
     if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
     
-    // Trigger MindAR chunk rebuild
-    triggerMindMerge();
-    logAdminActivity('REBUILD_MIND', 'Handmatige rebuild getriggerd');
-    jsonResponse(['success' => true, 'message' => 'Mind rebuild gestart']);
+    // Trigger MindAR chunk rebuild with output capture
+    $result = triggerMindMerge(true);
+    logAdminActivity('REBUILD_MIND', 'Handmatige rebuild uitgevoerd');
+    jsonResponse([
+        'success' => $result['returnVar'] === 0,
+        'message' => 'Mind rebuild ' . ($result['returnVar'] === 0 ? 'succesvol' : 'mislukt'),
+        'output' => $result['output']
+    ]);
 } elseif ($path === '/settings/ar-tracking') {
     // Settings logic
     $settingsFile = __DIR__ . '/assets/ar-settings.json';

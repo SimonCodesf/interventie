@@ -40,7 +40,7 @@ function handleGetPoster($db, $id) {
 }
 
 // Helper to trigger MindAR chunk rebuild
-function triggerMindMerge() {
+function triggerMindMerge($captureOutput = false) {
     global $db;
     
     // Schrijf alle poster IDs naar een JSON bestand zodat Node script weet welke geldig zijn
@@ -78,9 +78,18 @@ function triggerMindMerge() {
         $nodePath = '/Users/simon/.nvm/versions/node/v23.6.0/bin/node';
     }
     
-    $cmd = "$nodePath " . escapeshellarg($scriptPath) . " > /dev/null 2>&1 &";
-    exec($cmd);
-    error_log("Triggered MindAR merge: $cmd");
+    if ($captureOutput) {
+        // Run synchronously and capture output
+        $cmd = "$nodePath " . escapeshellarg($scriptPath) . " 2>&1";
+        exec($cmd, $output, $returnVar);
+        return ['output' => $output, 'returnVar' => $returnVar];
+    } else {
+        // Run in background (admin upload flow)
+        $cmd = "$nodePath " . escapeshellarg($scriptPath) . " > /dev/null 2>&1 &";
+        exec($cmd);
+        error_log("Triggered MindAR merge: $cmd");
+        return true;
+    }
 }
 
 function handleUploadPoster($db) {

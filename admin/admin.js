@@ -822,8 +822,18 @@ function setupLogoutButton() {
                 });
                 
                 const result = await response.json();
+                
+                // Show console output if available
+                if (result.output) {
+                    console.group("🖥️ AR Rebuild Server Output");
+                    console.log(`%c=== START LOGS ===`, 'color: #00ff00; font-weight: bold;');
+                    result.output.forEach(line => console.log(`%c${line}`, 'color: #aaa; font-family: monospace;'));
+                    console.log(`%c=== END LOGS ===`, 'color: #00ff00; font-weight: bold;');
+                    console.groupEnd();
+                }
+                
                 if (result.success) {
-                    alert('AR rebuild gestart! Dit kan tot 30 seconden duren.');
+                    alert('AR rebuild succesvol!\nCheck console voor details.');
                 } else {
                     alert('Fout: ' + (result.message || 'Onbekende fout'));
                 }
