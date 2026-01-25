@@ -1165,15 +1165,17 @@ function setupFilePreview() {
             const maxSize = 50 * 1024 * 1024; // 50MB
             const category = getFileSizeCategory(size, maxSize);
             
-            jpegSizeInfo.textContent = `${currentFiles.jpeg.name} - ${formatFileSize(size)}`;
-            jpegSizeInfo.className = `file-size-info show ${category}`;
-            jpegSizeInfo.style.display = 'inline-block'; // Force show
+            if (jpegSizeInfo) {
+                jpegSizeInfo.textContent = `${currentFiles.jpeg.name} - ${formatFileSize(size)}`;
+                jpegSizeInfo.className = `file-size-info show ${category}`;
+                jpegSizeInfo.style.display = 'inline-block';
+            }
             
             totalSize += size;
             breakdown.push(`<div><strong>JPEG:</strong> ${currentFiles.jpeg.name} <span style="color:#666">(${formatFileSize(size)})</span></div>`);
             hasFiles = true;
         } else {
-            jpegSizeInfo.style.display = 'none';
+            if (jpegSizeInfo) jpegSizeInfo.style.display = 'none';
         }
         
         // PDF Medium handling
@@ -1182,15 +1184,17 @@ function setupFilePreview() {
             const maxSize = 120 * 1024 * 1024; // 120MB
             const category = getFileSizeCategory(size, maxSize);
             
-            pdfMediumSizeInfo.textContent = `${currentFiles.pdfMedium.name} - ${formatFileSize(size)}`;
-            pdfMediumSizeInfo.className = `file-size-info show ${category}`;
-            pdfMediumSizeInfo.style.display = 'inline-block'; // Force show
+            if (pdfMediumSizeInfo) {
+                pdfMediumSizeInfo.textContent = `${currentFiles.pdfMedium.name} - ${formatFileSize(size)}`;
+                pdfMediumSizeInfo.className = `file-size-info show ${category}`;
+                pdfMediumSizeInfo.style.display = 'inline-block';
+            }
             
             totalSize += size;
             breakdown.push(`<div><strong>PDF (A3):</strong> ${currentFiles.pdfMedium.name} <span style="color:#666">(${formatFileSize(size)})</span></div>`);
             hasFiles = true;
         } else {
-            pdfMediumSizeInfo.style.display = 'none';
+            if (pdfMediumSizeInfo) pdfMediumSizeInfo.style.display = 'none';
         }
         
         // PDF Large handling
@@ -1199,15 +1203,17 @@ function setupFilePreview() {
             const maxSize = 120 * 1024 * 1024; // 120MB
             const category = getFileSizeCategory(size, maxSize);
             
-            pdfLargeSizeInfo.textContent = `${currentFiles.pdfLarge.name} - ${formatFileSize(size)}`;
-            pdfLargeSizeInfo.className = `file-size-info show ${category}`;
-            pdfLargeSizeInfo.style.display = 'inline-block'; // Force show
+            if (pdfLargeSizeInfo) {
+                pdfLargeSizeInfo.textContent = `${currentFiles.pdfLarge.name} - ${formatFileSize(size)}`;
+                pdfLargeSizeInfo.className = `file-size-info show ${category}`;
+                pdfLargeSizeInfo.style.display = 'inline-block';
+            }
             
             totalSize += size;
             breakdown.push(`<div><strong>PDF (A0):</strong> ${currentFiles.pdfLarge.name} <span style="color:#666">(${formatFileSize(size)})</span></div>`);
             hasFiles = true;
         } else {
-            pdfLargeSizeInfo.style.display = 'none';
+            if (pdfLargeSizeInfo) pdfLargeSizeInfo.style.display = 'none';
         }
         
         // .mind file handling
@@ -1216,9 +1222,11 @@ function setupFilePreview() {
             const maxSize = 10 * 1024 * 1024; // 10MB
             const category = getFileSizeCategory(size, maxSize);
             
-            mindSizeInfo.textContent = `${currentFiles.mind.name} - ${formatFileSize(size)}`;
-            mindSizeInfo.className = `file-size-info show ${category}`;
-            mindSizeInfo.style.display = 'inline-block'; // Force show
+            if (mindSizeInfo) {
+                mindSizeInfo.textContent = `${currentFiles.mind.name} - ${formatFileSize(size)}`;
+                mindSizeInfo.className = `file-size-info show ${category}`;
+                mindSizeInfo.style.display = 'inline-block';
+            }
             
             totalSize += size;
             breakdown.push(`<div><strong>Marker:</strong> ${currentFiles.mind.name} <span style="color:#666">(${formatFileSize(size)})</span></div>`);
@@ -1242,8 +1250,8 @@ function setupFilePreview() {
             hasFiles = true;
         }
         
-        // Update total summary
-        if (hasFiles) {
+        // Update total summary (indien elementen bestaan)
+        if (hasFiles && sizeBreakdown && sizeTotal && totalSummary) {
             sizeBreakdown.innerHTML = breakdown.join('');
             sizeTotal.textContent = `Totaal: ${formatFileSize(totalSize)} (max 300MB)`;
             totalSummary.style.display = 'block';
@@ -1256,7 +1264,7 @@ function setupFilePreview() {
             } else {
                 sizeTotal.style.color = '#2e7d32'; // Green ok
             }
-        } else {
+        } else if (totalSummary) {
             totalSummary.style.display = 'none';
         }
     }
