@@ -1366,3 +1366,46 @@ input[type="file"] {
     font-weight: bold;
 }
 
+/* Summary item delete state (V3.0) */
+.summary-item.delete {
+    color: #ff5555;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.summary-item.delete span {
+    color: #ff5555;
+}
+
+/* AR Extras Section (V3.0) */
+.ar-extras-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+}
+
+.section-divider {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+}
+
+/* Remove file button (V3.0) */
+.btn-remove-file {
+    background: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.7rem;
+    font-family: 'Roboto Mono', monospace;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-remove-file:hover {
+    background: #e74c3c;
+    color: #000;
+}

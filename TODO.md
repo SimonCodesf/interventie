@@ -21,7 +21,7 @@ Focus: Immediate visual bugs and usability issues.
 Focus: Backend usability and data safety.
 
 - [x] **Admin**: Improve UI/UX to match Desktop-website "hacker" style.
-- [ ] **Admin**: Fix Upload editing behavior (ensure consistency with upload).
+- [x] **Admin**: Fix Upload editing behavior (ensure consistency with upload).
 - [ ] **Security**: Improve security (review auth, headers).
 - [ ] **Analytics**: Add basic analytics with Cookie Consent (GDPR compliance).
 

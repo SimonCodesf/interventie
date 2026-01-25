@@ -155,6 +155,114 @@ let isARSupported = false;
 window.allPosters = []; // Global array for AR tracking
 let currentTrackedPoster = null;
 
+// ==================== AUDIO PLAYBACK SYSTEEM ====================
+let currentAudioElement = null; // Huidige audio element voor poster
+let audioVolume = 0.5; // Standaard volume (0.0 - 1.0)
+
+// Start audio playback voor een poster (indien beschikbaar)
+function playPosterAudio(poster) {
+    // Stop eventuele vorige audio
+    stopPosterAudio();
+    
+    if (!poster || !poster.audio_file) {
+        console.log(' Geen audio beschikbaar voor deze poster');
+        return;
+    }
+    
+    const audioPath = `uploads/ar-layers/${poster.audio_file}`;
+    console.log(' Audio starten:', audioPath);
+    
+    currentAudioElement = new Audio(audioPath);
+    currentAudioElement.volume = audioVolume;
+    currentAudioElement.loop = true; // Loop de audio
+    
+    // Speel af (met user gesture requirement handling)
+    currentAudioElement.play().then(() => {
+        console.log(' Audio speelt af:', poster.audio_file);
+        logToLoader('AUDIO GESTART');
+    }).catch(err => {
+        console.log(' Audio autoplay geblokkeerd (user gesture vereist):', err);
+        // Toon audio knop als fallback
+        showAudioPlayButton(poster);
+    });
+}
+
+// Stop huidige audio
+function stopPosterAudio() {
+    if (currentAudioElement) {
+        currentAudioElement.pause();
+        currentAudioElement.currentTime = 0;
+        currentAudioElement = null;
+        console.log(' Audio gestopt');
+    }
+    hideAudioPlayButton();
+}
+
+// Toon audio play button (voor als autoplay geblokkeerd is)
+function showAudioPlayButton(poster) {
+    let btn = document.getElementById('ar-audio-play-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'ar-audio-play-btn';
+        btn.innerHTML = '🔊 Speel Audio';
+        btn.style.cssText = `
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 1px solid #af1d1f;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+        `;
+        document.body.appendChild(btn);
+    }
+    btn.style.display = 'block';
+    btn.onclick = () => {
+        if (currentAudioElement) {
+            currentAudioElement.play();
+        } else if (poster && poster.audio_file) {
+            playPosterAudio(poster);
+        }
+        btn.style.display = 'none';
+    };
+}
+
+// Verberg audio play button
+function hideAudioPlayButton() {
+    const btn = document.getElementById('ar-audio-play-btn');
+    if (btn) btn.style.display = 'none';
+}
+
+// ==================== 3D MODEL INTERACTIVITEIT ====================
+// Setup click handlers voor 3D modellen
+function setupModelInteractivity() {
+    const model = document.getElementById('ar-glb-model');
+    if (!model) return;
+    
+    // Toggle rotatie animatie bij klik
+    model.addEventListener('click', function() {
+        const currentAnim = model.getAttribute('animation__rotate');
+        if (currentAnim) {
+            // Stop rotatie
+            model.removeAttribute('animation__rotate');
+            // Eenmalige scale pulse
+            model.setAttribute('animation__pulse', 'property: scale; from: 0.3 0.3 0.3; to: 0.4 0.4 0.4; dur: 300; dir: alternate; loop: 2');
+            console.log(' Model animatie gestopt');
+        } else {
+            // Start rotatie weer
+            model.setAttribute('animation__rotate', 'property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;');
+            console.log(' Model animatie gestart');
+        }
+    });
+    
+    console.log(' Model interactiviteit ingesteld');
+}
+
 // Featured Poster Management (voor gescande poster in galerij)
 let featuredPoster = null; // Momenteel geselecteerde gescande poster
 let isFeaturedPosterOpen = false; // Of de galerij is geopend voor featured poster
@@ -1674,7 +1782,24 @@ function buildLayersHTML(poster) {
         }
     }
     
-    if (!layersHTML.includes('ar-layer-1')) {
+    // Voeg GLB 3D model toe indien aanwezig
+    if (poster.glb_model) {
+        const glbPath = `uploads/ar-layers/${poster.glb_model}`;
+        layersHTML += `
+            <a-entity
+                id="ar-glb-model"
+                class="ar-model clickable"
+                gltf-model="${glbPath}"
+                position="0 0.5 0.2"
+                scale="0.3 0.3 0.3"
+                rotation="0 0 0"
+                animation__rotate="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;"
+                data-clickable="true"
+            ></a-entity>`;
+        console.log(' GLB model toegevoegd:', glbPath);
+    }
+    
+    if (!layersHTML.includes('ar-layer-1') && !poster.glb_model) {
         layersHTML += `<a-box position="0 0 0.1" color="#FF0000" width="0.2" height="0.2" depth="0.2"></a-box>`;
     }
     
@@ -1780,6 +1905,16 @@ function setupSceneEventListeners(scene, currentPoster) {
             // Update UI
             currentTrackedPoster = currentPoster;
             showDetectedPosterState(currentPoster);
+            
+            // START AUDIO (indien beschikbaar)
+            if (currentPoster.audio_file) {
+                playPosterAudio(currentPoster);
+            }
+            
+            // Setup model interactiviteit (indien GLB aanwezig)
+            if (currentPoster.glb_model) {
+                setTimeout(() => setupModelInteractivity(), 500);
+            }
         });
         
         target.addEventListener('targetLost', () => {
@@ -1791,6 +1926,9 @@ function setupSceneEventListeners(scene, currentPoster) {
             // Show scan frame
             const scanFrame = document.getElementById('scan-frame');
             if (scanFrame) scanFrame.classList.remove('hidden');
+            
+            // STOP AUDIO
+            stopPosterAudio();
             
             hideDetectedPosterState();
             currentTrackedPoster = null;
