@@ -235,10 +235,10 @@ function handleUploadPoster($db) {
             $layersData["layer_$i"] = $layerData;
         }
         
-        // Database insert (geen globale GLB/audio meer, nu per laag)
+        // Database insert (GLB/audio nu in layers_data, niet meer op poster niveau)
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
         ");
         
         $stmt->execute([
