@@ -188,6 +188,37 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         </div>
                     </div>
                 </div>
+                
+                <!-- AR Extras per laag -->
+                <div class="ar-extras-layer-section">
+                    <label class="toggle-label">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="${prefix}layer-${layerNum}-enable-extras">
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span>AR EXTRAS (3D/AUDIO)</span>
+                    </label>
+                    
+                    <div id="${prefix}layer-${layerNum}-extras-container" class="anim-container-hidden">
+                        <div class="anim-group">
+                            <div class="anim-inputs" style="flex-direction: column; gap: 0.75rem;">
+                                <div class="input-wrapper" style="width: 100%;">
+                                    <label style="width: auto; position: relative; transform: none; display: block; margin-bottom: 4px;">3D MODEL (.glb)</label>
+                                    <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf" style="width: 100%;">
+                                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-glb-current" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem;"></p>` : ''}
+                                    <p class="hint-text" style="font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem;">Max 10MB. Model verschijnt op deze laag positie.</p>
+                                </div>
+                                <div class="input-wrapper" style="width: 100%;">
+                                    <label style="width: auto; position: relative; transform: none; display: block; margin-bottom: 4px;">AUDIO (.mp3/.wav)</label>
+                                    <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,audio/ogg,.mp3,.wav,.ogg" style="width: 100%;">
+                                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-audio-current" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem;"></p>` : ''}
+                                    <p class="hint-text" style="font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem;">Max 10MB. Speelt bij detectie van deze laag.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 ${isEditForm ? `
                 <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid #ddd;">
                     <button type="button" onclick="deleteLayer(${layerNum})" style="background: #e74c3c; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%;">
@@ -253,10 +284,38 @@ function deleteLayer(layerNum) {
         }
     });
     
+    // Reset GLB en audio file inputs
+    const glbInput = document.getElementById(`edit-layer-${layerNum}-glb`);
+    const audioInput = document.getElementById(`edit-layer-${layerNum}-audio`);
+    if (glbInput) glbInput.value = '';
+    if (audioInput) audioInput.value = '';
+    
+    // Reset GLB en audio current info
+    const glbCurrent = document.getElementById(`edit-layer-${layerNum}-glb-current`);
+    const audioCurrent = document.getElementById(`edit-layer-${layerNum}-audio-current`);
+    if (glbCurrent) {
+        glbCurrent.textContent = 'Geen 3D model';
+        glbCurrent.style.color = '#999';
+    }
+    if (audioCurrent) {
+        audioCurrent.textContent = 'Geen audio';
+        audioCurrent.style.color = '#999';
+    }
+    
     // Reset animation container
     const animContainer = document.getElementById(`edit-layer-${layerNum}-anim-container`);
     if (animContainer) {
         animContainer.style.display = 'none';
+    }
+    
+    // Reset extras container
+    const extrasContainer = document.getElementById(`edit-layer-${layerNum}-extras-container`);
+    if (extrasContainer) {
+        extrasContainer.style.display = 'none';
+    }
+    const extrasToggle = document.getElementById(`edit-layer-${layerNum}-enable-extras`);
+    if (extrasToggle) {
+        extrasToggle.checked = false;
     }
     
     // Update status badge
@@ -494,9 +553,7 @@ function setupFileSummaryListeners() {
         { id: 'poster-jpeg', summaryId: 'summary-jpeg' },
         { id: 'ar-marker-file', summaryId: 'summary-mind' },
         { id: 'poster-pdf-medium', summaryId: 'summary-pdf-a3' },
-        { id: 'poster-pdf-large', summaryId: 'summary-pdf-a0' },
-        { id: 'poster-glb-model', summaryId: 'summary-glb' },
-        { id: 'poster-audio', summaryId: 'summary-audio' }
+        { id: 'poster-pdf-large', summaryId: 'summary-pdf-a0' }
     ];
 
     inputs.forEach(input => {
@@ -876,31 +933,33 @@ function setupUploadForm() {
             formData.append(`layer_${i}_anim_scale`, animScaleInput ? animScaleInput.value || '1.0' : '1.0');
             formData.append(`layer_${i}_anim_opacity`, animOpacityInput ? animOpacityInput.value || '1.0' : '1.0');
             formData.append(`layer_${i}_anim_duration`, durationInput ? durationInput.value || '0' : '0');
+            
+            // Per-laag AR extras: GLB model en audio
+            const layerGlbInput = document.getElementById(`layer-${i}-glb`);
+            const layerAudioInput = document.getElementById(`layer-${i}-audio`);
+            
+            if (layerGlbInput && layerGlbInput.files[0]) {
+                const glbFile = layerGlbInput.files[0];
+                if (glbFile.size > 10 * 1024 * 1024) {
+                    errorMsg.textContent = `Laag ${i}: GLB model is te groot (max 10MB)`;
+                    return;
+                }
+                formData.append(`layer_${i}_glb`, glbFile);
+            }
+            
+            if (layerAudioInput && layerAudioInput.files[0]) {
+                const audioFile = layerAudioInput.files[0];
+                if (audioFile.size > 10 * 1024 * 1024) {
+                    errorMsg.textContent = `Laag ${i}: Audio bestand is te groot (max 10MB)`;
+                    return;
+                }
+                formData.append(`layer_${i}_audio`, audioFile);
+            }
         }
         
         const jpegFile = document.getElementById('poster-jpeg').files[0];
         const pdfMediumFile = document.getElementById('poster-pdf-medium').files[0];
         const pdfLargeFile = document.getElementById('poster-pdf-large').files[0];
-        
-        // Optionele AR extras: GLB model en audio
-        const glbModelFile = document.getElementById('poster-glb-model')?.files[0];
-        const audioFile = document.getElementById('poster-audio')?.files[0];
-        
-        if (glbModelFile) {
-            if (glbModelFile.size > 10 * 1024 * 1024) {
-                errorMsg.textContent = 'GLB model is te groot (max 10MB)';
-                return;
-            }
-            formData.append('glb_model', glbModelFile);
-        }
-        
-        if (audioFile) {
-            if (audioFile.size > 10 * 1024 * 1024) {
-                errorMsg.textContent = 'Audio bestand is te groot (max 10MB)';
-                return;
-            }
-            formData.append('audio_file', audioFile);
-        }
         
         // Validate files
         if (!jpegFile || !pdfMediumFile || !pdfLargeFile) {
@@ -1575,6 +1634,30 @@ async function openEditModal(posterId) {
                     statusBadge.style.background = '#ffebee';
                     statusBadge.style.color = '#c62828';
                 }
+                
+                // Toon huidige GLB/audio status per laag (in AR EXTRAS toggle)
+                const glbInfo = document.getElementById(`edit-layer-${layerNum}-glb-current`);
+                const audioInfo = document.getElementById(`edit-layer-${layerNum}-audio-current`);
+                
+                if (glbInfo) {
+                    if (layerData.glb_model) {
+                        glbInfo.textContent = `Huidig: ${layerData.glb_model}`;
+                        glbInfo.style.color = '#27ae60';
+                    } else {
+                        glbInfo.textContent = 'Geen 3D model';
+                        glbInfo.style.color = '#999';
+                    }
+                }
+                
+                if (audioInfo) {
+                    if (layerData.audio_file) {
+                        audioInfo.textContent = `Huidig: ${layerData.audio_file}`;
+                        audioInfo.style.color = '#27ae60';
+                    } else {
+                        audioInfo.textContent = 'Geen audio';
+                        audioInfo.style.color = '#999';
+                    }
+                }
             }
         }
         
@@ -1585,79 +1668,19 @@ async function openEditModal(posterId) {
         const arMarkerInput = document.getElementById('edit-ar-marker-file');
         if (arMarkerInput) arMarkerInput.value = '';
         
-        // Clear GLB and audio inputs en toon huidige status
-        const glbInput = document.getElementById('edit-glb-model');
-        const audioInput = document.getElementById('edit-audio');
-        const glbCurrent = document.getElementById('edit-glb-current');
-        const audioCurrent = document.getElementById('edit-audio-current');
-        const deleteGlb = document.getElementById('edit-delete-glb');
-        const deleteAudio = document.getElementById('edit-delete-audio');
-        const removeGlbBtn = document.getElementById('edit-remove-glb-btn');
-        const removeAudioBtn = document.getElementById('edit-remove-audio-btn');
-        
-        if (glbInput) glbInput.value = '';
-        if (audioInput) audioInput.value = '';
-        if (deleteGlb) deleteGlb.value = '0';
-        if (deleteAudio) deleteAudio.value = '0';
-        
-        // Toon huidige GLB status
-        if (glbCurrent) {
-            if (poster.glb_model) {
-                glbCurrent.textContent = `Huidig: ${poster.glb_model}`;
-                glbCurrent.style.color = '#27ae60';
-                if (removeGlbBtn) removeGlbBtn.style.display = 'inline-block';
-            } else {
-                glbCurrent.textContent = 'Geen 3D model';
-                glbCurrent.style.color = '#999';
-                if (removeGlbBtn) removeGlbBtn.style.display = 'none';
-            }
-        }
-        
-        // Toon huidige audio status
-        if (audioCurrent) {
-            if (poster.audio_file) {
-                audioCurrent.textContent = `Huidig: ${poster.audio_file}`;
-                audioCurrent.style.color = '#27ae60';
-                if (removeAudioBtn) removeAudioBtn.style.display = 'inline-block';
-            } else {
-                audioCurrent.textContent = 'Geen audio bestand';
-                audioCurrent.style.color = '#999';
-                if (removeAudioBtn) removeAudioBtn.style.display = 'none';
-            }
-        }
-        
-        // Setup remove buttons
-        if (removeGlbBtn) {
-            removeGlbBtn.onclick = () => {
-                if (deleteGlb) deleteGlb.value = '1';
-                if (glbCurrent) {
-                    glbCurrent.textContent = '[WORDT VERWIJDERD]';
-                    glbCurrent.style.color = '#e74c3c';
-                }
-                removeGlbBtn.style.display = 'none';
-                setupEditChangesSummary(); // Update summary
-            };
-        }
-        
-        if (removeAudioBtn) {
-            removeAudioBtn.onclick = () => {
-                if (deleteAudio) deleteAudio.value = '1';
-                if (audioCurrent) {
-                    audioCurrent.textContent = '[WORDT VERWIJDERD]';
-                    audioCurrent.style.color = '#e74c3c';
-                }
-                removeAudioBtn.style.display = 'none';
-                setupEditChangesSummary(); // Update summary
-            };
-        }
-        
-        // Clear layer file inputs
+        // Clear layer file inputs (incl. GLB/audio per laag)
         for (let layerNum = 1; layerNum <= 8; layerNum++) {
             const fileInput = document.getElementById(`edit-layer-${layerNum}-image`);
             if (fileInput) fileInput.value = '';
             
             const deleteInput = document.getElementById(`edit-layer-${layerNum}-delete`);
             if (deleteInput) deleteInput.value = '0';
+            
+            // Clear GLB en audio inputs per laag
+            const glbInput = document.getElementById(`edit-layer-${layerNum}-glb`);
+            const audioInput = document.getElementById(`edit-layer-${layerNum}-audio`);
+            if (glbInput) glbInput.value = '';
+            if (audioInput) audioInput.value = '';
         }
         
         // Clear messages
@@ -1826,6 +1849,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_anim_scale`, animScaleEl ? animScaleEl.value || '1.0' : '1.0');
                 formData.append(`layer_${i}_anim_opacity`, animOpacityEl ? animOpacityEl.value || '1.0' : '1.0');
                 formData.append(`layer_${i}_anim_duration`, animDurationEl ? animDurationEl.value || '0' : '0');
+                
+                // Per-laag AR extras: GLB model en audio
+                const layerGlbEl = document.getElementById(`edit-layer-${i}-glb`);
+                const layerAudioEl = document.getElementById(`edit-layer-${i}-audio`);
+                
+                if (layerGlbEl && layerGlbEl.files[0]) {
+                    const glbFile = layerGlbEl.files[0];
+                    if (glbFile.size > 10 * 1024 * 1024) {
+                        if (errorMsg) errorMsg.textContent = `Laag ${i}: GLB model is te groot (max 10MB)`;
+                        return;
+                    }
+                    formData.append(`layer_${i}_glb`, glbFile);
+                }
+                
+                if (layerAudioEl && layerAudioEl.files[0]) {
+                    const audioFile = layerAudioEl.files[0];
+                    if (audioFile.size > 10 * 1024 * 1024) {
+                        if (errorMsg) errorMsg.textContent = `Laag ${i}: Audio bestand is te groot (max 10MB)`;
+                        return;
+                    }
+                    formData.append(`layer_${i}_audio`, audioFile);
+                }
             }
             
             // Add files if provided
@@ -1844,38 +1889,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pdfLargeFile) formData.append('pdfLarge', pdfLargeFile);
             if (arMarkerFile) formData.append('ar_marker_file', arMarkerFile);
             
-            // Add GLB model and audio file if provided
-            const glbModelEl = document.getElementById('edit-glb-model');
-            const audioEl = document.getElementById('edit-audio');
-            const deleteGlbEl = document.getElementById('edit-delete-glb');
-            const deleteAudioEl = document.getElementById('edit-delete-audio');
-            
-            const glbFile = glbModelEl ? glbModelEl.files[0] : null;
-            const audioFile = audioEl ? audioEl.files[0] : null;
-            
-            if (glbFile) {
-                if (glbFile.size > 10 * 1024 * 1024) {
-                    if (errorMsg) errorMsg.textContent = 'GLB model is te groot (max 10MB)';
-                    return;
-                }
-                formData.append('glb_model', glbFile);
-            }
-            if (audioFile) {
-                if (audioFile.size > 10 * 1024 * 1024) {
-                    if (errorMsg) errorMsg.textContent = 'Audio bestand is te groot (max 10MB)';
-                    return;
-                }
-                formData.append('audio_file', audioFile);
-            }
-            
-            // Check for delete flags
-            if (deleteGlbEl && deleteGlbEl.value === '1') {
-                formData.append('delete_glb', '1');
-            }
-            if (deleteAudioEl && deleteAudioEl.value === '1') {
-                formData.append('delete_audio', '1');
-            }
-            
             // Build summary of changes
             const changes = [];
             if (titleEl && titleEl.value) changes.push(`Titel: ${titleEl.value}`);
@@ -1883,10 +1896,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pdfMediumFile) changes.push(`Nieuwe PDF Medium: ${pdfMediumFile.name}`);
             if (pdfLargeFile) changes.push(`Nieuwe PDF Large: ${pdfLargeFile.name}`);
             if (arMarkerFile) changes.push(`Nieuwe AR Marker: ${arMarkerFile.name}`);
-            if (glbFile) changes.push(`Nieuw 3D Model: ${glbFile.name}`);
-            if (audioFile) changes.push(`Nieuw Audio: ${audioFile.name}`);
-            if (deleteGlbEl && deleteGlbEl.value === '1') changes.push('3D Model verwijderd');
-            if (deleteAudioEl && deleteAudioEl.value === '1') changes.push('Audio verwijderd');
             
             // Count layer changes
             let layerChangesCount = 0;
@@ -1895,6 +1904,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (layerImageEl && layerImageEl.files[0]) {
                     layerChangesCount++;
                     changes.push(`Nieuwe Layer ${i}: ${layerImageEl.files[0].name}`);
+                }
+                // Check voor GLB/audio per laag
+                const layerGlbEl = document.getElementById(`edit-layer-${i}-glb`);
+                const layerAudioEl = document.getElementById(`edit-layer-${i}-audio`);
+                if (layerGlbEl && layerGlbEl.files[0]) {
+                    changes.push(`Laag ${i} - Nieuw 3D Model: ${layerGlbEl.files[0].name}`);
+                }
+                if (layerAudioEl && layerAudioEl.files[0]) {
+                    changes.push(`Laag ${i} - Nieuw Audio: ${layerAudioEl.files[0].name}`);
                 }
             }
             
@@ -2058,6 +2076,26 @@ function setupLayerAnimationToggle(layerNum, isEditForm) {
                 }
             });
         }
+    });
+    
+    // Setup AR Extras toggle for this layer
+    setupLayerExtrasToggle(layerNum, isEditForm);
+}
+
+// Setup AR Extras (GLB/Audio) toggle per layer
+function setupLayerExtrasToggle(layerNum, isEditForm) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const extrasContainer = document.getElementById(`${prefix}layer-${layerNum}-extras-container`);
+    const enableCheckbox = document.getElementById(`${prefix}layer-${layerNum}-enable-extras`);
+    
+    if (!extrasContainer || !enableCheckbox) return;
+    
+    // Initial state
+    extrasContainer.style.display = enableCheckbox.checked ? 'block' : 'none';
+    
+    // Toggle on checkbox change
+    enableCheckbox.addEventListener('change', () => {
+        extrasContainer.style.display = enableCheckbox.checked ? 'block' : 'none';
     });
 }
 

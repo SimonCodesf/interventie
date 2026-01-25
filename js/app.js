@@ -193,17 +193,38 @@ let currentTrackedPoster = null;
 let currentAudioElement = null; // Huidige audio element voor poster
 let audioVolume = 0.5; // Standaard volume (0.0 - 1.0)
 
-// Start audio playback voor een poster (indien beschikbaar)
+// Start audio playback voor een poster (per-laag audio)
 function playPosterAudio(poster) {
     // Stop eventuele vorige audio
     stopPosterAudio();
     
-    if (!poster || !poster.audio_file) {
+    if (!poster || !poster.layers) {
+        console.log(' Geen layers data beschikbaar voor deze poster');
+        return;
+    }
+    
+    // Zoek naar audio in de layers
+    let audioFile = null;
+    for (let i = 1; i <= 8; i++) {
+        const layerData = poster.layers[`layer_${i}`];
+        if (layerData && layerData.audio_file) {
+            audioFile = layerData.audio_file;
+            console.log(` Audio gevonden in laag ${i}:`, audioFile);
+            break; // Gebruik eerste audio die gevonden wordt
+        }
+    }
+    
+    // Fallback naar poster-level audio (voor backwards compatibility)
+    if (!audioFile && poster.audio_file) {
+        audioFile = poster.audio_file;
+    }
+    
+    if (!audioFile) {
         console.log(' Geen audio beschikbaar voor deze poster');
         return;
     }
     
-    const audioPath = `uploads/ar-layers/${poster.audio_file}`;
+    const audioPath = `uploads/ar-layers/${audioFile}`;
     console.log(' Audio starten:', audioPath);
     
     currentAudioElement = new Audio(audioPath);
@@ -259,11 +280,37 @@ function showAudioPlayButton(poster) {
     btn.onclick = () => {
         if (currentAudioElement) {
             currentAudioElement.play();
-        } else if (poster && poster.audio_file) {
+        } else {
             playPosterAudio(poster);
         }
         btn.style.display = 'none';
     };
+}
+
+// Helper: check of een poster GLB model heeft in een van de layers
+function hasGLBInLayers(poster) {
+    if (!poster || !poster.layers) return false;
+    for (let i = 1; i <= 8; i++) {
+        const layerData = poster.layers[`layer_${i}`];
+        if (layerData && layerData.glb_model) {
+            return true;
+        }
+    }
+    // Fallback voor backwards compatibility
+    return !!poster.glb_model;
+}
+
+// Helper: check of een poster audio heeft in een van de layers
+function hasAudioInLayers(poster) {
+    if (!poster || !poster.layers) return false;
+    for (let i = 1; i <= 8; i++) {
+        const layerData = poster.layers[`layer_${i}`];
+        if (layerData && layerData.audio_file) {
+            return true;
+        }
+    }
+    // Fallback voor backwards compatibility
+    return !!poster.audio_file;
 }
 
 // Verberg audio play button
@@ -273,10 +320,30 @@ function hideAudioPlayButton() {
 }
 
 // ==================== 3D MODEL INTERACTIVITEIT ====================
-// Setup click handlers voor 3D modellen
+// Setup click handlers voor 3D modellen (per-laag GLB models)
 function setupModelInteractivity() {
-    const model = document.getElementById('ar-glb-model');
-    if (!model) return;
+    // Zoek alle GLB modellen (per laag)
+    const models = document.querySelectorAll('[id^="ar-glb-model"]');
+    if (models.length === 0) {
+        // Fallback: zoek naar oude single model ID
+        const singleModel = document.getElementById('ar-glb-model');
+        if (singleModel) {
+            setupSingleModelInteractivity(singleModel);
+        }
+        return;
+    }
+    
+    models.forEach(model => {
+        setupSingleModelInteractivity(model);
+    });
+    
+    console.log(` Model interactiviteit ingesteld voor ${models.length} model(len)`);
+}
+
+// Setup interactiviteit voor één GLB model
+function setupSingleModelInteractivity(model) {
+    const modelId = model.id;
+    const baseScale = parseFloat(model.getAttribute('scale')?.x) || 0.3;
     
     // Toggle rotatie animatie bij klik
     model.addEventListener('click', function() {
@@ -285,16 +352,14 @@ function setupModelInteractivity() {
             // Stop rotatie
             model.removeAttribute('animation__rotate');
             // Eenmalige scale pulse
-            model.setAttribute('animation__pulse', 'property: scale; from: 0.3 0.3 0.3; to: 0.4 0.4 0.4; dur: 300; dir: alternate; loop: 2');
-            console.log(' Model animatie gestopt');
+            model.setAttribute('animation__pulse', `property: scale; from: ${baseScale} ${baseScale} ${baseScale}; to: ${baseScale * 1.3} ${baseScale * 1.3} ${baseScale * 1.3}; dur: 300; dir: alternate; loop: 2`);
+            console.log(` Model ${modelId} animatie gestopt`);
         } else {
             // Start rotatie weer
             model.setAttribute('animation__rotate', 'property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;');
-            console.log(' Model animatie gestart');
+            console.log(` Model ${modelId} animatie gestart`);
         }
     });
-    
-    console.log(' Model interactiviteit ingesteld');
 }
 
 // Featured Poster Management (voor gescande poster in galerij)
@@ -1813,27 +1878,37 @@ function buildLayersHTML(poster) {
                             ${exclusionAttr}></a-plane>`;
                 }
             }
+            
+            // Per-laag GLB 3D model toevoegen (indien aanwezig in layerData)
+            if (layerData && layerData.glb_model) {
+                const glbPath = `uploads/ar-layers/${layerData.glb_model}`;
+                // Positioneer GLB boven de laag
+                const glbPosX = parseFloat(layerData.x) || 0;
+                const glbPosY = (parseFloat(layerData.y) || 0) + 0.5; // Iets boven de laag
+                const glbPosZ = (parseFloat(layerData.z) || 0.1) + 0.2;
+                const glbScale = (parseFloat(layerData.scale) || 1.0) * 0.3;
+                
+                layersHTML += `
+                    <a-entity
+                        id="ar-glb-model-${i}"
+                        class="ar-model clickable"
+                        gltf-model="${glbPath}"
+                        position="${glbPosX} ${glbPosY} ${glbPosZ}"
+                        scale="${glbScale} ${glbScale} ${glbScale}"
+                        rotation="0 0 0"
+                        animation__rotate="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;"
+                        data-clickable="true"
+                        data-layer="${i}"
+                    ></a-entity>`;
+                console.log(` GLB model toegevoegd voor laag ${i}:`, glbPath);
+            }
         }
     }
     
-    // Voeg GLB 3D model toe indien aanwezig
-    if (poster.glb_model) {
-        const glbPath = `uploads/ar-layers/${poster.glb_model}`;
-        layersHTML += `
-            <a-entity
-                id="ar-glb-model"
-                class="ar-model clickable"
-                gltf-model="${glbPath}"
-                position="0 0.5 0.2"
-                scale="0.3 0.3 0.3"
-                rotation="0 0 0"
-                animation__rotate="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;"
-                data-clickable="true"
-            ></a-entity>`;
-        console.log(' GLB model toegevoegd:', glbPath);
-    }
+    // GLB 3D modellen worden nu per laag toegevoegd (zie layer loop hierboven)
+    // Audio wordt afgespeeld vanuit layers_data tijdens targetFound
     
-    if (!layersHTML.includes('ar-layer-1') && !poster.glb_model) {
+    if (!layersHTML.includes('ar-layer-1') && !layersHTML.includes('ar-glb-model')) {
         layersHTML += `<a-box position="0 0 0.1" color="#FF0000" width="0.2" height="0.2" depth="0.2"></a-box>`;
     }
     
@@ -1940,13 +2015,11 @@ function setupSceneEventListeners(scene, currentPoster) {
             currentTrackedPoster = currentPoster;
             showDetectedPosterState(currentPoster);
             
-            // START AUDIO (indien beschikbaar)
-            if (currentPoster.audio_file) {
-                playPosterAudio(currentPoster);
-            }
+            // START AUDIO (indien beschikbaar in een van de layers)
+            playPosterAudio(currentPoster);
             
-            // Setup model interactiviteit (indien GLB aanwezig)
-            if (currentPoster.glb_model) {
+            // Setup model interactiviteit (indien GLB aanwezig in een van de layers)
+            if (hasGLBInLayers(currentPoster)) {
                 setTimeout(() => setupModelInteractivity(), 500);
             }
         });

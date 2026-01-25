@@ -208,42 +208,43 @@ function handleUploadPoster($db) {
                     error_log("[LAYER_{$i}] Image saved and optimized");
                 }
             }
+            
+            // Handle per-layer GLB model upload
+            if (isset($_FILES["layer_{$i}_glb"]) && $_FILES["layer_{$i}_glb"]['error'] === UPLOAD_ERR_OK) {
+                $glbFile = $_FILES["layer_{$i}_glb"];
+                if ($glbFile['size'] <= 10485760) { // 10MB max
+                    $glbFilename = $id . "_layer_{$i}.glb";
+                    move_uploaded_file($glbFile['tmp_name'], AR_LAYERS_DIR . '/' . $glbFilename);
+                    $layerData['glb_model'] = $glbFilename;
+                    error_log("[LAYER_{$i}] GLB model opgeslagen: {$glbFilename}");
+                }
+            }
+            
+            // Handle per-layer audio file upload
+            if (isset($_FILES["layer_{$i}_audio"]) && $_FILES["layer_{$i}_audio"]['error'] === UPLOAD_ERR_OK) {
+                $audioFile = $_FILES["layer_{$i}_audio"];
+                if ($audioFile['size'] <= 10485760) { // 10MB max
+                    $ext = pathinfo($audioFile['name'], PATHINFO_EXTENSION) ?: 'mp3';
+                    $audioFilename = $id . "_layer_{$i}_audio." . $ext;
+                    move_uploaded_file($audioFile['tmp_name'], AR_LAYERS_DIR . '/' . $audioFilename);
+                    $layerData['audio_file'] = $audioFilename;
+                    error_log("[LAYER_{$i}] Audio opgeslagen: {$audioFilename}");
+                }
+            }
+            
             $layersData["layer_$i"] = $layerData;
         }
         
-        // Handle optional GLB model upload
-        $glbModelFilename = null;
-        if (isset($_FILES['glb_model']) && $_FILES['glb_model']['error'] === UPLOAD_ERR_OK) {
-            $glbValidation = validateUploadedFile($_FILES['glb_model'], ['model/gltf-binary', 'application/octet-stream'], 10485760); // 10MB max
-            if ($glbValidation['valid']) {
-                $glbModelFilename = $id . '.glb';
-                move_uploaded_file($_FILES['glb_model']['tmp_name'], AR_LAYERS_DIR . '/' . $glbModelFilename);
-                error_log("[GLB] 3D model opgeslagen: {$glbModelFilename}");
-            }
-        }
-        
-        // Handle optional audio file upload
-        $audioFilename = null;
-        if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] === UPLOAD_ERR_OK) {
-            $audioValidation = validateUploadedFile($_FILES['audio_file'], ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'], 10485760); // 10MB max
-            if ($audioValidation['valid']) {
-                $ext = pathinfo($_FILES['audio_file']['name'], PATHINFO_EXTENSION) ?: 'mp3';
-                $audioFilename = $id . '_audio.' . $ext;
-                move_uploaded_file($_FILES['audio_file']['tmp_name'], AR_LAYERS_DIR . '/' . $audioFilename);
-                error_log("[AUDIO] Audio bestand opgeslagen: {$audioFilename}");
-            }
-        }
-        
-        // Database insert
+        // Database insert (geen globale GLB/audio meer, nu per laag)
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), $glbModelFilename, $audioFilename
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData)
         ]);
         
         logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id)");
@@ -491,71 +492,59 @@ function handleUpdatePoster($db, $id) {
                 }
             }
             
+            // Handle per-layer GLB model update
+            if (isset($_FILES["layer_{$i}_glb"]) && $_FILES["layer_{$i}_glb"]['error'] === UPLOAD_ERR_OK) {
+                $glbFile = $_FILES["layer_{$i}_glb"];
+                if ($glbFile['size'] <= 10485760) { // 10MB max
+                    // Verwijder oude GLB indien aanwezig
+                    if (!empty($existingLayer['glb_model'])) {
+                        @unlink(AR_LAYERS_DIR . '/' . $existingLayer['glb_model']);
+                    }
+                    $glbFilename = $id . "_layer_{$i}.glb";
+                    move_uploaded_file($glbFile['tmp_name'], AR_LAYERS_DIR . '/' . $glbFilename);
+                    $layerData['glb_model'] = $glbFilename;
+                    error_log("[UPDATE_LAYER_{$i}] GLB model bijgewerkt: {$glbFilename}");
+                }
+            } else {
+                // Behoud bestaand GLB model
+                $layerData['glb_model'] = $existingLayer['glb_model'] ?? null;
+            }
+            
+            // Handle per-layer audio file update
+            if (isset($_FILES["layer_{$i}_audio"]) && $_FILES["layer_{$i}_audio"]['error'] === UPLOAD_ERR_OK) {
+                $audioFile = $_FILES["layer_{$i}_audio"];
+                if ($audioFile['size'] <= 10485760) { // 10MB max
+                    // Verwijder oude audio indien aanwezig
+                    if (!empty($existingLayer['audio_file'])) {
+                        @unlink(AR_LAYERS_DIR . '/' . $existingLayer['audio_file']);
+                    }
+                    $ext = pathinfo($audioFile['name'], PATHINFO_EXTENSION) ?: 'mp3';
+                    $audioFilename = $id . "_layer_{$i}_audio." . $ext;
+                    move_uploaded_file($audioFile['tmp_name'], AR_LAYERS_DIR . '/' . $audioFilename);
+                    $layerData['audio_file'] = $audioFilename;
+                    error_log("[UPDATE_LAYER_{$i}] Audio bijgewerkt: {$audioFilename}");
+                }
+            } else {
+                // Behoud bestaand audio bestand
+                $layerData['audio_file'] = $existingLayer['audio_file'] ?? null;
+            }
+            
             $layersData["layer_$i"] = $layerData;
         }
         
-        // Handle GLB model update
-        $glbModelFilename = $poster['glb_model']; // Behoud bestaand model
-        if (isset($_FILES['glb_model']) && $_FILES['glb_model']['error'] === UPLOAD_ERR_OK) {
-            $glbValidation = validateUploadedFile($_FILES['glb_model'], ['model/gltf-binary', 'application/octet-stream'], 10485760);
-            if ($glbValidation['valid']) {
-                // Verwijder oude GLB indien aanwezig
-                if (!empty($poster['glb_model'])) {
-                    @unlink(AR_LAYERS_DIR . '/' . $poster['glb_model']);
-                }
-                $glbModelFilename = $id . '.glb';
-                move_uploaded_file($_FILES['glb_model']['tmp_name'], AR_LAYERS_DIR . '/' . $glbModelFilename);
-                error_log("[GLB] 3D model bijgewerkt: {$glbModelFilename}");
-            }
-        }
-        // Check voor GLB verwijdering
-        if (isset($_POST['delete_glb']) && $_POST['delete_glb'] === '1') {
-            if (!empty($poster['glb_model'])) {
-                @unlink(AR_LAYERS_DIR . '/' . $poster['glb_model']);
-            }
-            $glbModelFilename = null;
-            error_log("[GLB] 3D model verwijderd");
-        }
-        
-        // Handle audio file update
-        $audioFilename = $poster['audio_file']; // Behoud bestaand bestand
-        if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] === UPLOAD_ERR_OK) {
-            $audioValidation = validateUploadedFile($_FILES['audio_file'], ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'], 10485760);
-            if ($audioValidation['valid']) {
-                // Verwijder oude audio indien aanwezig
-                if (!empty($poster['audio_file'])) {
-                    @unlink(AR_LAYERS_DIR . '/' . $poster['audio_file']);
-                }
-                $ext = pathinfo($_FILES['audio_file']['name'], PATHINFO_EXTENSION) ?: 'mp3';
-                $audioFilename = $id . '_audio.' . $ext;
-                move_uploaded_file($_FILES['audio_file']['tmp_name'], AR_LAYERS_DIR . '/' . $audioFilename);
-                error_log("[AUDIO] Audio bestand bijgewerkt: {$audioFilename}");
-            }
-        }
-        // Check voor audio verwijdering
-        if (isset($_POST['delete_audio']) && $_POST['delete_audio'] === '1') {
-            if (!empty($poster['audio_file'])) {
-                @unlink(AR_LAYERS_DIR . '/' . $poster['audio_file']);
-            }
-            $audioFilename = null;
-            error_log("[AUDIO] Audio bestand verwijderd");
-        }
-        
-        // Update database
+        // Update database (geen globale GLB/audio meer)
         $stmt = $db->prepare("
             UPDATE posters SET 
                 title = ?, description = ?, jpeg_filename = ?, pdf_medium_filename = ?, pdf_large_filename = ?,
                 thumbnail = ?, latitude = ?, longitude = ?, location_description = ?, 
-                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?,
-                glb_model = ?, audio_file = ?
+                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?
             WHERE id = ?
         ");
         
         $stmt->execute([
             $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             $thumbnailPath, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData),
-            $glbModelFilename, $audioFilename, $id
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), $id
         ]);
         
         logAdminActivity('UPDATE_POSTER', "$title (ID: $id)");
