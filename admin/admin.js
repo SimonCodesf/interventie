@@ -806,10 +806,23 @@ function setupLogoutButton() {
     const rebuildBtn = document.getElementById('rebuild-mind-btn');
     if (rebuildBtn) {
         rebuildBtn.onclick = async () => {
-            if (!confirm('AR tracking data herbouwen? Dit kan even duren.')) return;
+            console.log('AR Rebuild button clicked'); // Debug log
+            
+            // Check if we should ask for confirmation (skip if shift key is pressed or just allow direct click if confirm blocked)
+            // Maar als de user confirm heeft geblokkeerd, gebruiken we een kleine fallback
+            let confirmed = false;
+            try {
+                confirmed = confirm('AR tracking data herbouwen? Dit kan even duren.');
+            } catch (e) {
+                console.warn('Confirm dialog blocked or failed', e);
+                // Als confirm faalt (bv. geblokkeerd), ga door
+                confirmed = true;
+            }
+            
+            if (!confirmed) return;
             
             rebuildBtn.disabled = true;
-            rebuildBtn.textContent = 'Bezig...';
+            rebuildBtn.innerHTML = 'Bezig... <span class="spinner"></span>';
             
             try {
                 const token = sessionStorage.getItem('adminToken');
