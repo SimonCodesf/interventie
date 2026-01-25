@@ -1,6 +1,81 @@
 <?php
 // includes/api_utils.php - Helper functies voor de API
 
+// ==================== DATABASE INITIALISATIE ====================
+// Initialiseer database met alle kolom migraties
+// Deze functie overschrijft de versie in config.php indien aanwezig
+function initDatabaseWithMigrations() {
+    $db = new PDO('sqlite:' . DB_FILE);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Maak posters tabel aan
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS posters (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            description TEXT,
+            jpeg_filename TEXT NOT NULL,
+            pdf_medium_filename TEXT NOT NULL,
+            pdf_large_filename TEXT NOT NULL,
+            thumbnail TEXT NOT NULL,
+            latitude REAL,
+            longitude REAL,
+            location_description TEXT,
+            upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            downloads INTEGER DEFAULT 0
+        )
+    ");
+    
+    // Helper functie om te checken of kolom bestaat
+    $columnExists = function($db, $table, $column) {
+        $result = $db->query("PRAGMA table_info($table)");
+        foreach ($result as $row) {
+            if ($row['name'] === $column) {
+                return true;
+            }
+        }
+        return false;
+    };
+    
+    // Voeg ontbrekende kolommen toe (database migratie)
+    $columnsToAdd = [
+        'latitude' => 'REAL',
+        'longitude' => 'REAL', 
+        'location_description' => 'TEXT',
+        'artikel_link' => 'TEXT',
+        'photographer_credit' => 'TEXT',
+        'credits' => 'TEXT',
+        'ar_marker' => 'TEXT',
+        'ar_marker_hq' => 'TEXT',
+        'ar_marker_lq' => 'TEXT',
+        'layers_data' => 'TEXT',
+        'glb_model' => 'TEXT',
+        'audio_file' => 'TEXT'
+    ];
+    
+    foreach ($columnsToAdd as $column => $type) {
+        if (!$columnExists($db, 'posters', $column)) {
+            try {
+                $db->exec("ALTER TABLE posters ADD COLUMN $column $type");
+                error_log("[DB] Kolom '$column' toegevoegd aan posters tabel");
+            } catch (PDOException $e) {
+                error_log("[DB] Fout bij toevoegen kolom '$column': " . $e->getMessage());
+            }
+        }
+    }
+    
+    // Migrate existing ar_marker_hq data to ar_marker (consolidation to single marker)
+    try {
+        $db->exec("UPDATE posters SET ar_marker = ar_marker_hq WHERE ar_marker_hq IS NOT NULL AND ar_marker IS NULL");
+    } catch (PDOException $e) {
+        // Migration might fail if data doesn't exist, which is fine
+    }
+    
+    return $db;
+}
+
+// ==================== HELPER FUNCTIES ====================
+
 // Helper functie voor JSON response
 function jsonResponse($data, $status = 200) {
     http_response_code($status);

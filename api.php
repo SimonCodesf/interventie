@@ -43,7 +43,8 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if (rand(1, 100) === 1) cleanupOldAttempts();
 
-$db = initDatabase();
+// Gebruik de nieuwe database functie met migraties (uit api_utils.php)
+$db = initDatabaseWithMigrations();
 $method = $_SERVER['REQUEST_METHOD'];
 
 // Path parsing
