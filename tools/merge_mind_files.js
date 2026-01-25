@@ -80,6 +80,9 @@ async function mergeMindFiles() {
     
     if (mindFiles.length === 0) {
         console.log('Geen .mind files gevonden om te mergen');
+        return;
+    }
+
     // 2. Process in chunks
     const chunks = [];
     let currentChunk = [];
