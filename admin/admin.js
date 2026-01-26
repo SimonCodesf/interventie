@@ -928,24 +928,21 @@ function renderARPreview() {
             
             if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename)) {
                 
-                // Determine dimensions based on aspect ratio
-                // In AR: layer grootte = 1.4 * scale, aspect ratio bepaalt width/height verhouding
+                // Scale=1 betekent dat de layer de volledige poster BREEDTE vult
+                // De hoogte wordt bepaald door de aspect ratio van de afbeelding
+                // Dit komt overeen met AR waar 1.4 * scale de basis breedte is
+                const baseWidth = posterW * data.scale;
+                
                 if (data.imageEl) {
                     const img = data.imageEl;
                     const aspectRatio = img.width / img.height;
-                    if (aspectRatio > 1) {
-                        // Landscape: width = layerSize, height smaller
-                        domW = layerSize; 
-                        domH = layerSize / aspectRatio;
-                    } else {
-                        // Portrait/Square: height = layerSize, width smaller or equal
-                        domH = layerSize; 
-                        domW = layerSize * aspectRatio;
-                    }
+                    // Breedte = poster breedte * scale, hoogte volgt uit aspect ratio
+                    domW = baseWidth;
+                    domH = baseWidth / aspectRatio;
                 } else if (data.isVideo) {
                     // Video default 16:9
-                    domW = layerSize; 
-                    domH = layerSize / (16/9);
+                    domW = baseWidth;
+                    domH = baseWidth / (16/9);
                 }
                 
                 // Create Overlay Element
