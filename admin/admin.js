@@ -1995,13 +1995,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (jpegFile) totalSize += jpegFile.size;
             if (pdfMediumFile) totalSize += pdfMediumFile.size;
             if (pdfLargeFile) totalSize += pdfLargeFile.size;
-            if (glbFile) totalSize += glbFile.size;
-            if (audioFile) totalSize += audioFile.size;
             if (arMarkerFile) totalSize += arMarkerFile.size;
+            
             for (let i = 1; i <= 8; i++) {
                 const layerImageEl = document.getElementById(`edit-layer-${i}-image`);
                 if (layerImageEl && layerImageEl.files[0]) {
                     totalSize += layerImageEl.files[0].size;
+                }
+                
+                const layerGlbEl = document.getElementById(`edit-layer-${i}-glb`);
+                if (layerGlbEl && layerGlbEl.files[0]) {
+                    totalSize += layerGlbEl.files[0].size;
+                }
+                
+                const layerAudioEl = document.getElementById(`edit-layer-${i}-audio`);
+                if (layerAudioEl && layerAudioEl.files[0]) {
+                    totalSize += layerAudioEl.files[0].size;
                 }
             }
             
