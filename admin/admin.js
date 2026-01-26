@@ -1614,12 +1614,19 @@ async function loadAdminPosters() {
 
 // Verwijder poster
 async function deletePoster(posterId) {
+    console.log('[Delete] deletePoster called with ID:', posterId);
+    
     if (!confirm('Weet je zeker dat je deze poster wilt verwijderen?')) {
+        console.log('[Delete] User cancelled');
         return;
     }
     
+    console.log('[Delete] User confirmed, proceeding with delete...');
+    
     try {
         const token = sessionStorage.getItem('adminToken');
+        console.log('[Delete] Token:', token ? 'present' : 'missing');
+        
         const response = await fetch(`${API_URL}/admin/posters/${posterId}`, {
             method: 'DELETE',
             headers: {
@@ -1628,7 +1635,10 @@ async function deletePoster(posterId) {
             credentials: 'include' // Include session cookies
         });
         
+        console.log('[Delete] Response status:', response.status);
+        
         if (response.ok) {
+            console.log('[Delete] Success!');
             // Close modal if open
             closeEditModal();
             
@@ -1642,10 +1652,12 @@ async function deletePoster(posterId) {
                 }, 300);
             }
         } else {
+            const errorText = await response.text();
+            console.error('[Delete] Server error:', errorText);
             alert('Kon poster niet verwijderen. Probeer opnieuw.');
         }
     } catch (error) {
-        console.error('Delete error:', error);
+        console.error('[Delete] Error:', error);
         alert('Kon poster niet verwijderen. Controleer of de server draait.');
     }
 }
@@ -1972,8 +1984,12 @@ async function openEditModal(posterId) {
         
         // Setup delete button
         const deleteBtn = document.getElementById('delete-poster-btn');
+        console.log('[Modal] Delete button found:', !!deleteBtn);
         if (deleteBtn) {
-            deleteBtn.onclick = () => deletePoster(posterId);
+            deleteBtn.onclick = () => {
+                console.log('[Modal] Delete button clicked for poster:', posterId);
+                deletePoster(posterId);
+            };
         }
         
     } catch (error) {
@@ -2321,6 +2337,7 @@ window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
 window.applyAnimPreset = applyAnimPreset;
 window.deleteLayer = deleteLayer;
+window.deletePoster = deletePoster;
 
 // Setup animation toggles for all layers
 // document.addEventListener('DOMContentLoaded', () => {
