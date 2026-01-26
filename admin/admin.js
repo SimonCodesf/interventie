@@ -1626,21 +1626,28 @@ async function openEditModal(posterId) {
             if (layerData) {
                 // Set z-position
                 const zInput = document.getElementById(`edit-layer-${layerNum}-z`);
-                // Fix: use 'num' instead of 'number' to match LAYER_CONFIG
-                if (zInput) zInput.value = layerData.z || LAYER_CONFIG.defaultLayers.find(l => l.num === layerNum)?.defaultZ.toFixed(3) || '0.000';
+                // Fix: explicit check for undefined/null to allow 0 values
+                if (zInput) {
+                    const defaultZ = LAYER_CONFIG.defaultLayers.find(l => l.num === layerNum)?.defaultZ.toFixed(3) || '0.000';
+                    zInput.value = (layerData.z !== undefined && layerData.z !== null) ? layerData.z : defaultZ;
+                }
                 
                 // Set base position and scale
                 const posXInput = document.getElementById(`edit-layer-${layerNum}-pos-x`);
-                if (posXInput) posXInput.value = layerData.pos_x || '0.000';
+                if (posXInput) posXInput.value = (layerData.pos_x !== undefined && layerData.pos_x !== null) ? layerData.pos_x : '0.000';
                 
                 const posYInput = document.getElementById(`edit-layer-${layerNum}-pos-y`);
-                if (posYInput) posYInput.value = layerData.pos_y || '0.000';
+                if (posYInput) posYInput.value = (layerData.pos_y !== undefined && layerData.pos_y !== null) ? layerData.pos_y : '0.000';
                 
                 const scaleInput = document.getElementById(`edit-layer-${layerNum}-scale`);
-                if (scaleInput) scaleInput.value = layerData.scale || '1.0';
+                if (scaleInput) {
+                    const val = (layerData.scale !== undefined && layerData.scale !== null) ? layerData.scale : '1.0';
+                    console.log(`[Admin] Layer ${layerNum} loaded scale:`, layerData.scale, 'Set to:', val);
+                    scaleInput.value = val;
+                }
                 
                 const rotZInput = document.getElementById(`edit-layer-${layerNum}-rot-z`);
-                if (rotZInput) rotZInput.value = layerData.rot_z || '0';
+                if (rotZInput) rotZInput.value = (layerData.rot_z !== undefined && layerData.rot_z !== null) ? layerData.rot_z : '0';
                 
                 // Set exclusion filter checkbox
                 const exclusionCheckbox = document.getElementById(`edit-layer-${layerNum}-exclusion`);
