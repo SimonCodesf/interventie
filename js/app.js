@@ -1882,12 +1882,17 @@ function buildLayersHTML(poster) {
             // Per-laag GLB 3D model toevoegen (indien aanwezig in layerData)
             if (layerData && layerData.glb_model) {
                 const glbPath = `uploads/ar-layers/${layerData.glb_model}`;
-                // Positioneer GLB boven de laag
-                const glbPosX = parseFloat(layerData.x) || 0;
-                const glbPosY = (parseFloat(layerData.y) || 0) + 0.5; // Iets boven de laag
-                const glbPosZ = (parseFloat(layerData.z) || 0.1) + 0.2;
-                const glbScale = (parseFloat(layerData.scale) || 1.0) * 0.3;
                 
+                // Positioneer GLB exact volgens layer parameters (zonder offsets)
+                // Hierdoor kan de gebruiker in admin panel exacte positie/schaal bepalen
+                const glbPosX = parseFloat(layerData.x) || 0;
+                const glbPosY = parseFloat(layerData.y) || 0;
+                const glbPosZ = parseFloat(layerData.z) || 0; 
+                const glbScale = parseFloat(layerData.scale) || 1.0;
+                const glbRotZ = parseFloat(layerData.rot_z) || 0;
+                
+                // Opmerking: we behouden de automatische rotatie-animatie, 
+                // maar passen nu wel de basis parameters toe.
                 layersHTML += `
                     <a-entity
                         id="ar-glb-model-${i}"
@@ -1895,7 +1900,7 @@ function buildLayersHTML(poster) {
                         gltf-model="${glbPath}"
                         position="${glbPosX} ${glbPosY} ${glbPosZ}"
                         scale="${glbScale} ${glbScale} ${glbScale}"
-                        rotation="0 0 0"
+                        rotation="0 0 ${glbRotZ}"
                         animation__rotate="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;"
                         data-clickable="true"
                         data-layer="${i}"
