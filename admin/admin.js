@@ -423,9 +423,20 @@ function setupARPreview() {
         layersPanelHeader.appendChild(previewBtn);
     }
     
-    // Listen to all transform inputs voor live updates
-    document.querySelectorAll('.mini-input input[data-layer]').forEach(input => {
-        input.addEventListener('input', updatePreviewFromInputs);
+    // Event delegation voor real-time preview updates
+    // Dit werkt ook voor dynamisch aangemaakte elementen
+    document.addEventListener('input', (e) => {
+        // Check of het een layer input is (positie, rotatie, scale)
+        if (e.target.matches('input[id*="layer-"][id*="-pos-"], input[id*="layer-"][id*="-rot-"], input[id*="layer-"][id*="-scale"], input[id*="layer-"][id*="-z"]')) {
+            updatePreviewFromInputs();
+        }
+    });
+    
+    // File upload change events voor real-time preview
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('input[type="file"][id*="layer-"][id*="-image"]')) {
+            updatePreviewFromInputs();
+        }
     });
 }
 
