@@ -928,21 +928,28 @@ function renderARPreview() {
             
             if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename)) {
                 
-                // Scale=1 betekent dat de layer de volledige poster BREEDTE vult
-                // De hoogte wordt bepaald door de aspect ratio van de afbeelding
-                // Dit komt overeen met AR waar 1.4 * scale de basis breedte is
-                const baseWidth = posterW * data.scale;
+                // AR gebruikt dezelfde logica voor alle media:
+                // Base size = 1.4 * scale (= posterH in preview termen, want poster is ~1.4m hoog)
+                // Dus: hoogte = posterH * scale, breedte volgt uit aspect ratio
+                const baseHeight = posterH * data.scale;
                 
                 if (data.imageEl) {
                     const img = data.imageEl;
                     const aspectRatio = img.width / img.height;
-                    // Breedte = poster breedte * scale, hoogte volgt uit aspect ratio
-                    domW = baseWidth;
-                    domH = baseWidth / aspectRatio;
+                    // Hoogte = poster hoogte * scale, breedte volgt uit aspect ratio
+                    domH = baseHeight;
+                    domW = baseHeight * aspectRatio;
+                    
+                    // Cap max breedte (zoals in AR: max 2.0 * scale relatief)
+                    const maxWidth = posterW * data.scale * 1.4; // ~140% van poster breedte max
+                    if (domW > maxWidth) {
+                        domW = maxWidth;
+                        domH = maxWidth / aspectRatio;
+                    }
                 } else if (data.isVideo) {
                     // Video default 16:9
-                    domW = baseWidth;
-                    domH = baseWidth / (16/9);
+                    domH = baseHeight;
+                    domW = baseHeight * (16/9);
                 }
                 
                 // Create Overlay Element
