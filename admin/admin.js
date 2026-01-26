@@ -2251,16 +2251,19 @@ async function openEditModal(posterId) {
         
         const poster = await response.json();
         
-        // Parse layers_data JSON string naar object
-        if (poster.layers_data && typeof poster.layers_data === 'string') {
-            try {
-                poster.layers = JSON.parse(poster.layers_data);
-            } catch (e) {
-                console.warn('Kon layers_data niet parsen:', e);
+        // API stuurt poster.layers al als object (geparsed in PHP)
+        // Fallback voor oude data: parse layers_data als het een string is
+        if (!poster.layers) {
+            if (poster.layers_data && typeof poster.layers_data === 'string') {
+                try {
+                    poster.layers = JSON.parse(poster.layers_data);
+                } catch (e) {
+                    console.warn('Kon layers_data niet parsen:', e);
+                    poster.layers = {};
+                }
+            } else {
                 poster.layers = {};
             }
-        } else {
-            poster.layers = poster.layers_data || {};
         }
         
         // Sla poster data globaal op voor AR preview
