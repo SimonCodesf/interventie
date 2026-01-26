@@ -78,7 +78,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="anim-inputs">
                             <div class="input-wrapper">
                                 <label>SCALE</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" placeholder="1.0" step="0.1" value="1.0">
+                                <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" placeholder="1.0" step="0.001" value="1.0">
                             </div>
                             <div class="input-wrapper">
                                 <label>ROT-Z</label>
