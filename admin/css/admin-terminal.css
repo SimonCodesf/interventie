@@ -57,27 +57,21 @@ html {
 }
 
 .sidebar-header {
-    padding: 1.5rem 1rem;
-    border-bottom: 1px solid var(--white);
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
     text-align: center;
-    background: repeating-linear-gradient(
-        45deg,
-        rgba(255, 255, 255, 0.02),
-        rgba(255, 255, 255, 0.02) 10px,
-        rgba(0, 0, 0, 0) 10px,
-        rgba(0, 0, 0, 0) 20px
-    );
+    background: rgba(255,255,255,0.02);
     flex-shrink: 0;
 }
 
-/* Logo styling */
+/* Logo styling - COMPACT */
 .admin-logo {
     width: 100%;
-    max-width: 80px;
+    max-width: 60px;
     height: auto;
     display: block;
-    margin: 0 auto 0.8rem auto;
-    filter: none; /* Show original colors */
+    margin: 0 auto 0.5rem auto;
+    filter: none;
     opacity: 1;
 }
 
@@ -110,9 +104,9 @@ html {
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem; /* Reduced gap */
-    padding: 1rem 0.75rem; /* Reduced padding */
-    border-bottom: 1px solid #ffffff; /* White line */
+    gap: 2px;
+    padding: 6px 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
     flex-shrink: 0;
 }
 
@@ -120,19 +114,18 @@ html {
 .nav-item-btn {
     display: flex;
     align-items: center;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.03);
     border: 1px solid transparent;
-    color: rgba(255,255,255,0.7);
-    padding: 0.5rem 0.75rem; /* Smaller padding */
+    color: rgba(255,255,255,0.6);
+    padding: 5px 8px;
     text-align: left;
     font-family: 'Roboto Mono', monospace;
-    font-size: 0.7rem; /* Smaller font */
+    font-size: 0.55rem;
     cursor: pointer;
     transition: all 0.2s;
     text-decoration: none;
     text-transform: uppercase;
     position: relative;
-    /* match clip-path removed */
 }
 
 .nav-item-link::before,
@@ -178,51 +171,50 @@ html {
     min-height: 0; /* Critical for flex scrolling */
 }
 
-/* Poster List Items */
+/* Poster List Items - COMPACT */
 .sidebar-poster-item {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.15);
-    padding: 0.35rem 0.5rem; /* Very compact */
-    margin-bottom: 2px; /* Minimal gap */
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 6px;
+    margin-bottom: 2px;
     transition: all 0.2s;
-    cursor: default;
+    cursor: pointer;
 }
 
 .sidebar-poster-item:hover {
-    border-color: var(--white);
-    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.03);
 }
 
 .poster-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0; /* No margin */
+    margin-bottom: 0;
 }
 
 .poster-item-title {
     font-family: var(--font-data);
-    font-size: 0.7rem;
-    color: var(--white);
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.8);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 140px;
+    max-width: 160px;
     line-height: 1.2;
 }
 
 .sidebar-poster-item:hover .poster-item-title {
     color: #fff;
-    text-shadow: 0 0 5px rgba(255,255,255,0.5);
 }
 
 .poster-item-meta {
     font-family: var(--font-data);
-    font-size: 0.6rem;
-    color: rgba(255,255,255,0.4);
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.3);
     margin: 0;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .delete-btn {
@@ -403,9 +395,10 @@ textarea.form-control {
     border: 1px solid rgba(255,255,255,0.2) !important;
     color: #ffffff !important;
     resize: vertical;
-    min-height: 50px;
-    font-size: 0.7rem;
-    padding: 6px 8px;
+    min-height: 40px;
+    font-size: 0.6rem;
+    padding: 5px 6px;
+    line-height: 1.3;
 }
 
 /* File input button - COMPACT */

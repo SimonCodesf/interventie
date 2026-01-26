@@ -404,7 +404,7 @@ function setupLayerAnimationToggles() {
 // Setup AR Preview canvas
 function setupARPreview() {
     // Check if preview container exists (will be created in layers panel header)
-    const container = document.getElementById('ar-preview-container');
+    let container = document.getElementById('ar-preview-container');
     if (!container) {
         // Create preview container at top of layers panel
         const layersContainer = document.getElementById('layers-container');
@@ -414,27 +414,27 @@ function setupARPreview() {
                     <div id="ar-preview-header">
                         <span>AR PREVIEW</span>
                         <div class="preview-controls">
-                            <button class="preview-btn active" data-view="front">FRONT</button>
-                            <button class="preview-btn" data-view="side">SIDE</button>
-                            <button class="preview-btn" data-view="top">TOP</button>
+                            <button type="button" class="preview-btn active" data-view="front">FRONT</button>
+                            <button type="button" class="preview-btn" data-view="side">SIDE</button>
+                            <button type="button" class="preview-btn" data-view="top">TOP</button>
                         </div>
                     </div>
                     <canvas id="ar-preview-canvas"></canvas>
                 </div>
             `;
             layersContainer.insertAdjacentHTML('beforebegin', previewHTML);
+            container = document.getElementById('ar-preview-container');
         }
     }
     
     previewCanvas = document.getElementById('ar-preview-canvas');
     if (previewCanvas) {
         previewCtx = previewCanvas.getContext('2d');
-        resizePreviewCanvas();
-        window.addEventListener('resize', resizePreviewCanvas);
         
         // Setup view buttons
         document.querySelectorAll('.preview-btn[data-view]').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
                 document.querySelectorAll('.preview-btn[data-view]').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 renderARPreview();
@@ -446,16 +446,28 @@ function setupARPreview() {
             input.addEventListener('input', updatePreviewFromInputs);
         });
         
-        // Initial render
-        renderARPreview();
+        // Initial resize and render - met delay voor DOM stabiliteit
+        setTimeout(() => {
+            resizePreviewCanvas();
+            renderARPreview();
+        }, 100);
+        
+        // Re-render wanneer container zichtbaar wordt (bij resize)
+        window.addEventListener('resize', resizePreviewCanvas);
     }
 }
 
 function resizePreviewCanvas() {
     if (!previewCanvas) return;
     const container = previewCanvas.parentElement;
-    previewCanvas.width = container.clientWidth;
-    previewCanvas.height = container.clientHeight - 30; // minus header
+    if (!container) return;
+    
+    // Gebruik minimum sizes als container nog niet gerenderd is
+    const containerWidth = container.clientWidth || 200;
+    const containerHeight = container.clientHeight || 250;
+    
+    previewCanvas.width = containerWidth;
+    previewCanvas.height = Math.max(containerHeight - 30, 100); // minus header, min 100px
     renderARPreview();
 }
 
@@ -1502,24 +1514,69 @@ function setupFilePreview() {
     // AR Layer inputs handlers (8 layers)
     for (let i = 1; i <= 8; i++) {
         const layerInput = document.getElementById(`layer-${i}-image`);
+        const glbInput = document.getElementById(`layer-${i}-glb`);
+        const audioInput = document.getElementById(`layer-${i}-audio`);
+        
+        // Helper functie om layer status badge te updaten
+        const updateLayerStatus = (layerNum) => {
+            const statusBadge = document.getElementById(`layer-${layerNum}-status`);
+            if (!statusBadge) return;
+            
+            // Check of er enig bestand is geselecteerd
+            const hasMedia = currentFiles.layers[layerNum];
+            const hasGlb = currentFiles.layerGlbs && currentFiles.layerGlbs[layerNum];
+            const hasAudio = currentFiles.layerAudios && currentFiles.layerAudios[layerNum];
+            
+            if (hasMedia || hasGlb || hasAudio) {
+                statusBadge.textContent = 'GESELECTEERD';
+                statusBadge.classList.add('active');
+            } else {
+                statusBadge.textContent = 'LEEG';
+                statusBadge.classList.remove('active');
+            }
+        };
+        
         if (layerInput) {
             layerInput.onchange = (e) => {
                 const file = e.target.files[0];
-                const statusBadge = document.getElementById(`layer-${i}-status`);
-                
                 if (file) {
                     currentFiles.layers[i] = file;
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Geselecteerd';
-                        statusBadge.classList.add('active');
-                    }
                 } else {
                     delete currentFiles.layers[i];
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Leeg';
-                        statusBadge.classList.remove('active');
-                    }
                 }
+                updateLayerStatus(i);
+                updateFileSizeDisplay();
+            };
+        }
+        
+        if (glbInput) {
+            // Init layerGlbs object if needed
+            if (!currentFiles.layerGlbs) currentFiles.layerGlbs = {};
+            
+            glbInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    currentFiles.layerGlbs[i] = file;
+                } else {
+                    delete currentFiles.layerGlbs[i];
+                }
+                updateLayerStatus(i);
+                updateFileSizeDisplay();
+            };
+        }
+        
+        if (audioInput) {
+            // Init layerAudios object if needed
+            if (!currentFiles.layerAudios) currentFiles.layerAudios = {};
+            
+            audioInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    currentFiles.layerAudios[i] = file;
+                } else {
+                    delete currentFiles.layerAudios[i];
+                }
+                updateLayerStatus(i);
                 updateFileSizeDisplay();
             };
         }
