@@ -1891,8 +1891,8 @@ function buildLayersHTML(poster) {
                 const glbScale = parseFloat(layerData.scale) || 1.0;
                 const glbRotZ = parseFloat(layerData.rot_z) || 0;
                 
-                // Opmerking: we behouden de automatische rotatie-animatie, 
-                // maar passen nu wel de basis parameters toe.
+                // Opmerking: we gebruiken nu de geconfigureerde animatie parameters
+                // in plaats van een hardcoded rotatie.
                 layersHTML += `
                     <a-entity
                         id="ar-glb-model-${i}"
@@ -1901,7 +1901,7 @@ function buildLayersHTML(poster) {
                         position="${glbPosX} ${glbPosY} ${glbPosZ}"
                         scale="${glbScale} ${glbScale} ${glbScale}"
                         rotation="0 0 ${glbRotZ}"
-                        animation__rotate="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear;"
+                        ${animationStr}
                         data-clickable="true"
                         data-layer="${i}"
                     ></a-entity>`;
