@@ -673,6 +673,9 @@ function loadChunkScene(chunkIndex) {
             device-orientation-permission-ui="enabled: false">
             
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+            <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
+            <a-light type="directional" color="#FFF" intensity="0.8" position="-0.5 1 1"></a-light>
             
             ${entitiesHTML}
         </a-scene>
