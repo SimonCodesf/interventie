@@ -1616,7 +1616,13 @@ async function loadAdminPosters() {
 async function deletePoster(posterId) {
     console.log('[Delete] deletePoster called with ID:', posterId);
     
-    if (!confirm('Weet je zeker dat je deze poster wilt verwijderen?')) {
+    // Gebruik custom confirm modal in plaats van native confirm()
+    const confirmed = await showConfirmModal(
+        'POSTER VERWIJDEREN',
+        'Weet je zeker dat je deze poster wilt verwijderen? Dit kan niet ongedaan worden gemaakt.'
+    );
+    
+    if (!confirmed) {
         console.log('[Delete] User cancelled');
         return;
     }
@@ -1661,6 +1667,45 @@ async function deletePoster(posterId) {
         alert('Kon poster niet verwijderen. Controleer of de server draait.');
     }
 }
+
+// Custom confirm modal (vervangt native confirm() die geblokkeerd kan worden)
+function showConfirmModal(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const titleEl = document.getElementById('confirm-title');
+        const messageEl = document.getElementById('confirm-message');
+        const yesBtn = document.getElementById('confirm-yes');
+        
+        if (!modal) {
+            // Fallback naar native confirm als modal niet bestaat
+            resolve(confirm(message));
+            return;
+        }
+        
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        modal.style.display = 'block';
+        
+        // Store resolve function for buttons
+        window._confirmResolve = resolve;
+        
+        yesBtn.onclick = () => {
+            closeConfirmModal(true);
+        };
+    });
+}
+
+function closeConfirmModal(result) {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    if (window._confirmResolve) {
+        window._confirmResolve(result);
+        window._confirmResolve = null;
+    }
+}
+window.closeConfirmModal = closeConfirmModal;
 
 // Formatteer datum
 function formatDate(dateString) {

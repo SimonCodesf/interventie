@@ -353,6 +353,23 @@
         </div>
     </div>
 
-    <script src="admin.js?v=3.2"></script>
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; height: auto; margin: 20vh auto;">
+            <div class="modal-header">
+                <h2 id="confirm-title">BEVESTIGEN</h2>
+                <span class="close-modal" onclick="closeConfirmModal(false)">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 20px; flex-direction: column;">
+                <p id="confirm-message" style="color: #fff; font-family: 'Roboto Mono', monospace; font-size: 0.75rem; margin-bottom: 20px;">Weet je het zeker?</p>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="confirm-yes" class="btn btn-primary" style="flex: 1;">JA, VERWIJDER</button>
+                    <button type="button" id="confirm-no" class="btn terminal-btn-danger" style="flex: 1;" onclick="closeConfirmModal(false)">ANNULEREN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js?v=3.3"></script>
 </body>
 </html>
