@@ -1898,26 +1898,26 @@ function buildLayersHTML(poster) {
             if (layerData && layerData.glb_model) {
                 const glbPath = `uploads/ar-layers/${layerData.glb_model}`;
                 
-                // Positioneer GLB exact volgens layer parameters (zonder offsets)
-                // Gebruik de eerder geëxtraheerde base variabels (posX, posY, baseScale etc)
-                // baseZ is de veilige Z-waarde (0.1 + layer_index)
-                
-                // Als gebruiker expliciet Z=0 heeft ingesteld, proberen we dat te respecteren,
-                // maar baseZ is veiliger voor zichtbaarheid.
-                // We gebruiken baseZ voor consistentie met de image layer.
+                // Positioneer GLB exact volgens layer parameters
                 const glbPosX = posX;
                 const glbPosY = posY;
                 const glbPosZ = baseZ; 
                 
-                // Gebruik dezelfde rotatie als image layer
+                // Rotatie voor GLB (+ extra -90 graden op X om model rechtop te zetten indien nodig)
                 const glbRotX = rotX;
                 const glbRotY = rotY;
                 const glbRotZ = rotZ;
                 
-                // Gebruik dezelfde scale als image layer
-                const glbScale = baseScale;
+                // GLB modellen hebben vaak een kleine intrinsieke grootte
+                // We gebruiken een multiplier om ze zichtbaar te maken op AR poster schaal
+                // De gebruiker's scale (baseScale) wordt hiermee vermenigvuldigd
+                const GLB_SCALE_MULTIPLIER = 0.5; // GLB modellen ~50cm basis bij scale=1
+                const glbScale = baseScale * GLB_SCALE_MULTIPLIER;
                 
-                // Voeg ook user-defined animatie toe (animationStr is al berekend)
+                console.log(`[GLB] Laag ${i}: ${layerData.glb_model}`);
+                console.log(`[GLB] Position: (${glbPosX.toFixed(3)}, ${glbPosY.toFixed(3)}, ${glbPosZ.toFixed(3)})`);
+                console.log(`[GLB] Scale: ${baseScale} * ${GLB_SCALE_MULTIPLIER} = ${glbScale.toFixed(3)}`);
+                console.log(`[GLB] Rotation: (${glbRotX}, ${glbRotY}, ${glbRotZ})`);
                 
                 layersHTML += `
                     <a-entity
@@ -1931,7 +1931,20 @@ function buildLayersHTML(poster) {
                         data-clickable="true"
                         data-layer="${i}"
                     ></a-entity>`;
-                console.log(` GLB model toegevoegd voor laag ${i}:`, glbPath, `Pos: ${glbPosX} ${glbPosY} ${glbPosZ}, Scale: ${glbScale}`);
+                
+                // Voeg event listeners toe om model loading te monitoren (na DOM insertion)
+                // Dit wordt gedaan via een setTimeout om te wachten tot de entity bestaat
+                setTimeout(() => {
+                    const glbEntity = document.getElementById(`ar-glb-model-${i}`);
+                    if (glbEntity) {
+                        glbEntity.addEventListener('model-loaded', () => {
+                            console.log(`[GLB] Model ${i} succesvol geladen:`, glbPath);
+                        });
+                        glbEntity.addEventListener('model-error', (e) => {
+                            console.error(`[GLB] Model ${i} laden mislukt:`, glbPath, e.detail);
+                        });
+                    }
+                }, 100);
             }
         }
     }
