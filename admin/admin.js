@@ -700,23 +700,33 @@ function updatePreviewFromInputs() {
         
         // Check bestaand bestand via opgeslagen poster data
         let existingFilename = null;
+        let existingGlbModel = null;
         if (isEditMode && currentPosterData?.layers) {
             const layerKey = `layer_${i}`;
-            const layerData = currentPosterData.layers[layerKey];
-            if (layerData?.filename) {
-                existingFilename = layerData.filename;
+            const layerDataFromPoster = currentPosterData.layers[layerKey];
+            if (layerDataFromPoster?.filename) {
+                existingFilename = layerDataFromPoster.filename;
+            }
+            if (layerDataFromPoster?.glb_model) {
+                existingGlbModel = layerDataFromPoster.glb_model;
             }
         }
         
+        // Check voor nieuwe GLB upload
+        const glbInput = document.getElementById(`${prefix}layer-${i}-glb`);
+        const hasGlbFile = glbInput?.files?.length > 0;
+        
         // ALLEEN layers met content tonen in preview
-        if (hasFile || existingFilename) {
+        if (hasFile || existingFilename || hasGlbFile || existingGlbModel) {
             const layerData = { 
                 posX, posY, posZ, scale, rotX, rotY, rotZ, 
                 hasContent: true,
                 imageSrc: null,
                 imageLoaded: false,
                 imageEl: null,
-                isVideo: false
+                isVideo: false,
+                isGlb: false,
+                glbFilename: null
             };
             
             // Laad afbeelding voor preview
@@ -770,6 +780,13 @@ function updatePreviewFromInputs() {
                     // Gebruik filename direct
                     img.src = `../uploads/ar-layers/${existingFilename}`;
                 }
+            }
+            
+            // GLB 3D model check - toon placeholder in preview
+            if (hasGlbFile || existingGlbModel) {
+                layerData.isGlb = true;
+                layerData.glbFilename = existingGlbModel || (hasGlbFile ? glbInput.files[0].name : null);
+                layerData.imageLoaded = true; // Markeer als "geladen" zodat preview rendert
             }
             
             previewLayers[i] = layerData;
@@ -878,8 +895,8 @@ function renderARPreview() {
         ctx.save();
         ctx.translate(x, y);
         
-        // 3D models and side/top views: draw on canvas
-        const is3DModel = data.has3DModel && !data.imageEl && !data.isVideo;
+        // GLB 3D models: toon altijd als placeholder met nummer
+        const is3DModel = data.isGlb;
         
         if (activeView !== 'front' || is3DModel) {
             let drawW = layerSize, drawH = layerSize;
@@ -890,17 +907,44 @@ function renderARPreview() {
             } else if (activeView === 'top') {
                 drawH = 4;
             } else if (is3DModel) {
-                // Front view 3D model
-                const size = 24;
+                // Front view 3D model placeholder - duidelijke kubus indicatie
+                const size = Math.max(40, layerSize * 0.3); // Schaal mee met layer grootte
+                
+                // Achtergrond vierkant met 3D effect
                 ctx.fillStyle = color;
+                ctx.globalAlpha = 0.3;
+                ctx.fillRect(-size/2, -size/2, size, size);
+                ctx.globalAlpha = 1;
+                
+                // Border
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-size/2, -size/2, size, size);
+                
+                // 3D kubus lijnen (isometrisch effect)
+                const offset = size * 0.2;
                 ctx.beginPath();
-                ctx.arc(0, 0, size/2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 10px Roboto Mono';
+                ctx.moveTo(-size/2, -size/2);
+                ctx.lineTo(-size/2 + offset, -size/2 - offset);
+                ctx.lineTo(size/2 + offset, -size/2 - offset);
+                ctx.lineTo(size/2, -size/2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(size/2 + offset, -size/2 - offset);
+                ctx.lineTo(size/2 + offset, size/2 - offset);
+                ctx.lineTo(size/2, size/2);
+                ctx.stroke();
+                
+                // "3D" label
+                ctx.fillStyle = color;
+                ctx.font = 'bold 11px Roboto Mono';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(layerNum, 0, 0);
+                ctx.fillText('3D', 0, -4);
+                
+                // Laagnummer
+                ctx.font = 'bold 9px Roboto Mono';
+                ctx.fillText(`L${layerNum}`, 0, 8);
             }
             
             if (!is3DModel) {
