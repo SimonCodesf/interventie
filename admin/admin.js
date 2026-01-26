@@ -351,6 +351,8 @@ let sessionTimer = null;
 let previewLayers = {};
 let previewCanvas = null;
 let previewCtx = null;
+let arPreviewWindow = null;
+let arPreviewZIndex = 1000;
 
 // Check if already logged in
 document.addEventListener('DOMContentLoaded', () => {
@@ -401,96 +403,273 @@ function setupLayerAnimationToggles() {
     }
 }
 
-// Setup AR Preview canvas
+// Setup AR Preview - Nu als popup window
 function setupARPreview() {
-    // Check if preview container exists (will be created in layers panel header)
-    let container = document.getElementById('ar-preview-container');
-    if (!container) {
-        // Create preview container at top of layers panel
-        const layersContainer = document.getElementById('layers-container');
-        if (layersContainer) {
-            const previewHTML = `
-                <div id="ar-preview-container">
-                    <div id="ar-preview-header">
-                        <span>AR PREVIEW</span>
-                        <div class="preview-controls">
-                            <button type="button" class="preview-btn active" data-view="front">FRONT</button>
-                            <button type="button" class="preview-btn" data-view="side">SIDE</button>
-                            <button type="button" class="preview-btn" data-view="top">TOP</button>
-                        </div>
-                    </div>
-                    <canvas id="ar-preview-canvas"></canvas>
-                </div>
-            `;
-            layersContainer.insertAdjacentHTML('beforebegin', previewHTML);
-            container = document.getElementById('ar-preview-container');
-        }
+    // Verwijder oude static preview als die bestaat
+    const oldContainer = document.getElementById('ar-preview-container');
+    if (oldContainer) oldContainer.remove();
+    
+    // Voeg preview knop toe aan layers panel header
+    const layersPanelHeader = document.querySelector('#layers-container')?.closest('.panel-box')?.querySelector('.panel-header');
+    if (layersPanelHeader && !layersPanelHeader.querySelector('.preview-toggle-btn')) {
+        const previewBtn = document.createElement('button');
+        previewBtn.type = 'button';
+        previewBtn.className = 'preview-toggle-btn';
+        previewBtn.textContent = 'PREVIEW';
+        previewBtn.onclick = toggleARPreviewWindow;
+        layersPanelHeader.appendChild(previewBtn);
     }
     
+    // Listen to all transform inputs voor live updates
+    document.querySelectorAll('.mini-input input[data-layer]').forEach(input => {
+        input.addEventListener('input', updatePreviewFromInputs);
+    });
+}
+
+// Toggle AR Preview Window
+function toggleARPreviewWindow() {
+    if (arPreviewWindow && document.body.contains(arPreviewWindow)) {
+        closeARPreviewWindow();
+    } else {
+        openARPreviewWindow();
+    }
+}
+
+// Open AR Preview Window
+function openARPreviewWindow() {
+    if (arPreviewWindow && document.body.contains(arPreviewWindow)) return;
+    
+    // Create window
+    const windowWidth = 350;
+    const windowHeight = 400;
+    const posX = window.innerWidth - windowWidth - 50;
+    const posY = 100;
+    
+    arPreviewWindow = document.createElement('div');
+    arPreviewWindow.id = 'ar-preview-window';
+    arPreviewWindow.className = 'ar-preview-window';
+    arPreviewWindow.style.cssText = `
+        position: fixed;
+        left: ${posX}px;
+        top: ${posY}px;
+        width: ${windowWidth}px;
+        height: ${windowHeight}px;
+        z-index: ${++arPreviewZIndex};
+    `;
+    
+    arPreviewWindow.innerHTML = `
+        <div class="ar-window-header">
+            <span class="ar-window-title">┌─[ AR PREVIEW ]─┐</span>
+            <div class="ar-window-controls">
+                <button type="button" class="ar-win-btn ar-win-close" title="Sluiten">×</button>
+            </div>
+        </div>
+        <div class="ar-window-content">
+            <div class="ar-view-controls">
+                <button type="button" class="ar-view-btn active" data-view="front">FRONT</button>
+                <button type="button" class="ar-view-btn" data-view="side">SIDE</button>
+                <button type="button" class="ar-view-btn" data-view="top">TOP</button>
+            </div>
+            <canvas id="ar-preview-canvas"></canvas>
+            <div class="ar-preview-legend">
+                <span><span class="legend-dot" style="background:#fff"></span>L1</span>
+                <span><span class="legend-dot" style="background:#f00"></span>L2</span>
+                <span><span class="legend-dot" style="background:#0f0"></span>L3</span>
+                <span><span class="legend-dot" style="background:#00f"></span>L4</span>
+            </div>
+        </div>
+        <div class="ar-resize-handle ar-resize-se"></div>
+        <div class="ar-resize-handle ar-resize-sw"></div>
+        <div class="ar-resize-handle ar-resize-ne"></div>
+        <div class="ar-resize-handle ar-resize-nw"></div>
+    `;
+    
+    document.body.appendChild(arPreviewWindow);
+    
+    // Setup interactions
+    setupARWindowDrag(arPreviewWindow);
+    setupARWindowResize(arPreviewWindow);
+    setupARWindowControls(arPreviewWindow);
+    
+    // Setup canvas
     previewCanvas = document.getElementById('ar-preview-canvas');
     if (previewCanvas) {
         previewCtx = previewCanvas.getContext('2d');
-        
-        // Setup view buttons
-        document.querySelectorAll('.preview-btn[data-view]').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.preview-btn[data-view]').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                renderARPreview();
-            });
-        });
-        
-        // Listen to all transform inputs
-        document.querySelectorAll('.mini-input input[data-layer]').forEach(input => {
-            input.addEventListener('input', updatePreviewFromInputs);
-        });
-        
-        // Initial resize and render - met delay voor DOM stabiliteit
-        setTimeout(() => {
-            resizePreviewCanvas();
-            renderARPreview();
-        }, 100);
-        
-        // Re-render wanneer container zichtbaar wordt (bij resize)
-        window.addEventListener('resize', resizePreviewCanvas);
+        resizePreviewCanvas();
+        updatePreviewFromInputs();
     }
+}
+
+// Close AR Preview Window
+function closeARPreviewWindow() {
+    if (arPreviewWindow) {
+        arPreviewWindow.remove();
+        arPreviewWindow = null;
+        previewCanvas = null;
+        previewCtx = null;
+    }
+}
+window.closeARPreviewWindow = closeARPreviewWindow;
+
+// Setup AR Window Dragging
+function setupARWindowDrag(windowEl) {
+    const header = windowEl.querySelector('.ar-window-header');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    
+    header.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('ar-win-btn')) return;
+        
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = windowEl.offsetLeft;
+        startTop = windowEl.offsetTop;
+        
+        windowEl.style.zIndex = ++arPreviewZIndex;
+        windowEl.classList.add('dragging');
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        windowEl.style.left = `${startLeft + dx}px`;
+        windowEl.style.top = `${startTop + dy}px`;
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            windowEl.classList.remove('dragging');
+        }
+    });
+}
+
+// Setup AR Window Resizing
+function setupARWindowResize(windowEl) {
+    const handles = windowEl.querySelectorAll('.ar-resize-handle');
+    let isResizing = false;
+    let currentHandle = null;
+    let startX, startY, startWidth, startHeight, startLeft, startTop;
+    
+    const minWidth = 250;
+    const minHeight = 300;
+    
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            currentHandle = handle;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = windowEl.offsetWidth;
+            startHeight = windowEl.offsetHeight;
+            startLeft = windowEl.offsetLeft;
+            startTop = windowEl.offsetTop;
+            
+            windowEl.style.zIndex = ++arPreviewZIndex;
+            windowEl.classList.add('resizing');
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing || !currentHandle) return;
+        
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        if (currentHandle.classList.contains('ar-resize-se') || currentHandle.classList.contains('ar-resize-ne')) {
+            windowEl.style.width = `${Math.max(minWidth, startWidth + dx)}px`;
+        }
+        if (currentHandle.classList.contains('ar-resize-sw') || currentHandle.classList.contains('ar-resize-nw')) {
+            const newWidth = Math.max(minWidth, startWidth - dx);
+            windowEl.style.width = `${newWidth}px`;
+            windowEl.style.left = `${startLeft + (startWidth - newWidth)}px`;
+        }
+        if (currentHandle.classList.contains('ar-resize-se') || currentHandle.classList.contains('ar-resize-sw')) {
+            windowEl.style.height = `${Math.max(minHeight, startHeight + dy)}px`;
+        }
+        if (currentHandle.classList.contains('ar-resize-ne') || currentHandle.classList.contains('ar-resize-nw')) {
+            const newHeight = Math.max(minHeight, startHeight - dy);
+            windowEl.style.height = `${newHeight}px`;
+            windowEl.style.top = `${startTop + (startHeight - newHeight)}px`;
+        }
+        
+        resizePreviewCanvas();
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            currentHandle = null;
+            windowEl.classList.remove('resizing');
+        }
+    });
+}
+
+// Setup AR Window Controls
+function setupARWindowControls(windowEl) {
+    // Close button
+    const closeBtn = windowEl.querySelector('.ar-win-close');
+    if (closeBtn) {
+        closeBtn.onclick = closeARPreviewWindow;
+    }
+    
+    // View buttons
+    windowEl.querySelectorAll('.ar-view-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            windowEl.querySelectorAll('.ar-view-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            renderARPreview();
+        });
+    });
 }
 
 function resizePreviewCanvas() {
     if (!previewCanvas) return;
-    const container = previewCanvas.parentElement;
-    if (!container) return;
+    const content = previewCanvas.parentElement;
+    if (!content) return;
     
-    // Gebruik minimum sizes als container nog niet gerenderd is
-    const containerWidth = container.clientWidth || 200;
-    const containerHeight = container.clientHeight || 250;
+    const width = content.clientWidth - 20; // padding
+    const height = content.clientHeight - 80; // view controls + legend
     
-    previewCanvas.width = containerWidth;
-    previewCanvas.height = Math.max(containerHeight - 30, 100); // minus header, min 100px
+    previewCanvas.width = Math.max(width, 200);
+    previewCanvas.height = Math.max(height, 150);
     renderARPreview();
 }
 
 function updatePreviewFromInputs() {
-    // Gather all layer data from inputs
+    // Gather all layer data from inputs (check both upload en edit forms)
     previewLayers = {};
+    const prefix = document.getElementById('edit-modal')?.style.display === 'block' ? 'edit-' : '';
+    
     for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
         const getVal = (id, def = 0) => {
             const el = document.getElementById(id);
             return el ? parseFloat(el.value) || def : def;
         };
         
-        const posX = getVal(`layer-${i}-pos-x`, 0);
-        const posY = getVal(`layer-${i}-pos-y`, 0);
-        const posZ = getVal(`layer-${i}-z`, 0);
-        const scale = getVal(`layer-${i}-scale`, 1);
-        const rotX = getVal(`layer-${i}-rot-x`, 0);
-        const rotY = getVal(`layer-${i}-rot-y`, 0);
-        const rotZ = getVal(`layer-${i}-rot-z`, 0);
+        const posX = getVal(`${prefix}layer-${i}-pos-x`, 0);
+        const posY = getVal(`${prefix}layer-${i}-pos-y`, 0);
+        const posZ = getVal(`${prefix}layer-${i}-z`, 0);
+        const scale = getVal(`${prefix}layer-${i}-scale`, 1);
+        const rotX = getVal(`${prefix}layer-${i}-rot-x`, 0);
+        const rotY = getVal(`${prefix}layer-${i}-rot-y`, 0);
+        const rotZ = getVal(`${prefix}layer-${i}-rot-z`, 0);
         
-        // Only add if there's any non-default value
-        if (posX !== 0 || posY !== 0 || posZ !== 0 || scale !== 1 || rotX !== 0 || rotY !== 0 || rotZ !== 0) {
-            previewLayers[i] = { posX, posY, posZ, scale, rotX, rotY, rotZ };
+        // Check of layer media heeft (file input of bestaand bestand)
+        const hasFile = document.getElementById(`${prefix}layer-${i}-image`)?.files?.length > 0;
+        const hasCurrent = document.getElementById(`${prefix}layer-${i}-current`)?.textContent?.includes('Huidig');
+        
+        // Voeg layer toe als er data is OF als er een bestand is
+        if (hasFile || hasCurrent || posX !== 0 || posY !== 0 || posZ !== 0 || scale !== 1) {
+            previewLayers[i] = { posX, posY, posZ, scale, rotX, rotY, rotZ, hasContent: hasFile || hasCurrent };
         }
     }
     renderARPreview();
@@ -502,16 +681,19 @@ function renderARPreview() {
     const ctx = previewCtx;
     const w = previewCanvas.width;
     const h = previewCanvas.height;
-    const activeView = document.querySelector('.preview-btn[data-view].active')?.dataset.view || 'front';
     
-    // Clear
-    ctx.fillStyle = '#000';
+    if (w <= 0 || h <= 0) return;
+    
+    const activeView = document.querySelector('.ar-view-btn.active')?.dataset.view || 'front';
+    
+    // Clear with dark background
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, w, h);
     
     // Draw grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
-    const gridSize = 20;
+    const gridSize = 25;
     for (let x = 0; x <= w; x += gridSize) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
     }
@@ -522,77 +704,91 @@ function renderARPreview() {
     // Center point
     const cx = w / 2;
     const cy = h / 2;
-    const scale = 100; // Pixels per meter
+    const pxPerMeter = Math.min(w, h) * 0.6; // Scale based on canvas size
     
-    // Draw poster base (layer 0)
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    // Draw poster base (represents the AR target)
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     ctx.lineWidth = 2;
-    const posterW = 1 * scale; // 1m wide
-    const posterH = 1.4 * scale; // 1.4m tall (A ratio)
+    const posterW = 1 * pxPerMeter * 0.8;
+    const posterH = 1.4 * pxPerMeter * 0.8;
     
     if (activeView === 'front') {
         ctx.fillRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
         ctx.strokeRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
+        // Label
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '10px Roboto Mono';
+        ctx.textAlign = 'center';
+        ctx.fillText('POSTER', cx, cy);
     } else if (activeView === 'side') {
-        // Side view: show as thin line
-        ctx.fillRect(cx - 2, cy - posterH/2, 4, posterH);
-        ctx.strokeRect(cx - 2, cy - posterH/2, 4, posterH);
+        ctx.fillRect(cx - 3, cy - posterH/2, 6, posterH);
+        ctx.strokeRect(cx - 3, cy - posterH/2, 6, posterH);
     } else if (activeView === 'top') {
-        // Top view: show as thin line
-        ctx.fillRect(cx - posterW/2, cy - 2, posterW, 4);
-        ctx.strokeRect(cx - posterW/2, cy - 2, posterW, 4);
+        ctx.fillRect(cx - posterW/2, cy - 3, posterW, 6);
+        ctx.strokeRect(cx - posterW/2, cy - 3, posterW, 6);
     }
     
     // Draw layers
-    const colors = ['#fff', '#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#f80'];
+    const colors = ['#ffffff', '#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff', '#ff8844'];
+    
     Object.entries(previewLayers).forEach(([layerNum, data]) => {
-        const color = colors[parseInt(layerNum) - 1] || '#fff';
+        const idx = parseInt(layerNum) - 1;
+        const color = colors[idx] || '#fff';
+        
+        let x, y;
+        const size = 16 * Math.max(0.5, data.scale);
+        
+        if (activeView === 'front') {
+            x = cx + data.posX * pxPerMeter;
+            y = cy - data.posY * pxPerMeter;
+        } else if (activeView === 'side') {
+            x = cx + data.posZ * pxPerMeter;
+            y = cy - data.posY * pxPerMeter;
+        } else if (activeView === 'top') {
+            x = cx + data.posX * pxPerMeter;
+            y = cy - data.posZ * pxPerMeter;
+        }
+        
+        // Draw layer marker
         ctx.fillStyle = color;
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         
-        let x, y, size;
-        size = 20 * data.scale;
-        
-        if (activeView === 'front') {
-            x = cx + data.posX * scale;
-            y = cy - data.posY * scale; // Y is inverted in canvas
-        } else if (activeView === 'side') {
-            x = cx + data.posZ * scale; // Z becomes horizontal
-            y = cy - data.posY * scale;
-        } else if (activeView === 'top') {
-            x = cx + data.posX * scale;
-            y = cy - data.posZ * scale; // Z becomes vertical
+        if (data.hasContent) {
+            // Filled circle for layers with content
+            ctx.beginPath();
+            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Ring for layers without content
+            ctx.beginPath();
+            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            ctx.stroke();
         }
         
-        // Draw layer indicator
-        ctx.beginPath();
-        ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Label
-        ctx.font = '10px Roboto Mono';
-        ctx.fillStyle = '#000';
+        // Layer number
+        ctx.fillStyle = data.hasContent ? '#000' : color;
+        ctx.font = 'bold 9px Roboto Mono';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(layerNum, x, y);
     });
     
-    // Draw axis labels
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    // Draw axis indicator
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = '9px Roboto Mono';
     ctx.textAlign = 'left';
-    if (activeView === 'front') {
-        ctx.fillText('X →', 10, h - 20);
-        ctx.fillText('Y ↑', 10, h - 10);
-    } else if (activeView === 'side') {
-        ctx.fillText('Z →', 10, h - 20);
-        ctx.fillText('Y ↑', 10, h - 10);
-    } else if (activeView === 'top') {
-        ctx.fillText('X →', 10, h - 20);
-        ctx.fillText('Z ↑', 10, h - 10);
-    }
+    ctx.textBaseline = 'bottom';
+    
+    const axisLabels = {
+        front: ['X →', 'Y ↑'],
+        side: ['Z →', 'Y ↑'],
+        top: ['X →', 'Z ↑']
+    };
+    
+    ctx.fillText(axisLabels[activeView][0], 8, h - 8);
+    ctx.fillText(axisLabels[activeView][1], 8, h - 20);
 }
 
 // ========== Credits Sectie - Dynamische rijen ==========

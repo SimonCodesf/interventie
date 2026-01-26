@@ -789,54 +789,191 @@ input[type="file"]::file-selector-button:hover {
     font-family: 'Roboto Mono', monospace;
 }
 
-/* AR Preview Canvas */
-#ar-preview-container {
-    position: sticky;
-    top: 0;
-    background: #0a0a0a;
+/* Preview Toggle Button in Panel Header */
+.preview-toggle-btn {
+    background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.3);
-    margin-bottom: 10px;
-    aspect-ratio: 1 / 1.4;
-    max-height: 300px;
-    display: flex;
-    flex-direction: column;
+    color: #fff;
+    padding: 3px 8px;
+    font-size: 0.55rem;
+    cursor: pointer;
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    transition: all 0.2s;
 }
 
-#ar-preview-header {
+.preview-toggle-btn:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* AR Preview Floating Window */
+.ar-preview-window {
+    background: #000;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Roboto Mono', monospace;
+    user-select: none;
+}
+
+.ar-preview-window.dragging,
+.ar-preview-window.resizing {
+    opacity: 0.9;
+}
+
+.ar-window-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 6px 10px;
-    background: rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    font-family: 'Roboto Mono', monospace;
+    background: #fff;
+    color: #000;
+    cursor: move;
+    flex-shrink: 0;
+}
+
+.ar-window-title {
     font-size: 0.65rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.ar-window-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.ar-win-btn {
+    background: none;
+    border: 1px solid #000;
+    color: #000;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.ar-win-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+.ar-window-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.ar-view-controls {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.ar-view-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.5);
+    padding: 4px 10px;
+    font-size: 0.55rem;
+    cursor: pointer;
+    font-family: 'Roboto Mono', monospace;
+    flex: 1;
+    transition: all 0.15s;
+}
+
+.ar-view-btn:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+.ar-view-btn.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
 }
 
 #ar-preview-canvas {
     flex: 1;
     width: 100%;
-    background: #000;
+    background: #0a0a0a;
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
-.preview-controls {
+.ar-preview-legend {
     display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+}
+
+.ar-preview-legend span {
+    display: flex;
+    align-items: center;
     gap: 4px;
 }
 
-.preview-btn {
-    background: none;
-    border: 1px solid rgba(255,255,255,0.3);
-    color: rgba(255,255,255,0.5);
-    padding: 2px 6px;
-    font-size: 0.55rem;
-    cursor: pointer;
-    font-family: 'Roboto Mono', monospace;
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
-.preview-btn:hover, .preview-btn.active {
-    background: #fff;
-    color: #000;
+/* Resize Handles for AR Window */
+.ar-resize-handle {
+    position: absolute;
+    background: transparent;
+}
+
+.ar-resize-se {
+    right: 0;
+    bottom: 0;
+    width: 15px;
+    height: 15px;
+    cursor: se-resize;
+}
+
+.ar-resize-sw {
+    left: 0;
+    bottom: 0;
+    width: 15px;
+    height: 15px;
+    cursor: sw-resize;
+}
+
+.ar-resize-ne {
+    right: 0;
+    top: 25px;
+    width: 15px;
+    height: 15px;
+    cursor: ne-resize;
+}
+
+.ar-resize-nw {
+    left: 0;
+    top: 25px;
+    width: 15px;
+    height: 15px;
+    cursor: nw-resize;
+}
+
+/* Old static preview - deprecated, keep for fallback */
+#ar-preview-container {
+    display: none;
 }
 
 /* Login Screen */
