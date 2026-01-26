@@ -484,7 +484,10 @@ function openARPreviewWindow() {
                 <button type="button" class="ar-view-btn" data-view="side">SIDE</button>
                 <button type="button" class="ar-view-btn" data-view="top">TOP</button>
             </div>
-            <canvas id="ar-preview-canvas"></canvas>
+            <div id="ar-canvas-wrapper" style="position: relative; flex: 1; min-height: 0; overflow: hidden; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.2);">
+                <canvas id="ar-preview-canvas" style="display: block; width: 100%; height: 100%;"></canvas>
+                <div id="ar-preview-overlays" style="position: absolute; inset: 0; pointer-events: none; overflow: hidden;"></div>
+            </div>
             <div class="ar-preview-legend">
                 <span><span class="legend-dot" style="background:#fff"></span>L1</span>
                 <span><span class="legend-dot" style="background:#f00"></span>L2</span>
@@ -517,6 +520,11 @@ function openARPreviewWindow() {
 // Close AR Preview Window
 function closeARPreviewWindow() {
     if (arPreviewWindow) {
+        // Stop any running animations
+        if (typeof cancelAnimationFrame === 'function' && window._arPreviewAnimationId) {
+            cancelAnimationFrame(window._arPreviewAnimationId);
+        }
+        
         arPreviewWindow.remove();
         arPreviewWindow = null;
         previewCanvas = null;
@@ -648,15 +656,19 @@ function setupARWindowControls(windowEl) {
 
 function resizePreviewCanvas() {
     if (!previewCanvas) return;
-    const content = previewCanvas.parentElement;
-    if (!content) return;
+    const wrapper = document.getElementById('ar-canvas-wrapper');
+    if (!wrapper) return;
     
-    const width = content.clientWidth - 20; // padding
-    const height = content.clientHeight - 80; // view controls + legend
+    // Canvas dimensions = wrapper dimensions (100% fill)
+    const width = wrapper.clientWidth;
+    const height = wrapper.clientHeight;
     
-    previewCanvas.width = Math.max(width, 200);
-    previewCanvas.height = Math.max(height, 150);
-    renderARPreview();
+    // Update internal resizing
+    if (previewCanvas.width !== width || previewCanvas.height !== height) {
+        previewCanvas.width = width;
+        previewCanvas.height = height;
+        renderARPreview();
+    }
 }
 
 function updatePreviewFromInputs() {
@@ -732,7 +744,8 @@ function updatePreviewFromInputs() {
                 }
             } else if (existingFilename) {
                 // Bestaand bestand - laad van server
-                const isVideo = existingFilename.endsWith('.mp4') || existingFilename.endsWith('.webm') || existingFilename.endsWith('.gif');
+                // Treat GIF as image so it animates in preview
+                const isVideo = existingFilename.endsWith('.mp4') || existingFilename.endsWith('.webm');
                 
                 if (isVideo) {
                     // Video - toon placeholder met play icoon
@@ -740,7 +753,7 @@ function updatePreviewFromInputs() {
                     layerData.imageLoaded = true;
                     layerData.filename = existingFilename;
                 } else {
-                    // Afbeelding - laad van server
+                    // Afbeelding (JPG, PNG, GIF) - laad van server
                     const img = new Image();
                     img.crossOrigin = 'anonymous';
                     img.onload = () => {
@@ -752,6 +765,9 @@ function updatePreviewFromInputs() {
                         console.warn('Kon afbeelding niet laden:', existingFilename);
                         layerData.imageLoaded = true; // Toon placeholder bij error
                     };
+                    // Cache buster voor GIFs om herstarten te forceren indien nodig, 
+                    // maar browser cache is meestal prima voor preview.
+                    // Gebruik filename direct
                     img.src = `../uploads/ar-layers/${existingFilename}`;
                 }
             }
@@ -816,11 +832,14 @@ function renderARPreview() {
         ctx.strokeRect(cx - posterW/2, cy - 3, posterW, 6);
     }
     
+    // Update overlays
+    const overlayContainer = document.getElementById('ar-preview-overlays');
+    if (overlayContainer) overlayContainer.innerHTML = '';
+    
     // Check of er layers zijn met content
     const layersWithContent = Object.entries(previewLayers).filter(([_, data]) => data.hasContent);
     
     if (layersWithContent.length === 0) {
-        // Geen layers met content - toon instructie
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.font = '11px Roboto Mono';
         ctx.textAlign = 'center';
@@ -836,8 +855,6 @@ function renderARPreview() {
         const color = colors[idx] || '#fff';
         
         let x, y;
-        // Scale 1 = poster grootte (poster is de referentie)
-        // Layer met scale 1 is even groot als de poster/marker
         const layerW = posterW * data.scale;
         const layerH = posterH * data.scale;
         
@@ -852,119 +869,132 @@ function renderARPreview() {
             y = cy - data.posZ * pxPerMeter;
         }
         
+        // 1. Draw helper badge/placeholder on Canvas
         ctx.save();
         ctx.translate(x, y);
         
-        // Check of het een 3D model is (geen afbeelding, geen video)
+        // 3D models and side/top views: draw on canvas
         const is3DModel = data.has3DModel && !data.imageEl && !data.isVideo;
         
-        // Teken afbeelding als die geladen is
-        if (data.imageLoaded && data.imageEl && !is3DModel) {
-            const img = data.imageEl;
-            const aspectRatio = img.width / img.height;
+        if (activeView !== 'front' || is3DModel) {
+            let drawW = layerW, drawH = layerH;
             
-            let drawW, drawH;
-            if (aspectRatio > 1) {
-                // Landscape - fit width to layer size
-                drawW = layerW;
-                drawH = layerW / aspectRatio;
-            } else {
-                // Portrait - fit height to layer size
-                drawH = layerH;
-                drawW = layerH * aspectRatio;
-            }
-            
-            // Side en top view: toon als dunne lijn
-            if (activeView === 'side') {
+            // Side and top view: thin lines
+            if (activeView === 'side') { 
                 drawW = 4;
             } else if (activeView === 'top') {
                 drawH = 4;
-            }
-            
-            // Teken afbeelding (geen glow)
-            ctx.drawImage(img, -drawW/2, -drawH/2, drawW, drawH);
-            
-            // Teken border
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-drawW/2, -drawH/2, drawW, drawH);
-            
-            // Layer nummer badge
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(-drawW/2 + 10, -drawH/2 + 10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 9px Roboto Mono';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(layerNum, -drawW/2 + 10, -drawH/2 + 10);
-        } else if (data.isVideo && data.imageLoaded) {
-            // Video placeholder - toon als rechthoek met play icoon
-            let drawW = layerW;
-            let drawH = layerW * 0.6; // 16:9 aspect
-            
-            // Side en top view: toon als dunne lijn
-            if (activeView === 'side') {
-                drawW = 4;
-            } else if (activeView === 'top') {
-                drawH = 4;
-            }
-            
-            // Teken video placeholder (geen glow)
-            ctx.fillStyle = color;
-            ctx.globalAlpha = 0.2;
-            ctx.fillRect(-drawW/2, -drawH/2, drawW, drawH);
-            ctx.globalAlpha = 1;
-            
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-drawW/2, -drawH/2, drawW, drawH);
-            
-            // Play icoon (alleen in front view)
-            if (activeView === 'front') {
+            } else if (is3DModel) {
+                // Front view 3D model
+                const size = 24;
                 ctx.fillStyle = color;
                 ctx.beginPath();
-                ctx.moveTo(-8, -10);
-                ctx.lineTo(-8, 10);
-                ctx.lineTo(10, 0);
-                ctx.closePath();
+                ctx.arc(0, 0, size/2, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 10px Roboto Mono';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(layerNum, 0, 0);
             }
             
-            // Layer nummer badge
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(-drawW/2 + 10, -drawH/2 + 10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 9px Roboto Mono';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(layerNum, -drawW/2 + 10, -drawH/2 + 10);
-        } else {
-            // 3D model of nog niet geladen - toon alleen nummer
-            const size = 24;
-            
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Layer number
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 10px Roboto Mono';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(layerNum, 0, 0);
+            if (!is3DModel) {
+                // Side/Top view lines
+                ctx.fillStyle = color;
+                ctx.fillRect(-drawW/2, -drawH/2, drawW, drawH);
+                
+                // Badge
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(-drawW/2 + 8, -drawH/2 + 8, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 7px Roboto Mono';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(layerNum, -drawW/2 + 8, -drawH/2 + 8);
+            }
         }
-        
         ctx.restore();
+        
+        // 2. Draw Images / GIFs / Video placeholders via DOM Overlays (only in FRONT view)
+        if (activeView === 'front' && !is3DModel && overlayContainer) {
+            let domW, domH;
+            
+            if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename)) {
+                
+                // Determine dimensions
+                if (data.imageEl) {
+                    const img = data.imageEl;
+                    const aspectRatio = img.width / img.height;
+                    if (aspectRatio > 1) {
+                        domW = layerW; domH = layerW / aspectRatio;
+                    } else {
+                        domH = layerH; domW = layerH * aspectRatio;
+                    }
+                } else if (data.isVideo) {
+                    // Video default 16:9
+                    domW = layerW; domH = layerW * 0.6;
+                }
+                
+                // Create Overlay Element
+                const el = document.createElement('div');
+                el.style.position = 'absolute';
+                el.style.left = `${x - domW/2}px`;
+                el.style.top = `${y - domH/2}px`;
+                el.style.width = `${domW}px`;
+                el.style.height = `${domH}px`;
+                el.style.zIndex = layerNum;
+                el.style.border = `2px solid ${color}`;
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+                
+                // Add Content
+                if (data.imageEl) {
+                    // Image or GIF
+                    const img = document.createElement('img');
+                    img.src = data.imageEl.src;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'contain';
+                    el.appendChild(img);
+                } else if (data.isVideo) {
+                    // Video Placeholder
+                    el.style.backgroundColor = `${color}33`; // 20% opacity hex
+                    const playIcon = document.createElement('div');
+                    playIcon.style.width = '0';
+                    playIcon.style.height = '0';
+                    playIcon.style.borderLeft = '10px solid ' + color;
+                    playIcon.style.borderTop = '6px solid transparent';
+                    playIcon.style.borderBottom = '6px solid transparent';
+                    el.appendChild(playIcon);
+                }
+                
+                // Badge
+                const badge = document.createElement('div');
+                badge.textContent = layerNum;
+                badge.style.position = 'absolute';
+                badge.style.top = '4px';
+                badge.style.left = '4px';
+                badge.style.width = '16px';
+                badge.style.height = '16px';
+                badge.style.borderRadius = '50%';
+                badge.style.backgroundColor = color;
+                badge.style.color = '#000';
+                badge.style.fontSize = '9px';
+                badge.style.fontWeight = 'bold';
+                badge.style.display = 'flex';
+                badge.style.alignItems = 'center';
+                badge.style.justifyContent = 'center';
+                el.appendChild(badge);
+                
+                overlayContainer.appendChild(el);
+            }
+        }
     });
-    
-    // Draw axis indicator
+
+    // Draw axis indicator (on canvas)
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = '9px Roboto Mono';
     ctx.textAlign = 'left';
@@ -2220,6 +2250,18 @@ async function openEditModal(posterId) {
         if (!response.ok) throw new Error('Poster niet gevonden');
         
         const poster = await response.json();
+        
+        // Parse layers_data JSON string naar object
+        if (poster.layers_data && typeof poster.layers_data === 'string') {
+            try {
+                poster.layers = JSON.parse(poster.layers_data);
+            } catch (e) {
+                console.warn('Kon layers_data niet parsen:', e);
+                poster.layers = {};
+            }
+        } else {
+            poster.layers = poster.layers_data || {};
+        }
         
         // Sla poster data globaal op voor AR preview
         currentPosterData = poster;
