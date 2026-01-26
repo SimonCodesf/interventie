@@ -961,6 +961,14 @@ function renderARPreview() {
                 el.style.alignItems = 'center';
                 el.style.justifyContent = 'center';
                 
+                // Rotatie toepassen (rotZ is de primaire rotatie in front view)
+                // rotX en rotY hebben effect op 3D perspectief, rotZ is 2D rotatie
+                if (data.rotZ !== 0 || data.rotX !== 0 || data.rotY !== 0) {
+                    // CSS 3D transform voor volledige rotatie ondersteuning
+                    el.style.transformOrigin = 'center center';
+                    el.style.transform = `rotateX(${data.rotX}deg) rotateY(${data.rotY}deg) rotateZ(${data.rotZ}deg)`;
+                }
+                
                 // Add Content
                 if (data.imageEl) {
                     // Image or GIF
