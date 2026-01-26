@@ -874,25 +874,46 @@ input:checked + .toggle-slider:before {
 
 .input-wrapper {
     flex: 1;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }
 
 .input-wrapper label {
-    position: absolute;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
+    display: block;
     color: var(--dim);
-    font-size: 0.7rem;
-    font-weight: 600;
-    pointer-events: none;
+    font-size: 0.6rem;
+    font-weight: normal;
     font-family: var(--font-data);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .input-wrapper input {
-    padding-left: 24px;
-    text-align: right;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #ffffff;
+    padding: 8px 10px;
+    text-align: left;
     font-family: 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper input:focus {
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+    outline: none;
+}
+
+/* Specific overrides for very short inputs if needed */
+.input-wrapper input[type="number"]::-webkit-inner-spin-button, 
+.input-wrapper input[type="number"]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
 }
 
 /* Poster list in sidebar */
