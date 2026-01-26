@@ -824,8 +824,10 @@ function renderARPreview() {
         const color = colors[idx] || '#fff';
         
         let x, y;
-        // Base size voor layer (in pixels), schaal met canvas en layer scale
-        const baseSize = pxPerMeter * 0.3 * data.scale;
+        // Scale 1 = poster grootte (poster is de referentie)
+        // Layer met scale 1 is even groot als de poster/marker
+        const layerW = posterW * data.scale;
+        const layerH = posterH * data.scale;
         
         if (activeView === 'front') {
             x = cx + data.posX * pxPerMeter;
@@ -841,20 +843,23 @@ function renderARPreview() {
         ctx.save();
         ctx.translate(x, y);
         
+        // Check of het een 3D model is (geen afbeelding, geen video)
+        const is3DModel = data.has3DModel && !data.imageEl && !data.isVideo;
+        
         // Teken afbeelding als die geladen is
-        if (data.imageLoaded && data.imageEl) {
+        if (data.imageLoaded && data.imageEl && !is3DModel) {
             const img = data.imageEl;
             const aspectRatio = img.width / img.height;
             
             let drawW, drawH;
             if (aspectRatio > 1) {
-                // Landscape
-                drawW = baseSize;
-                drawH = baseSize / aspectRatio;
+                // Landscape - fit width to layer size
+                drawW = layerW;
+                drawH = layerW / aspectRatio;
             } else {
-                // Portrait
-                drawH = baseSize;
-                drawW = baseSize * aspectRatio;
+                // Portrait - fit height to layer size
+                drawH = layerH;
+                drawW = layerH * aspectRatio;
             }
             
             // Side en top view: toon als dunne lijn
@@ -864,15 +869,10 @@ function renderARPreview() {
                 drawH = 4;
             }
             
-            // Teken schaduw/glow
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 8;
-            
-            // Teken afbeelding
+            // Teken afbeelding (geen glow)
             ctx.drawImage(img, -drawW/2, -drawH/2, drawW, drawH);
             
             // Teken border
-            ctx.shadowBlur = 0;
             ctx.strokeStyle = color;
             ctx.lineWidth = 2;
             ctx.strokeRect(-drawW/2, -drawH/2, drawW, drawH);
@@ -890,26 +890,25 @@ function renderARPreview() {
             ctx.fillText(layerNum, -drawW/2 + 10, -drawH/2 + 10);
         } else if (data.isVideo && data.imageLoaded) {
             // Video placeholder - toon als rechthoek met play icoon
-            const drawW = baseSize;
-            const drawH = baseSize * 0.6; // 16:9 aspect
+            let drawW = layerW;
+            let drawH = layerW * 0.6; // 16:9 aspect
             
             // Side en top view: toon als dunne lijn
-            let finalW = drawW, finalH = drawH;
             if (activeView === 'side') {
-                finalW = 4;
+                drawW = 4;
             } else if (activeView === 'top') {
-                finalH = 4;
+                drawH = 4;
             }
             
-            // Teken video placeholder
+            // Teken video placeholder (geen glow)
             ctx.fillStyle = color;
-            ctx.globalAlpha = 0.3;
-            ctx.fillRect(-finalW/2, -finalH/2, finalW, finalH);
+            ctx.globalAlpha = 0.2;
+            ctx.fillRect(-drawW/2, -drawH/2, drawW, drawH);
             ctx.globalAlpha = 1;
             
             ctx.strokeStyle = color;
             ctx.lineWidth = 2;
-            ctx.strokeRect(-finalW/2, -finalH/2, finalW, finalH);
+            ctx.strokeRect(-drawW/2, -drawH/2, drawW, drawH);
             
             // Play icoon (alleen in front view)
             if (activeView === 'front') {
@@ -925,35 +924,26 @@ function renderARPreview() {
             // Layer nummer badge
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(-finalW/2 + 10, -finalH/2 + 10, 8, 0, Math.PI * 2);
+            ctx.arc(-drawW/2 + 10, -drawH/2 + 10, 8, 0, Math.PI * 2);
             ctx.fill();
             
             ctx.fillStyle = '#000';
             ctx.font = 'bold 9px Roboto Mono';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(layerNum, -finalW/2 + 10, -finalH/2 + 10);
+            ctx.fillText(layerNum, -drawW/2 + 10, -drawH/2 + 10);
         } else {
-            // Afbeelding nog niet geladen - toon placeholder cirkel
-            const size = 20 * Math.max(0.5, data.scale);
+            // 3D model of nog niet geladen - toon alleen nummer
+            const size = 24;
             
             ctx.fillStyle = color;
-            ctx.globalAlpha = 0.5;
             ctx.beginPath();
             ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
             ctx.fill();
-            ctx.globalAlpha = 1;
-            
-            // Loading indicator
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, size / 2 + 3, 0, Math.PI * 1.5);
-            ctx.stroke();
             
             // Layer number
             ctx.fillStyle = '#000';
-            ctx.font = 'bold 9px Roboto Mono';
+            ctx.font = 'bold 10px Roboto Mono';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(layerNum, 0, 0);
