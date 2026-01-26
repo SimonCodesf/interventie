@@ -1901,7 +1901,12 @@ function buildLayersHTML(poster) {
                 // Hierdoor kan de gebruiker in admin panel exacte positie/schaal bepalen
                 const glbPosX = parseFloat(layerData.pos_x) || 0;
                 const glbPosY = parseFloat(layerData.pos_y) || 0;
-                const glbPosZ = parseFloat(layerData.z) || 0; 
+                
+                // Fix: Gebruik baseZ (dezelfde diepte als afbeelding) als default, zodat hij niet ACHTER de afbeelding verdwijnt
+                // Als gebruiker expliciet Z=0 heeft, wordt dit 0. Maar baseZ is meestal ~0.1
+                const userZ = parseFloat(layerData.z);
+                const glbPosZ = (userZ !== 0 && !isNaN(userZ)) ? userZ : baseZ;
+                
                 const glbScale = parseFloat(layerData.scale) || 1.0;
                 const glbRotX = parseFloat(layerData.rot_x) || 0;
                 const glbRotY = parseFloat(layerData.rot_y) || 0;
