@@ -1720,23 +1720,21 @@ function buildLayersHTML(poster) {
         for (let i = 1; i <= 8; i++) {
             const layerData = poster.layers[`layer_${i}`];
             
-            if (layerData && layerData.filename) {
-                // Base positioning
-                const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
-                const posX = parseFloat(layerData.pos_x) || 0;
-                const posY = parseFloat(layerData.pos_y) || 0;
-                const posZ = baseZ;
-                
-                // Base scale (applies proportionally)
-                const baseScale = parseFloat(layerData.scale) || 1.0;
-                const rotZ = parseFloat(layerData.rot_z) || 0;
-                
-                // Animation data
+            // Define variables accessible to both image block and GLB block
+            let animationStr = '';
+            
+            // Calculate animation string if layerData exists (common for both GLB and Image)
+            if (layerData) {
                 const hasAnimation = layerData.anim_duration && layerData.anim_duration > 0;
                 let animAttrs = [];
                 
                 if (hasAnimation) {
                     const dur = parseInt(layerData.anim_duration);
+                    const posX = parseFloat(layerData.pos_x) || 0;
+                    const posY = parseFloat(layerData.pos_y) || 0;
+                    const posZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
+                    const rotZ = parseFloat(layerData.rot_z) || 0;
+                    
                     const animX = parseFloat(layerData.anim_x) || 0;
                     const animY = parseFloat(layerData.anim_y) || 0;
                     const animZ = parseFloat(layerData.anim_z) || 0;
@@ -1764,6 +1762,21 @@ function buildLayersHTML(poster) {
                         animAttrs.push(`animation__scale="property: scale; from: 1 1 1; to: ${animScale} ${animScale} ${animScale}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
                     }
                 }
+                animationStr = animAttrs.length > 0 ? animAttrs.join(' ') : '';
+            }
+
+            if (layerData && layerData.filename) {
+                // Base positioning
+                const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
+                const posX = parseFloat(layerData.pos_x) || 0;
+                const posY = parseFloat(layerData.pos_y) || 0;
+                const posZ = baseZ;
+                
+                // Base scale (applies proportionally)
+                const baseScale = parseFloat(layerData.scale) || 1.0;
+                const rotZ = parseFloat(layerData.rot_z) || 0;
+                
+                // (Animation logic moved up)
                 
                 const mediaPath = `uploads/ar-layers/${layerData.filename}`;
                 const exclusionAttr = layerData.exclusion_filter ? `data-exclusion="true"` : '';
@@ -1774,10 +1787,6 @@ function buildLayersHTML(poster) {
                                layerData.filename.endsWith('.mp4') || 
                                layerData.filename.endsWith('.webm')) && !isGif;
 
-
-                
-                // Build animation string
-                const animationStr = animAttrs.length > 0 ? animAttrs.join(' ') : '';
                 
                 const customScaleAttr = `data-custom-scale="${baseScale}"`;
 
