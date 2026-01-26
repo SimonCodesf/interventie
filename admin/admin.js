@@ -32,208 +32,126 @@ async function convertGifFileToMp4(file, label = 'layer') {
 
 
 
-// Generate HTML for a single layer
+// Generate HTML for a single layer - COMPACT VERSION with visual preview
 function generateLayerHTML(layerNum, isEditForm = false) {
     const prefix = isEditForm ? 'edit-' : '';
     const config = LAYER_CONFIG.defaultLayers.find(l => l.num === layerNum);
-    const layerName = config ? config.name : `Layer ${layerNum}`;
     const defaultZ = config ? config.defaultZ : 0;
     
-    // Open first layer by default
+    // Only open first layer by default
     const isOpen = layerNum === 1 ? 'open' : '';
     
     return `
-        <details class="layer-accordion" ${isOpen}>
-            <summary>
-                <span>Laag ${layerNum} - ${layerName}</span>
-                <span class="layer-status" id="${prefix}layer-${layerNum}-status">Leeg</span>
+        <details class="layer-card" ${isOpen}>
+            <summary class="layer-header">
+                <span class="layer-num">${layerNum}</span>
+                <span class="layer-title">LAAG ${layerNum}</span>
+                <span class="layer-status" id="${prefix}layer-${layerNum}-status">LEEG</span>
             </summary>
-            <div class="layer-content">
-                <div class="form-group">
-                    <label for="${prefix}layer-${layerNum}-image">${isEditForm ? 'Nieuwe afbeelding/video (optioneel)' : 'Afbeelding (.png/.jpg) of Video (.mp4/.webm, GIF geconverteerd naar MP4)'}:</label>
-                    <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm">
-                    <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
-                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-current" style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem; font-family: 'Roboto Mono', monospace;"></p>` : ''}
-                </div>
-                
-                <div class="position-scale-section">
-                    <h5 class="section-subtitle">BASIS POSITIE & SCHAAL</h5>
-                    <div class="anim-group">
-                        <div class="anim-inputs">
-                            <div class="input-wrapper">
-                                <label>X OFFSET</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-pos-x" name="layer_${layerNum}_pos_x" placeholder="0.000" step="0.001">
-                            </div>
-                            <div class="input-wrapper">
-                                <label>Y OFFSET</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-pos-y" name="layer_${layerNum}_pos_y" placeholder="0.000" step="0.001">
-                            </div>
-                            <div class="input-wrapper">
-                                <label>Z-POS</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-z" name="layer_${layerNum}_z" step="0.001" value="${defaultZ.toFixed(3)}" placeholder="${defaultZ.toFixed(3)}">
-                            </div>
-                        </div>
+            
+            <div class="layer-body">
+                <!-- Unified File Upload -->
+                <div class="layer-files">
+                    <div class="file-slot">
+                        <label>MEDIA</label>
+                        <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm,.glb,.gltf">
+                        <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
+                        ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-current"></span>` : ''}
                     </div>
-                    <div class="anim-group">
-                        <div class="anim-inputs">
-                            <div class="input-wrapper">
-                                <label>SCALE</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" placeholder="1.0" step="0.001" value="1.0">
-                            </div>
-                            <div class="input-wrapper">
-                                <label>ROT-X</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-rot-x" name="layer_${layerNum}_rot_x" placeholder="0" step="1" value="0">
-                            </div>
-                            <div class="input-wrapper">
-                                <label>ROT-Y</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-rot-y" name="layer_${layerNum}_rot_y" placeholder="0" step="1" value="0">
-                            </div>
-                            <div class="input-wrapper">
-                                <label>ROT-Z</label>
-                                <input type="number" id="${prefix}layer-${layerNum}-rot-z" name="layer_${layerNum}_rot_z" placeholder="0" step="1" value="0">
-                            </div>
-                        </div>
+                    <div class="file-slot file-slot-small">
+                        <label>3D</label>
+                        <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf">
+                        ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-glb-current"></span>` : ''}
+                    </div>
+                    <div class="file-slot file-slot-small">
+                        <label>AUDIO</label>
+                        <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,.mp3,.wav">
+                        ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-audio-current"></span>` : ''}
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="toggle-label">
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
-                            <span class="toggle-slider"></span>
+                <!-- Transform Controls - Compact Grid -->
+                <div class="layer-transform">
+                    <div class="transform-group">
+                        <span class="group-label">POS</span>
+                        <div class="mini-input">
+                            <span>X</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-pos-x" name="layer_${layerNum}_pos_x" value="0" step="0.01" data-layer="${layerNum}" data-param="posX">
                         </div>
-                        <span>Exclusion filter (masker)</span>
+                        <div class="mini-input">
+                            <span>Y</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-pos-y" name="layer_${layerNum}_pos_y" value="0" step="0.01" data-layer="${layerNum}" data-param="posY">
+                        </div>
+                        <div class="mini-input">
+                            <span>Z</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-z" name="layer_${layerNum}_z" value="${defaultZ.toFixed(2)}" step="0.01" data-layer="${layerNum}" data-param="posZ">
+                        </div>
+                    </div>
+                    <div class="transform-group">
+                        <span class="group-label">ROT</span>
+                        <div class="mini-input">
+                            <span>X</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-rot-x" name="layer_${layerNum}_rot_x" value="0" step="1" data-layer="${layerNum}" data-param="rotX">
+                        </div>
+                        <div class="mini-input">
+                            <span>Y</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-rot-y" name="layer_${layerNum}_rot_y" value="0" step="1" data-layer="${layerNum}" data-param="rotY">
+                        </div>
+                        <div class="mini-input">
+                            <span>Z</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-rot-z" name="layer_${layerNum}_rot_z" value="0" step="1" data-layer="${layerNum}" data-param="rotZ">
+                        </div>
+                    </div>
+                    <div class="transform-group">
+                        <span class="group-label">SIZE</span>
+                        <div class="mini-input wide">
+                            <span>SCALE</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" value="1.0" step="0.01" data-layer="${layerNum}" data-param="scale">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Options Row -->
+                <div class="layer-options">
+                    <label class="option-toggle">
+                        <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
+                        <span>MASKER</span>
                     </label>
+                    <label class="option-toggle">
+                        <input type="checkbox" id="${prefix}layer-${layerNum}-enable-anim" data-layer="${layerNum}">
+                        <span>ANIMATIE</span>
+                    </label>
+                    ${isEditForm ? `<button type="button" class="delete-layer-btn" onclick="deleteLayer(${layerNum})">×</button>` : ''}
                 </div>
                 
-                <div class="animation-section">
-                    <label class="toggle-label">
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-enable-anim">
-                            <span class="toggle-slider"></span>
-                        </div>
-                        <span>ANIMATIE INSCHAKELEN</span>
-                    </label>
-                    
-                    <div id="${prefix}layer-${layerNum}-anim-container" class="anim-container-hidden">
-                        
-                        <div class="preset-selector">
-                            <label>PRESET:</label>
-                            <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" class="terminal-select">
-                                <option value="">-- Kies een animatie --</option>
-                                <option value="reset">Reset (Geen animatie)</option>
-                                <optgroup label="Rotatie">
-                                    <option value="spin-y">Draaien rond Y-as (Loop)</option>
-                                    <option value="spin-x">Draaien rond X-as (Loop)</option>
-                                    <option value="spin-z">Draaien rond Z-as (Loop)</option>
-                                </optgroup>
-                                <optgroup label="Beweging">
-                                    <option value="float-up">Omhoog zweven</option>
-                                    <option value="hover">Zweven (Op & Neer)</option>
-                                    <option value="slide-in">Inschuiven van links</option>
-                                </optgroup>
-                                <optgroup label="Effecten">
-                                    <option value="pulse">Hartslag (Pulse)</option>
-                                    <option value="fade-in">Inkomen (Fade In)</option>
-                                    <option value="pop-in">Pop In (Schaal)</option>
-                                    <option value="blink">Knipperen</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <div class="anim-group">
-                            <h5>Positie Offset (meters)</h5>
-                            <div class="anim-inputs">
-                                <div class="input-wrapper">
-                                    <label>X</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-x" name="layer_${layerNum}_anim_x" placeholder="0.000" step="0.001">
-                                </div>
-                                <div class="input-wrapper">
-                                    <label>Y</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-y" name="layer_${layerNum}_anim_y" placeholder="0.000" step="0.001">
-                                </div>
-                                <div class="input-wrapper">
-                                    <label>Z</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-z" name="layer_${layerNum}_anim_z" placeholder="0.000" step="0.001">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="anim-group">
-                            <h5>Rotatie (graden)</h5>
-                            <div class="anim-inputs">
-                                <div class="input-wrapper">
-                                    <label>X</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-rot-x" name="layer_${layerNum}_anim_rot_x" placeholder="0" step="1">
-                                </div>
-                                <div class="input-wrapper">
-                                    <label>Y</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-rot-y" name="layer_${layerNum}_anim_rot_y" placeholder="0" step="1">
-                                </div>
-                                <div class="input-wrapper">
-                                    <label>Z</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-rot-z" name="layer_${layerNum}_anim_rot_z" placeholder="0" step="1">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="anim-group">
-                            <h5>Effecten & Tijd</h5>
-                            <div class="anim-inputs">
-                                <div class="input-wrapper" style="flex: 1;">
-                                    <label style="width: auto; position: relative; transform: none; top: auto; left: auto; display: block; margin-bottom: 4px;">Schaal</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-scale" name="layer_${layerNum}_anim_scale" placeholder="1.0" step="0.1" style="padding-left: 0.8rem !important; text-align: left;">
-                                </div>
-                                <div class="input-wrapper" style="flex: 1;">
-                                    <label style="width: auto; position: relative; transform: none; top: auto; left: auto; display: block; margin-bottom: 4px;">Opaciteit</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-opacity" name="layer_${layerNum}_anim_opacity" placeholder="1.0" step="0.1" min="0" max="1" style="padding-left: 0.8rem !important; text-align: left;">
-                                </div>
-                                <div class="input-wrapper" style="flex: 1.5;">
-                                    <label style="width: auto; position: relative; transform: none; top: auto; left: auto; display: block; margin-bottom: 4px;">Duur (ms)</label>
-                                    <input type="number" id="${prefix}layer-${layerNum}-anim-duration" name="layer_${layerNum}_anim_duration" placeholder="0" style="padding-left: 0.8rem !important; text-align: left;">
-                                </div>
-                            </div>
-                        </div>
+                <!-- Animation Panel (hidden by default) -->
+                <div id="${prefix}layer-${layerNum}-anim-container" class="anim-panel hidden">
+                    <div class="anim-row">
+                        <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" class="anim-preset-select">
+                            <option value="">PRESET</option>
+                            <option value="spin-y">SPIN Y</option>
+                            <option value="spin-x">SPIN X</option>
+                            <option value="hover">HOVER</option>
+                            <option value="pulse">PULSE</option>
+                            <option value="float-up">FLOAT</option>
+                        </select>
+                        <div class="mini-input"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-duration" name="layer_${layerNum}_anim_duration" value="0" step="100" placeholder="ms"></div>
+                    </div>
+                    <div class="anim-row">
+                        <div class="mini-input"><span>ΔX</span><input type="number" id="${prefix}layer-${layerNum}-anim-x" name="layer_${layerNum}_anim_x" value="0" step="0.01"></div>
+                        <div class="mini-input"><span>ΔY</span><input type="number" id="${prefix}layer-${layerNum}-anim-y" name="layer_${layerNum}_anim_y" value="0" step="0.01"></div>
+                        <div class="mini-input"><span>ΔZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-z" name="layer_${layerNum}_anim_z" value="0" step="0.01"></div>
+                    </div>
+                    <div class="anim-row">
+                        <div class="mini-input"><span>RX</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-x" name="layer_${layerNum}_anim_rot_x" value="0" step="1"></div>
+                        <div class="mini-input"><span>RY</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-y" name="layer_${layerNum}_anim_rot_y" value="0" step="1"></div>
+                        <div class="mini-input"><span>RZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-z" name="layer_${layerNum}_anim_rot_z" value="0" step="1"></div>
+                    </div>
+                    <div class="anim-row">
+                        <div class="mini-input"><span>SCALE</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale" name="layer_${layerNum}_anim_scale" value="1" step="0.1"></div>
+                        <div class="mini-input"><span>OPACITY</span><input type="number" id="${prefix}layer-${layerNum}-anim-opacity" name="layer_${layerNum}_anim_opacity" value="1" step="0.1" min="0" max="1"></div>
                     </div>
                 </div>
-                
-                <!-- AR Extras per laag -->
-                <div class="ar-extras-layer-section">
-                    <label class="toggle-label">
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-enable-extras">
-                            <span class="toggle-slider"></span>
-                        </div>
-                        <span>AR EXTRAS (3D/AUDIO)</span>
-                    </label>
-                    
-                    <div id="${prefix}layer-${layerNum}-extras-container" class="anim-container-hidden">
-                        <div class="anim-group">
-                            <div class="anim-inputs" style="flex-direction: column; gap: 0.75rem;">
-                                <div class="input-wrapper" style="width: 100%;">
-                                    <label style="width: auto; position: relative; transform: none; display: block; margin-bottom: 4px;">3D MODEL (.glb)</label>
-                                    <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf" style="width: 100%;">
-                                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-glb-current" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem;"></p>` : ''}
-                                    <p class="hint-text" style="font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem;">Max 10MB. Model verschijnt op deze laag positie.</p>
-                                </div>
-                                <div class="input-wrapper" style="width: 100%;">
-                                    <label style="width: auto; position: relative; transform: none; display: block; margin-bottom: 4px;">AUDIO (.mp3/.wav)</label>
-                                    <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,audio/ogg,.mp3,.wav,.ogg" style="width: 100%;">
-                                    ${isEditForm ? `<p class="file-info" id="${prefix}layer-${layerNum}-audio-current" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem;"></p>` : ''}
-                                    <p class="hint-text" style="font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem;">Max 10MB. Speelt bij detectie van deze laag.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                ${isEditForm ? `
-                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid #ddd;">
-                    <button type="button" onclick="deleteLayer(${layerNum})" style="background: #e74c3c; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%;">
-                        Verwijder Laag ${layerNum}
-                    </button>
-                </div>
-                ` : ''}
             </div>
         </details>
     `;
@@ -429,6 +347,11 @@ function applyAnimPreset(selectEl, prefix, layerNum) {
 const SESSION_TIMEOUT = 3600000; // milliseconds
 let sessionTimer = null;
 
+// AR Preview state
+let previewLayers = {};
+let previewCanvas = null;
+let previewCtx = null;
+
 // Check if already logged in
 document.addEventListener('DOMContentLoaded', () => {
     renderLayers(false); // Render layers first so elements exist
@@ -448,8 +371,217 @@ document.addEventListener('DOMContentLoaded', () => {
     setupCreditsSection(); // Credits dynamic rows
     
     // Defer layer listeners slightly to ensure inputs exist
-    setTimeout(setupLayerSummaryListeners, 500);
+    setTimeout(() => {
+        setupLayerSummaryListeners();
+        setupLayerAnimationToggles(); // Animation toggles
+        setupARPreview(); // Visual preview
+    }, 500);
 });
+
+// Setup animation toggle listeners (show/hide anim panel)
+function setupLayerAnimationToggles() {
+    for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
+        // Upload form
+        const animToggle = document.getElementById(`layer-${i}-enable-anim`);
+        const animContainer = document.getElementById(`layer-${i}-anim-container`);
+        if (animToggle && animContainer) {
+            animToggle.addEventListener('change', function() {
+                animContainer.classList.toggle('hidden', !this.checked);
+            });
+        }
+        
+        // Edit form
+        const editAnimToggle = document.getElementById(`edit-layer-${i}-enable-anim`);
+        const editAnimContainer = document.getElementById(`edit-layer-${i}-anim-container`);
+        if (editAnimToggle && editAnimContainer) {
+            editAnimToggle.addEventListener('change', function() {
+                editAnimContainer.classList.toggle('hidden', !this.checked);
+            });
+        }
+    }
+}
+
+// Setup AR Preview canvas
+function setupARPreview() {
+    // Check if preview container exists (will be created in layers panel header)
+    const container = document.getElementById('ar-preview-container');
+    if (!container) {
+        // Create preview container at top of layers panel
+        const layersContainer = document.getElementById('layers-container');
+        if (layersContainer) {
+            const previewHTML = `
+                <div id="ar-preview-container">
+                    <div id="ar-preview-header">
+                        <span>AR PREVIEW</span>
+                        <div class="preview-controls">
+                            <button class="preview-btn active" data-view="front">FRONT</button>
+                            <button class="preview-btn" data-view="side">SIDE</button>
+                            <button class="preview-btn" data-view="top">TOP</button>
+                        </div>
+                    </div>
+                    <canvas id="ar-preview-canvas"></canvas>
+                </div>
+            `;
+            layersContainer.insertAdjacentHTML('beforebegin', previewHTML);
+        }
+    }
+    
+    previewCanvas = document.getElementById('ar-preview-canvas');
+    if (previewCanvas) {
+        previewCtx = previewCanvas.getContext('2d');
+        resizePreviewCanvas();
+        window.addEventListener('resize', resizePreviewCanvas);
+        
+        // Setup view buttons
+        document.querySelectorAll('.preview-btn[data-view]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.preview-btn[data-view]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderARPreview();
+            });
+        });
+        
+        // Listen to all transform inputs
+        document.querySelectorAll('.mini-input input[data-layer]').forEach(input => {
+            input.addEventListener('input', updatePreviewFromInputs);
+        });
+        
+        // Initial render
+        renderARPreview();
+    }
+}
+
+function resizePreviewCanvas() {
+    if (!previewCanvas) return;
+    const container = previewCanvas.parentElement;
+    previewCanvas.width = container.clientWidth;
+    previewCanvas.height = container.clientHeight - 30; // minus header
+    renderARPreview();
+}
+
+function updatePreviewFromInputs() {
+    // Gather all layer data from inputs
+    previewLayers = {};
+    for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
+        const getVal = (id, def = 0) => {
+            const el = document.getElementById(id);
+            return el ? parseFloat(el.value) || def : def;
+        };
+        
+        const posX = getVal(`layer-${i}-pos-x`, 0);
+        const posY = getVal(`layer-${i}-pos-y`, 0);
+        const posZ = getVal(`layer-${i}-z`, 0);
+        const scale = getVal(`layer-${i}-scale`, 1);
+        const rotX = getVal(`layer-${i}-rot-x`, 0);
+        const rotY = getVal(`layer-${i}-rot-y`, 0);
+        const rotZ = getVal(`layer-${i}-rot-z`, 0);
+        
+        // Only add if there's any non-default value
+        if (posX !== 0 || posY !== 0 || posZ !== 0 || scale !== 1 || rotX !== 0 || rotY !== 0 || rotZ !== 0) {
+            previewLayers[i] = { posX, posY, posZ, scale, rotX, rotY, rotZ };
+        }
+    }
+    renderARPreview();
+}
+
+function renderARPreview() {
+    if (!previewCanvas || !previewCtx) return;
+    
+    const ctx = previewCtx;
+    const w = previewCanvas.width;
+    const h = previewCanvas.height;
+    const activeView = document.querySelector('.preview-btn[data-view].active')?.dataset.view || 'front';
+    
+    // Clear
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Draw grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    const gridSize = 20;
+    for (let x = 0; x <= w; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    
+    // Center point
+    const cx = w / 2;
+    const cy = h / 2;
+    const scale = 100; // Pixels per meter
+    
+    // Draw poster base (layer 0)
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 2;
+    const posterW = 1 * scale; // 1m wide
+    const posterH = 1.4 * scale; // 1.4m tall (A ratio)
+    
+    if (activeView === 'front') {
+        ctx.fillRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
+        ctx.strokeRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
+    } else if (activeView === 'side') {
+        // Side view: show as thin line
+        ctx.fillRect(cx - 2, cy - posterH/2, 4, posterH);
+        ctx.strokeRect(cx - 2, cy - posterH/2, 4, posterH);
+    } else if (activeView === 'top') {
+        // Top view: show as thin line
+        ctx.fillRect(cx - posterW/2, cy - 2, posterW, 4);
+        ctx.strokeRect(cx - posterW/2, cy - 2, posterW, 4);
+    }
+    
+    // Draw layers
+    const colors = ['#fff', '#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#f80'];
+    Object.entries(previewLayers).forEach(([layerNum, data]) => {
+        const color = colors[parseInt(layerNum) - 1] || '#fff';
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        
+        let x, y, size;
+        size = 20 * data.scale;
+        
+        if (activeView === 'front') {
+            x = cx + data.posX * scale;
+            y = cy - data.posY * scale; // Y is inverted in canvas
+        } else if (activeView === 'side') {
+            x = cx + data.posZ * scale; // Z becomes horizontal
+            y = cy - data.posY * scale;
+        } else if (activeView === 'top') {
+            x = cx + data.posX * scale;
+            y = cy - data.posZ * scale; // Z becomes vertical
+        }
+        
+        // Draw layer indicator
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Label
+        ctx.font = '10px Roboto Mono';
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(layerNum, x, y);
+    });
+    
+    // Draw axis labels
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '9px Roboto Mono';
+    ctx.textAlign = 'left';
+    if (activeView === 'front') {
+        ctx.fillText('X →', 10, h - 20);
+        ctx.fillText('Y ↑', 10, h - 10);
+    } else if (activeView === 'side') {
+        ctx.fillText('Z →', 10, h - 20);
+        ctx.fillText('Y ↑', 10, h - 10);
+    } else if (activeView === 'top') {
+        ctx.fillText('X →', 10, h - 20);
+        ctx.fillText('Z ↑', 10, h - 10);
+    }
+}
 
 // ========== Credits Sectie - Dynamische rijen ==========
 
