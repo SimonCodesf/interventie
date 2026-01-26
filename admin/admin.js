@@ -850,13 +850,18 @@ function renderARPreview() {
     // Draw layers
     const colors = ['#ffffff', '#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff', '#ff8844'];
     
+    // In AR: 1.4 * scale = werkelijke grootte in meters
+    // De poster is ook ~1.4m, dus scale=1 = poster grootte
+    // We gebruiken posterW als referentie (= 1.4m equivalent)
+    const arUnitSize = posterW; // Basis grootte voor scale=1
+    
     layersWithContent.forEach(([layerNum, data]) => {
         const idx = parseInt(layerNum) - 1;
         const color = colors[idx] || '#fff';
         
         let x, y;
-        const layerW = posterW * data.scale;
-        const layerH = posterH * data.scale;
+        // Layer grootte: scale * basis (in AR is dit 1.4 * scale meters)
+        const layerSize = arUnitSize * data.scale;
         
         if (activeView === 'front') {
             x = cx + data.posX * pxPerMeter;
@@ -877,7 +882,7 @@ function renderARPreview() {
         const is3DModel = data.has3DModel && !data.imageEl && !data.isVideo;
         
         if (activeView !== 'front' || is3DModel) {
-            let drawW = layerW, drawH = layerH;
+            let drawW = layerSize, drawH = layerSize;
             
             // Side and top view: thin lines
             if (activeView === 'side') { 
@@ -923,18 +928,24 @@ function renderARPreview() {
             
             if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename)) {
                 
-                // Determine dimensions
+                // Determine dimensions based on aspect ratio
+                // In AR: layer grootte = 1.4 * scale, aspect ratio bepaalt width/height verhouding
                 if (data.imageEl) {
                     const img = data.imageEl;
                     const aspectRatio = img.width / img.height;
                     if (aspectRatio > 1) {
-                        domW = layerW; domH = layerW / aspectRatio;
+                        // Landscape: width = layerSize, height smaller
+                        domW = layerSize; 
+                        domH = layerSize / aspectRatio;
                     } else {
-                        domH = layerH; domW = layerH * aspectRatio;
+                        // Portrait/Square: height = layerSize, width smaller or equal
+                        domH = layerSize; 
+                        domW = layerSize * aspectRatio;
                     }
                 } else if (data.isVideo) {
                     // Video default 16:9
-                    domW = layerW; domH = layerW * 0.6;
+                    domW = layerSize; 
+                    domH = layerSize / (16/9);
                 }
                 
                 // Create Overlay Element
