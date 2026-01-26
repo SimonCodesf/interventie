@@ -649,6 +649,9 @@ function updatePreviewFromInputs() {
     previewLayers = {};
     const prefix = document.getElementById('edit-modal')?.style.display === 'block' ? 'edit-' : '';
     
+    // Haal poster ID op voor URL constructie (alleen bij edit)
+    const posterId = document.getElementById('edit-poster-id')?.value || null;
+    
     for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
         const getVal = (id, def = 0) => {
             const el = document.getElementById(id);
@@ -664,12 +667,77 @@ function updatePreviewFromInputs() {
         const rotZ = getVal(`${prefix}layer-${i}-rot-z`, 0);
         
         // Check of layer media heeft (file input of bestaand bestand)
-        const hasFile = document.getElementById(`${prefix}layer-${i}-image`)?.files?.length > 0;
-        const hasCurrent = document.getElementById(`${prefix}layer-${i}-current`)?.textContent?.includes('Huidig');
+        const fileInput = document.getElementById(`${prefix}layer-${i}-image`);
+        const hasFile = fileInput?.files?.length > 0;
+        const currentEl = document.getElementById(`${prefix}layer-${i}-current`);
+        const currentText = currentEl?.textContent || '';
+        const hasCurrent = currentText.includes('Huidig:');
         
-        // Voeg layer toe als er data is OF als er een bestand is
-        if (hasFile || hasCurrent || posX !== 0 || posY !== 0 || posZ !== 0 || scale !== 1) {
-            previewLayers[i] = { posX, posY, posZ, scale, rotX, rotY, rotZ, hasContent: hasFile || hasCurrent };
+        // ALLEEN layers met content tonen in preview
+        if (hasFile || hasCurrent) {
+            const layerData = { 
+                posX, posY, posZ, scale, rotX, rotY, rotZ, 
+                hasContent: true,
+                imageSrc: null,
+                imageLoaded: false,
+                imageEl: null
+            };
+            
+            // Laad afbeelding voor preview
+            if (hasFile) {
+                // Nieuw geüploade bestand - gebruik FileReader
+                const file = fileInput.files[0];
+                if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                layerData.imageEl = img;
+                                layerData.imageLoaded = true;
+                                renderARPreview();
+                            };
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        // Video - pak eerste frame (of toon placeholder)
+                        layerData.isVideo = true;
+                        layerData.imageLoaded = true; // Toon placeholder voor video
+                    }
+                }
+            } else if (hasCurrent && posterId) {
+                // Bestaand bestand - bouw URL van filename
+                // Filename formaat: {posterId}_layer_{i}.png/gif/mp4
+                const filenameMatch = currentText.match(/Huidig:\s*(.+)/);
+                if (filenameMatch) {
+                    const filename = filenameMatch[1].trim();
+                    const isVideo = filename.endsWith('.mp4') || filename.endsWith('.webm') || filename.endsWith('.gif');
+                    
+                    if (isVideo) {
+                        // Video - toon gekleurde placeholder met video icoon
+                        layerData.isVideo = true;
+                        layerData.imageLoaded = true;
+                        layerData.filename = filename;
+                    } else {
+                        // Afbeelding - laad van server
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => {
+                            layerData.imageEl = img;
+                            layerData.imageLoaded = true;
+                            renderARPreview();
+                        };
+                        img.onerror = () => {
+                            console.warn('Kon afbeelding niet laden:', filename);
+                            layerData.imageLoaded = true; // Toon placeholder bij error
+                        };
+                        img.src = `../uploads/ar-layers/${filename}`;
+                    }
+                }
+            }
+            
+            previewLayers[i] = layerData;
         }
     }
     renderARPreview();
@@ -729,15 +797,28 @@ function renderARPreview() {
         ctx.strokeRect(cx - posterW/2, cy - 3, posterW, 6);
     }
     
+    // Check of er layers zijn met content
+    const layersWithContent = Object.entries(previewLayers).filter(([_, data]) => data.hasContent);
+    
+    if (layersWithContent.length === 0) {
+        // Geen layers met content - toon instructie
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '11px Roboto Mono';
+        ctx.textAlign = 'center';
+        ctx.fillText('Upload een bestand om preview te zien', cx, cy + posterH/2 + 25);
+        return;
+    }
+    
     // Draw layers
     const colors = ['#ffffff', '#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff', '#ff8844'];
     
-    Object.entries(previewLayers).forEach(([layerNum, data]) => {
+    layersWithContent.forEach(([layerNum, data]) => {
         const idx = parseInt(layerNum) - 1;
         const color = colors[idx] || '#fff';
         
         let x, y;
-        const size = 16 * Math.max(0.5, data.scale);
+        // Base size voor layer (in pixels), schaal met canvas en layer scale
+        const baseSize = pxPerMeter * 0.3 * data.scale;
         
         if (activeView === 'front') {
             x = cx + data.posX * pxPerMeter;
@@ -750,29 +831,128 @@ function renderARPreview() {
             y = cy - data.posZ * pxPerMeter;
         }
         
-        // Draw layer marker
-        ctx.fillStyle = color;
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.translate(x, y);
         
-        if (data.hasContent) {
-            // Filled circle for layers with content
+        // Teken afbeelding als die geladen is
+        if (data.imageLoaded && data.imageEl) {
+            const img = data.imageEl;
+            const aspectRatio = img.width / img.height;
+            
+            let drawW, drawH;
+            if (aspectRatio > 1) {
+                // Landscape
+                drawW = baseSize;
+                drawH = baseSize / aspectRatio;
+            } else {
+                // Portrait
+                drawH = baseSize;
+                drawW = baseSize * aspectRatio;
+            }
+            
+            // Side en top view: toon als dunne lijn
+            if (activeView === 'side') {
+                drawW = 4;
+            } else if (activeView === 'top') {
+                drawH = 4;
+            }
+            
+            // Teken schaduw/glow
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+            
+            // Teken afbeelding
+            ctx.drawImage(img, -drawW/2, -drawH/2, drawW, drawH);
+            
+            // Teken border
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-drawW/2, -drawH/2, drawW, drawH);
+            
+            // Layer nummer badge
+            ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            ctx.arc(-drawW/2 + 10, -drawH/2 + 10, 8, 0, Math.PI * 2);
             ctx.fill();
-        } else {
-            // Ring for layers without content
+            
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 9px Roboto Mono';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(layerNum, -drawW/2 + 10, -drawH/2 + 10);
+        } else if (data.isVideo && data.imageLoaded) {
+            // Video placeholder - toon als rechthoek met play icoon
+            const drawW = baseSize;
+            const drawH = baseSize * 0.6; // 16:9 aspect
+            
+            // Side en top view: toon als dunne lijn
+            let finalW = drawW, finalH = drawH;
+            if (activeView === 'side') {
+                finalW = 4;
+            } else if (activeView === 'top') {
+                finalH = 4;
+            }
+            
+            // Teken video placeholder
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(-finalW/2, -finalH/2, finalW, finalH);
+            ctx.globalAlpha = 1;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-finalW/2, -finalH/2, finalW, finalH);
+            
+            // Play icoon (alleen in front view)
+            if (activeView === 'front') {
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(-8, -10);
+                ctx.lineTo(-8, 10);
+                ctx.lineTo(10, 0);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // Layer nummer badge
+            ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            ctx.arc(-finalW/2 + 10, -finalH/2 + 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 9px Roboto Mono';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(layerNum, -finalW/2 + 10, -finalH/2 + 10);
+        } else {
+            // Afbeelding nog niet geladen - toon placeholder cirkel
+            const size = 20 * Math.max(0.5, data.scale);
+            
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Loading indicator
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, size / 2 + 3, 0, Math.PI * 1.5);
             ctx.stroke();
+            
+            // Layer number
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 9px Roboto Mono';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(layerNum, 0, 0);
         }
         
-        // Layer number
-        ctx.fillStyle = data.hasContent ? '#000' : color;
-        ctx.font = 'bold 9px Roboto Mono';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(layerNum, x, y);
+        ctx.restore();
     });
     
     // Draw axis indicator
