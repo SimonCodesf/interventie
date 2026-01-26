@@ -524,6 +524,7 @@ function closeARPreviewWindow() {
     }
 }
 window.closeARPreviewWindow = closeARPreviewWindow;
+window.toggleARPreviewWindow = toggleARPreviewWindow;
 
 // Setup AR Window Dragging
 function setupARWindowDrag(windowEl) {
