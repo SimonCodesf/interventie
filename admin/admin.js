@@ -1626,7 +1626,8 @@ async function openEditModal(posterId) {
             if (layerData) {
                 // Set z-position
                 const zInput = document.getElementById(`edit-layer-${layerNum}-z`);
-                if (zInput) zInput.value = layerData.z || LAYER_CONFIG.defaultLayers.find(l => l.number === layerNum)?.defaultZ.toFixed(3) || '0.000';
+                // Fix: use 'num' instead of 'number' to match LAYER_CONFIG
+                if (zInput) zInput.value = layerData.z || LAYER_CONFIG.defaultLayers.find(l => l.num === layerNum)?.defaultZ.toFixed(3) || '0.000';
                 
                 // Set base position and scale
                 const posXInput = document.getElementById(`edit-layer-${layerNum}-pos-x`);
