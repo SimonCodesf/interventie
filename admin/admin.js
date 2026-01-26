@@ -15,6 +15,9 @@ const LAYER_CONFIG = {
     ]
 };
 
+// Huidige poster data voor AR preview
+let currentPosterData = null;
+
 
 // ========== GIF handling: use GIF directly as video ==========
 // GIFs can be used directly in <a-video> tags; no conversion needed!
@@ -647,7 +650,8 @@ function resizePreviewCanvas() {
 function updatePreviewFromInputs() {
     // Gather all layer data from inputs (check both upload en edit forms)
     previewLayers = {};
-    const prefix = document.getElementById('edit-modal')?.style.display === 'block' ? 'edit-' : '';
+    const isEditMode = document.getElementById('edit-modal')?.style.display === 'block';
+    const prefix = isEditMode ? 'edit-' : '';
     
     // Haal poster ID op voor URL constructie (alleen bij edit)
     const posterId = document.getElementById('edit-poster-id')?.value || null;
@@ -666,21 +670,29 @@ function updatePreviewFromInputs() {
         const rotY = getVal(`${prefix}layer-${i}-rot-y`, 0);
         const rotZ = getVal(`${prefix}layer-${i}-rot-z`, 0);
         
-        // Check of layer media heeft (file input of bestaand bestand)
+        // Check of layer media heeft (file input of bestaand bestand uit poster data)
         const fileInput = document.getElementById(`${prefix}layer-${i}-image`);
         const hasFile = fileInput?.files?.length > 0;
-        const currentEl = document.getElementById(`${prefix}layer-${i}-current`);
-        const currentText = currentEl?.textContent || '';
-        const hasCurrent = currentText.includes('Huidig:');
+        
+        // Check bestaand bestand via opgeslagen poster data
+        let existingFilename = null;
+        if (isEditMode && currentPosterData?.layers) {
+            const layerKey = `layer_${i}`;
+            const layerData = currentPosterData.layers[layerKey];
+            if (layerData?.filename) {
+                existingFilename = layerData.filename;
+            }
+        }
         
         // ALLEEN layers met content tonen in preview
-        if (hasFile || hasCurrent) {
+        if (hasFile || existingFilename) {
             const layerData = { 
                 posX, posY, posZ, scale, rotX, rotY, rotZ, 
                 hasContent: true,
                 imageSrc: null,
                 imageLoaded: false,
-                imageEl: null
+                imageEl: null,
+                isVideo: false
             };
             
             // Laad afbeelding voor preview
@@ -701,39 +713,34 @@ function updatePreviewFromInputs() {
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        // Video - pak eerste frame (of toon placeholder)
-                        layerData.isVideo = true;
-                        layerData.imageLoaded = true; // Toon placeholder voor video
-                    }
-                }
-            } else if (hasCurrent && posterId) {
-                // Bestaand bestand - bouw URL van filename
-                // Filename formaat: {posterId}_layer_{i}.png/gif/mp4
-                const filenameMatch = currentText.match(/Huidig:\s*(.+)/);
-                if (filenameMatch) {
-                    const filename = filenameMatch[1].trim();
-                    const isVideo = filename.endsWith('.mp4') || filename.endsWith('.webm') || filename.endsWith('.gif');
-                    
-                    if (isVideo) {
-                        // Video - toon gekleurde placeholder met video icoon
+                        // Video - toon placeholder
                         layerData.isVideo = true;
                         layerData.imageLoaded = true;
-                        layerData.filename = filename;
-                    } else {
-                        // Afbeelding - laad van server
-                        const img = new Image();
-                        img.crossOrigin = 'anonymous';
-                        img.onload = () => {
-                            layerData.imageEl = img;
-                            layerData.imageLoaded = true;
-                            renderARPreview();
-                        };
-                        img.onerror = () => {
-                            console.warn('Kon afbeelding niet laden:', filename);
-                            layerData.imageLoaded = true; // Toon placeholder bij error
-                        };
-                        img.src = `../uploads/ar-layers/${filename}`;
                     }
+                }
+            } else if (existingFilename) {
+                // Bestaand bestand - laad van server
+                const isVideo = existingFilename.endsWith('.mp4') || existingFilename.endsWith('.webm') || existingFilename.endsWith('.gif');
+                
+                if (isVideo) {
+                    // Video - toon placeholder met play icoon
+                    layerData.isVideo = true;
+                    layerData.imageLoaded = true;
+                    layerData.filename = existingFilename;
+                } else {
+                    // Afbeelding - laad van server
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        layerData.imageEl = img;
+                        layerData.imageLoaded = true;
+                        renderARPreview();
+                    };
+                    img.onerror = () => {
+                        console.warn('Kon afbeelding niet laden:', existingFilename);
+                        layerData.imageLoaded = true; // Toon placeholder bij error
+                    };
+                    img.src = `../uploads/ar-layers/${existingFilename}`;
                 }
             }
             
@@ -2211,6 +2218,9 @@ async function openEditModal(posterId) {
         if (!response.ok) throw new Error('Poster niet gevonden');
         
         const poster = await response.json();
+        
+        // Sla poster data globaal op voor AR preview
+        currentPosterData = poster;
         
         // Populate form
         document.getElementById('edit-poster-id').value = poster.id;
