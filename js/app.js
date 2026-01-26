@@ -1726,6 +1726,20 @@ function buildLayersHTML(poster) {
             // Define variables accessible to both image block and GLB block
             let animationStr = '';
             
+            // Extract common spatial parameters (needed for both Image/Video and GLB)
+            // Use 0.1 as safe default Z to avoid z-fighting with background plane
+            const baseZ = Math.max(parseFloat(layerData ? layerData.z : 0) || 0, 0.1) + (i * 0.01); 
+            const posX = parseFloat(layerData ? layerData.pos_x : 0) || 0;
+            const posY = parseFloat(layerData ? layerData.pos_y : 0) || 0;
+            const posZ = baseZ; // Image/Video uses baseZ directly
+            
+            const baseScale = parseFloat(layerData ? layerData.scale : 1.0) || 1.0;
+            
+            // Rotation
+            const rotX = parseFloat(layerData ? layerData.rot_x : 0) || 0;
+            const rotY = parseFloat(layerData ? layerData.rot_y : 0) || 0;
+            const rotZ = parseFloat(layerData ? layerData.rot_z : 0) || 0;
+
             // Calculate animation string if layerData exists (common for both GLB and Image)
             if (layerData) {
                 const hasAnimation = layerData.anim_duration && layerData.anim_duration > 0;
@@ -1733,10 +1747,6 @@ function buildLayersHTML(poster) {
                 
                 if (hasAnimation) {
                     const dur = parseInt(layerData.anim_duration);
-                    const posX = parseFloat(layerData.pos_x) || 0;
-                    const posY = parseFloat(layerData.pos_y) || 0;
-                    const posZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
-                    const rotZ = parseFloat(layerData.rot_z) || 0;
                     
                     const animX = parseFloat(layerData.anim_x) || 0;
                     const animY = parseFloat(layerData.anim_y) || 0;
@@ -1755,31 +1765,22 @@ function buildLayersHTML(poster) {
                     
                     // Rotation animation  
                     if (animRotX !== 0 || animRotY !== 0 || animRotZ !== 0) {
-                        const fromRot = `0 0 ${rotZ}`;
-                        const toRot = `${animRotX} ${animRotY} ${rotZ + animRotZ}`;
+                        const fromRot = `${rotX} ${rotY} ${rotZ}`; // Use configured rotation as start
+                        const toRot = `${rotX + animRotX} ${rotY + animRotY} ${rotZ + animRotZ}`;
                         animAttrs.push(`animation__rot="property: rotation; from: ${fromRot}; to: ${toRot}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
                     }
                     
                     // Scale animation
                     if (animScale !== 1.0) {
-                        animAttrs.push(`animation__scale="property: scale; from: 1 1 1; to: ${animScale} ${animScale} ${animScale}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
+                        // Use baseScale as start point
+                        animAttrs.push(`animation__scale="property: scale; from: ${baseScale} ${baseScale} ${baseScale}; to: ${baseScale * animScale} ${baseScale * animScale} ${baseScale * animScale}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
                     }
                 }
                 animationStr = animAttrs.length > 0 ? animAttrs.join(' ') : '';
             }
 
             if (layerData && layerData.filename) {
-                // Base positioning
-                const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
-                const posX = parseFloat(layerData.pos_x) || 0;
-                const posY = parseFloat(layerData.pos_y) || 0;
-                const posZ = baseZ;
-                
-                // Base scale (applies proportionally)
-                const baseScale = parseFloat(layerData.scale) || 1.0;
-                const rotX = parseFloat(layerData.rot_x) || 0;
-                const rotY = parseFloat(layerData.rot_y) || 0;
-                const rotZ = parseFloat(layerData.rot_z) || 0;
+                // (Variable extraction moved up)
                 
                 // (Animation logic moved up)
                 
@@ -1898,22 +1899,26 @@ function buildLayersHTML(poster) {
                 const glbPath = `uploads/ar-layers/${layerData.glb_model}`;
                 
                 // Positioneer GLB exact volgens layer parameters (zonder offsets)
-                // Hierdoor kan de gebruiker in admin panel exacte positie/schaal bepalen
-                const glbPosX = parseFloat(layerData.pos_x) || 0;
-                const glbPosY = parseFloat(layerData.pos_y) || 0;
+                // Gebruik de eerder geëxtraheerde base variabels (posX, posY, baseScale etc)
+                // baseZ is de veilige Z-waarde (0.1 + layer_index)
                 
-                // Fix: Gebruik baseZ (dezelfde diepte als afbeelding) als default, zodat hij niet ACHTER de afbeelding verdwijnt
-                // Als gebruiker expliciet Z=0 heeft, wordt dit 0. Maar baseZ is meestal ~0.1
-                const userZ = parseFloat(layerData.z);
-                const glbPosZ = (userZ !== 0 && !isNaN(userZ)) ? userZ : baseZ;
+                // Als gebruiker expliciet Z=0 heeft ingesteld, proberen we dat te respecteren,
+                // maar baseZ is veiliger voor zichtbaarheid.
+                // We gebruiken baseZ voor consistentie met de image layer.
+                const glbPosX = posX;
+                const glbPosY = posY;
+                const glbPosZ = baseZ; 
                 
-                const glbScale = parseFloat(layerData.scale) || 1.0;
-                const glbRotX = parseFloat(layerData.rot_x) || 0;
-                const glbRotY = parseFloat(layerData.rot_y) || 0;
-                const glbRotZ = parseFloat(layerData.rot_z) || 0;
+                // Gebruik dezelfde rotatie als image layer
+                const glbRotX = rotX;
+                const glbRotY = rotY;
+                const glbRotZ = rotZ;
                 
-                // Opmerking: we gebruiken nu de geconfigureerde animatie parameters
-                // in plaats van een hardcoded rotatie.
+                // Gebruik dezelfde scale als image layer
+                const glbScale = baseScale;
+                
+                // Voeg ook user-defined animatie toe (animationStr is al berekend)
+                
                 layersHTML += `
                     <a-entity
                         id="ar-glb-model-${i}"
@@ -1926,7 +1931,7 @@ function buildLayersHTML(poster) {
                         data-clickable="true"
                         data-layer="${i}"
                     ></a-entity>`;
-                console.log(` GLB model toegevoegd voor laag ${i}:`, glbPath);
+                console.log(` GLB model toegevoegd voor laag ${i}:`, glbPath, `Pos: ${glbPosX} ${glbPosY} ${glbPosZ}, Scale: ${glbScale}`);
             }
         }
     }
