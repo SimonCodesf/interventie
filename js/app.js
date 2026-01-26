@@ -1774,6 +1774,8 @@ function buildLayersHTML(poster) {
                 
                 // Base scale (applies proportionally)
                 const baseScale = parseFloat(layerData.scale) || 1.0;
+                const rotX = parseFloat(layerData.rot_x) || 0;
+                const rotY = parseFloat(layerData.rot_y) || 0;
                 const rotZ = parseFloat(layerData.rot_z) || 0;
                 
                 // (Animation logic moved up)
@@ -1837,7 +1839,7 @@ function buildLayersHTML(poster) {
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
-                            rotation="0 0 ${rotZ}"
+                            rotation="${rotX} ${rotY} ${rotZ}"
                             material="shader: gif; src: url(${mediaPath}); transparent: true; alphaTest: 0.5;"
                             data-preserve-aspect="true"
                             data-image-src="${mediaPath}"
@@ -1856,7 +1858,7 @@ function buildLayersHTML(poster) {
                             position="${posX} ${posY} ${posZ}" 
                             height="${videoHeight.toFixed(3)}" 
                             width="${videoWidth.toFixed(3)}" 
-                            rotation="0 0 ${rotZ}"
+                            rotation="${rotX} ${rotY} ${rotZ}"
                             autoplay="true"
                             loop="true"
                             muted="true"
@@ -1878,7 +1880,7 @@ function buildLayersHTML(poster) {
                             position="${posX} ${posY} ${posZ}" 
                             height="1.4" 
                             width="1.4" 
-                            rotation="0 0 ${rotZ}"
+                            rotation="${rotX} ${rotY} ${rotZ}"
                             data-image-src="${mediaPath}"
                             data-preserve-aspect="true"
                             ${customScaleAttr}
@@ -1894,10 +1896,12 @@ function buildLayersHTML(poster) {
                 
                 // Positioneer GLB exact volgens layer parameters (zonder offsets)
                 // Hierdoor kan de gebruiker in admin panel exacte positie/schaal bepalen
-                const glbPosX = parseFloat(layerData.x) || 0;
-                const glbPosY = parseFloat(layerData.y) || 0;
+                const glbPosX = parseFloat(layerData.pos_x) || 0;
+                const glbPosY = parseFloat(layerData.pos_y) || 0;
                 const glbPosZ = parseFloat(layerData.z) || 0; 
                 const glbScale = parseFloat(layerData.scale) || 1.0;
+                const glbRotX = parseFloat(layerData.rot_x) || 0;
+                const glbRotY = parseFloat(layerData.rot_y) || 0;
                 const glbRotZ = parseFloat(layerData.rot_z) || 0;
                 
                 // Opmerking: we gebruiken nu de geconfigureerde animatie parameters
@@ -1909,7 +1913,7 @@ function buildLayersHTML(poster) {
                         gltf-model="${glbPath}"
                         position="${glbPosX} ${glbPosY} ${glbPosZ}"
                         scale="${glbScale} ${glbScale} ${glbScale}"
-                        rotation="0 0 ${glbRotZ}"
+                        rotation="${glbRotX} ${glbRotY} ${glbRotZ}"
                         ${animationStr}
                         data-clickable="true"
                         data-layer="${i}"

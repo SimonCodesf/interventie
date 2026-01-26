@@ -81,6 +81,14 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                                 <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" placeholder="1.0" step="0.001" value="1.0">
                             </div>
                             <div class="input-wrapper">
+                                <label>ROT-X</label>
+                                <input type="number" id="${prefix}layer-${layerNum}-rot-x" name="layer_${layerNum}_rot_x" placeholder="0" step="1" value="0">
+                            </div>
+                            <div class="input-wrapper">
+                                <label>ROT-Y</label>
+                                <input type="number" id="${prefix}layer-${layerNum}-rot-y" name="layer_${layerNum}_rot_y" placeholder="0" step="1" value="0">
+                            </div>
+                            <div class="input-wrapper">
                                 <label>ROT-Z</label>
                                 <input type="number" id="${prefix}layer-${layerNum}-rot-z" name="layer_${layerNum}_rot_z" placeholder="0" step="1" value="0">
                             </div>
@@ -1646,6 +1654,12 @@ async function openEditModal(posterId) {
                     scaleInput.value = val;
                 }
                 
+                const rotXInput = document.getElementById(`edit-layer-${layerNum}-rot-x`);
+                if (rotXInput) rotXInput.value = (layerData.rot_x !== undefined && layerData.rot_x !== null) ? layerData.rot_x : '0';
+                
+                const rotYInput = document.getElementById(`edit-layer-${layerNum}-rot-y`);
+                if (rotYInput) rotYInput.value = (layerData.rot_y !== undefined && layerData.rot_y !== null) ? layerData.rot_y : '0';
+                
                 const rotZInput = document.getElementById(`edit-layer-${layerNum}-rot-z`);
                 if (rotZInput) rotZInput.value = (layerData.rot_z !== undefined && layerData.rot_z !== null) ? layerData.rot_z : '0';
                 
@@ -1859,6 +1873,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const posXEl = document.getElementById(`edit-layer-${i}-pos-x`);
                 const posYEl = document.getElementById(`edit-layer-${i}-pos-y`);
                 const scaleEl = document.getElementById(`edit-layer-${i}-scale`);
+                const rotXEl = document.getElementById(`edit-layer-${i}-rot-x`);
+                const rotYEl = document.getElementById(`edit-layer-${i}-rot-y`);
                 const rotZEl = document.getElementById(`edit-layer-${i}-rot-z`);
                 
                 // Animation inputs
@@ -1906,6 +1922,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_pos_x`, posXEl ? posXEl.value || '0' : '0');
                 formData.append(`layer_${i}_pos_y`, posYEl ? posYEl.value || '0' : '0');
                 formData.append(`layer_${i}_scale`, scaleEl ? scaleEl.value || '1.0' : '1.0');
+                formData.append(`layer_${i}_rot_x`, rotXEl ? rotXEl.value || '0' : '0');
+                formData.append(`layer_${i}_rot_y`, rotYEl ? rotYEl.value || '0' : '0');
                 formData.append(`layer_${i}_rot_z`, rotZEl ? rotZEl.value || '0' : '0');
                 
                 // Animation params

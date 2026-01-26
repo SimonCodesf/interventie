@@ -455,6 +455,8 @@ function handleUpdatePoster($db, $id) {
                 'pos_x' => isset($_POST["layer_{$i}_pos_x"]) ? (float)$_POST["layer_{$i}_pos_x"] : ($existingLayer['pos_x'] ?? 0),
                 'pos_y' => isset($_POST["layer_{$i}_pos_y"]) ? (float)$_POST["layer_{$i}_pos_y"] : ($existingLayer['pos_y'] ?? 0),
                 'scale' => isset($_POST["layer_{$i}_scale"]) ? (float)$_POST["layer_{$i}_scale"] : ($existingLayer['scale'] ?? 1.0),
+                'rot_x' => isset($_POST["layer_{$i}_rot_x"]) ? (float)$_POST["layer_{$i}_rot_x"] : ($existingLayer['rot_x'] ?? 0),
+                'rot_y' => isset($_POST["layer_{$i}_rot_y"]) ? (float)$_POST["layer_{$i}_rot_y"] : ($existingLayer['rot_y'] ?? 0),
                 'rot_z' => isset($_POST["layer_{$i}_rot_z"]) ? (float)$_POST["layer_{$i}_rot_z"] : ($existingLayer['rot_z'] ?? 0),
                 'anim_x' => isset($_POST["layer_{$i}_anim_x"]) ? (float)$_POST["layer_{$i}_anim_x"] : ($existingLayer['anim_x'] ?? 0),
                 'anim_y' => isset($_POST["layer_{$i}_anim_y"]) ? (float)$_POST["layer_{$i}_anim_y"] : ($existingLayer['anim_y'] ?? 0),
