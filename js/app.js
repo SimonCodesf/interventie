@@ -1908,15 +1908,16 @@ function buildLayersHTML(poster) {
                 const glbRotY = rotY;
                 const glbRotZ = rotZ;
                 
-                // GLB modellen hebben vaak een kleine intrinsieke grootte
-                // We gebruiken een multiplier om ze zichtbaar te maken op AR poster schaal
-                // De gebruiker's scale (baseScale) wordt hiermee vermenigvuldigd
-                const GLB_SCALE_MULTIPLIER = 0.5; // GLB modellen ~50cm basis bij scale=1
-                const glbScale = baseScale * GLB_SCALE_MULTIPLIER;
+                // GLB modellen grootte berekening:
+                // GLB modellen kunnen elke intrinsieke grootte hebben (vaak 1 unit = 1 meter)
+                // De gebruiker's scale is een factor: scale=1 → poster grootte (~1.4m), scale=0.1 → klein
+                // We vermenigvuldigen met 1.4 zodat scale=1 vergelijkbaar is met image layers
+                const GLB_SCALE_BASE = 1.4; // Basis grootte in meters (zoals image layers)
+                const glbScale = baseScale * GLB_SCALE_BASE;
                 
                 console.log(`[GLB] Laag ${i}: ${layerData.glb_model}`);
                 console.log(`[GLB] Position: (${glbPosX.toFixed(3)}, ${glbPosY.toFixed(3)}, ${glbPosZ.toFixed(3)})`);
-                console.log(`[GLB] Scale: ${baseScale} * ${GLB_SCALE_MULTIPLIER} = ${glbScale.toFixed(3)}`);
+                console.log(`[GLB] Scale: ${baseScale} * ${GLB_SCALE_BASE} = ${glbScale.toFixed(3)}`);
                 console.log(`[GLB] Rotation: (${glbRotX}, ${glbRotY}, ${glbRotZ})`);
                 
                 layersHTML += `
