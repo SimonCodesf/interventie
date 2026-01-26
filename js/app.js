@@ -1909,16 +1909,15 @@ function buildLayersHTML(poster) {
                 const glbRotZ = rotZ;
                 
                 // GLB modellen grootte berekening:
-                // GLB modellen gebruiken 1 unit = 1 meter standaard
-                // Scale waarde = directe grootte in meters:
-                // - scale=0.1  → 10cm
-                // - scale=0.5  → 50cm  
-                // - scale=1.0  → 1m
-                const glbScale = baseScale; // Directe mapping: scale = meters
+                // Scale waarde * 0.1 = grootte in meters:
+                // - scale=1.0  → 10cm
+                // - scale=5.0  → 50cm  
+                // - scale=10.0 → 1m
+                const glbScale = baseScale * 0.1;
                 
                 console.log(`[GLB] Laag ${i}: ${layerData.glb_model}`);
                 console.log(`[GLB] Position: (${glbPosX.toFixed(3)}, ${glbPosY.toFixed(3)}, ${glbPosZ.toFixed(3)})`);
-                console.log(`[GLB] Scale: ${glbScale.toFixed(3)}m`);
+                console.log(`[GLB] Scale: ${baseScale} * 0.1 = ${glbScale.toFixed(3)}m`);
                 console.log(`[GLB] Rotation: (${glbRotX}, ${glbRotY}, ${glbRotZ})`);
                 
                 layersHTML += `
