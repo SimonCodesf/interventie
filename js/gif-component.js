@@ -21,17 +21,21 @@
         if (!gifContainer) {
             gifContainer = document.createElement('div');
             gifContainer.id = 'gif-animation-container';
+            // BELANGRIJK: visibility NIET op hidden zetten!
+            // De browser animeert GIFs alleen als ze "zichtbaar" zijn.
+            // We positioneren ze buiten het scherm maar houden ze technisch zichtbaar.
             gifContainer.style.cssText = `
                 position: fixed;
                 left: -9999px;
-                top: -9999px;
+                top: 0;
                 width: 1px;
                 height: 1px;
                 overflow: hidden;
                 pointer-events: none;
-                visibility: hidden;
+                opacity: 0.01;
             `;
             document.body.appendChild(gifContainer);
+            console.log('[gif-component] DOM container aangemaakt');
         }
         return gifContainer;
     }
@@ -171,6 +175,12 @@
             this.lastDrawTime = time;
             
             try {
+                // Debug: log elke 2 seconden om te bevestigen dat tick draait
+                if (!this.lastDebugLog || time - this.lastDebugLog > 2000) {
+                    this.lastDebugLog = time;
+                    console.log('[gif-component] Tick actief, capturing frame van:', this.loadedSrc);
+                }
+                
                 // De img in de DOM wordt door de browser geanimeerd
                 // Wij capturen gewoon de huidige staat
                 this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
@@ -179,7 +189,7 @@
                     this.texture.needsUpdate = true;
                 }
             } catch (e) {
-                // Negeer CORS of andere fouten
+                console.error('[gif-component] Tick error:', e);
             }
         },
         
