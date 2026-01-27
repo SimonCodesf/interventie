@@ -575,9 +575,15 @@ function handleUpdatePoster($db, $id) {
             
             // Handle new layer image upload
             if (isset($_FILES["layer_{$i}_image"]) && $_FILES["layer_{$i}_image"]['error'] === UPLOAD_ERR_OK) {
-                // Delete old layer file
+                // Delete old layer file if it exists
                 if (!empty($existingLayer['filename'])) {
-                    @unlink(AR_LAYERS_DIR . '/' . $existingLayer['filename']);
+                    $oldFilePath = AR_LAYERS_DIR . '/' . $existingLayer['filename'];
+                    if (file_exists($oldFilePath)) {
+                        @unlink($oldFilePath);
+                        error_log("[UPDATE_LAYER_{$i}] Deleted old file: {$existingLayer['filename']}");
+                    } else {
+                        error_log("[UPDATE_LAYER_{$i}] Old file not found (skipping delete): {$existingLayer['filename']}");
+                    }
                 }
 
                 $uploadedFile = $_FILES["layer_{$i}_image"];
@@ -637,7 +643,10 @@ function handleUpdatePoster($db, $id) {
                 if ($glbFile['size'] <= 10485760) { // 10MB max
                     // Verwijder oude GLB indien aanwezig
                     if (!empty($existingLayer['glb_model'])) {
-                        @unlink(AR_LAYERS_DIR . '/' . $existingLayer['glb_model']);
+                        $oldGlbPath = AR_LAYERS_DIR . '/' . $existingLayer['glb_model'];
+                        if (file_exists($oldGlbPath)) {
+                            @unlink($oldGlbPath);
+                        }
                     }
                     $glbFilename = $id . "_layer_{$i}.glb";
                     move_uploaded_file($glbFile['tmp_name'], AR_LAYERS_DIR . '/' . $glbFilename);
@@ -655,7 +664,10 @@ function handleUpdatePoster($db, $id) {
                 if ($audioFile['size'] <= 10485760) { // 10MB max
                     // Verwijder oude audio indien aanwezig
                     if (!empty($existingLayer['audio_file'])) {
-                        @unlink(AR_LAYERS_DIR . '/' . $existingLayer['audio_file']);
+                        $oldAudioPath = AR_LAYERS_DIR . '/' . $existingLayer['audio_file'];
+                        if (file_exists($oldAudioPath)) {
+                            @unlink($oldAudioPath);
+                        }
                     }
                     $ext = pathinfo($audioFile['name'], PATHINFO_EXTENSION) ?: 'mp3';
                     $audioFilename = $id . "_layer_{$i}_audio." . $ext;
