@@ -787,8 +787,9 @@ function formatCredits(poster) {
     }
     
     // Format als CREDITS sectie met items op één regel
+    // Elk item in nowrap span zodat alleen bij | mag breken
     const creditLines = creditItems
-        .map(c => `${escapeHtml(c.item)}: ${escapeHtml(c.owner)}`)
+        .map(c => `<span style="white-space:nowrap">${escapeHtml(c.item)}: ${escapeHtml(c.owner)}</span>`)
         .join(' | ');
     
     const result = `<div class="term-row"><span class="term-key">CREDITS</span><span class="term-val">${creditLines}</span></div>`;

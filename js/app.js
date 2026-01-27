@@ -179,8 +179,9 @@ function formatCredits(poster) {
     if (creditItems.length === 0) return '';
     
     // Format als CREDITS sectie met items op één regel
+    // Elk item in nowrap span zodat alleen bij | mag breken
     const creditLines = creditItems
-        .map(c => `${c.item}: ${c.owner}`)
+        .map(c => `<span style="white-space:nowrap">${c.item}: ${c.owner}</span>`)
         .join(' | ');
     
     return `<div class="term-row"><span class="term-key">CREDITS</span><span class="term-val">${creditLines}</span></div>`;
