@@ -791,52 +791,21 @@ function setupChunkEventListeners(scene, chunk) {
 }
 
 /**
- * LAZY LOAD GIFs: Laad GIF shaders pas wanneer target gevonden is
- * Dit voorkomt browser crashes door te veel GIFs tegelijk te laden bij pagina start
+ * LAZY LOAD GIFs: Nu niet meer nodig - GIFs worden als normale images geladen
+ * Behouden voor backwards compatibility
  */
 function loadLazyGifsForTarget(target) {
-    const lazyGifs = target.querySelectorAll('.lazy-gif');
-    if (lazyGifs.length === 0) return;
-    
-    console.log(`[GIF] Loading ${lazyGifs.length} lazy GIF(s) for target`);
-    
-    lazyGifs.forEach((gifEl, index) => {
-        const gifSrc = gifEl.getAttribute('data-gif-src');
-        const gifSettings = gifEl.getAttribute('data-gif-settings') || 'transparent: true;';
-        
-        if (gifSrc) {
-            console.log(`[GIF] Activating GIF ${index + 1}: ${gifSrc}`);
-            
-            // Wissel van flat shader naar gif shader met de echte src
-            gifEl.setAttribute('material', `shader: gif; src: url(${gifSrc}); ${gifSettings}`);
-            gifEl.classList.remove('lazy-gif');
-            gifEl.classList.add('gif-loaded');
-        }
-    });
+    // GIFs worden nu als <a-image> geladen, geen lazy loading nodig
+    console.log('[GIF] GIFs worden als normale images geladen (geen lazy loading)');
 }
 
 /**
- * UNLOAD GIFs: Verwijder GIF shaders wanneer target verloren is
- * Dit maakt geheugen vrij en voorkomt memory leaks
+ * UNLOAD GIFs: Nu niet meer nodig - GIFs zijn normale images
+ * Behouden voor backwards compatibility  
  */
 function unloadLazyGifsForTarget(target) {
-    const loadedGifEls = target.querySelectorAll('.gif-loaded');
-    if (loadedGifEls.length === 0) return;
-    
-    console.log(`[GIF] Unloading ${loadedGifEls.length} GIF(s) from target`);
-    
-    loadedGifEls.forEach((gifEl) => {
-        // Sla originele src op zodat we later opnieuw kunnen laden
-        const gifSrc = gifEl.getAttribute('data-gif-src');
-        const gifSettings = gifEl.getAttribute('data-gif-settings') || 'transparent: true;';
-        
-        // Wissel terug naar flat shader (geen GIF meer)
-        gifEl.setAttribute('material', 'shader: flat; color: #222222; transparent: true; opacity: 0;');
-        gifEl.classList.remove('gif-loaded');
-        gifEl.classList.add('lazy-gif');
-        
-        console.log(`[GIF] Unloaded: ${gifSrc}`);
-    });
+    // GIFs zijn nu normale images, geen speciale cleanup nodig
+    console.log('[GIF] GIF cleanup niet nodig (normale images)');
 }
 
 function checkAndShowLoader(poster) {
@@ -1934,27 +1903,25 @@ function buildLayersHTML(poster) {
                 }
 
                 if (isGif) {
-                    // Use a-plane with GIF shader for GIF playback
-                    // BELANGRIJK: Laad GIF LAZY - src wordt pas gezet bij targetFound
-                    // Dit voorkomt browser crashes door te veel GIFs tegelijk te laden
+                    // GIF: gebruik simpele a-image (toont eerste frame, geen animatie)
+                    // De GIF shader is te buggy - dit is een betrouwbare fallback
                     const gifSize = 1.4 * baseScale;
-                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
+                    const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
                     layersHTML += `
-                        <a-plane 
+                        <a-image 
                             id="ar-layer-${i}"
-                            class="gif-layer lazy-gif"
+                            class="gif-layer"
+                            src="${mediaPath}"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
                             rotation="${rotX} ${rotY} ${rotZ}"
-                            material="shader: flat; color: #222222; transparent: true; opacity: 0;"
-                            data-gif-src="${mediaPath}"
-                            data-gif-settings="${transparentSettings}"
+                            material="${materialSettings}"
                             data-preserve-aspect="true"
                             data-image-src="${mediaPath}"
                             ${customScaleAttr}
                             ${animationStr}
-                            ${exclusionAttr}></a-plane>`;
+                            ${exclusionAttr}></a-image>`;
                 } else if (isVideo) {
                     // Use a-video for MP4/WebM layers
                     // Video: gebruik default aspect ratio 16:9
