@@ -146,8 +146,6 @@
         },
         
         init: function() {
-            console.log('[gif-component] Init met transparent:', this.data.transparent, 'type:', typeof this.data.transparent);
-            
             this.canvas = document.createElement('canvas');
             this.ctx = this.canvas.getContext('2d');
             
@@ -249,10 +247,11 @@
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
             } else {
-                // Opaque modus: accumuleer frames op witte achtergrond
-                this.accCtx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.drawImage(this.accCanvas, 0, 0);
+                // Opaque modus: teken witte achtergrond + frame elke keer
+                // Dit voorkomt problemen met GIFs die disposal method 2 gebruiken
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
             }
         },
         
