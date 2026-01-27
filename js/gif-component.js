@@ -84,28 +84,57 @@
                 return;
             }
             
-            // Laad alle frames als Image objecten
+            // Laad alle frames als Image objecten EN composite op wit
             const loadedFrames = new Array(frames.length);
             let loaded = 0;
+            
+            // Temporary canvas voor compositing
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            let previousFrame = null;
             
             frames.forEach((blobUrl, i) => {
                 const img = new Image();
                 img.onload = () => {
-                    loadedFrames[i] = img;
-                    loaded++;
-                    
-                    if (loaded === frames.length) {
-                        // Cleanup blob URLs
-                        frames.forEach(url => URL.revokeObjectURL(url));
-                        
-                        resolve({
-                            frames: loadedFrames,
-                            delays: delayTimes,
-                            loopCount: loopCnt,
-                            width: loadedFrames[0].width,
-                            height: loadedFrames[0].height
-                        });
+                    // Set canvas size op eerste frame
+                    if (i === 0) {
+                        tempCanvas.width = img.width;
+                        tempCanvas.height = img.height;
                     }
+                    
+                    // Composite frame op vorige frame (GIF animatie gedrag)
+                    // Of op wit als eerste frame
+                    if (i === 0 || !previousFrame) {
+                        tempCtx.fillStyle = '#FFFFFF';
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    } else {
+                        tempCtx.drawImage(previousFrame, 0, 0);
+                    }
+                    
+                    // Teken nieuw frame eroverheen
+                    tempCtx.drawImage(img, 0, 0);
+                    
+                    // Maak nieuwe Image van gecomposite frame
+                    const compositeImg = new Image();
+                    compositeImg.onload = () => {
+                        loadedFrames[i] = compositeImg;
+                        previousFrame = compositeImg;
+                        loaded++;
+                        
+                        if (loaded === frames.length) {
+                            // Cleanup blob URLs
+                            frames.forEach(url => URL.revokeObjectURL(url));
+                            
+                            resolve({
+                                frames: loadedFrames,
+                                delays: delayTimes,
+                                loopCount: loopCnt,
+                                width: loadedFrames[0].width,
+                                height: loadedFrames[0].height
+                            });
+                        }
+                    };
+                    compositeImg.src = tempCanvas.toDataURL();
                 };
                 img.onerror = () => {
                     reject(new Error('Failed to load frame ' + i));
@@ -226,11 +255,9 @@
             
             const frame = this.gifData.frames[index];
             
-            // Vul canvas met wit EERST - zorgt voor opaque rendering
-            this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            // Teken het frame eroverheen
+            // Frames zijn al gecomposite met witte achtergrond tijdens parsing
+            // Gewoon direct tekenen zonder extra fill
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
         },
         
