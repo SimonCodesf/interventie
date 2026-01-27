@@ -271,6 +271,9 @@ function deleteLayer(layerNum) {
 
 // Verwijder specifiek media type van een laag (afbeelding, glb, of audio)
 function deleteLayerMedia(layerNum, mediaType) {
+    console.log('deleteLayerMedia called:', layerNum, mediaType);
+    alert('deleteLayerMedia aangeroepen voor laag ' + layerNum + ', type: ' + mediaType);
+    
     const typeNames = {
         'image': 'afbeelding/video',
         'glb': '3D model',
