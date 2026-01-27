@@ -159,9 +159,20 @@
 	   * @protected
 	   */
 	  tick: function tick(t) {
-	    if (!this.__frames || this.paused()) return;
-	    if (Date.now() - this.__startTime >= this.__nextFrameTime) {
-	      this.nextFrame();
+	    // Skip if not ready or paused
+	    if (!this.__frames || !this.__frames.length || this.paused()) return;
+	    
+	    // Skip if crashed previously
+	    if (this.__crashed) return;
+	    
+	    try {
+	      if (Date.now() - this.__startTime >= this.__nextFrameTime) {
+	        this.nextFrame();
+	      }
+	    } catch (e) {
+	      console.error('GIF tick error:', e);
+	      this.__crashed = true;
+	      this.pause();
 	    }
 	  },
 
@@ -532,16 +543,29 @@
 	   * @public
 	   */
 	  nextFrame: function nextFrame() {
-	    this.__draw();
+	    try {
+	      // Safety checks
+	      if (!this.__frames || !this.__delayTimes) return;
+	      if (this.__frameIdx >= this.__frames.length) this.__frameIdx = 0;
+	      if (this.__frameIdx < 0) this.__frameIdx = 0;
+	      
+	      this.__draw();
 
-	    /* update next frame time */
-	    while (Date.now() - this.__startTime >= this.__nextFrameTime) {
-
-	      this.__nextFrameTime += this.__delayTimes[this.__frameIdx++];
-	      if ((this.__infinity || this.__loopCnt) && this.__frameCnt <= this.__frameIdx) {
-	        /* go back to the first */
-	        this.__frameIdx = 0;
+	      /* update next frame time */
+	      var loopCount = 0;
+	      var maxLoops = 100; // Prevent infinite loop
+	      while (Date.now() - this.__startTime >= this.__nextFrameTime && loopCount < maxLoops) {
+	        loopCount++;
+	        var delay = this.__delayTimes[this.__frameIdx] || 100; // Default 100ms if missing
+	        this.__nextFrameTime += delay;
+	        this.__frameIdx++;
+	        if ((this.__infinity || this.__loopCnt) && this.__frameCnt <= this.__frameIdx) {
+	          /* go back to the first */
+	          this.__frameIdx = 0;
+	        }
 	      }
+	    } catch (e) {
+	      console.error('GIF nextFrame error:', e);
 	    }
 	  },
 
@@ -673,84 +697,159 @@
 	 */
 
 	exports.parseGIF = function (gif, successCB, errorCB) {
-
-	  var pos = 0;
-	  var delayTimes = [];
-	  var loadCnt = 0;
-	  var graphicControl = null;
-	  var imageData = null;
-	  var frames = [];
-	  var loopCnt = 0;
-	  if (gif[0] === 0x47 && gif[1] === 0x49 && gif[2] === 0x46 && // 'GIF'
-	  gif[3] === 0x38 && gif[4] === 0x39 && gif[5] === 0x61) {
-	    // '89a'
-	    pos += 13 + +!!(gif[10] & 0x80) * Math.pow(2, (gif[10] & 0x07) + 1) * 3;
-	    var gifHeader = gif.subarray(0, pos);
-	    while (gif[pos] && gif[pos] !== 0x3b) {
-	      var offset = pos,
-	          blockId = gif[pos];
-	      if (blockId === 0x21) {
-	        var label = gif[++pos];
-	        if ([0x01, 0xfe, 0xf9, 0xff].indexOf(label) !== -1) {
-	          label === 0xf9 && delayTimes.push((gif[pos + 3] + (gif[pos + 4] << 8)) * 10);
-	          label === 0xff && (loopCnt = gif[pos + 15] + (gif[pos + 16] << 8));
+	  try {
+	    var pos = 0;
+	    var delayTimes = [];
+	    var loadCnt = 0;
+	    var graphicControl = null;
+	    var imageData = null;
+	    var frames = [];
+	    var loopCnt = 0;
+	    
+	    // Limit max frames to prevent memory issues
+	    var MAX_FRAMES = 50;
+	    
+	    if (gif[0] === 0x47 && gif[1] === 0x49 && gif[2] === 0x46 && // 'GIF'
+	    gif[3] === 0x38 && gif[4] === 0x39 && gif[5] === 0x61) {
+	      // '89a'
+	      pos += 13 + +!!(gif[10] & 0x80) * Math.pow(2, (gif[10] & 0x07) + 1) * 3;
+	      var gifHeader = gif.subarray(0, pos);
+	      
+	      // Safety: max iterations to prevent infinite loop
+	      var iterations = 0;
+	      var maxIterations = 10000;
+	      
+	      while (gif[pos] && gif[pos] !== 0x3b && iterations < maxIterations && frames.length < MAX_FRAMES) {
+	        iterations++;
+	        var offset = pos,
+	            blockId = gif[pos];
+	        if (blockId === 0x21) {
+	          var label = gif[++pos];
+	          if ([0x01, 0xfe, 0xf9, 0xff].indexOf(label) !== -1) {
+	            label === 0xf9 && delayTimes.push((gif[pos + 3] + (gif[pos + 4] << 8)) * 10);
+	            label === 0xff && (loopCnt = gif[pos + 15] + (gif[pos + 16] << 8));
+	            while (gif[++pos]) {
+	              pos += gif[pos];
+	              if (pos >= gif.length) break; // Safety bounds check
+	            }
+	            label === 0xf9 && (graphicControl = gif.subarray(offset, pos + 1));
+	          } else {
+	            console.warn('parseGIF: unknown label, skipping');
+	            break;
+	          }
+	        } else if (blockId === 0x2c) {
+	          pos += 9;
+	          pos += 1 + +!!(gif[pos] & 0x80) * (Math.pow(2, (gif[pos] & 0x07) + 1) * 3);
 	          while (gif[++pos]) {
 	            pos += gif[pos];
-	          }label === 0xf9 && (graphicControl = gif.subarray(offset, pos + 1));
+	            if (pos >= gif.length) break; // Safety bounds check
+	          }
+	          var imageData = gif.subarray(offset, pos + 1);
+	          try {
+	            frames.push(URL.createObjectURL(new Blob([gifHeader, graphicControl, imageData])));
+	          } catch (e) {
+	            console.warn('parseGIF: failed to create blob for frame', e);
+	          }
 	        } else {
-	          errorCB && errorCB('parseGIF: unknown label');break;
+	          console.warn('parseGIF: unknown blockId, skipping');
+	          break;
 	        }
-	      } else if (blockId === 0x2c) {
-	        pos += 9;
-	        pos += 1 + +!!(gif[pos] & 0x80) * (Math.pow(2, (gif[pos] & 0x07) + 1) * 3);
-	        while (gif[++pos]) {
-	          pos += gif[pos];
-	        }var imageData = gif.subarray(offset, pos + 1);
-	        frames.push(URL.createObjectURL(new Blob([gifHeader, graphicControl, imageData])));
-	      } else {
-	        errorCB && errorCB('parseGIF: unknown blockId');break;
+	        pos++;
 	      }
-	      pos++;
+	      
+	      if (frames.length >= MAX_FRAMES) {
+	        console.warn('parseGIF: frame limit reached (' + MAX_FRAMES + ')');
+	      }
+	    } else {
+	      errorCB && errorCB('parseGIF: no GIF89a');
+	      return;
 	    }
-	  } else {
-	    errorCB && errorCB('parseGIF: no GIF89a');
-	  }
-	  if (frames.length) {
-
-	    var cnv = document.createElement('canvas');
-	    var loadImg = function loadImg() {
-	      frames.forEach(function (src, i) {
-	        var img = new Image();
-	        img.onload = function (e, i) {
-	          if (i === 0) {
-	            cnv.width = img.width;
-	            cnv.height = img.height;
+	    
+	    if (frames.length) {
+	      console.log('parseGIF: ' + frames.length + ' frames found');
+	      
+	      var cnv = document.createElement('canvas');
+	      var ctx = cnv.getContext('2d');
+	      var loadedFrameImages = [];
+	      
+	      var loadImg = function loadImg() {
+	        var loadedCount = 0;
+	        frames.forEach(function (src, i) {
+	          var img = new Image();
+	          img.onload = function () {
+	            if (i === 0) {
+	              cnv.width = img.width;
+	              cnv.height = img.height;
+	            }
+	            loadedFrameImages[i] = img;
+	            loadedCount++;
+	            
+	            // Revoke blob URL to free memory
+	            URL.revokeObjectURL(src);
+	            
+	            if (loadedCount === frames.length) {
+	              // All frames loaded, now fix them by drawing to canvas
+	              fixFrames();
+	            }
+	          };
+	          img.onerror = function() {
+	            console.warn('parseGIF: failed to load frame ' + i);
+	            loadedFrameImages[i] = null;
+	            loadedCount++;
+	            URL.revokeObjectURL(src);
+	            if (loadedCount === frames.length) {
+	              fixFrames();
+	            }
+	          };
+	          img.src = src;
+	        });
+	      };
+	      
+	      var fixFrames = function fixFrames() {
+	        var fixedFrames = [];
+	        
+	        loadedFrameImages.forEach(function(frameImg, i) {
+	          if (frameImg) {
+	            // Draw frame to canvas
+	            ctx.clearRect(0, 0, cnv.width, cnv.height);
+	            ctx.drawImage(frameImg, 0, 0);
+	            
+	            // Create new image from canvas
+	            var fixedImg = new Image();
+	            fixedImg.src = cnv.toDataURL('image/png'); // Use PNG for better quality
+	            fixedFrames[i] = fixedImg;
+	          } else {
+	            // Skip broken frames
+	            fixedFrames[i] = loadedFrameImages[0] || new Image();
 	          }
-	          loadCnt++;
-	          frames[i] = this;
-	          if (loadCnt === frames.length) {
-	            loadCnt = 0;
-	            imageFix(1);
-	          }
-	        }.bind(img, null, i);
-	        img.src = src;
-	      });
-	    };
-	    var imageFix = function imageFix(i) {
-	      var img = new Image();
-	      img.onload = function (e, i) {
-	        loadCnt++;
-	        frames[i] = this;
-	        if (loadCnt === frames.length) {
-	          cnv = null;
-	          successCB && successCB(delayTimes, loopCnt, frames);
-	        } else {
-	          imageFix(++i);
+	        });
+	        
+	        // Ensure minimum delay times
+	        delayTimes = delayTimes.map(function(t) {
+	          return Math.max(t, 20); // Minimum 20ms per frame
+	        });
+	        
+	        // Fill missing delay times
+	        while (delayTimes.length < fixedFrames.length) {
+	          delayTimes.push(100); // Default 100ms
 	        }
-	      }.bind(img);
-	      img.src = cnv.toDataURL('image/gif');
-	    };
-	    loadImg();
+	        
+	        // Clean up
+	        cnv = null;
+	        ctx = null;
+	        loadedFrameImages = null;
+	        
+	        console.log('parseGIF: frames fixed, calling success callback');
+	        successCB && successCB(delayTimes, loopCnt, fixedFrames);
+	      };
+	      
+	      loadImg();
+	    } else {
+	      errorCB && errorCB('parseGIF: no frames found');
+	    }
+	  } catch (e) {
+	    console.error('parseGIF error:', e);
+	    errorCB && errorCB('parseGIF: ' + e.message);
 	  }
 	};
 
