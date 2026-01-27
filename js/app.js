@@ -640,6 +640,15 @@ async function initializeChunkAR() {
     
     // Show Scan Button always (allows user to reset/scan)
     setTimeout(() => showScanButton('Scan'), 2000);
+    
+    // Failsafe: If AR doesn't become ready in 30 seconds, hide loader anyway
+    setTimeout(() => {
+        const loader = document.getElementById('arjs-loader');
+        if (loader && !loader.classList.contains('hidden')) {
+            console.warn('⚠️ AR init timeout (30s) - hiding loader');
+            loader.classList.add('hidden');
+        }
+    }, 30000);
 }
 
 // Load a specific chunk scene
@@ -694,6 +703,14 @@ function loadChunkScene(chunkIndex) {
 
 // Setup listeners for Chunk System
 function setupChunkEventListeners(scene, chunk) {
+    // Error handling voor MindAR
+    scene.addEventListener('arError', (e) => {
+        console.error('❌ AR Error:', e.detail || e);
+        // Hide loader on error
+        const loader = document.getElementById('arjs-loader');
+        if (loader) loader.classList.add('hidden');
+    });
+    
     scene.addEventListener('arReady', () => {
         console.log(' Chunk AR Ready');
         fixLayerAspectRatios();
@@ -801,6 +818,14 @@ function checkAndShowLoader(poster) {
             }, 800);
         } else {
             console.log(' Waiting for GIFs to load...');
+            
+            // Failsafe: Hide loader after 10 seconds regardless (prevents infinite loading)
+            setTimeout(() => {
+                if (currentTrackedPoster && currentTrackedPoster.id === poster.id) {
+                    console.warn('⚠️ GIF load timeout - hiding loader anyway');
+                    hideGifLoader();
+                }
+            }, 10000);
         }
     }
 }
