@@ -533,16 +533,31 @@ function handleUpdatePoster($db, $id) {
             
             // Verwijder bestanden indien delete flag is gezet
             if ($deleteMedia && !empty($existingLayer['filename'])) {
-                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['filename']);
-                error_log("[UPDATE_LAYER_{$i}] Media verwijderd op verzoek");
+                $deleteMediaPath = AR_LAYERS_DIR . '/' . $existingLayer['filename'];
+                if (file_exists($deleteMediaPath)) {
+                    @unlink($deleteMediaPath);
+                    error_log("[UPDATE_LAYER_{$i}] Media verwijderd op verzoek");
+                } else {
+                    error_log("[UPDATE_LAYER_{$i}] Media bestand niet gevonden (skip delete): {$existingLayer['filename']}");
+                }
             }
             if ($deleteGlb && !empty($existingLayer['glb_model'])) {
-                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['glb_model']);
-                error_log("[UPDATE_LAYER_{$i}] GLB model verwijderd op verzoek");
+                $deleteGlbPath = AR_LAYERS_DIR . '/' . $existingLayer['glb_model'];
+                if (file_exists($deleteGlbPath)) {
+                    @unlink($deleteGlbPath);
+                    error_log("[UPDATE_LAYER_{$i}] GLB model verwijderd op verzoek");
+                } else {
+                    error_log("[UPDATE_LAYER_{$i}] GLB model niet gevonden (skip delete): {$existingLayer['glb_model']}");
+                }
             }
             if ($deleteAudio && !empty($existingLayer['audio_file'])) {
-                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['audio_file']);
-                error_log("[UPDATE_LAYER_{$i}] Audio verwijderd op verzoek");
+                $deleteAudioPath = AR_LAYERS_DIR . '/' . $existingLayer['audio_file'];
+                if (file_exists($deleteAudioPath)) {
+                    @unlink($deleteAudioPath);
+                    error_log("[UPDATE_LAYER_{$i}] Audio verwijderd op verzoek");
+                } else {
+                    error_log("[UPDATE_LAYER_{$i}] Audio niet gevonden (skip delete): {$existingLayer['audio_file']}");
+                }
             }
             
             $layerData = [
