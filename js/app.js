@@ -703,6 +703,8 @@ function showChunkCycleButtonAgain() {
 
 // Start chunk scan - cycle door chunks tot poster gevonden
 function startChunkScan() {
+    console.log('🔍 Start chunk scan aangeroepen');
+    
     if (window.chunkLocked) {
         console.log('Chunk vergrendeld - poster gevonden');
         return;
@@ -710,6 +712,11 @@ function startChunkScan() {
     
     const totalChunks = window.arManifest.chunks.length;
     const btn = document.getElementById('chunk-cycle-btn');
+    
+    console.log('Total chunks:', totalChunks);
+    
+    // Direct knop updaten als feedback
+    if (btn) btn.innerHTML = 'SCANNING...';
     
     // Als er maar 1 chunk is, reload gewoon
     if (totalChunks === 1) {
@@ -736,10 +743,13 @@ function startChunkScan() {
     let currentChunk = 0;
     let dots = 0;
     
+    console.log('Starting dot animation');
+    
     // Puntjes animatie tijdens scannen
     const dotInterval = setInterval(() => {
         if (!window.isChunkScanning || window.chunkLocked) {
             clearInterval(dotInterval);
+            console.log('Dot interval cleared');
             return;
         }
         dots = (dots + 1) % 4;
@@ -758,6 +768,8 @@ function startChunkScan() {
     updateScanDisplay();
     
     const scanNextChunk = () => {
+        console.log('scanNextChunk called, isChunkScanning:', window.isChunkScanning);
+        
         if (!window.isChunkScanning || window.chunkLocked) {
             // Stop scanning
             clearInterval(dotInterval);
