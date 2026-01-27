@@ -772,14 +772,18 @@ function startChunkScan() {
         }
         dots = (dots + 1) % 4;
         if (btn) {
-            btn.innerHTML = `${currentChunk + 1}/${totalChunks}` + '.'.repeat(dots);
+            const text = `${currentChunk + 1}/${totalChunks}` + '.'.repeat(dots);
+            btn.textContent = text;
+            console.log('Knop update:', text);
         }
     }, 300);
     
     const updateScanDisplay = () => {
         dots = 0;
         if (btn) {
-            btn.innerHTML = `${currentChunk + 1}/${totalChunks}`;
+            const text = `${currentChunk + 1}/${totalChunks}`;
+            btn.textContent = text;
+            console.log('Scan display update:', text);
         }
     };
     
@@ -791,7 +795,7 @@ function startChunkScan() {
         if (!window.isChunkScanning || window.chunkLocked) {
             // Stop scanning
             clearInterval(dotInterval);
-            if (btn) btn.innerHTML = 'SCAN';
+            if (btn) btn.textContent = 'SCAN';
             return;
         }
         
@@ -807,7 +811,7 @@ function startChunkScan() {
             if (cycleCount >= maxCycles) {
                 window.isChunkScanning = false;
                 clearInterval(dotInterval);
-                if (btn) btn.innerHTML = 'SCAN';
+                if (btn) btn.textContent = 'SCAN';
                 console.log(`Scan gestopt na ${maxCycles} cycli`);
                 return;
             }
