@@ -146,8 +146,7 @@
         
         init: function() {
             this.canvas = document.createElement('canvas');
-            // Alpha: false = canvas is OPAQUE (niet transparant)
-            this.ctx = this.canvas.getContext('2d', { alpha: false });
+            this.ctx = this.canvas.getContext('2d');
             this.texture = null;
             this.gifData = null;
             this.currentFrame = 0;
@@ -227,10 +226,11 @@
             
             const frame = this.gifData.frames[index];
             
-            // Clear canvas voor volgend frame
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            // Vul canvas met wit EERST - zorgt voor opaque rendering
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             
-            // Teken het frame
+            // Teken het frame eroverheen
             this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
         },
         
@@ -242,13 +242,13 @@
             this.texture = new THREE.CanvasTexture(this.canvas);
             this.texture.minFilter = THREE.LinearFilter;
             this.texture.magFilter = THREE.LinearFilter;
-            this.texture.format = THREE.RGBFormat; // RGB want canvas is opaque
+            this.texture.format = THREE.RGBAFormat; // MOET RGBAFormat zijn
             this.texture.needsUpdate = true;
             
             const mesh = this.el.getObject3D('mesh');
             if (mesh && mesh.material) {
                 mesh.material.map = this.texture;
-                // Geen transparantie - GIFs zijn opaque
+                // Canvas heeft witte achtergrond, dus geen transparantie nodig
                 mesh.material.transparent = false;
                 mesh.material.depthWrite = true;
                 mesh.material.needsUpdate = true;
