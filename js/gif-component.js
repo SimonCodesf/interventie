@@ -247,11 +247,18 @@
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
             } else {
-                // Opaque modus: teken witte achtergrond + frame elke keer
-                // Dit voorkomt problemen met GIFs die disposal method 2 gebruiken
-                this.ctx.fillStyle = '#FFFFFF';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
+                // Opaque modus: accumuleer frames op witte achtergrond
+                // - Bij frame 0: reset naar wit (start nieuwe loop)
+                // - Anders: stapel frame op vorige
+                if (index === 0) {
+                    this.accCtx.fillStyle = '#FFFFFF';
+                    this.accCtx.fillRect(0, 0, this.accCanvas.width, this.accCanvas.height);
+                }
+                // Teken frame op accumulator (stapelt op vorige)
+                this.accCtx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
+                // Kopieer accumulator naar output canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.drawImage(this.accCanvas, 0, 0);
             }
         },
         
