@@ -151,21 +151,49 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <option value="pulse">PULSE</option>
                             <option value="float-up">FLOAT</option>
                         </select>
-                        <div class="mini-input"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-duration" name="layer_${layerNum}_anim_duration" value="0" step="100" placeholder="ms"></div>
                     </div>
-                    <div class="anim-row">
-                        <div class="mini-input"><span>ΔX</span><input type="number" id="${prefix}layer-${layerNum}-anim-x" name="layer_${layerNum}_anim_x" value="0" step="0.01"></div>
-                        <div class="mini-input"><span>ΔY</span><input type="number" id="${prefix}layer-${layerNum}-anim-y" name="layer_${layerNum}_anim_y" value="0" step="0.01"></div>
-                        <div class="mini-input"><span>ΔZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-z" name="layer_${layerNum}_anim_z" value="0" step="0.01"></div>
+                    
+                    <!-- Positie animatie (ΔX, ΔY, ΔZ) -->
+                    <div class="anim-group">
+                        <div class="anim-row">
+                            <div class="mini-input"><span>ΔX</span><input type="number" id="${prefix}layer-${layerNum}-anim-x" name="layer_${layerNum}_anim_x" value="0" step="0.01"></div>
+                            <div class="mini-input"><span>ΔY</span><input type="number" id="${prefix}layer-${layerNum}-anim-y" name="layer_${layerNum}_anim_y" value="0" step="0.01"></div>
+                            <div class="mini-input"><span>ΔZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-z" name="layer_${layerNum}_anim_z" value="0" step="0.01"></div>
+                            <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-pos-duration" name="layer_${layerNum}_anim_pos_duration" value="0" step="100" placeholder="ms"></div>
+                        </div>
                     </div>
-                    <div class="anim-row">
-                        <div class="mini-input"><span>RX</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-x" name="layer_${layerNum}_anim_rot_x" value="0" step="1"></div>
-                        <div class="mini-input"><span>RY</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-y" name="layer_${layerNum}_anim_rot_y" value="0" step="1"></div>
-                        <div class="mini-input"><span>RZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-z" name="layer_${layerNum}_anim_rot_z" value="0" step="1"></div>
+                    
+                    <!-- Rotatie animatie (RX, RY, RZ) met origin selector -->
+                    <div class="anim-group">
+                        <div class="anim-row">
+                            <div class="mini-input"><span>RX</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-x" name="layer_${layerNum}_anim_rot_x" value="0" step="1"></div>
+                            <div class="mini-input"><span>RY</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-y" name="layer_${layerNum}_anim_rot_y" value="0" step="1"></div>
+                            <div class="mini-input"><span>RZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-z" name="layer_${layerNum}_anim_rot_z" value="0" step="1"></div>
+                            <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-duration" name="layer_${layerNum}_anim_rot_duration" value="0" step="100" placeholder="ms"></div>
+                        </div>
+                        <div class="anim-row">
+                            <label class="origin-label">ORIGIN:</label>
+                            <select id="${prefix}layer-${layerNum}-anim-rot-origin" name="layer_${layerNum}_anim_rot_origin" class="origin-select">
+                                <option value="center">CENTER</option>
+                                <option value="top">BOVEN</option>
+                                <option value="bottom">ONDER</option>
+                                <option value="left">LINKS</option>
+                                <option value="right">RECHTS</option>
+                                <option value="top-left">LINKS-BOVEN</option>
+                                <option value="top-right">RECHTS-BOVEN</option>
+                                <option value="bottom-left">LINKS-ONDER</option>
+                                <option value="bottom-right">RECHTS-ONDER</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="anim-row">
-                        <div class="mini-input"><span>SCALE</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale" name="layer_${layerNum}_anim_scale" value="1" step="0.1"></div>
-                        <div class="mini-input"><span>OPACITY</span><input type="number" id="${prefix}layer-${layerNum}-anim-opacity" name="layer_${layerNum}_anim_opacity" value="1" step="0.1" min="0" max="1"></div>
+                    
+                    <!-- Scale/Opacity animatie -->
+                    <div class="anim-group">
+                        <div class="anim-row">
+                            <div class="mini-input"><span>SCALE</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale" name="layer_${layerNum}_anim_scale" value="1" step="0.1"></div>
+                            <div class="mini-input"><span>OPACITY</span><input type="number" id="${prefix}layer-${layerNum}-anim-opacity" name="layer_${layerNum}_anim_opacity" value="1" step="0.1" min="0" max="1"></div>
+                            <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale-duration" name="layer_${layerNum}_anim_scale_duration" value="0" step="100" placeholder="ms"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -192,12 +220,15 @@ function deleteLayer(layerNum) {
         `edit-layer-${layerNum}-anim-x`,
         `edit-layer-${layerNum}-anim-y`,
         `edit-layer-${layerNum}-anim-z`,
+        `edit-layer-${layerNum}-anim-pos-duration`,
         `edit-layer-${layerNum}-anim-rot-x`,
         `edit-layer-${layerNum}-anim-rot-y`,
         `edit-layer-${layerNum}-anim-rot-z`,
+        `edit-layer-${layerNum}-anim-rot-duration`,
+        `edit-layer-${layerNum}-anim-rot-origin`,
         `edit-layer-${layerNum}-anim-scale`,
         `edit-layer-${layerNum}-anim-opacity`,
-        `edit-layer-${layerNum}-anim-duration`,
+        `edit-layer-${layerNum}-anim-scale-duration`,
         `edit-layer-${layerNum}-anim-preset`
     ];
     
@@ -391,8 +422,10 @@ function applyAnimPreset(selectEl, prefix, layerNum) {
 
     // Reset all first
     setVal('anim-x', 0); setVal('anim-y', 0); setVal('anim-z', 0);
+    setVal('anim-pos-duration', 0);
     setVal('anim-rot-x', 0); setVal('anim-rot-y', 0); setVal('anim-rot-z', 0);
-    setVal('anim-scale', 1.0); setVal('anim-opacity', 1.0); setVal('anim-duration', 0);
+    setVal('anim-rot-duration', 0); setVal('anim-rot-origin', 'center');
+    setVal('anim-scale', 1.0); setVal('anim-opacity', 1.0); setVal('anim-scale-duration', 0);
 
     switch(preset) {
         case 'reset':
@@ -400,43 +433,43 @@ function applyAnimPreset(selectEl, prefix, layerNum) {
             break;
         case 'spin-y':
             setVal('anim-rot-y', 360);
-            setVal('anim-duration', 5000);
+            setVal('anim-rot-duration', 5000);
             break;
         case 'spin-x':
             setVal('anim-rot-x', 360);
-            setVal('anim-duration', 5000);
+            setVal('anim-rot-duration', 5000);
             break;
         case 'spin-z':
             setVal('anim-rot-z', 360);
-            setVal('anim-duration', 5000);
+            setVal('anim-rot-duration', 5000);
             break;
         case 'float-up':
             setVal('anim-y', 0.5); // 50cm up
-            setVal('anim-duration', 3000);
+            setVal('anim-pos-duration', 3000);
             break;
         case 'hover':
             setVal('anim-y', 0.2); // 20cm up/down
-            setVal('anim-duration', 2000);
+            setVal('anim-pos-duration', 2000);
             break;
         case 'slide-in':
-            setVal('anim-x', -1.0); // Start from left?
-            setVal('anim-duration', 1500);
+            setVal('anim-x', -1.0); // Start from left
+            setVal('anim-pos-duration', 1500);
             break;
         case 'pulse':
             setVal('anim-scale', 1.2);
-            setVal('anim-duration', 1000);
+            setVal('anim-scale-duration', 1000);
             break;
         case 'fade-in':
             setVal('anim-opacity', 0); 
-            setVal('anim-duration', 2000);
+            setVal('anim-scale-duration', 2000);
             break;
         case 'pop-in':
             setVal('anim-scale', 0.01); // Start small
-            setVal('anim-duration', 800);
+            setVal('anim-scale-duration', 800);
             break;
         case 'blink':
             setVal('anim-opacity', 0);
-            setVal('anim-duration', 500);
+            setVal('anim-scale-duration', 500);
             break;
     }
 }
@@ -793,11 +826,15 @@ function updatePreviewFromInputs() {
         const animX = getVal(`${prefix}layer-${i}-anim-x`, 0);
         const animY = getVal(`${prefix}layer-${i}-anim-y`, 0);
         const animZ = getVal(`${prefix}layer-${i}-anim-z`, 0);
+        const animPosDuration = getVal(`${prefix}layer-${i}-anim-pos-duration`, 0);
         const animRotX = getVal(`${prefix}layer-${i}-anim-rot-x`, 0);
         const animRotY = getVal(`${prefix}layer-${i}-anim-rot-y`, 0);
         const animRotZ = getVal(`${prefix}layer-${i}-anim-rot-z`, 0);
+        const animRotDuration = getVal(`${prefix}layer-${i}-anim-rot-duration`, 0);
+        const animRotOrigin = document.getElementById(`${prefix}layer-${i}-anim-rot-origin`)?.value || 'center';
         const animScale = getVal(`${prefix}layer-${i}-anim-scale`, 1);
-        const animDuration = getVal(`${prefix}layer-${i}-anim-duration`, 0);
+        const animOpacity = getVal(`${prefix}layer-${i}-anim-opacity`, 1);
+        const animScaleDuration = getVal(`${prefix}layer-${i}-anim-scale-duration`, 0);
         
         // Check of layer media heeft (file input of bestaand bestand uit poster data)
         const fileInput = document.getElementById(`${prefix}layer-${i}-image`);
@@ -833,7 +870,9 @@ function updatePreviewFromInputs() {
             const layerData = { 
                 posX, posY, posZ, scale, rotX, rotY, rotZ, 
                 // Animatie parameters
-                animX, animY, animZ, animRotX, animRotY, animRotZ, animScale, animDuration,
+                animX, animY, animZ, animPosDuration,
+                animRotX, animRotY, animRotZ, animRotDuration, animRotOrigin,
+                animScale, animOpacity, animScaleDuration,
                 hasContent: true,
                 imageSrc: null,
                 imageLoaded: false,
@@ -1136,63 +1175,101 @@ function renderARPreview() {
                 el.style.justifyContent = 'center';
                 
                 // Basis transform (rotatie)
-                el.style.transformOrigin = 'center center';
                 const baseTransform = `rotateX(${data.rotX}deg) rotateY(${data.rotY}deg) rotateZ(${data.rotZ}deg)`;
                 el.style.transform = baseTransform;
                 
-                // Animatie toepassen als duration > 0
-                const animDur = data.animDuration || 0;
+                // Transform origin berekenen op basis van animRotOrigin
+                const originMap = {
+                    'center': 'center center',
+                    'top': 'center top',
+                    'bottom': 'center bottom',
+                    'left': 'left center',
+                    'right': 'right center',
+                    'top-left': 'left top',
+                    'top-right': 'right top',
+                    'bottom-left': 'left bottom',
+                    'bottom-right': 'right bottom'
+                };
+                el.style.transformOrigin = originMap[data.animRotOrigin] || 'center center';
+                
+                // Animatie parameters ophalen
                 const animX = data.animX || 0;
                 const animY = data.animY || 0;
+                const animPosDur = data.animPosDuration || 0;
                 const animRotX = data.animRotX || 0;
                 const animRotY = data.animRotY || 0;
                 const animRotZ = data.animRotZ || 0;
+                const animRotDur = data.animRotDuration || 0;
                 const animScaleVal = data.animScale || 1;
+                const animOpacityVal = data.animOpacity || 1;
+                const animScaleDur = data.animScaleDuration || 0;
                 
-                const hasPositionAnim = animX !== 0 || animY !== 0;
-                const hasRotationAnim = animRotX !== 0 || animRotY !== 0 || animRotZ !== 0;
-                const hasScaleAnim = animScaleVal !== 1;
-                const hasAnyAnim = hasPositionAnim || hasRotationAnim || hasScaleAnim;
+                const hasPositionAnim = (animX !== 0 || animY !== 0) && animPosDur > 0;
+                const hasRotationAnim = (animRotX !== 0 || animRotY !== 0 || animRotZ !== 0) && animRotDur > 0;
+                const hasScaleAnim = (animScaleVal !== 1 || animOpacityVal !== 1) && animScaleDur > 0;
                 
-                if (animDur > 0 && hasAnyAnim) {
-                    // Positie animatie in pixels
+                // Verzamel alle animaties
+                const animations = [];
+                
+                // Maak of update style element
+                let styleEl = document.getElementById('preview-animations');
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'preview-animations';
+                    document.head.appendChild(styleEl);
+                }
+                
+                // Positie animatie
+                if (hasPositionAnim) {
+                    const animId = `anim-pos-${layerNum}-${Math.random().toString(36).substr(2, 5)}`;
                     const animXPx = animX * pxPerMeter;
-                    const animYPx = -animY * pxPerMeter; // Y is omgekeerd in CSS
+                    const animYPx = -animY * pxPerMeter;
                     
-                    // Bereken eind rotatie
+                    const keyframeCSS = `
+                        @keyframes ${animId} {
+                            0% { translate: 0px 0px; }
+                            100% { translate: ${animXPx}px ${animYPx}px; }
+                        }
+                    `;
+                    styleEl.textContent += keyframeCSS;
+                    animations.push(`${animId} ${animPosDur}ms ease-in-out infinite alternate`);
+                }
+                
+                // Rotatie animatie
+                if (hasRotationAnim) {
+                    const animId = `anim-rot-${layerNum}-${Math.random().toString(36).substr(2, 5)}`;
                     const endRotX = data.rotX + animRotX;
                     const endRotY = data.rotY + animRotY;
                     const endRotZ = data.rotZ + animRotZ;
                     
-                    // Gebruik CSS animation met inline @keyframes via animationName
-                    // Of simpeler: gebruik CSS transitions met setInterval
-                    // Meest robuust: direct inline animation
-                    
-                    const animId = `anim-${layerNum}-${Math.random().toString(36).substr(2, 5)}`;
+                    const keyframeCSS = `
+                        @keyframes ${animId} {
+                            0% { rotate: ${data.rotZ}deg; }
+                            100% { rotate: ${endRotZ}deg; }
+                        }
+                    `;
+                    styleEl.textContent += keyframeCSS;
+                    animations.push(`${animId} ${animRotDur}ms ease-in-out infinite alternate`);
+                }
+                
+                // Scale/Opacity animatie
+                if (hasScaleAnim) {
+                    const animId = `anim-scale-${layerNum}-${Math.random().toString(36).substr(2, 5)}`;
                     
                     const keyframeCSS = `
                         @keyframes ${animId} {
-                            0% { 
-                                transform: ${baseTransform} scale(1) translate(0px, 0px);
-                            }
-                            100% { 
-                                transform: rotateX(${endRotX}deg) rotateY(${endRotY}deg) rotateZ(${endRotZ}deg) scale(${animScaleVal}) translate(${animXPx}px, ${animYPx}px);
-                            }
+                            0% { scale: 1; opacity: 1; }
+                            100% { scale: ${animScaleVal}; opacity: ${animOpacityVal}; }
                         }
                     `;
-                    
-                    // Maak of update style element
-                    let styleEl = document.getElementById('preview-animations');
-                    if (!styleEl) {
-                        styleEl = document.createElement('style');
-                        styleEl.id = 'preview-animations';
-                        document.head.appendChild(styleEl);
-                    }
                     styleEl.textContent += keyframeCSS;
-                    
-                    // Pas animatie toe
-                    el.style.animation = `${animId} ${animDur}ms ease-in-out infinite alternate`;
-                    console.log(`[Preview] Animatie toegepast op layer ${layerNum}: ${animId}, dur=${animDur}ms`);
+                    animations.push(`${animId} ${animScaleDur}ms ease-in-out infinite alternate`);
+                }
+                
+                // Pas alle animaties toe
+                if (animations.length > 0) {
+                    el.style.animation = animations.join(', ');
+                    console.log(`[Preview] Animaties toegepast op layer ${layerNum}: ${animations.length} animatie(s)`);
                 }
                 
                 // Add Content
@@ -1753,12 +1830,15 @@ function setupUploadForm() {
             const animXInput = document.getElementById(`layer-${i}-anim-x`);
             const animYInput = document.getElementById(`layer-${i}-anim-y`);
             const animZInput = document.getElementById(`layer-${i}-anim-z`);
+            const animPosDurationInput = document.getElementById(`layer-${i}-anim-pos-duration`);
             const animRotXInput = document.getElementById(`layer-${i}-anim-rot-x`);
             const animRotYInput = document.getElementById(`layer-${i}-anim-rot-y`);
             const animRotZInput = document.getElementById(`layer-${i}-anim-rot-z`);
+            const animRotDurationInput = document.getElementById(`layer-${i}-anim-rot-duration`);
+            const animRotOriginInput = document.getElementById(`layer-${i}-anim-rot-origin`);
             const animScaleInput = document.getElementById(`layer-${i}-anim-scale`);
             const animOpacityInput = document.getElementById(`layer-${i}-anim-opacity`);
-            const durationInput = document.getElementById(`layer-${i}-anim-duration`);
+            const animScaleDurationInput = document.getElementById(`layer-${i}-anim-scale-duration`);
             
             // Skip if layer inputs don't exist
             if (!imageInput || !zInput) {
@@ -1792,12 +1872,15 @@ function setupUploadForm() {
             formData.append(`layer_${i}_anim_x`, animXInput ? animXInput.value || '0' : '0');
             formData.append(`layer_${i}_anim_y`, animYInput ? animYInput.value || '0' : '0');
             formData.append(`layer_${i}_anim_z`, animZInput ? animZInput.value || '0' : '0');
+            formData.append(`layer_${i}_anim_pos_duration`, animPosDurationInput ? animPosDurationInput.value || '0' : '0');
             formData.append(`layer_${i}_anim_rot_x`, animRotXInput ? animRotXInput.value || '0' : '0');
             formData.append(`layer_${i}_anim_rot_y`, animRotYInput ? animRotYInput.value || '0' : '0');
             formData.append(`layer_${i}_anim_rot_z`, animRotZInput ? animRotZInput.value || '0' : '0');
+            formData.append(`layer_${i}_anim_rot_duration`, animRotDurationInput ? animRotDurationInput.value || '0' : '0');
+            formData.append(`layer_${i}_anim_rot_origin`, animRotOriginInput ? animRotOriginInput.value || 'center' : 'center');
             formData.append(`layer_${i}_anim_scale`, animScaleInput ? animScaleInput.value || '1.0' : '1.0');
             formData.append(`layer_${i}_anim_opacity`, animOpacityInput ? animOpacityInput.value || '1.0' : '1.0');
-            formData.append(`layer_${i}_anim_duration`, durationInput ? durationInput.value || '0' : '0');
+            formData.append(`layer_${i}_anim_scale_duration`, animScaleDurationInput ? animScaleDurationInput.value || '0' : '0');
             
             // Per-laag AR extras: GLB model en audio
             const layerGlbInput = document.getElementById(`layer-${i}-glb`);
@@ -2618,7 +2701,9 @@ async function openEditModal(posterId) {
                                     layerData.anim_rot_x || layerData.anim_rot_y || layerData.anim_rot_z ||
                                     (layerData.anim_scale && layerData.anim_scale !== 1.0) ||
                                     (layerData.anim_opacity && layerData.anim_opacity !== 1.0) ||
-                                    (layerData.anim_duration && layerData.anim_duration !== 0);
+                                    (layerData.anim_pos_duration && layerData.anim_pos_duration !== 0) ||
+                                    (layerData.anim_rot_duration && layerData.anim_rot_duration !== 0) ||
+                                    (layerData.anim_scale_duration && layerData.anim_scale_duration !== 0);
                 
                 // Set animation toggle
                 const animToggle = document.getElementById(`edit-layer-${layerNum}-enable-anim`);
@@ -2632,8 +2717,12 @@ async function openEditModal(posterId) {
                 }
                 
                 // Set animation values
-                const fields = ['anim_x', 'anim_y', 'anim_z', 'anim_rot_x', 'anim_rot_y', 'anim_rot_z', 'anim_scale', 'anim_opacity', 'anim_duration'];
-                fields.forEach(field => {
+                const animFields = [
+                    'anim_x', 'anim_y', 'anim_z', 'anim_pos_duration',
+                    'anim_rot_x', 'anim_rot_y', 'anim_rot_z', 'anim_rot_duration', 'anim_rot_origin',
+                    'anim_scale', 'anim_opacity', 'anim_scale_duration'
+                ];
+                animFields.forEach(field => {
                     const input = document.getElementById(`edit-layer-${layerNum}-${field.replace(/_/g, '-')}`);
                     if (input && layerData[field] !== undefined) {
                         input.value = layerData[field];
@@ -2838,12 +2927,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const animXEl = document.getElementById(`edit-layer-${i}-anim-x`);
                 const animYEl = document.getElementById(`edit-layer-${i}-anim-y`);
                 const animZEl = document.getElementById(`edit-layer-${i}-anim-z`);
+                const animPosDurationEl = document.getElementById(`edit-layer-${i}-anim-pos-duration`);
                 const animRotXEl = document.getElementById(`edit-layer-${i}-anim-rot-x`);
                 const animRotYEl = document.getElementById(`edit-layer-${i}-anim-rot-y`);
                 const animRotZEl = document.getElementById(`edit-layer-${i}-anim-rot-z`);
+                const animRotDurationEl = document.getElementById(`edit-layer-${i}-anim-rot-duration`);
+                const animRotOriginEl = document.getElementById(`edit-layer-${i}-anim-rot-origin`);
                 const animScaleEl = document.getElementById(`edit-layer-${i}-anim-scale`);
                 const animOpacityEl = document.getElementById(`edit-layer-${i}-anim-opacity`);
-                const animDurationEl = document.getElementById(`edit-layer-${i}-anim-duration`);
+                const animScaleDurationEl = document.getElementById(`edit-layer-${i}-anim-scale-duration`);
                 
                 // Skip if elements don't exist
                 if (!layerImageEl || !layerZEl) {
@@ -2908,12 +3000,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_anim_x`, animXEl ? animXEl.value || '0' : '0');
                 formData.append(`layer_${i}_anim_y`, animYEl ? animYEl.value || '0' : '0');
                 formData.append(`layer_${i}_anim_z`, animZEl ? animZEl.value || '0' : '0');
+                formData.append(`layer_${i}_anim_pos_duration`, animPosDurationEl ? animPosDurationEl.value || '0' : '0');
                 formData.append(`layer_${i}_anim_rot_x`, animRotXEl ? animRotXEl.value || '0' : '0');
                 formData.append(`layer_${i}_anim_rot_y`, animRotYEl ? animRotYEl.value || '0' : '0');
                 formData.append(`layer_${i}_anim_rot_z`, animRotZEl ? animRotZEl.value || '0' : '0');
+                formData.append(`layer_${i}_anim_rot_duration`, animRotDurationEl ? animRotDurationEl.value || '0' : '0');
+                formData.append(`layer_${i}_anim_rot_origin`, animRotOriginEl ? animRotOriginEl.value || 'center' : 'center');
                 formData.append(`layer_${i}_anim_scale`, animScaleEl ? animScaleEl.value || '1.0' : '1.0');
                 formData.append(`layer_${i}_anim_opacity`, animOpacityEl ? animOpacityEl.value || '1.0' : '1.0');
-                formData.append(`layer_${i}_anim_duration`, animDurationEl ? animDurationEl.value || '0' : '0');
+                formData.append(`layer_${i}_anim_scale_duration`, animScaleDurationEl ? animScaleDurationEl.value || '0' : '0');
                 
                 // Per-laag AR extras: GLB model en audio
                 const layerGlbEl = document.getElementById(`edit-layer-${i}-glb`);

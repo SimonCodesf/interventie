@@ -1331,9 +1331,36 @@ input:checked + .toggle-slider:before {
 /* Animation Input Groups */
 .anim-group {
     background: rgba(0,0,0,0.8);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border: 0.5px solid rgba(255,255,255,0.5);
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 0.5px solid rgba(255,255,255,0.3);
+}
+
+/* Origin selector voor rotatie animatie */
+.origin-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.65rem;
+    font-family: var(--font-data);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 0.5rem;
+}
+
+.origin-select {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #ffffff;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    font-family: var(--font-data);
+    text-transform: uppercase;
+    cursor: pointer;
+    flex: 1;
+}
+
+.origin-select:focus {
+    border-color: #ffffff;
+    outline: none;
 }
 
 .anim-group h5 {

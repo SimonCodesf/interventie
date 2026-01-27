@@ -1746,38 +1746,51 @@ function buildLayersHTML(poster) {
 
             // Calculate animation string if layerData exists (common for both GLB and Image)
             if (layerData) {
-                const hasAnimation = layerData.anim_duration && layerData.anim_duration > 0;
+                // Check of er animaties zijn met hun eigen durations
+                const hasPositionAnim = (parseFloat(layerData.anim_x) || parseFloat(layerData.anim_y) || parseFloat(layerData.anim_z)) && parseInt(layerData.anim_pos_duration) > 0;
+                const hasRotationAnim = (parseFloat(layerData.anim_rot_x) || parseFloat(layerData.anim_rot_y) || parseFloat(layerData.anim_rot_z)) && parseInt(layerData.anim_rot_duration) > 0;
+                const hasScaleAnim = (parseFloat(layerData.anim_scale) !== 1.0 || parseFloat(layerData.anim_opacity) !== 1.0) && parseInt(layerData.anim_scale_duration) > 0;
+                const hasAnimation = hasPositionAnim || hasRotationAnim || hasScaleAnim;
                 let animAttrs = [];
                 
                 if (hasAnimation) {
-                    const dur = parseInt(layerData.anim_duration);
-                    
                     const animX = parseFloat(layerData.anim_x) || 0;
                     const animY = parseFloat(layerData.anim_y) || 0;
                     const animZ = parseFloat(layerData.anim_z) || 0;
+                    const posDur = parseInt(layerData.anim_pos_duration) || 1000;
+                    
                     const animRotX = parseFloat(layerData.anim_rot_x) || 0;
                     const animRotY = parseFloat(layerData.anim_rot_y) || 0;
                     const animRotZ = parseFloat(layerData.anim_rot_z) || 0;
+                    const rotDur = parseInt(layerData.anim_rot_duration) || 1000;
+                    
                     const animScale = parseFloat(layerData.anim_scale) || 1.0;
+                    const animOpacity = parseFloat(layerData.anim_opacity) || 1.0;
+                    const scaleDur = parseInt(layerData.anim_scale_duration) || 1000;
                     
                     // Position animation
-                    if (animX !== 0 || animY !== 0 || animZ !== 0) {
+                    if (hasPositionAnim) {
                         const fromPos = `${posX} ${posY} ${posZ}`;
                         const toPos = `${posX + animX} ${posY + animY} ${posZ + animZ}`;
-                        animAttrs.push(`animation="property: position; from: ${fromPos}; to: ${toPos}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
+                        animAttrs.push(`animation="property: position; from: ${fromPos}; to: ${toPos}; dur: ${posDur}; easing: linear; loop: true; dir: alternate;"`);
                     }
                     
                     // Rotation animation  
-                    if (animRotX !== 0 || animRotY !== 0 || animRotZ !== 0) {
+                    if (hasRotationAnim) {
                         const fromRot = `${rotX} ${rotY} ${rotZ}`; // Use configured rotation as start
                         const toRot = `${rotX + animRotX} ${rotY + animRotY} ${rotZ + animRotZ}`;
-                        animAttrs.push(`animation__rot="property: rotation; from: ${fromRot}; to: ${toRot}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
+                        animAttrs.push(`animation__rot="property: rotation; from: ${fromRot}; to: ${toRot}; dur: ${rotDur}; easing: linear; loop: true; dir: alternate;"`);
                     }
                     
                     // Scale animation
-                    if (animScale !== 1.0) {
+                    if (hasScaleAnim) {
                         // Use baseScale as start point
-                        animAttrs.push(`animation__scale="property: scale; from: ${baseScale} ${baseScale} ${baseScale}; to: ${baseScale * animScale} ${baseScale * animScale} ${baseScale * animScale}; dur: ${dur}; easing: linear; loop: true; dir: alternate;"`);
+                        animAttrs.push(`animation__scale="property: scale; from: ${baseScale} ${baseScale} ${baseScale}; to: ${baseScale * animScale} ${baseScale * animScale} ${baseScale * animScale}; dur: ${scaleDur}; easing: linear; loop: true; dir: alternate;"`);
+                        
+                        // Opacity animation indien niet 1.0
+                        if (animOpacity !== 1.0) {
+                            animAttrs.push(`animation__opacity="property: material.opacity; from: 1; to: ${animOpacity}; dur: ${scaleDur}; easing: linear; loop: true; dir: alternate;"`);
+                        }
                     }
                 }
                 animationStr = animAttrs.length > 0 ? animAttrs.join(' ') : '';
@@ -2457,25 +2470,25 @@ function addMindARTargets(scene) {
             const animX = parseFloat(layerData.anim_x) || 0;
             const animY = parseFloat(layerData.anim_y) || 0;
             const animZ = parseFloat(layerData.anim_z) || 0;
-            const animDuration = parseInt(layerData.anim_duration) || 2000;
+            const animPosDuration = parseInt(layerData.anim_pos_duration) || 0;
             
-            if (animX > 0 || animY > 0 || animZ > 0) {
-                console.log(` Layer ${i}: Adding animation (X:${animX}, Y:${animY}, Z:${animZ}, dur:${animDuration}ms)`);
+            if ((animX > 0 || animY > 0 || animZ > 0) && animPosDuration > 0) {
+                console.log(` Layer ${i}: Adding animation (X:${animX}, Y:${animY}, Z:${animZ}, dur:${animPosDuration}ms)`);
                 
                 // Scale animation for ultrawide
                 const scaleFactor = isUltrawide ? 0.3 : 1.0;
                 
                 if (animX > 0) {
                     const range = animX * scaleFactor;
-                    layer.setAttribute('animation__x', `property: position.x; from: ${-range}; to: ${range}; dur: ${animDuration}; dir: alternate; loop: true; easing: easeInOutQuad`);
+                    layer.setAttribute('animation__x', `property: position.x; from: ${-range}; to: ${range}; dur: ${animPosDuration}; dir: alternate; loop: true; easing: easeInOutQuad`);
                 }
                 if (animY > 0) {
                     const range = animY * scaleFactor;
-                    layer.setAttribute('animation__y', `property: position.y; from: ${-range}; to: ${range}; dur: ${animDuration * 1.1}; dir: alternate; loop: true; easing: easeInOutQuad`);
+                    layer.setAttribute('animation__y', `property: position.y; from: ${-range}; to: ${range}; dur: ${animPosDuration * 1.1}; dir: alternate; loop: true; easing: easeInOutQuad`);
                 }
                 if (animZ > 0) {
                     const range = animZ * scaleFactor;
-                    layer.setAttribute('animation__z', `property: position.z; from: ${zPos - range}; to: ${zPos + range}; dur: ${animDuration * 1.2}; dir: alternate; loop: true; easing: easeInOutQuad`);
+                    layer.setAttribute('animation__z', `property: position.z; from: ${zPos - range}; to: ${zPos + range}; dur: ${animPosDuration * 1.2}; dir: alternate; loop: true; easing: easeInOutQuad`);
                 }
             }
             
