@@ -13,6 +13,9 @@
         return;
     }
     
+    // Cache voor geladen images - voorkomt dubbel laden
+    const imageCache = new Map();
+    
     /**
      * A-Frame component voor geanimeerde GIFs
      * Gebruikt een verborgen <img> element dat de browser native animeert
@@ -33,6 +36,7 @@
             this.isPlaying = false;
             this.lastDrawTime = 0;
             this.updateInterval = 50; // Update texture elke 50ms (20 fps)
+            this.loadedSrc = null; // Track welke src al geladen is
             
             // Laad GIF als src is opgegeven
             if (this.data.src) {
@@ -41,20 +45,36 @@
         },
         
         update: function(oldData) {
-            // Als src veranderd is, herlaad
-            if (oldData.src !== this.data.src && this.data.src) {
+            // ALLEEN herladen als src ECHT veranderd is (niet bij eerste init)
+            if (oldData.src && oldData.src !== this.data.src && this.data.src) {
                 this.loadGif(this.data.src);
             }
         },
         
         loadGif: function(src) {
+            // Voorkom dubbel laden van dezelfde src
+            if (this.loadedSrc === src) {
+                console.log('[gif-component] Skip dubbel laden:', src);
+                return;
+            }
+            this.loadedSrc = src;
+            
             console.log('[gif-component] Laden:', src);
             
+            // Check cache eerst
+            if (imageCache.has(src)) {
+                const cachedImg = imageCache.get(src);
+                if (cachedImg.complete && cachedImg.naturalWidth > 0) {
+                    console.log('[gif-component] Uit cache:', src);
+                    this.setupFromImage(cachedImg);
+                    return;
+                }
+            }
+            
             // Cleanup vorige img als die bestaat
-            if (this.img) {
+            if (this.img && !imageCache.has(this.img.src)) {
                 this.img.onload = null;
                 this.img.onerror = null;
-                this.img = null;
             }
             
             // Maak nieuw img element
@@ -62,42 +82,57 @@
             this.img.crossOrigin = 'anonymous';
             
             this.img.onload = () => {
-                console.log('[gif-component] Geladen:', this.img.naturalWidth, 'x', this.img.naturalHeight);
+                // Zet in cache
+                imageCache.set(src, this.img);
+                this.setupFromImage(this.img);
                 
-                // Stel canvas grootte in (max 512px voor performance op mobiel)
-                const maxSize = 512;
-                let width = this.img.naturalWidth;
-                let height = this.img.naturalHeight;
-                
-                if (width > maxSize || height > maxSize) {
-                    const scale = maxSize / Math.max(width, height);
-                    width = Math.floor(width * scale);
-                    height = Math.floor(height * scale);
-                }
-                
-                // Zet canvas grootte
-                this.canvas.width = width;
-                this.canvas.height = height;
-                
-                // Teken eerste frame
-                this.ctx.drawImage(this.img, 0, 0, width, height);
-                
-                // Maak texture
-                this.createTexture();
-                this.isLoaded = true;
-                
-                // Start animatie capture
-                if (this.data.autoplay) {
-                    this.isPlaying = true;
-                }
+                // Dispatch event zodat app.js weet dat GIF geladen is
+                window.dispatchEvent(new CustomEvent('gif-loaded', { 
+                    detail: { src: src } 
+                }));
             };
             
             this.img.onerror = (e) => {
                 console.error('[gif-component] Laden mislukt:', src);
+                // Dispatch error event
+                window.dispatchEvent(new CustomEvent('gif-error', { 
+                    detail: { src: src } 
+                }));
             };
             
             // Start laden
             this.img.src = src;
+        },
+        
+        setupFromImage: function(img) {
+            console.log('[gif-component] Geladen:', img.naturalWidth, 'x', img.naturalHeight);
+            
+            // Stel canvas grootte in (max 512px voor performance op mobiel)
+            const maxSize = 512;
+            let width = img.naturalWidth;
+            let height = img.naturalHeight;
+            
+            if (width > maxSize || height > maxSize) {
+                const scale = maxSize / Math.max(width, height);
+                width = Math.floor(width * scale);
+                height = Math.floor(height * scale);
+            }
+            
+            // Zet canvas grootte
+            this.canvas.width = width;
+            this.canvas.height = height;
+            
+            // Teken eerste frame
+            this.ctx.drawImage(img, 0, 0, width, height);
+            
+            // Maak texture
+            this.createTexture();
+            this.isLoaded = true;
+            
+            // Start animatie capture
+            if (this.data.autoplay) {
+                this.isPlaying = true;
+            }
         },
         
         createTexture: function() {
@@ -141,7 +176,6 @@
                 }
             } catch (e) {
                 // Stil falen bij CORS of andere issues
-                console.warn('[gif-component] Frame capture fout:', e.message);
             }
         },
         
@@ -163,12 +197,8 @@
                 this.texture = null;
             }
             
-            if (this.img) {
-                this.img.onload = null;
-                this.img.onerror = null;
-                this.img = null;
-            }
-            
+            // Img niet verwijderen - zit in cache
+            this.img = null;
             this.canvas = null;
             this.ctx = null;
         }

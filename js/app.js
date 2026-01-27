@@ -845,13 +845,13 @@ function checkAndShowLoader(poster) {
         } else {
             console.log(' Waiting for GIFs to load...');
             
-            // Failsafe: Hide loader after 10 seconds regardless (prevents infinite loading)
+            // Failsafe: Hide loader after 3 seconden (GIFs zijn klein, zou snel moeten zijn)
             setTimeout(() => {
                 if (currentTrackedPoster && currentTrackedPoster.id === poster.id) {
                     console.warn('⚠️ GIF load timeout - hiding loader anyway');
                     hideGifLoader();
                 }
-            }, 10000);
+            }, 3000);
         }
     }
 }
@@ -3537,19 +3537,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log(' Camera spacing ingesteld via CSS (16px op alle zijden)');
     
-    // Listen for GIF loaded events (optional logging)
-    document.addEventListener('gif-loaded', (e) => {
-        console.log('🎞️ GIF Loaded Event Caught:', e.target.id);
+    // Listen for GIF loaded events van de gif-component
+    window.addEventListener('gif-loaded', (e) => {
+        console.log('🎞️ GIF geladen:', e.detail.src);
         if (e.detail && e.detail.src) {
             loadedGifs.add(e.detail.src);
             
-            // Check if we can hide loader
-            // We only hide if the CURRENTLY tracked poster's GIFs are all loaded
+            // Check of we de loader kunnen verbergen
             if (currentTrackedPoster) {
                 checkAndHideLoader(currentTrackedPoster);
             }
         }
-    }, true); // Use capture to ensure we catch it early
+    });
+    
+    // Listen for GIF errors
+    window.addEventListener('gif-error', (e) => {
+        console.warn('🎞️ GIF fout:', e.detail.src);
+        // Tel ook errors als "geladen" zodat we niet blijven wachten
+        if (e.detail && e.detail.src) {
+            loadedGifs.add(e.detail.src);
+            if (currentTrackedPoster) {
+                checkAndHideLoader(currentTrackedPoster);
+            }
+        }
+    });
 
     try {
         // Detect device type
