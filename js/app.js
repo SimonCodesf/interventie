@@ -1905,13 +1905,14 @@ function buildLayersHTML(poster) {
                 if (isGif) {
                     // GIF: gebruik de gif component voor animatie
                     // De component captured browser's native GIF animatie naar WebGL texture
+                    // isTransparent bepaalt of GIF transparantie moet behouden (checkbox in admin)
                     const gifSize = 1.4 * baseScale;
                     const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
-                            gif="src: ${mediaPath}; autoplay: true"
+                            gif="src: ${mediaPath}; autoplay: true; transparent: ${isTransparent}"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 

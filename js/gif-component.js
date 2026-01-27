@@ -141,7 +141,8 @@
     AFRAME.registerComponent('gif', {
         schema: {
             src: { type: 'string', default: '' },
-            autoplay: { type: 'boolean', default: true }
+            autoplay: { type: 'boolean', default: true },
+            transparent: { type: 'boolean', default: false } // Default: opaque met witte achtergrond
         },
         
         init: function() {
@@ -205,9 +206,11 @@
                 this.accCanvas.width = width;
                 this.accCanvas.height = height;
                 
-                // Vul accumulator met wit (zoals GIFs standaard zijn)
-                this.accCtx.fillStyle = '#FFFFFF';
-                this.accCtx.fillRect(0, 0, width, height);
+                // Vul accumulator met wit TENZIJ transparent=true
+                if (!this.data.transparent) {
+                    this.accCtx.fillStyle = '#FFFFFF';
+                    this.accCtx.fillRect(0, 0, width, height);
+                }
                 
                 // Teken eerste frame
                 this.drawFrame(0);
@@ -239,12 +242,16 @@
             
             const frame = this.gifData.frames[index];
             
-            // Teken frame op accumulator canvas (accumulatie zoals browsers doen)
-            this.accCtx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
-            
-            // Copy accumulator naar display canvas
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.drawImage(this.accCanvas, 0, 0);
+            if (this.data.transparent) {
+                // Transparante modus: clear en teken direct (geen accumulation)
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
+            } else {
+                // Opaque modus: accumuleer frames op witte achtergrond
+                this.accCtx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.drawImage(this.accCanvas, 0, 0);
+            }
         },
         
         createTexture: function() {
