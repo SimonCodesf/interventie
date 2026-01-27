@@ -146,7 +146,8 @@
         
         init: function() {
             this.canvas = document.createElement('canvas');
-            this.ctx = this.canvas.getContext('2d');
+            // Alpha: false = canvas is OPAQUE (niet transparant)
+            this.ctx = this.canvas.getContext('2d', { alpha: false });
             this.texture = null;
             this.gifData = null;
             this.currentFrame = 0;
@@ -180,8 +181,8 @@
                 console.log('[gif-component] Geparsed:', this.gifData.frames.length, 'frames,', 
                     this.gifData.width, 'x', this.gifData.height);
                 
-                // Setup canvas
-                const maxSize = 512;
+                // Setup canvas - kleinere max size voor betere performance
+                const maxSize = 384; // Was 512, nu 384 voor snelheid
                 let width = this.gifData.width;
                 let height = this.gifData.height;
                 
@@ -241,13 +242,15 @@
             this.texture = new THREE.CanvasTexture(this.canvas);
             this.texture.minFilter = THREE.LinearFilter;
             this.texture.magFilter = THREE.LinearFilter;
-            this.texture.format = THREE.RGBAFormat;
+            this.texture.format = THREE.RGBFormat; // RGB want canvas is opaque
             this.texture.needsUpdate = true;
             
             const mesh = this.el.getObject3D('mesh');
             if (mesh && mesh.material) {
                 mesh.material.map = this.texture;
-                mesh.material.transparent = true;
+                // Geen transparantie - GIFs zijn opaque
+                mesh.material.transparent = false;
+                mesh.material.depthWrite = true;
                 mesh.material.needsUpdate = true;
             }
         },
