@@ -664,6 +664,29 @@ function showChunkCycleButton() {
     const existing = document.getElementById('chunk-cycle-btn');
     if (existing) existing.remove();
     
+    // Add CSS animation voor spinner
+    if (!document.getElementById('chunk-btn-style')) {
+        const style = document.createElement('style');
+        style.id = 'chunk-btn-style';
+        style.innerHTML = `
+            @keyframes spinLoader {
+                0% { transform: translateX(-50%) rotate(0deg); }
+                100% { transform: translateX(-50%) rotate(360deg); }
+            }
+            .chunk-spinner {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border: 0.5px solid #fff;
+                border-top: 0.5px solid transparent;
+                border-radius: 50%;
+                animation: spinLoader 1s linear infinite;
+                margin-right: 6px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
     btn.textContent = 'SCAN';
@@ -682,6 +705,9 @@ function showChunkCycleButton() {
         font-size: 11px;
         letter-spacing: 2px;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     `;
     
     btn.onclick = startChunkScan;
@@ -708,20 +734,32 @@ function startChunkScan() {
     }
     
     const totalChunks = window.arManifest.chunks.length;
+    const btn = document.getElementById('chunk-cycle-btn');
     
     // Als er maar 1 chunk is, reload gewoon
     if (totalChunks === 1) {
         console.log('Single chunk - reloading');
+        if (btn) {
+            btn.innerHTML = '<span class="chunk-spinner"></span> 1/1';
+        }
         loadChunkScene(0);
+        setTimeout(() => {
+            if (btn) btn.textContent = 'SCAN';
+        }, 2000);
         return;
     }
     
     // Start scan cycle
     window.isChunkScanning = true;
-    const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) btn.textContent = 'SCANNING...';
+    let currentChunk = 0;
     
-    let scannedChunks = 0;
+    const updateScanDisplay = () => {
+        if (btn) {
+            btn.innerHTML = `<span class="chunk-spinner"></span> ${currentChunk + 1}/${totalChunks}`;
+        }
+    };
+    
+    updateScanDisplay();
     
     const scanNextChunk = () => {
         if (!window.isChunkScanning || window.chunkLocked) {
@@ -730,21 +768,22 @@ function startChunkScan() {
             return;
         }
         
-        scannedChunks++;
+        // Stap naar volgende chunk
+        currentChunk++;
         
         // Stop na alle chunks gescand
-        if (scannedChunks >= totalChunks) {
+        if (currentChunk >= totalChunks) {
             window.isChunkScanning = false;
             if (btn) btn.textContent = 'SCAN';
             console.log('Alle chunks gescand');
             return;
         }
         
-        // Naar volgende chunk
-        const nextIndex = (window.currentChunkIndex + 1) % totalChunks;
-        console.log(`Scanning chunk ${nextIndex + 1}/${totalChunks}`);
-        window.currentChunkIndex = nextIndex;
-        loadChunkScene(nextIndex);
+        // Laad volgende chunk
+        console.log(`Scanning chunk ${currentChunk + 1}/${totalChunks}`);
+        window.currentChunkIndex = currentChunk;
+        updateScanDisplay();
+        loadChunkScene(currentChunk);
         
         // Wacht 3 seconden voor detectie, dan volgende
         setTimeout(scanNextChunk, 3000);
