@@ -884,7 +884,13 @@ function updatePreviewFromInputs() {
                 layerData.isGlb = true;
                 layerData.glbFilename = existingGlbModel || (hasGlbFile ? glbInput.files[0].name : null);
                 layerData.imageLoaded = true; // Markeer als "geladen" zodat preview rendert
+                console.log(`[Preview] Layer ${i} heeft GLB: ${layerData.glbFilename}`);
             }
+            
+            console.log(`[Preview] Layer ${i} toegevoegd aan previewLayers:`, {
+                hasFile, existingFilename, hasGlbFile, existingGlbModel,
+                isGlb: layerData.isGlb, imageLoaded: layerData.imageLoaded
+            });
             
             previewLayers[i] = layerData;
         }
@@ -958,6 +964,7 @@ function renderARPreview() {
     
     // Check of er layers zijn met content
     const layersWithContent = Object.entries(previewLayers).filter(([_, data]) => data.hasContent);
+    console.log('[Preview] Layers met content:', layersWithContent.length, 'GLB layers:', layersWithContent.filter(([_,d]) => d.isGlb).length);
     
     if (layersWithContent.length === 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
