@@ -806,23 +806,17 @@
 	      };
 	      
 	      var fixFrames = function fixFrames() {
-	        var fixedFrames = [];
-	        
-	        loadedFrameImages.forEach(function(frameImg, i) {
-	          if (frameImg) {
-	            // Draw frame to canvas
-	            ctx.clearRect(0, 0, cnv.width, cnv.height);
-	            ctx.drawImage(frameImg, 0, 0);
-	            
-	            // Create new image from canvas
-	            var fixedImg = new Image();
-	            fixedImg.src = cnv.toDataURL('image/png'); // Use PNG for better quality
-	            fixedFrames[i] = fixedImg;
-	          } else {
-	            // Skip broken frames
-	            fixedFrames[i] = loadedFrameImages[0] || new Image();
-	          }
+	        // Simply use the already loaded frame images directly
+	        // No need to re-encode to PNG - the original images work fine
+	        var validFrames = loadedFrameImages.filter(function(img) {
+	          return img && img.width && img.height;
 	        });
+	        
+	        if (validFrames.length === 0) {
+	          console.warn('parseGIF: no valid frames after loading');
+	          errorCB && errorCB('parseGIF: no valid frames');
+	          return;
+	        }
 	        
 	        // Ensure minimum delay times
 	        delayTimes = delayTimes.map(function(t) {
@@ -830,17 +824,16 @@
 	        });
 	        
 	        // Fill missing delay times
-	        while (delayTimes.length < fixedFrames.length) {
+	        while (delayTimes.length < validFrames.length) {
 	          delayTimes.push(100); // Default 100ms
 	        }
 	        
 	        // Clean up
 	        cnv = null;
 	        ctx = null;
-	        loadedFrameImages = null;
 	        
-	        console.log('parseGIF: frames fixed, calling success callback');
-	        successCB && successCB(delayTimes, loopCnt, fixedFrames);
+	        console.log('parseGIF: ' + validFrames.length + ' frames ready, calling success');
+	        successCB && successCB(delayTimes, loopCnt, validFrames);
 	      };
 	      
 	      loadImg();
