@@ -211,13 +211,24 @@ function handleUploadPoster($db) {
                 $isVideoFile = in_array($realMimeType, ['video/mp4', 'video/webm']);
                 
                 if ($isGif) {
-                    // Use GIF directly as video (A-Frame can play GIFs in <a-video> elements)
-                    error_log("[LAYER_{$i}] GIF detected, saving as video");
+                    // Check GIF file size - large GIFs crash the browser's GIF shader
+                    $gifMaxSize = 500 * 1024; // 500KB max voor GIFs
+                    if ($uploadedFile['size'] > $gifMaxSize) {
+                        $sizeKB = round($uploadedFile['size'] / 1024);
+                        error_log("[LAYER_{$i}] GIF te groot: {$sizeKB}KB (max: 500KB)");
+                        jsonResponse([
+                            'message' => "GIF te groot ({$sizeKB}KB). Maximum is 500KB voor stabiele AR weergave. Tip: gebruik ezgif.com om je GIF te optimaliseren."
+                        ], 400);
+                        return;
+                    }
+                    
+                    // Use GIF directly (A-Frame GIF shader handles playback)
+                    error_log("[LAYER_{$i}] GIF detected, size OK: {$uploadedFile['size']} bytes");
                     $gifFilename = $id . "_layer_{$i}.gif";
                     move_uploaded_file($uploadedFile['tmp_name'], AR_LAYERS_DIR . '/' . $gifFilename);
                     $layerData['filename'] = $gifFilename;
                     $layerData['is_video'] = true; // GIFs are treated as video
-                    error_log("[LAYER_{$i}] ✅ GIF saved as video: {$gifFilename}");
+                    error_log("[LAYER_{$i}] ✅ GIF saved: {$gifFilename}");
                 } else if ($isVideoFile) {
                     // Direct MP4/WebM upload
                     error_log("[LAYER_{$i}] Native video file detected");
