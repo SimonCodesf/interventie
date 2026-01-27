@@ -6,13 +6,21 @@ function handleGetPosters($db) {
         $stmt = $db->query("SELECT * FROM posters ORDER BY upload_date DESC");
         $posters = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Decode layers_data for all posters
+        // Decode layers_data en gallery_images for all posters
         foreach ($posters as &$poster) {
             if (isset($poster['layers_data']) && !empty($poster['layers_data'])) {
                 $poster['layers'] = json_decode($poster['layers_data'], true);
                 unset($poster['layers_data']);
             } else {
                 $poster['layers'] = [];
+            }
+            
+            // Parse gallery_images van JSON string naar array
+            if (isset($poster['gallery_images']) && !empty($poster['gallery_images'])) {
+                $gallery = json_decode($poster['gallery_images'], true);
+                $poster['gallery_images'] = is_array($gallery) ? $gallery : [];
+            } else {
+                $poster['gallery_images'] = [];
             }
         }
         
@@ -33,6 +41,15 @@ function handleGetPoster($db, $id) {
             $poster['layers'] = json_decode($poster['layers_data'], true);
             unset($poster['layers_data']);
         }
+        
+        // Parse gallery_images van JSON string naar array
+        if (!empty($poster['gallery_images'])) {
+            $gallery = json_decode($poster['gallery_images'], true);
+            $poster['gallery_images'] = is_array($gallery) ? $gallery : [];
+        } else {
+            $poster['gallery_images'] = [];
+        }
+        
         jsonResponse($poster);
     } else {
         jsonResponse(['message' => 'Poster niet gevonden'], 404);
@@ -316,10 +333,26 @@ function handleUploadPoster($db) {
         // Trigger MindAR chunk rebuild
         triggerMindMerge();
         
-        // Return new poster
+        // Return new poster met geparsede data
         $stmt = $db->prepare("SELECT * FROM posters WHERE id = ?");
         $stmt->execute([$id]);
-        jsonResponse(['success' => true, 'poster' => $stmt->fetch(PDO::FETCH_ASSOC)]);
+        $newPoster = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Parse layers_data
+        if (!empty($newPoster['layers_data'])) {
+            $newPoster['layers'] = json_decode($newPoster['layers_data'], true);
+            unset($newPoster['layers_data']);
+        }
+        
+        // Parse gallery_images
+        if (!empty($newPoster['gallery_images'])) {
+            $gallery = json_decode($newPoster['gallery_images'], true);
+            $newPoster['gallery_images'] = is_array($gallery) ? $gallery : [];
+        } else {
+            $newPoster['gallery_images'] = [];
+        }
+        
+        jsonResponse(['success' => true, 'poster' => $newPoster]);
         
     } catch (Exception $e) {
         logAdminActivity('UPLOAD_FAILED', $e->getMessage());
@@ -696,10 +729,26 @@ function handleUpdatePoster($db, $id) {
         // Trigger MindAR chunk rebuild
         triggerMindMerge();
         
-        // Return updated poster
+        // Return updated poster met geparsede data
         $stmt = $db->prepare("SELECT * FROM posters WHERE id = ?");
         $stmt->execute([$id]);
-        jsonResponse(['success' => true, 'poster' => $stmt->fetch(PDO::FETCH_ASSOC)]);
+        $updatedPoster = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Parse layers_data
+        if (!empty($updatedPoster['layers_data'])) {
+            $updatedPoster['layers'] = json_decode($updatedPoster['layers_data'], true);
+            unset($updatedPoster['layers_data']);
+        }
+        
+        // Parse gallery_images
+        if (!empty($updatedPoster['gallery_images'])) {
+            $gallery = json_decode($updatedPoster['gallery_images'], true);
+            $updatedPoster['gallery_images'] = is_array($gallery) ? $gallery : [];
+        } else {
+            $updatedPoster['gallery_images'] = [];
+        }
+        
+        jsonResponse(['success' => true, 'poster' => $updatedPoster]);
         
     } catch (Exception $e) {
         logAdminActivity('UPDATE_FAILED', $e->getMessage());
