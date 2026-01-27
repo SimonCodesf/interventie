@@ -660,9 +660,14 @@ async function initializeChunkAR() {
 
 // Toon chunk scan knop
 function showChunkCycleButton() {
+    console.log('🔘 showChunkCycleButton aangeroepen');
+    
     // Verwijder bestaande knop
     const existing = document.getElementById('chunk-cycle-btn');
-    if (existing) existing.remove();
+    if (existing) {
+        console.log('⚠️ Verwijder bestaande knop');
+        existing.remove();
+    }
     
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
@@ -685,8 +690,13 @@ function showChunkCycleButton() {
         min-width: 70px;
     `;
     
-    btn.onclick = startChunkScan;
+    btn.onclick = () => {
+        console.log('🖱️ SCAN knop geklikt!');
+        startChunkScan();
+    };
+    
     document.body.appendChild(btn);
+    console.log('✅ SCAN knop toegevoegd aan DOM');
 }
 
 // Verberg chunk knop
@@ -742,6 +752,8 @@ function startChunkScan() {
     window.isChunkScanning = true;
     let currentChunk = 0;
     let dots = 0;
+    let cycleCount = 0;
+    const maxCycles = 3;
     
     console.log('Starting dot animation');
     
@@ -780,17 +792,26 @@ function startChunkScan() {
         // Stap naar volgende chunk
         currentChunk++;
         
-        // Stop na alle chunks gescand
+        // Check of we een volledige cyclus hebben voltooid
         if (currentChunk >= totalChunks) {
-            window.isChunkScanning = false;
-            clearInterval(dotInterval);
-            if (btn) btn.innerHTML = 'SCAN';
-            console.log('Alle chunks gescand');
-            return;
+            cycleCount++;
+            console.log(`Cyclus ${cycleCount}/${maxCycles} voltooid`);
+            
+            // Stop na 3 cycli
+            if (cycleCount >= maxCycles) {
+                window.isChunkScanning = false;
+                clearInterval(dotInterval);
+                if (btn) btn.innerHTML = 'SCAN';
+                console.log(`Scan gestopt na ${maxCycles} cycli`);
+                return;
+            }
+            
+            // Reset naar eerste chunk voor volgende cyclus
+            currentChunk = 0;
         }
         
         // Laad volgende chunk
-        console.log(`Scanning chunk ${currentChunk + 1}/${totalChunks}`);
+        console.log(`Scanning chunk ${currentChunk + 1}/${totalChunks} (cyclus ${cycleCount + 1}/${maxCycles})`);
         window.currentChunkIndex = currentChunk;
         updateScanDisplay();
         loadChunkScene(currentChunk);
