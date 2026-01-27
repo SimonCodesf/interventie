@@ -3048,6 +3048,7 @@ window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
 window.applyAnimPreset = applyAnimPreset;
 window.deleteLayer = deleteLayer;
+window.deleteLayerMedia = deleteLayerMedia;
 window.deletePoster = deletePoster;
 
 // Setup animation toggles for all layers
