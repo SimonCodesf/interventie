@@ -1,4 +1,5 @@
 // Main.js - AR.js Version (iOS Compatible)
+console.log('🚀 APP.JS LOADED - Start of file');
 
 // ==================== SYSTEM LOADER LOGIC (DUTCH) ====================
 const logQueue = [];
