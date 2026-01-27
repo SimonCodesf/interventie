@@ -638,8 +638,26 @@
 	    if (this.__width > 1024) this.__width = 1024;
 	    if (this.__height > 1024) this.__height = 1024;
 	    
+	    // CRITICAL: Resize canvas AND create new texture
+	    // The old texture was created with 2x2 canvas, we need a new one
 	    this.__cnv.width = this.__width;
 	    this.__cnv.height = this.__height;
+	    
+	    // Dispose old texture and create new one with correct dimensions
+	    if (this.__texture) {
+	      this.__texture.dispose();
+	    }
+	    this.__texture = new THREE.Texture(this.__cnv);
+	    this.__texture.minFilter = THREE.LinearFilter;
+	    this.__texture.magFilter = THREE.LinearFilter;
+	    this.__texture.generateMipmaps = false;
+	    this.__texture.needsUpdate = true;
+	    
+	    // Update material with new texture
+	    if (this.material) {
+	      this.material.map = this.__texture;
+	      this.material.needsUpdate = true;
+	    }
 	    
 	    // Initial draw
 	    try {
