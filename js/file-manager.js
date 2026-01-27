@@ -427,6 +427,21 @@ function createWindow(poster) {
     const imageUrl = poster.thumbnail ? `${baseUrl}${poster.thumbnail}` : 
                      (poster.jpeg_url ? `${baseUrl}${poster.jpeg_url}` : 'img/placeholder.png');
     
+    // Build gallery images array (poster image first, then gallery images)
+    let galleryImages = [imageUrl];
+    if (poster.gallery_images) {
+        let extraImages = [];
+        if (typeof poster.gallery_images === 'string') {
+            try { extraImages = JSON.parse(poster.gallery_images); } catch(e) {}
+        } else if (Array.isArray(poster.gallery_images)) {
+            extraImages = poster.gallery_images;
+        }
+        extraImages.forEach(img => {
+            if (img) galleryImages.push(baseUrl + img);
+        });
+    }
+    const hasMultipleImages = galleryImages.length > 1;
+    
     // Window dimensions
     const windowWidth = 680;
     const windowHeight = 450;
@@ -465,8 +480,11 @@ function createWindow(poster) {
             </div>
         </div>
         <div class="window-content">
-            <div class="window-image">
+            <div class="window-image slideshow-container" data-current="0" data-images='${JSON.stringify(galleryImages)}'>
+                ${hasMultipleImages ? `<button class="slideshow-arrow slideshow-prev" onclick="slideshowPrev(this)">‹</button>` : ''}
                 <img src="${imageUrl}" alt="${escapeHtml(poster.title || '')}" onerror="this.src='img/placeholder.png'">
+                ${hasMultipleImages ? `<button class="slideshow-arrow slideshow-next" onclick="slideshowNext(this)">›</button>` : ''}
+                ${hasMultipleImages ? `<div class="slideshow-dots">${galleryImages.map((_, i) => `<span class="slideshow-dot${i === 0 ? ' active' : ''}" onclick="slideshowGoTo(this, ${i})"></span>`).join('')}</div>` : ''}
             </div>
             <div class="window-terminal">
                 <div class="term-line"><span class="term-prompt">$</span> cat ./poster_${poster.id}.info</div>
@@ -797,6 +815,54 @@ function formatCredits(poster) {
     
     return result;
 }
+
+// Slideshow functies
+function slideshowNext(btn) {
+    const container = btn.closest('.slideshow-container');
+    if (!container) return;
+    const images = JSON.parse(container.dataset.images || '[]');
+    let current = parseInt(container.dataset.current) || 0;
+    current = (current + 1) % images.length;
+    updateSlideshow(container, current, images);
+}
+
+function slideshowPrev(btn) {
+    const container = btn.closest('.slideshow-container');
+    if (!container) return;
+    const images = JSON.parse(container.dataset.images || '[]');
+    let current = parseInt(container.dataset.current) || 0;
+    current = (current - 1 + images.length) % images.length;
+    updateSlideshow(container, current, images);
+}
+
+function slideshowGoTo(dot, index) {
+    const container = dot.closest('.slideshow-container');
+    if (!container) return;
+    const images = JSON.parse(container.dataset.images || '[]');
+    updateSlideshow(container, index, images);
+}
+
+function updateSlideshow(container, index, images) {
+    container.dataset.current = index;
+    const img = container.querySelector('img');
+    if (img && images[index]) {
+        img.style.opacity = '0';
+        setTimeout(() => {
+            img.src = images[index];
+            img.style.opacity = '1';
+        }, 150);
+    }
+    // Update dots
+    const dots = container.querySelectorAll('.slideshow-dot');
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+    });
+}
+
+// Export slideshow functies naar window
+window.slideshowNext = slideshowNext;
+window.slideshowPrev = slideshowPrev;
+window.slideshowGoTo = slideshowGoTo;
 
 // Export for use
 window.initFileManager = initFileManager;

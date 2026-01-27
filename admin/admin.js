@@ -1805,6 +1805,14 @@ function setupUploadForm() {
             formData.append('credits', JSON.stringify(credits));
         }
         
+        // Add gallery images
+        const galleryInput = document.getElementById('gallery-images');
+        if (galleryInput && galleryInput.files.length > 0) {
+            for (let i = 0; i < galleryInput.files.length; i++) {
+                formData.append('gallery_images[]', galleryInput.files[i]);
+            }
+        }
+        
         // Add AR marker file (single marker, required)
         const arMarkerFile = document.getElementById('ar-marker-file').files[0];
         
@@ -2793,6 +2801,44 @@ async function openEditModal(posterId) {
         const arMarkerInput = document.getElementById('edit-ar-marker-file');
         if (arMarkerInput) arMarkerInput.value = '';
         
+        // Gallery images - toon huidige en setup delete
+        const galleryContainer = document.getElementById('edit-gallery-current');
+        if (galleryContainer) {
+            galleryContainer.innerHTML = '';
+            window.deleteGalleryImages = []; // Reset delete tracking
+            
+            // Parse gallery_images
+            let galleryImages = [];
+            if (poster.gallery_images) {
+                if (typeof poster.gallery_images === 'string') {
+                    try { galleryImages = JSON.parse(poster.gallery_images); } catch(e) {}
+                } else if (Array.isArray(poster.gallery_images)) {
+                    galleryImages = poster.gallery_images;
+                }
+            }
+            
+            if (galleryImages.length > 0) {
+                galleryImages.forEach((imgPath, idx) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'gallery-item';
+                    wrapper.dataset.path = imgPath;
+                    wrapper.innerHTML = `
+                        <img src="${imgPath}" alt="Gallery ${idx + 1}">
+                        <button type="button" class="gallery-delete-btn" onclick="markGalleryForDelete('${imgPath}', this)">&times;</button>
+                    `;
+                    galleryContainer.appendChild(wrapper);
+                });
+            } else {
+                galleryContainer.innerHTML = '<span class="hint-text">Geen galerij fotos</span>';
+            }
+        }
+        
+        // Clear gallery input
+        const editGalleryInput = document.getElementById('edit-gallery-images');
+        if (editGalleryInput) editGalleryInput.value = '';
+        const arMarkerInput = document.getElementById('edit-ar-marker-file');
+        if (arMarkerInput) arMarkerInput.value = '';
+        
         // Clear layer file inputs (incl. GLB/audio per laag)
         for (let layerNum = 1; layerNum <= 8; layerNum++) {
             const fileInput = document.getElementById(`edit-layer-${layerNum}-image`);
@@ -3049,6 +3095,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pdfLargeFile) formData.append('pdfLarge', pdfLargeFile);
             if (arMarkerFile) formData.append('ar_marker_file', arMarkerFile);
             
+            // Gallery images - verwijderen en toevoegen
+            if (window.deleteGalleryImages && window.deleteGalleryImages.length > 0) {
+                formData.append('delete_gallery_images', JSON.stringify(window.deleteGalleryImages));
+            }
+            
+            const editGalleryInput = document.getElementById('edit-gallery-images');
+            if (editGalleryInput && editGalleryInput.files.length > 0) {
+                for (let i = 0; i < editGalleryInput.files.length; i++) {
+                    formData.append('gallery_images[]', editGalleryInput.files[i]);
+                }
+            }
+            
             // Build summary of changes
             const changes = [];
             if (titleEl && titleEl.value) changes.push(`Titel: ${titleEl.value}`);
@@ -3200,6 +3258,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Markeer gallery image voor verwijdering
+function markGalleryForDelete(imgPath, btn) {
+    if (!window.deleteGalleryImages) {
+        window.deleteGalleryImages = [];
+    }
+    window.deleteGalleryImages.push(imgPath);
+    
+    // Verberg het item visueel
+    const item = btn.closest('.gallery-item');
+    if (item) {
+        item.style.opacity = '0.3';
+        item.style.textDecoration = 'line-through';
+        btn.disabled = true;
+        btn.textContent = '✓';
+    }
+}
+
 // Make functions globally available
 window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
@@ -3208,6 +3283,7 @@ window.deleteLayer = deleteLayer;
 window.deleteLayerMedia = deleteLayerMedia;
 window.toggleBgColorPicker = toggleBgColorPicker;
 window.deletePoster = deletePoster;
+window.markGalleryForDelete = markGalleryForDelete;
 
 // Setup animation toggles for all layers
 // document.addEventListener('DOMContentLoaded', () => {

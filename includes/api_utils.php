@@ -50,7 +50,8 @@ function initDatabaseWithMigrations() {
         'ar_marker_lq' => 'TEXT',
         'layers_data' => 'TEXT',
         'glb_model' => 'TEXT',
-        'audio_file' => 'TEXT'
+        'audio_file' => 'TEXT',
+        'gallery_images' => 'TEXT'
     ];
     
     foreach ($columnsToAdd as $column => $type) {

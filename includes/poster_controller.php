@@ -268,14 +268,36 @@ function handleUploadPoster($db) {
         
         // Database insert (GLB/audio nu in layers_data, niet meer op poster niveau)
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)
         ");
+        
+        // Verwerk gallery afbeeldingen
+        $galleryImages = [];
+        if (!empty($_FILES['gallery_images']['name'][0])) {
+            $galleryDir = UPLOADS_DIR . '/gallery';
+            if (!is_dir($galleryDir)) {
+                mkdir($galleryDir, 0755, true);
+            }
+            
+            foreach ($_FILES['gallery_images']['name'] as $key => $filename) {
+                if ($_FILES['gallery_images']['error'][$key] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                        $newFilename = $id . '_gallery_' . ($key + 1) . '.' . $ext;
+                        $destPath = $galleryDir . '/' . $newFilename;
+                        if (move_uploaded_file($_FILES['gallery_images']['tmp_name'][$key], $destPath)) {
+                            $galleryImages[] = '/uploads/gallery/' . $newFilename;
+                        }
+                    }
+                }
+            }
+        }
         
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData)
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages)
         ]);
         
         logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id)");
@@ -596,18 +618,57 @@ function handleUpdatePoster($db, $id) {
         }
         
         // Update database (geen globale GLB/audio meer)
+        // Verwerk gallery afbeeldingen
+        $existingGallery = !empty($poster['gallery_images']) ? json_decode($poster['gallery_images'], true) : [];
+        if (!is_array($existingGallery)) $existingGallery = [];
+        
+        // Verwijder gemarkeerde gallery afbeeldingen
+        $deleteGalleryImages = isset($_POST['delete_gallery_images']) ? json_decode($_POST['delete_gallery_images'], true) : [];
+        if (is_array($deleteGalleryImages) && count($deleteGalleryImages) > 0) {
+            foreach ($deleteGalleryImages as $imgPath) {
+                $fullPath = dirname(__DIR__) . $imgPath;
+                if (file_exists($fullPath)) {
+                    @unlink($fullPath);
+                }
+                $existingGallery = array_filter($existingGallery, fn($img) => $img !== $imgPath);
+            }
+            $existingGallery = array_values($existingGallery);
+        }
+        
+        // Voeg nieuwe gallery afbeeldingen toe
+        if (!empty($_FILES['gallery_images']['name'][0])) {
+            $galleryDir = UPLOADS_DIR . '/gallery';
+            if (!is_dir($galleryDir)) {
+                mkdir($galleryDir, 0755, true);
+            }
+            
+            $nextIndex = count($existingGallery) + 1;
+            foreach ($_FILES['gallery_images']['name'] as $key => $filename) {
+                if ($_FILES['gallery_images']['error'][$key] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                        $newFilename = $id . '_gallery_' . time() . '_' . ($nextIndex + $key) . '.' . $ext;
+                        $destPath = $galleryDir . '/' . $newFilename;
+                        if (move_uploaded_file($_FILES['gallery_images']['tmp_name'][$key], $destPath)) {
+                            $existingGallery[] = '/uploads/gallery/' . $newFilename;
+                        }
+                    }
+                }
+            }
+        }
+        
         $stmt = $db->prepare("
             UPDATE posters SET 
                 title = ?, description = ?, jpeg_filename = ?, pdf_medium_filename = ?, pdf_large_filename = ?,
                 thumbnail = ?, latitude = ?, longitude = ?, location_description = ?, 
-                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?
+                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?
             WHERE id = ?
         ");
         
         $stmt->execute([
             $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             $thumbnailPath, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), $id
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $id
         ]);
         
         logAdminActivity('UPDATE_POSTER', "$title (ID: $id)");

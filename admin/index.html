@@ -141,6 +141,14 @@
                                 </div>
                             </div>
                             
+                            <!-- Gallery Images -->
+                            <div class="form-group">
+                                <label for="gallery-images">GALERIJ FOTOS (context afbeeldingen)</label>
+                                <input type="file" id="gallery-images" accept="image/*" multiple>
+                                <div class="hint-text" style="margin-top: 0.5rem;">Foto's van de poster in de straat, AR preview GIFs, etc. (optioneel)</div>
+                                <div id="gallery-preview" class="gallery-preview"></div>
+                            </div>
+                            
                             <p class="hint-text" style="margin-top: 1rem; color: rgba(255,255,255,0.5);">3D modellen en audio kunnen per AR laag worden toegevoegd (rechter paneel).</p>
                         </div>
                     </div>
@@ -296,6 +304,14 @@
                                         <input type="file" id="edit-pdf-large" accept="application/pdf">
                                         <div id="edit-pdf-large-size-info" class="file-size-info"></div>
                                     </div>
+                                </div>
+                                
+                                <!-- Gallery Images Edit -->
+                                <div class="form-group">
+                                    <label>GALERIJ FOTOS</label>
+                                    <div id="edit-gallery-current" class="gallery-current"></div>
+                                    <input type="file" id="edit-gallery-images" accept="image/*" multiple>
+                                    <div class="hint-text">Nieuwe fotos toevoegen (klik × om te verwijderen)</div>
                                 </div>
                                 
                                 <p class="hint-text" style="margin-top: 1rem; color: rgba(255,255,255,0.5);">3D modellen en audio kunnen per AR laag worden toegevoegd (rechter paneel).</p>
