@@ -1,9 +1,8 @@
 /**
- * A-Frame GIF Component - Met DOM-gebaseerde animatie
+ * A-Frame GIF Component - Met echte frame parsing
  * 
- * iOS Safari animeert GIFs alleen als ze in de DOM zitten.
- * Deze component voegt een verborgen img toe aan de body,
- * en captured de animatie naar een WebGL texture.
+ * Parsed GIF bestanden en wisselt tussen frames.
+ * Werkt op alle browsers inclusief iOS Safari.
  */
 
 (function() {
@@ -14,34 +13,130 @@
         return;
     }
     
-    // Container voor alle GIF images (verborgen)
-    let gifContainer = null;
+    // Cache voor geparsede GIFs
+    const gifCache = new Map();
     
-    function getGifContainer() {
-        if (!gifContainer) {
-            gifContainer = document.createElement('div');
-            gifContainer.id = 'gif-animation-container';
-            // BELANGRIJK: visibility NIET op hidden zetten!
-            // De browser animeert GIFs alleen als ze "zichtbaar" zijn.
-            // We positioneren ze buiten het scherm maar houden ze technisch zichtbaar.
-            gifContainer.style.cssText = `
-                position: fixed;
-                left: -9999px;
-                top: 0;
-                width: 1px;
-                height: 1px;
-                overflow: hidden;
-                pointer-events: none;
-                opacity: 0.01;
-            `;
-            document.body.appendChild(gifContainer);
-            console.log('[gif-component] DOM container aangemaakt');
-        }
-        return gifContainer;
+    /**
+     * Parse een GIF bestand naar individuele frames
+     * Gebaseerd op gtk2k's gif parser
+     */
+    function parseGIF(arrayBuffer) {
+        return new Promise((resolve, reject) => {
+            const gif = new Uint8Array(arrayBuffer);
+            let pos = 0;
+            const delayTimes = [];
+            let loadCnt = 0;
+            let graphicControl = null;
+            const frames = [];
+            let loopCnt = 0;
+            
+            // Check GIF89a header
+            if (gif[0] === 0x47 && gif[1] === 0x49 && gif[2] === 0x46 &&
+                gif[3] === 0x38 && gif[4] === 0x39 && gif[5] === 0x61) {
+                
+                pos += 13 + +!!(gif[10] & 0x80) * Math.pow(2, (gif[10] & 0x07) + 1) * 3;
+                const gifHeader = gif.subarray(0, pos);
+                
+                while (gif[pos] && gif[pos] !== 0x3b) {
+                    const offset = pos;
+                    const blockId = gif[pos];
+                    
+                    if (blockId === 0x21) {
+                        const label = gif[++pos];
+                        if ([0x01, 0xfe, 0xf9, 0xff].indexOf(label) !== -1) {
+                            if (label === 0xf9) {
+                                delayTimes.push((gif[pos + 3] + (gif[pos + 4] << 8)) * 10);
+                            }
+                            if (label === 0xff) {
+                                loopCnt = gif[pos + 15] + (gif[pos + 16] << 8);
+                            }
+                            while (gif[++pos]) {
+                                pos += gif[pos];
+                            }
+                            if (label === 0xf9) {
+                                graphicControl = gif.subarray(offset, pos + 1);
+                            }
+                        } else {
+                            reject(new Error('Unknown GIF label'));
+                            return;
+                        }
+                    } else if (blockId === 0x2c) {
+                        pos += 9;
+                        pos += 1 + +!!(gif[pos] & 0x80) * (Math.pow(2, (gif[pos] & 0x07) + 1) * 3);
+                        while (gif[++pos]) {
+                            pos += gif[pos];
+                        }
+                        const imageData = gif.subarray(offset, pos + 1);
+                        frames.push(URL.createObjectURL(new Blob([gifHeader, graphicControl, imageData])));
+                    } else {
+                        reject(new Error('Unknown GIF block'));
+                        return;
+                    }
+                    pos++;
+                }
+            } else {
+                reject(new Error('Not a GIF89a file'));
+                return;
+            }
+            
+            if (frames.length === 0) {
+                reject(new Error('No frames found'));
+                return;
+            }
+            
+            // Laad alle frames als Image objecten
+            const loadedFrames = new Array(frames.length);
+            let loaded = 0;
+            
+            frames.forEach((blobUrl, i) => {
+                const img = new Image();
+                img.onload = () => {
+                    loadedFrames[i] = img;
+                    loaded++;
+                    
+                    if (loaded === frames.length) {
+                        // Cleanup blob URLs
+                        frames.forEach(url => URL.revokeObjectURL(url));
+                        
+                        resolve({
+                            frames: loadedFrames,
+                            delays: delayTimes,
+                            loopCount: loopCnt,
+                            width: loadedFrames[0].width,
+                            height: loadedFrames[0].height
+                        });
+                    }
+                };
+                img.onerror = () => {
+                    reject(new Error('Failed to load frame ' + i));
+                };
+                img.src = blobUrl;
+            });
+        });
     }
     
-    // Cache voor geladen images
-    const imageCache = new Map();
+    /**
+     * Laad en parse een GIF
+     */
+    async function loadGIF(src) {
+        // Check cache
+        if (gifCache.has(src)) {
+            return gifCache.get(src);
+        }
+        
+        const response = await fetch(src);
+        if (!response.ok) {
+            throw new Error('Failed to fetch GIF: ' + response.status);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const gifData = await parseGIF(arrayBuffer);
+        
+        // Cache het resultaat
+        gifCache.set(src, gifData);
+        
+        return gifData;
+    }
     
     AFRAME.registerComponent('gif', {
         schema: {
@@ -51,13 +146,13 @@
         
         init: function() {
             this.canvas = document.createElement('canvas');
-            this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+            this.ctx = this.canvas.getContext('2d');
             this.texture = null;
-            this.img = null;
-            this.isLoaded = false;
+            this.gifData = null;
+            this.currentFrame = 0;
+            this.lastFrameTime = 0;
             this.isPlaying = false;
-            this.lastDrawTime = 0;
-            this.updateInterval = 33; // ~30fps voor vloeiendere animatie
+            this.isLoaded = false;
             this.loadedSrc = null;
             
             if (this.data.src) {
@@ -71,7 +166,7 @@
             }
         },
         
-        loadGif: function(src) {
+        loadGif: async function(src) {
             if (this.loadedSrc === src) {
                 return;
             }
@@ -79,73 +174,59 @@
             
             console.log('[gif-component] Laden:', src);
             
-            // Check cache
-            if (imageCache.has(src)) {
-                const cached = imageCache.get(src);
-                if (cached.complete && cached.naturalWidth > 0) {
-                    console.log('[gif-component] Uit cache:', src);
-                    this.img = cached;
-                    this.setupFromImage(cached);
-                    return;
-                }
-            }
-            
-            // Maak nieuw img element IN DE DOM
-            const container = getGifContainer();
-            this.img = document.createElement('img');
-            this.img.crossOrigin = 'anonymous';
-            this.img.style.cssText = 'width: auto; height: auto;';
-            
-            // Unieke ID voor tracking
-            const imgId = 'gif-' + Math.random().toString(36).substr(2, 9);
-            this.img.id = imgId;
-            
-            this.img.onload = () => {
-                console.log('[gif-component] Geladen in DOM:', this.img.naturalWidth, 'x', this.img.naturalHeight);
-                imageCache.set(src, this.img);
-                this.setupFromImage(this.img);
+            try {
+                this.gifData = await loadGIF(src);
                 
+                console.log('[gif-component] Geparsed:', this.gifData.frames.length, 'frames,', 
+                    this.gifData.width, 'x', this.gifData.height);
+                
+                // Setup canvas
+                const maxSize = 512;
+                let width = this.gifData.width;
+                let height = this.gifData.height;
+                
+                if (width > maxSize || height > maxSize) {
+                    const scale = maxSize / Math.max(width, height);
+                    width = Math.floor(width * scale);
+                    height = Math.floor(height * scale);
+                }
+                
+                this.canvas.width = width;
+                this.canvas.height = height;
+                this.scaledWidth = width;
+                this.scaledHeight = height;
+                
+                // Teken eerste frame
+                this.drawFrame(0);
+                
+                // Maak texture
+                this.createTexture();
+                this.isLoaded = true;
+                
+                if (this.data.autoplay && this.gifData.frames.length > 1) {
+                    this.isPlaying = true;
+                    this.lastFrameTime = performance.now();
+                }
+                
+                // Dispatch loaded event
                 window.dispatchEvent(new CustomEvent('gif-loaded', { 
                     detail: { src: src } 
                 }));
-            };
-            
-            this.img.onerror = () => {
-                console.error('[gif-component] Laden mislukt:', src);
+                
+            } catch (err) {
+                console.error('[gif-component] Parse fout:', err.message);
                 window.dispatchEvent(new CustomEvent('gif-error', { 
-                    detail: { src: src } 
+                    detail: { src: src, error: err.message } 
                 }));
-            };
-            
-            // BELANGRIJK: Eerst aan DOM toevoegen, dan src zetten
-            // Dit zorgt dat de browser de GIF gaat animeren
-            container.appendChild(this.img);
-            this.img.src = src;
+            }
         },
         
-        setupFromImage: function(img) {
-            const maxSize = 512;
-            let width = img.naturalWidth;
-            let height = img.naturalHeight;
+        drawFrame: function(index) {
+            if (!this.gifData || index >= this.gifData.frames.length) return;
             
-            if (width > maxSize || height > maxSize) {
-                const scale = maxSize / Math.max(width, height);
-                width = Math.floor(width * scale);
-                height = Math.floor(height * scale);
-            }
-            
-            this.canvas.width = width;
-            this.canvas.height = height;
-            
-            // Teken eerste frame
-            this.ctx.drawImage(img, 0, 0, width, height);
-            
-            this.createTexture();
-            this.isLoaded = true;
-            
-            if (this.data.autoplay) {
-                this.isPlaying = true;
-            }
+            const frame = this.gifData.frames[index];
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
         },
         
         createTexture: function() {
@@ -168,33 +249,33 @@
         },
         
         tick: function(time) {
-            if (!this.isPlaying || !this.isLoaded || !this.img) return;
+            if (!this.isPlaying || !this.isLoaded || !this.gifData) return;
+            if (this.gifData.frames.length <= 1) return;
             
-            // Update elke 33ms (~30fps)
-            if (time - this.lastDrawTime < this.updateInterval) return;
-            this.lastDrawTime = time;
+            // Check of het tijd is voor het volgende frame
+            const delay = this.gifData.delays[this.currentFrame] || 100;
             
-            try {
-                // Debug: log elke 2 seconden om te bevestigen dat tick draait
-                if (!this.lastDebugLog || time - this.lastDebugLog > 2000) {
-                    this.lastDebugLog = time;
-                    console.log('[gif-component] Tick actief, capturing frame van:', this.loadedSrc);
-                }
+            if (time - this.lastFrameTime >= delay) {
+                this.lastFrameTime = time;
                 
-                // De img in de DOM wordt door de browser geanimeerd
-                // Wij capturen gewoon de huidige staat
-                this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+                // Volgende frame
+                this.currentFrame = (this.currentFrame + 1) % this.gifData.frames.length;
                 
+                // Teken frame
+                this.drawFrame(this.currentFrame);
+                
+                // Update texture
                 if (this.texture) {
                     this.texture.needsUpdate = true;
                 }
-            } catch (e) {
-                console.error('[gif-component] Tick error:', e);
             }
         },
         
         play: function() {
-            this.isPlaying = true;
+            if (this.gifData && this.gifData.frames.length > 1) {
+                this.isPlaying = true;
+                this.lastFrameTime = performance.now();
+            }
         },
         
         pause: function() {
@@ -210,12 +291,11 @@
                 this.texture = null;
             }
             
-            // Verwijder img NIET uit DOM - kan gecached zijn voor andere entities
-            this.img = null;
+            this.gifData = null;
             this.canvas = null;
             this.ctx = null;
         }
     });
     
-    console.log('[gif-component] Geregistreerd (DOM-gebaseerd)');
+    console.log('[gif-component] Geregistreerd (frame parser)');
 })();
