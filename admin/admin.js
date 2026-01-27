@@ -2836,8 +2836,6 @@ async function openEditModal(posterId) {
         // Clear gallery input
         const editGalleryInput = document.getElementById('edit-gallery-images');
         if (editGalleryInput) editGalleryInput.value = '';
-        const arMarkerInput = document.getElementById('edit-ar-marker-file');
-        if (arMarkerInput) arMarkerInput.value = '';
         
         // Clear layer file inputs (incl. GLB/audio per laag)
         for (let layerNum = 1; layerNum <= 8; layerNum++) {
