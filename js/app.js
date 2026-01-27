@@ -670,18 +670,13 @@ function showChunkCycleButton() {
         style.id = 'chunk-btn-style';
         style.innerHTML = `
             @keyframes spinLoader {
-                0% { transform: translateX(-50%) rotate(0deg); }
-                100% { transform: translateX(-50%) rotate(360deg); }
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
             }
-            .chunk-spinner {
+            #chunk-cycle-btn .spinner {
                 display: inline-block;
-                width: 8px;
-                height: 8px;
-                border: 0.5px solid #fff;
-                border-top: 0.5px solid transparent;
-                border-radius: 50%;
                 animation: spinLoader 1s linear infinite;
-                margin-right: 6px;
+                margin-right: 4px;
             }
         `;
         document.head.appendChild(style);
@@ -689,12 +684,11 @@ function showChunkCycleButton() {
     
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
-    btn.textContent = 'SCAN';
+    btn.innerHTML = 'SCAN';
     btn.style.cssText = `
         position: fixed;
         bottom: 120px;
         left: 50%;
-        transform: translateX(-50%);
         z-index: 10000;
         background: transparent;
         color: #fff;
@@ -705,9 +699,6 @@ function showChunkCycleButton() {
         font-size: 11px;
         letter-spacing: 2px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 4px;
     `;
     
     btn.onclick = startChunkScan;
@@ -740,11 +731,11 @@ function startChunkScan() {
     if (totalChunks === 1) {
         console.log('Single chunk - reloading');
         if (btn) {
-            btn.innerHTML = '<span class="chunk-spinner"></span> 1/1';
+            btn.innerHTML = `<span class="spinner">◐</span> 1/1`;
         }
         loadChunkScene(0);
         setTimeout(() => {
-            if (btn) btn.textContent = 'SCAN';
+            if (btn) btn.innerHTML = 'SCAN';
         }, 2000);
         return;
     }
@@ -755,7 +746,7 @@ function startChunkScan() {
     
     const updateScanDisplay = () => {
         if (btn) {
-            btn.innerHTML = `<span class="chunk-spinner"></span> ${currentChunk + 1}/${totalChunks}`;
+            btn.innerHTML = `<span class="spinner">◐</span> ${currentChunk + 1}/${totalChunks}`;
         }
     };
     
@@ -764,7 +755,7 @@ function startChunkScan() {
     const scanNextChunk = () => {
         if (!window.isChunkScanning || window.chunkLocked) {
             // Stop scanning
-            if (btn) btn.textContent = 'SCAN';
+            if (btn) btn.innerHTML = 'SCAN';
             return;
         }
         
@@ -774,7 +765,7 @@ function startChunkScan() {
         // Stop na alle chunks gescand
         if (currentChunk >= totalChunks) {
             window.isChunkScanning = false;
-            if (btn) btn.textContent = 'SCAN';
+            if (btn) btn.innerHTML = 'SCAN';
             console.log('Alle chunks gescand');
             return;
         }
