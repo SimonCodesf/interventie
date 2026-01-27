@@ -51,6 +51,8 @@ async function mergeMindFiles() {
     const validPosterData = getValidPosterIds();
     if (validPosterData) {
         console.log(`Database bevat ${validPosterData.length} posters (gesorteerd op datum)`);
+        // Log de eerste paar om de volgorde te verifiëren
+        console.log('Eerste 3 posters (nieuwste):', validPosterData.slice(0, 3).map(p => p.id || p));
     }
     
     // 1. Find all .mind files
@@ -61,11 +63,18 @@ async function mergeMindFiles() {
     for (const item of items) {
         const itemPath = path.join(ASSETS_DIR, item);
         if (fs.statSync(itemPath).isDirectory()) {
-            // Skip als poster niet in database staat
-            const posterData = validPosterData ? validPosterData.find(p => p.id === item) : null;
-            if (validPosterData && !posterData) {
-                console.log(`Skipping ${item} - niet in database`);
-                continue;
+            // Check of poster in database staat
+            // Support zowel oude format (array van strings) als nieuwe format (array van objects)
+            let posterData = null;
+            if (validPosterData) {
+                posterData = validPosterData.find(p => {
+                    if (typeof p === 'string') return p === item;
+                    return p.id === item;
+                });
+                if (!posterData) {
+                    console.log(`Skipping ${item} - niet in database`);
+                    continue;
+                }
             }
             
             // Look for .mind file inside (usually same name as folder)
@@ -74,7 +83,7 @@ async function mergeMindFiles() {
                 mindFiles.push({
                     id: item,
                     path: mindFile,
-                    created_at: posterData ? posterData.created_at : null
+                    created_at: posterData && typeof posterData === 'object' ? posterData.created_at : null
                 });
             }
         }
@@ -88,16 +97,15 @@ async function mergeMindFiles() {
     }
 
     // 2. Process in chunks - sorteer op datum (nieuwste eerst voor chunk 0)
-    // Als we database data hebben, sorteer op created_at DESC
-    // Anders fallback op alfabetisch (deterministic)
-    if (validPosterData) {
-        // Sorteer op basis van positie in validPosterData (al gesorteerd op datum)
+    if (validPosterData && validPosterData.length > 0) {
+        // Sorteer op basis van positie in validPosterData (al gesorteerd op datum DESC)
         mindFiles.sort((a, b) => {
-            const indexA = validPosterData.findIndex(p => p.id === a.id);
-            const indexB = validPosterData.findIndex(p => p.id === b.id);
+            const indexA = validPosterData.findIndex(p => (typeof p === 'string' ? p : p.id) === a.id);
+            const indexB = validPosterData.findIndex(p => (typeof p === 'string' ? p : p.id) === b.id);
             return indexA - indexB; // Behoud database volgorde (nieuwste eerst)
         });
         console.log('Gesorteerd op upload datum (nieuwste eerst in chunk 0)');
+        console.log('Volgorde na sortering:', mindFiles.slice(0, 3).map(f => f.id));
     } else {
         mindFiles.sort((a, b) => a.id.localeCompare(b.id));
         console.log('Gesorteerd alfabetisch (fallback)');

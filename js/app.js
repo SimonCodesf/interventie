@@ -667,28 +667,39 @@ function showChunkCycleButton() {
     const totalChunks = window.arManifest.chunks.length;
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
-    btn.innerHTML = `<span class="chunk-icon">◀▶</span> <span class="chunk-text">${window.currentChunkIndex + 1}/${totalChunks}</span>`;
-    btn.title = 'Wissel naar andere posters';
+    btn.innerHTML = `MEER POSTERS (${window.currentChunkIndex + 1}/${totalChunks})`;
+    btn.title = 'Laad andere posters';
     btn.style.cssText = `
         position: fixed;
-        bottom: 80px;
-        left: 16px;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 10000;
-        background: rgba(0, 0, 0, 0.7);
-        color: #0f0;
-        border: 1px solid #0f0;
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.5);
         border-radius: 4px;
-        padding: 8px 12px;
+        padding: 10px 20px;
         font-family: 'Courier New', monospace;
-        font-size: 12px;
+        font-size: 11px;
+        letter-spacing: 1px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 6px;
     `;
     
     btn.onclick = cycleChunk;
     document.body.appendChild(btn);
+}
+
+// Verberg chunk knop
+function hideChunkCycleButton() {
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) btn.style.display = 'none';
+}
+
+// Toon chunk knop
+function showChunkCycleButtonAgain() {
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) btn.style.display = 'block';
 }
 
 // Cycle naar volgende chunk
@@ -708,7 +719,7 @@ function cycleChunk() {
     // Update knop tekst
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn) {
-        btn.querySelector('.chunk-text').textContent = `${nextIndex + 1}/${totalChunks}`;
+        btn.innerHTML = `MEER POSTERS (${nextIndex + 1}/${totalChunks})`;
     }
     
     // Laad nieuwe chunk
@@ -812,12 +823,7 @@ function setupChunkEventListeners(scene, chunk) {
             
             // Vergrendel deze chunk - we hebben een poster gevonden!
             window.chunkLocked = true;
-            const btn = document.getElementById('chunk-cycle-btn');
-            if (btn) {
-                btn.style.opacity = '0.3';
-                btn.style.pointerEvents = 'none';
-                btn.title = 'Chunk vergrendeld - poster gevonden';
-            }
+            hideChunkCycleButton();
             
             revealARScene();
             stopScanCycles('found');
@@ -845,12 +851,7 @@ function setupChunkEventListeners(scene, chunk) {
             
             // Ontgrendel chunk - gebruiker kan weer cyclen
             window.chunkLocked = false;
-            const btn = document.getElementById('chunk-cycle-btn');
-            if (btn) {
-                btn.style.opacity = '1';
-                btn.style.pointerEvents = 'auto';
-                btn.title = 'Wissel naar andere posters';
-            }
+            showChunkCycleButtonAgain();
             
             // UNLOAD GIFs: Verwijder GIF shaders om geheugen vrij te maken
             unloadLazyGifsForTarget(target);
