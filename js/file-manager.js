@@ -475,6 +475,7 @@ function createWindow(poster) {
                     ${poster.description ? `<div class="term-row"><span class="term-key">DESC</span><span class="term-val">${escapeHtml(poster.description)}</span></div>` : ''}
                     ${poster.location_description ? `<div class="term-row"><span class="term-key">LOC</span><span class="term-val">${escapeHtml(poster.location_description)}</span></div>` : ''}
                     ${formatCredits(poster)}
+                    <!-- v202501271845 -->
                     <div class="term-row"><span class="term-key">DL_COUNT</span><span class="term-val">${poster.downloads || 0}</span></div>
                     <div class="term-row"><span class="term-key">STATUS</span><span class="term-val term-ok">ONLINE</span></div>
                 </div>
