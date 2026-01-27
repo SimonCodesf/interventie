@@ -287,7 +287,13 @@
                 this.lastFrameTime = time;
                 
                 // Volgende frame
+                const prevFrame = this.currentFrame;
                 this.currentFrame = (this.currentFrame + 1) % this.gifData.frames.length;
+                
+                // Debug log (alleen bij frame 0 → 1)
+                if (prevFrame === 0 && this.currentFrame === 1) {
+                    console.log('[gif-component] Animatie draait voor:', this.data.src.split('/').pop());
+                }
                 
                 // Teken frame
                 this.drawFrame(this.currentFrame);
