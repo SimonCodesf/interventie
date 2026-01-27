@@ -664,24 +664,6 @@ function showChunkCycleButton() {
     const existing = document.getElementById('chunk-cycle-btn');
     if (existing) existing.remove();
     
-    // Add CSS animation voor spinner
-    if (!document.getElementById('chunk-btn-style')) {
-        const style = document.createElement('style');
-        style.id = 'chunk-btn-style';
-        style.innerHTML = `
-            @keyframes spinLoader {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            #chunk-cycle-btn .spinner {
-                display: inline-block;
-                animation: spinLoader 1s linear infinite;
-                margin-right: 4px;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
     btn.innerHTML = 'SCAN';
@@ -700,6 +682,7 @@ function showChunkCycleButton() {
         font-size: 11px;
         letter-spacing: 2px;
         cursor: pointer;
+        min-width: 70px;
     `;
     
     btn.onclick = startChunkScan;
@@ -732,22 +715,43 @@ function startChunkScan() {
     if (totalChunks === 1) {
         console.log('Single chunk - reloading');
         if (btn) {
-            btn.innerHTML = `<span class="spinner">◐</span> 1/1`;
+            // Puntjes animatie
+            let dots = 0;
+            const dotInterval = setInterval(() => {
+                dots = (dots + 1) % 4;
+                btn.innerHTML = '1/1' + '.'.repeat(dots);
+            }, 300);
+            
+            loadChunkScene(0);
+            setTimeout(() => {
+                clearInterval(dotInterval);
+                if (btn) btn.innerHTML = 'SCAN';
+            }, 2000);
         }
-        loadChunkScene(0);
-        setTimeout(() => {
-            if (btn) btn.innerHTML = 'SCAN';
-        }, 2000);
         return;
     }
     
     // Start scan cycle
     window.isChunkScanning = true;
     let currentChunk = 0;
+    let dots = 0;
+    
+    // Puntjes animatie tijdens scannen
+    const dotInterval = setInterval(() => {
+        if (!window.isChunkScanning || window.chunkLocked) {
+            clearInterval(dotInterval);
+            return;
+        }
+        dots = (dots + 1) % 4;
+        if (btn) {
+            btn.innerHTML = `${currentChunk + 1}/${totalChunks}` + '.'.repeat(dots);
+        }
+    }, 300);
     
     const updateScanDisplay = () => {
+        dots = 0;
         if (btn) {
-            btn.innerHTML = `<span class="spinner">◐</span> ${currentChunk + 1}/${totalChunks}`;
+            btn.innerHTML = `${currentChunk + 1}/${totalChunks}`;
         }
     };
     
@@ -756,6 +760,7 @@ function startChunkScan() {
     const scanNextChunk = () => {
         if (!window.isChunkScanning || window.chunkLocked) {
             // Stop scanning
+            clearInterval(dotInterval);
             if (btn) btn.innerHTML = 'SCAN';
             return;
         }
@@ -766,6 +771,7 @@ function startChunkScan() {
         // Stop na alle chunks gescand
         if (currentChunk >= totalChunks) {
             window.isChunkScanning = false;
+            clearInterval(dotInterval);
             if (btn) btn.innerHTML = 'SCAN';
             console.log('Alle chunks gescand');
             return;
