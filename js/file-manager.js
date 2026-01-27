@@ -755,6 +755,7 @@ function escapeHtml(text) {
 
 // Utility: Format credits voor terminal weergave
 function formatCredits(poster) {
+    console.log('formatCredits v2 aangeroepen voor poster:', poster.id);
     let creditItems = [];
     
     // Probeer eerst het nieuwe credits veld (JSON array)
@@ -779,14 +780,20 @@ function formatCredits(poster) {
         creditItems = [{ item: 'Foto', owner: poster.photographer_credit }];
     }
     
-    if (creditItems.length === 0) return '';
+    if (creditItems.length === 0) {
+        console.log('Geen credits gevonden voor poster', poster.id);
+        return '';
+    }
     
     // Format als CREDITS sectie met items op één regel
     const creditLines = creditItems
         .map(c => `${escapeHtml(c.item)}: ${escapeHtml(c.owner)}`)
         .join(' | ');
     
-    return `<div class="term-row"><span class="term-key">CREDITS</span><span class="term-val">${creditLines}</span></div>`;
+    const result = `<div class="term-row"><span class="term-key">CREDITS</span><span class="term-val">${creditLines}</span></div>`;
+    console.log('Credits geformateerd:', result);
+    
+    return result;
 }
 
 // Export for use
