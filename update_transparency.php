@@ -27,7 +27,7 @@ try {
     echo "════════════════════════════════════════\n\n";
     
     // Haal alle posters op
-    $stmt = $db->query("SELECT id, title, layers FROM posters");
+    $stmt = $db->query("SELECT id, title, layers_data FROM posters");
     $posters = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     $totalPosters = count($posters);
@@ -40,7 +40,7 @@ try {
     foreach ($posters as $poster) {
         $id = $poster['id'];
         $title = $poster['title'];
-        $layersJson = $poster['layers'];
+        $layersJson = $poster['layers_data'];
         
         if (empty($layersJson)) {
             continue;
@@ -70,7 +70,7 @@ try {
         if ($hasChanges) {
             // Update de database
             $updatedLayersJson = json_encode($layers, JSON_UNESCAPED_UNICODE);
-            $updateStmt = $db->prepare("UPDATE posters SET layers = :layers WHERE id = :id");
+            $updateStmt = $db->prepare("UPDATE posters SET layers_data = :layers WHERE id = :id");
             $updateStmt->execute([
                 ':layers' => $updatedLayersJson,
                 ':id' => $id
