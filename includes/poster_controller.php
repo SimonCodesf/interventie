@@ -184,6 +184,7 @@ function handleUploadPoster($db) {
                 'anim_scale' => (float)($_POST["layer_{$i}_anim_scale"] ?? 1.0),
                 'anim_opacity' => (float)($_POST["layer_{$i}_anim_opacity"] ?? 1.0),
                 'anim_duration' => (int)($_POST["layer_{$i}_anim_duration"] ?? 0),
+                'transparent' => (int)($_POST["layer_{$i}_transparent"] ?? 0) === 1,
                 'exclusion_filter' => (int)($_POST["layer_{$i}_exclusion"] ?? 0) === 1,
                 'filename' => null,
                 'is_video' => false
@@ -441,6 +442,7 @@ function handleUpdatePoster($db, $id) {
                     'anim_scale' => 1.0,
                     'anim_opacity' => 1.0,
                     'anim_duration' => 0,
+                    'transparent' => false,
                     'exclusion_filter' => false,
                     'filename' => null,
                     'is_video' => false
@@ -467,6 +469,7 @@ function handleUpdatePoster($db, $id) {
                 'anim_scale' => isset($_POST["layer_{$i}_anim_scale"]) ? (float)$_POST["layer_{$i}_anim_scale"] : ($existingLayer['anim_scale'] ?? 1.0),
                 'anim_opacity' => isset($_POST["layer_{$i}_anim_opacity"]) ? (float)$_POST["layer_{$i}_anim_opacity"] : ($existingLayer['anim_opacity'] ?? 1.0),
                 'anim_duration' => isset($_POST["layer_{$i}_anim_duration"]) ? (int)$_POST["layer_{$i}_anim_duration"] : ($existingLayer['anim_duration'] ?? 0),
+                'transparent' => isset($_POST["layer_{$i}_transparent"]) ? ((int)$_POST["layer_{$i}_transparent"] === 1) : ($existingLayer['transparent'] ?? false),
                 'exclusion_filter' => isset($_POST["layer_{$i}_exclusion"]) ? ((int)$_POST["layer_{$i}_exclusion"] === 1) : ($existingLayer['exclusion_filter'] ?? false),
                 'filename' => $existingLayer['filename'] ?? null,
                 'is_video' => $existingLayer['is_video'] ?? false

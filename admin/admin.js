@@ -123,6 +123,10 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <!-- Quick Options Row -->
                 <div class="layer-options">
                     <label class="option-toggle">
+                        <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1">
+                        <span>TRANSPARANT</span>
+                    </label>
+                    <label class="option-toggle">
                         <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
                         <span>MASKER</span>
                     </label>
@@ -2573,6 +2577,12 @@ async function openEditModal(posterId) {
                 
                 const rotZInput = document.getElementById(`edit-layer-${layerNum}-rot-z`);
                 if (rotZInput) rotZInput.value = (layerData.rot_z !== undefined && layerData.rot_z !== null) ? layerData.rot_z : '0';
+                
+                // Set transparent checkbox
+                const transparentCheckbox = document.getElementById(`edit-layer-${layerNum}-transparent`);
+                if (transparentCheckbox) {
+                    transparentCheckbox.checked = layerData.transparent || false;
+                }
                 
                 // Set exclusion filter checkbox
                 const exclusionCheckbox = document.getElementById(`edit-layer-${layerNum}-exclusion`);

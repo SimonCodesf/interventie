@@ -1790,6 +1790,7 @@ function buildLayersHTML(poster) {
                 
                 const mediaPath = `uploads/ar-layers/${layerData.filename}`;
                 const exclusionAttr = layerData.exclusion_filter ? `data-exclusion="true"` : '';
+                const isTransparent = layerData.transparent === true;
                 
                 // Check if it's a video (MP4, WebM) or GIF or image
                 const isGif = layerData.filename.endsWith('.gif');
@@ -1840,6 +1841,7 @@ function buildLayersHTML(poster) {
                     // Use a-plane with GIF shader for GIF playback
                     // Start with square, let fixLayerAspectRatios handle the rest
                     const gifSize = 1.4 * baseScale;
+                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : 'transparent: false;';
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
@@ -1848,7 +1850,7 @@ function buildLayersHTML(poster) {
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
                             rotation="${rotX} ${rotY} ${rotZ}"
-                            material="shader: gif; src: url(${mediaPath}); transparent: true; alphaTest: 0.5;"
+                            material="shader: gif; src: url(${mediaPath}); ${transparentSettings}"
                             data-preserve-aspect="true"
                             data-image-src="${mediaPath}"
                             ${customScaleAttr}
@@ -1879,7 +1881,8 @@ function buildLayersHTML(poster) {
                 } else {
                     // Use a-plane for static images
                     // Zet initial dimensions op placeholder, wordt dynamisch aangepast via Image loader
-                    const materialAttr = `material="transparent: true; alphaTest: 0.1; side: double;"`;
+                    const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.1; side: double;' : 'transparent: false; side: double;';
+                    const materialAttr = `material="${materialSettings}"`;
                     
                     layersHTML += `
                         <a-plane 
