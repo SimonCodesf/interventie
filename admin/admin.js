@@ -3102,9 +3102,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const editGalleryInput = document.getElementById('edit-gallery-images');
             if (editGalleryInput && editGalleryInput.files.length > 0) {
                 console.log('[Edit] Adding gallery files:', editGalleryInput.files.length);
+                const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                let hasInvalidFile = false;
+                
                 for (let i = 0; i < editGalleryInput.files.length; i++) {
                     const file = editGalleryInput.files[i];
-                    console.log(`[Edit] Gallery file ${i}: ${file.name} (${file.size} bytes)`);
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    console.log(`[Edit] Gallery file ${i}: ${file.name} (${file.size} bytes, ext: ${ext})`);
+                    
+                    if (!allowedExtensions.includes(ext)) {
+                        hasInvalidFile = true;
+                        if (errorMsg) {
+                            errorMsg.textContent = `Ongeldig bestandstype: ${file.name}. Gebruik JPG, PNG, GIF of WebP (geen HEIC/HEIF).`;
+                        }
+                        console.error(`[Edit] Invalid file type: ${ext}. HEIC is niet ondersteund - converteer naar JPG.`);
+                        return; // Stop de upload
+                    }
+                    
                     formData.append('gallery_images[]', file);
                 }
             } else {
