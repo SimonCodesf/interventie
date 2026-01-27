@@ -520,8 +520,26 @@ function handleUpdatePoster($db, $id) {
                 }
             }
             
+            // Check voor specifieke media delete flags (niet hele layer delete)
+            $deleteMedia = isset($_POST["layer_{$i}_delete_media"]) && (int)$_POST["layer_{$i}_delete_media"] === 1;
+            $deleteGlb = isset($_POST["layer_{$i}_delete_glb"]) && (int)$_POST["layer_{$i}_delete_glb"] === 1;
+            $deleteAudio = isset($_POST["layer_{$i}_delete_audio"]) && (int)$_POST["layer_{$i}_delete_audio"] === 1;
+            
+            // Verwijder media (afbeelding/video) indien gevraagd
+            if ($deleteMedia && !empty($layerData['filename'])) {
+                @unlink(AR_LAYERS_DIR . '/' . $layerData['filename']);
+                $layerData['filename'] = null;
+                $layerData['is_video'] = false;
+                error_log("[UPDATE_LAYER_{$i}] Media verwijderd op verzoek");
+            }
+            
             // Handle per-layer GLB model update
-            if (isset($_FILES["layer_{$i}_glb"]) && $_FILES["layer_{$i}_glb"]['error'] === UPLOAD_ERR_OK) {
+            if ($deleteGlb && !empty($existingLayer['glb_model'])) {
+                // Verwijder GLB op verzoek
+                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['glb_model']);
+                $layerData['glb_model'] = null;
+                error_log("[UPDATE_LAYER_{$i}] GLB model verwijderd op verzoek");
+            } elseif (isset($_FILES["layer_{$i}_glb"]) && $_FILES["layer_{$i}_glb"]['error'] === UPLOAD_ERR_OK) {
                 $glbFile = $_FILES["layer_{$i}_glb"];
                 if ($glbFile['size'] <= 10485760) { // 10MB max
                     // Verwijder oude GLB indien aanwezig
@@ -539,7 +557,12 @@ function handleUpdatePoster($db, $id) {
             }
             
             // Handle per-layer audio file update
-            if (isset($_FILES["layer_{$i}_audio"]) && $_FILES["layer_{$i}_audio"]['error'] === UPLOAD_ERR_OK) {
+            if ($deleteAudio && !empty($existingLayer['audio_file'])) {
+                // Verwijder audio op verzoek
+                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['audio_file']);
+                $layerData['audio_file'] = null;
+                error_log("[UPDATE_LAYER_{$i}] Audio verwijderd op verzoek");
+            } elseif (isset($_FILES["layer_{$i}_audio"]) && $_FILES["layer_{$i}_audio"]['error'] === UPLOAD_ERR_OK) {
                 $audioFile = $_FILES["layer_{$i}_audio"];
                 if ($audioFile['size'] <= 10485760) { // 10MB max
                     // Verwijder oude audio indien aanwezig

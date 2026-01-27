@@ -59,17 +59,23 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <label>MEDIA</label>
                         <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm,.glb,.gltf">
                         <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
+                        <input type="hidden" id="${prefix}layer-${layerNum}-delete-media" name="layer_${layerNum}_delete_media" value="0">
                         ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-current"></span>` : ''}
+                        ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-media-btn" onclick="deleteLayerMedia(${layerNum}, 'image')" title="Verwijder afbeelding" style="display:none;">×</button>` : ''}
                     </div>
                     <div class="file-slot file-slot-small">
                         <label>3D</label>
                         <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf">
+                        <input type="hidden" id="${prefix}layer-${layerNum}-delete-glb" name="layer_${layerNum}_delete_glb" value="0">
                         ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-glb-current"></span>` : ''}
+                        ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-glb-btn" onclick="deleteLayerMedia(${layerNum}, 'glb')" title="Verwijder 3D model" style="display:none;">×</button>` : ''}
                     </div>
                     <div class="file-slot file-slot-small">
                         <label>AUDIO</label>
                         <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,.mp3,.wav">
+                        <input type="hidden" id="${prefix}layer-${layerNum}-delete-audio" name="layer_${layerNum}_delete_audio" value="0">
                         ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-audio-current"></span>` : ''}
+                        ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-audio-btn" onclick="deleteLayerMedia(${layerNum}, 'audio')" title="Verwijder audio" style="display:none;">×</button>` : ''}
                     </div>
                 </div>
                 
@@ -261,6 +267,85 @@ function deleteLayer(layerNum) {
     }
     
     alert(`Laag ${layerNum} is verwijderd!`);
+}
+
+// Verwijder specifiek media type van een laag (afbeelding, glb, of audio)
+function deleteLayerMedia(layerNum, mediaType) {
+    const typeNames = {
+        'image': 'afbeelding/video',
+        'glb': '3D model',
+        'audio': 'audio bestand'
+    };
+    
+    if (!confirm(`Weet je zeker dat je de ${typeNames[mediaType]} van laag ${layerNum} wilt verwijderen?`)) {
+        return;
+    }
+    
+    const prefix = 'edit-';
+    
+    if (mediaType === 'image') {
+        // Set delete flag voor backend
+        const deleteFlag = document.getElementById(`${prefix}layer-${layerNum}-delete-media`);
+        if (deleteFlag) deleteFlag.value = '1';
+        
+        // Clear file input
+        const fileInput = document.getElementById(`${prefix}layer-${layerNum}-image`);
+        if (fileInput) fileInput.value = '';
+        
+        // Update current info
+        const currentInfo = document.getElementById(`${prefix}layer-${layerNum}-current`);
+        if (currentInfo) {
+            currentInfo.textContent = 'Wordt verwijderd bij opslaan';
+            currentInfo.style.color = '#f44';
+        }
+        
+        // Hide delete button
+        const deleteBtn = document.getElementById(`${prefix}layer-${layerNum}-delete-media-btn`);
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        
+    } else if (mediaType === 'glb') {
+        // Set delete flag voor backend
+        const deleteFlag = document.getElementById(`${prefix}layer-${layerNum}-delete-glb`);
+        if (deleteFlag) deleteFlag.value = '1';
+        
+        // Clear file input
+        const fileInput = document.getElementById(`${prefix}layer-${layerNum}-glb`);
+        if (fileInput) fileInput.value = '';
+        
+        // Update current info
+        const currentInfo = document.getElementById(`${prefix}layer-${layerNum}-glb-current`);
+        if (currentInfo) {
+            currentInfo.textContent = 'Wordt verwijderd bij opslaan';
+            currentInfo.style.color = '#f44';
+        }
+        
+        // Hide delete button
+        const deleteBtn = document.getElementById(`${prefix}layer-${layerNum}-delete-glb-btn`);
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        
+    } else if (mediaType === 'audio') {
+        // Set delete flag voor backend
+        const deleteFlag = document.getElementById(`${prefix}layer-${layerNum}-delete-audio`);
+        if (deleteFlag) deleteFlag.value = '1';
+        
+        // Clear file input
+        const fileInput = document.getElementById(`${prefix}layer-${layerNum}-audio`);
+        if (fileInput) fileInput.value = '';
+        
+        // Update current info
+        const currentInfo = document.getElementById(`${prefix}layer-${layerNum}-audio-current`);
+        if (currentInfo) {
+            currentInfo.textContent = 'Wordt verwijderd bij opslaan';
+            currentInfo.style.color = '#f44';
+        }
+        
+        // Hide delete button
+        const deleteBtn = document.getElementById(`${prefix}layer-${layerNum}-delete-audio-btn`);
+        if (deleteBtn) deleteBtn.style.display = 'none';
+    }
+    
+    // Update preview
+    updatePreviewFromInputs();
 }
 
 // API URL - Detect environment
@@ -2516,12 +2601,15 @@ async function openEditModal(posterId) {
                 
                 // Show current filename if exists
                 const currentFileInfo = document.getElementById(`edit-layer-${layerNum}-current`);
+                const deleteMediaBtn = document.getElementById(`edit-layer-${layerNum}-delete-media-btn`);
                 if (currentFileInfo && layerData.filename) {
                     currentFileInfo.textContent = `Huidig: ${layerData.filename}`;
                     currentFileInfo.style.color = '#27ae60';
+                    if (deleteMediaBtn) deleteMediaBtn.style.display = 'inline-block';
                 } else if (currentFileInfo) {
                     currentFileInfo.textContent = 'Geen afbeelding';
                     currentFileInfo.style.color = '#999';
+                    if (deleteMediaBtn) deleteMediaBtn.style.display = 'none';
                 }
                 
                 // Update layer status badge in edit modal
@@ -2539,14 +2627,18 @@ async function openEditModal(posterId) {
                 // Toon huidige GLB/audio status per laag (in AR EXTRAS toggle)
                 const glbInfo = document.getElementById(`edit-layer-${layerNum}-glb-current`);
                 const audioInfo = document.getElementById(`edit-layer-${layerNum}-audio-current`);
+                const deleteGlbBtn = document.getElementById(`edit-layer-${layerNum}-delete-glb-btn`);
+                const deleteAudioBtn = document.getElementById(`edit-layer-${layerNum}-delete-audio-btn`);
                 
                 if (glbInfo) {
                     if (layerData.glb_model) {
                         glbInfo.textContent = `Huidig: ${layerData.glb_model}`;
                         glbInfo.style.color = '#27ae60';
+                        if (deleteGlbBtn) deleteGlbBtn.style.display = 'inline-block';
                     } else {
                         glbInfo.textContent = 'Geen 3D model';
                         glbInfo.style.color = '#999';
+                        if (deleteGlbBtn) deleteGlbBtn.style.display = 'none';
                     }
                 }
                 
@@ -2554,9 +2646,11 @@ async function openEditModal(posterId) {
                     if (layerData.audio_file) {
                         audioInfo.textContent = `Huidig: ${layerData.audio_file}`;
                         audioInfo.style.color = '#27ae60';
+                        if (deleteAudioBtn) deleteAudioBtn.style.display = 'inline-block';
                     } else {
                         audioInfo.textContent = 'Geen audio';
                         audioInfo.style.color = '#999';
+                        if (deleteAudioBtn) deleteAudioBtn.style.display = 'none';
                     }
                 }
             }

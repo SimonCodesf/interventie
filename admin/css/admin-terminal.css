@@ -757,6 +757,27 @@ input[type="file"]::file-selector-button:hover {
     background: rgba(255,255,255,0.1);
 }
 
+/* Delete Media Button (per file slot) */
+.btn-delete-media {
+    background: none;
+    border: 1px solid rgba(255,100,100,0.4);
+    color: rgba(255,100,100,0.6);
+    width: 18px;
+    height: 18px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+.btn-delete-media:hover {
+    border-color: #f44;
+    color: #f44;
+    background: rgba(255,68,68,0.1);
+}
+
 /* Animation Panel */
 .anim-panel {
     background: rgba(255,255,255,0.02);
