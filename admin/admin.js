@@ -1033,49 +1033,58 @@ function renderARPreview() {
                 el.style.transform = baseTransform;
                 
                 // Animatie toepassen als duration > 0
-                if (data.animDuration > 0) {
-                    const hasPositionAnim = data.animX !== 0 || data.animY !== 0;
-                    const hasRotationAnim = data.animRotX !== 0 || data.animRotY !== 0 || data.animRotZ !== 0;
-                    const hasScaleAnim = data.animScale !== 1;
+                const animDur = data.animDuration || 0;
+                const animX = data.animX || 0;
+                const animY = data.animY || 0;
+                const animRotX = data.animRotX || 0;
+                const animRotY = data.animRotY || 0;
+                const animRotZ = data.animRotZ || 0;
+                const animScaleVal = data.animScale || 1;
+                
+                const hasPositionAnim = animX !== 0 || animY !== 0;
+                const hasRotationAnim = animRotX !== 0 || animRotY !== 0 || animRotZ !== 0;
+                const hasScaleAnim = animScaleVal !== 1;
+                const hasAnyAnim = hasPositionAnim || hasRotationAnim || hasScaleAnim;
+                
+                if (animDur > 0 && hasAnyAnim) {
+                    // Positie animatie in pixels
+                    const animXPx = animX * pxPerMeter;
+                    const animYPx = -animY * pxPerMeter; // Y is omgekeerd in CSS
                     
-                    if (hasPositionAnim || hasRotationAnim || hasScaleAnim) {
-                        // Genereer unieke keyframe naam
-                        const animName = `layer-anim-${layerNum}-${Date.now()}`;
-                        
-                        // Bereken eind transform
-                        const endRotX = data.rotX + data.animRotX;
-                        const endRotY = data.rotY + data.animRotY;
-                        const endRotZ = data.rotZ + data.animRotZ;
-                        const endTransform = `rotateX(${endRotX}deg) rotateY(${endRotY}deg) rotateZ(${endRotZ}deg) scale(${data.animScale})`;
-                        
-                        // Positie animatie in pixels (animX/Y zijn in meters, converteer naar pixels)
-                        const animXPx = data.animX * pxPerMeter;
-                        const animYPx = -data.animY * pxPerMeter; // Y is omgekeerd in CSS
-                        
-                        // Maak keyframes
-                        const keyframes = `
-                            @keyframes ${animName} {
-                                0% { 
-                                    transform: ${baseTransform} scale(1) translate(0, 0);
-                                }
-                                100% { 
-                                    transform: ${endTransform} translate(${animXPx}px, ${animYPx}px);
-                                }
+                    // Bereken eind rotatie
+                    const endRotX = data.rotX + animRotX;
+                    const endRotY = data.rotY + animRotY;
+                    const endRotZ = data.rotZ + animRotZ;
+                    
+                    // Gebruik CSS animation met inline @keyframes via animationName
+                    // Of simpeler: gebruik CSS transitions met setInterval
+                    // Meest robuust: direct inline animation
+                    
+                    const animId = `anim-${layerNum}-${Math.random().toString(36).substr(2, 5)}`;
+                    
+                    const keyframeCSS = `
+                        @keyframes ${animId} {
+                            0% { 
+                                transform: ${baseTransform} scale(1) translate(0px, 0px);
                             }
-                        `;
-                        
-                        // Voeg keyframes toe aan document (of hergebruik bestaande style tag)
-                        let styleEl = document.getElementById('preview-animations');
-                        if (!styleEl) {
-                            styleEl = document.createElement('style');
-                            styleEl.id = 'preview-animations';
-                            document.head.appendChild(styleEl);
+                            100% { 
+                                transform: rotateX(${endRotX}deg) rotateY(${endRotY}deg) rotateZ(${endRotZ}deg) scale(${animScaleVal}) translate(${animXPx}px, ${animYPx}px);
+                            }
                         }
-                        styleEl.textContent += keyframes;
-                        
-                        // Pas animatie toe
-                        el.style.animation = `${animName} ${data.animDuration}ms linear infinite alternate`;
+                    `;
+                    
+                    // Maak of update style element
+                    let styleEl = document.getElementById('preview-animations');
+                    if (!styleEl) {
+                        styleEl = document.createElement('style');
+                        styleEl.id = 'preview-animations';
+                        document.head.appendChild(styleEl);
                     }
+                    styleEl.textContent += keyframeCSS;
+                    
+                    // Pas animatie toe
+                    el.style.animation = `${animId} ${animDur}ms ease-in-out infinite alternate`;
+                    console.log(`[Preview] Animatie toegepast op layer ${layerNum}: ${animId}, dur=${animDur}ms`);
                 }
                 
                 // Add Content
