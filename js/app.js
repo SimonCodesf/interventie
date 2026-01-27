@@ -1903,15 +1903,15 @@ function buildLayersHTML(poster) {
                 }
 
                 if (isGif) {
-                    // GIF: gebruik simpele a-image (toont eerste frame, geen animatie)
-                    // De GIF shader is te buggy - dit is een betrouwbare fallback
+                    // GIF: gebruik de gif component voor animatie
+                    // De component captured browser's native GIF animatie naar WebGL texture
                     const gifSize = 1.4 * baseScale;
                     const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
                     layersHTML += `
-                        <a-image 
+                        <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
-                            src="${mediaPath}"
+                            gif="src: ${mediaPath}; autoplay: true"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
@@ -1921,7 +1921,7 @@ function buildLayersHTML(poster) {
                             data-image-src="${mediaPath}"
                             ${customScaleAttr}
                             ${animationStr}
-                            ${exclusionAttr}></a-image>`;
+                            ${exclusionAttr}></a-plane>`;
                 } else if (isVideo) {
                     // Use a-video for MP4/WebM layers
                     // Video: gebruik default aspect ratio 16:9
