@@ -793,9 +793,14 @@ function startChunkScan() {
         console.log('scanNextChunk called, isChunkScanning:', window.isChunkScanning);
         
         if (!window.isChunkScanning || window.chunkLocked) {
-            // Stop scanning
+            // Stop scanning - reset knop styling
             clearInterval(dotInterval);
-            if (btn) btn.textContent = 'SCAN';
+            if (btn) {
+                btn.textContent = 'SCAN';
+                btn.style.background = 'transparent';
+                btn.style.borderColor = '#fff';
+                btn.style.color = '#fff';
+            }
             return;
         }
         
@@ -811,7 +816,12 @@ function startChunkScan() {
             if (cycleCount >= maxCycles) {
                 window.isChunkScanning = false;
                 clearInterval(dotInterval);
-                if (btn) btn.textContent = 'SCAN';
+                if (btn) {
+                    btn.textContent = 'SCAN';
+                    btn.style.background = 'transparent';
+                    btn.style.borderColor = '#fff';
+                    btn.style.color = '#fff';
+                }
                 console.log(`Scan gestopt na ${maxCycles} cycli`);
                 return;
             }
@@ -846,12 +856,23 @@ function loadChunkScene(chunkIndex) {
     if (scanBtn && window.isChunkScanning) {
         const totalChunks = window.arManifest.chunks.length;
         scanBtn.textContent = `${chunkIndex + 1}/${totalChunks}`;
-        console.log(`📟 Knop update via loadChunkScene: ${scanBtn.textContent}`);
+        // Visuele feedback: donkere achtergrond tijdens scannen
+        scanBtn.style.background = 'rgba(255,255,255,0.15)';
+        scanBtn.style.borderColor = '#0f0';
+        scanBtn.style.color = '#0f0';
     }
     
-    // Remove existing scene
+    // Remove existing scene - wacht even voor cleanup
     const existingScene = document.getElementById('ar-scene');
-    if (existingScene) existingScene.remove();
+    if (existingScene) {
+        // Stop alle GIF animaties eerst
+        existingScene.querySelectorAll('[gif]').forEach(el => {
+            if (el.components && el.components.gif) {
+                el.components.gif.isPlaying = false;
+            }
+        });
+        existingScene.remove();
+    }
     
     // Build entities for all posters in this chunk
     let entitiesHTML = '';
@@ -905,6 +926,17 @@ function setupChunkEventListeners(scene, chunk) {
     scene.addEventListener('arReady', () => {
         console.log(' Chunk AR Ready');
         fixLayerAspectRatios();
+        
+        // Herstart GIF animaties na scene rebuild
+        setTimeout(() => {
+            scene.querySelectorAll('[gif]').forEach(el => {
+                if (el.components && el.components.gif) {
+                    el.components.gif.isPlaying = true;
+                    el.components.gif.lastFrameTime = performance.now();
+                    console.log('[gif-component] Herstart animatie na chunk load');
+                }
+            });
+        }, 100);
         
         // Hide loader
         const loader = document.getElementById('arjs-loader');
