@@ -247,14 +247,9 @@
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
             } else {
-                // Opaque modus: accumuleer frames op witte achtergrond
-                // - Bij frame 0: reset naar wit (start nieuwe loop)
-                // - Anders: stapel frame op vorige
-                if (index === 0) {
-                    this.accCtx.fillStyle = '#FFFFFF';
-                    this.accCtx.fillRect(0, 0, this.accCanvas.width, this.accCanvas.height);
-                }
-                // Teken frame op accumulator (stapelt op vorige)
+                // Opaque modus: stapel frames op witte achtergrond
+                // Gebruik 'source-over' (default) zodat transparante pixels de vorige frame niet wissen
+                this.accCtx.globalCompositeOperation = 'source-over';
                 this.accCtx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
                 // Kopieer accumulator naar output canvas
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
