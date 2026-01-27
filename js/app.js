@@ -759,6 +759,9 @@ function setupChunkEventListeners(scene, chunk) {
                 console.log('⭐ Featured poster set in rotating scanner:', poster.title);
             }
             
+            // LAZY LOAD GIFs: Laad nu pas de GIFs voor deze specifieke target
+            loadLazyGifsForTarget(target);
+            
             // Check if we need to show loader for GIFs
             checkAndShowLoader(poster);
         });
@@ -767,6 +770,10 @@ function setupChunkEventListeners(scene, chunk) {
             console.log(' Target lost');
             hideARScene();
             hideDetectedPosterState();
+            
+            // UNLOAD GIFs: Verwijder GIF shaders om geheugen vrij te maken
+            unloadLazyGifsForTarget(target);
+            
             currentTrackedPoster = null;
             showScanButton('↻ Scan een andere poster');
             hideGifLoader(); // Always hide loader when target lost
@@ -780,6 +787,55 @@ function setupChunkEventListeners(scene, chunk) {
                 console.log('📋 Galerij geopend: featured poster blijft getoond totdat galerij sluit');
             }
         });
+    });
+}
+
+/**
+ * LAZY LOAD GIFs: Laad GIF shaders pas wanneer target gevonden is
+ * Dit voorkomt browser crashes door te veel GIFs tegelijk te laden bij pagina start
+ */
+function loadLazyGifsForTarget(target) {
+    const lazyGifs = target.querySelectorAll('.lazy-gif');
+    if (lazyGifs.length === 0) return;
+    
+    console.log(`[GIF] Loading ${lazyGifs.length} lazy GIF(s) for target`);
+    
+    lazyGifs.forEach((gifEl, index) => {
+        const gifSrc = gifEl.getAttribute('data-gif-src');
+        const gifSettings = gifEl.getAttribute('data-gif-settings') || 'transparent: true;';
+        
+        if (gifSrc) {
+            console.log(`[GIF] Activating GIF ${index + 1}: ${gifSrc}`);
+            
+            // Wissel van flat shader naar gif shader met de echte src
+            gifEl.setAttribute('material', `shader: gif; src: url(${gifSrc}); ${gifSettings}`);
+            gifEl.classList.remove('lazy-gif');
+            gifEl.classList.add('gif-loaded');
+        }
+    });
+}
+
+/**
+ * UNLOAD GIFs: Verwijder GIF shaders wanneer target verloren is
+ * Dit maakt geheugen vrij en voorkomt memory leaks
+ */
+function unloadLazyGifsForTarget(target) {
+    const loadedGifEls = target.querySelectorAll('.gif-loaded');
+    if (loadedGifEls.length === 0) return;
+    
+    console.log(`[GIF] Unloading ${loadedGifEls.length} GIF(s) from target`);
+    
+    loadedGifEls.forEach((gifEl) => {
+        // Sla originele src op zodat we later opnieuw kunnen laden
+        const gifSrc = gifEl.getAttribute('data-gif-src');
+        const gifSettings = gifEl.getAttribute('data-gif-settings') || 'transparent: true;';
+        
+        // Wissel terug naar flat shader (geen GIF meer)
+        gifEl.setAttribute('material', 'shader: flat; color: #222222; transparent: true; opacity: 0;');
+        gifEl.classList.remove('gif-loaded');
+        gifEl.classList.add('lazy-gif');
+        
+        console.log(`[GIF] Unloaded: ${gifSrc}`);
     });
 }
 
@@ -1879,17 +1935,21 @@ function buildLayersHTML(poster) {
 
                 if (isGif) {
                     // Use a-plane with GIF shader for GIF playback
+                    // BELANGRIJK: Laad GIF LAZY - src wordt pas gezet bij targetFound
+                    // Dit voorkomt browser crashes door te veel GIFs tegelijk te laden
                     const gifSize = 1.4 * baseScale;
                     const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
-                            class="gif-layer"
+                            class="gif-layer lazy-gif"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
                             rotation="${rotX} ${rotY} ${rotZ}"
-                            material="shader: gif; src: url(${mediaPath}); ${transparentSettings}"
+                            material="shader: flat; color: #222222; transparent: true; opacity: 0;"
+                            data-gif-src="${mediaPath}"
+                            data-gif-settings="${transparentSettings}"
                             data-preserve-aspect="true"
                             data-image-src="${mediaPath}"
                             ${customScaleAttr}
@@ -2106,6 +2166,9 @@ function setupSceneEventListeners(scene, currentPoster) {
             currentTrackedPoster = currentPoster;
             showDetectedPosterState(currentPoster);
             
+            // LAZY LOAD GIFs: Laad nu pas de GIFs voor deze target
+            loadLazyGifsForTarget(target);
+            
             // START AUDIO (indien beschikbaar in een van de layers)
             playPosterAudio(currentPoster);
             
@@ -2120,6 +2183,9 @@ function setupSceneEventListeners(scene, currentPoster) {
             
             // HIDE AR SCENE - show static camera feed again
             hideARScene();
+            
+            // UNLOAD GIFs: Verwijder GIF shaders om geheugen vrij te maken
+            unloadLazyGifsForTarget(target);
             
             // Show scan frame
             const scanFrame = document.getElementById('scan-frame');
@@ -2631,6 +2697,9 @@ function addMindARTargets(scene) {
             console.log('🔵 AFTER setFeaturedPoster - featuredPoster is now:', featuredPoster?.title || 'null');
         }
         
+        // LAZY LOAD GIFs: Laad nu pas de GIFs voor deze target
+        loadLazyGifsForTarget(target);
+        
         // Make ALL layers visible (dynamic 1-8)
         target.object3D.visible = true;
         for (let i = 1; i <= 8; i++) {
@@ -2655,6 +2724,9 @@ function addMindARTargets(scene) {
         
         // Switch back to state 1 (gallery button)
         showSwipeState(1);
+        
+        // UNLOAD GIFs: Verwijder GIF shaders om geheugen vrij te maken
+        unloadLazyGifsForTarget(target);
         
         // Reset featured poster ALLEEN als galerij niet geopend is
         if (!isFeaturedPosterOpen) {
