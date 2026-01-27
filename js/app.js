@@ -1906,6 +1906,7 @@ function buildLayersHTML(poster) {
                     // GIF: gebruik de gif component voor animatie
                     // De component captured browser's native GIF animatie naar WebGL texture
                     // isTransparent bepaalt of GIF transparantie moet behouden (checkbox in admin)
+                    console.log(`[GIF-DEBUG] Layer ${i}: isTransparent=${isTransparent}, layerData.transparent=${layerData.transparent}`);
                     const gifSize = 1.4 * baseScale;
                     const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
                     layersHTML += `
