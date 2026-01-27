@@ -1878,24 +1878,23 @@ function buildLayersHTML(poster) {
                 }
 
                 if (isGif) {
-                    // Use a-image for GIF playback (simpler, more reliable than GIF shader)
-                    // Modern browsers handle animated GIFs natively in img elements
+                    // Use a-plane with GIF shader for GIF playback
                     const gifSize = 1.4 * baseScale;
+                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
                     layersHTML += `
-                        <a-image 
+                        <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
-                            src="${mediaPath}"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
                             rotation="${rotX} ${rotY} ${rotZ}"
-                            material="transparent: true; alphaTest: 0.1; side: double;"
+                            material="shader: gif; src: url(${mediaPath}); ${transparentSettings}"
                             data-preserve-aspect="true"
                             data-image-src="${mediaPath}"
                             ${customScaleAttr}
                             ${animationStr}
-                            ${exclusionAttr}></a-image>`;
+                            ${exclusionAttr}></a-plane>`;
                 } else if (isVideo) {
                     // Use a-video for MP4/WebM layers
                     // Video: gebruik default aspect ratio 16:9

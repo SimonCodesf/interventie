@@ -66,6 +66,15 @@
 
 	/* store data so that you won't load same data */
 	var gifData = {};
+	
+	/* Clear cache on page unload to prevent stale data on reload */
+	window.addEventListener('beforeunload', function() {
+	  gifData = {};
+	});
+	/* Also clear on pagehide for iOS Safari */
+	window.addEventListener('pagehide', function() {
+	  gifData = {};
+	});
 
 	/* create error message */
 	function createError(err, src) {
