@@ -147,6 +147,11 @@
         init: function() {
             this.canvas = document.createElement('canvas');
             this.ctx = this.canvas.getContext('2d');
+            
+            // Accumulator canvas - houdt alle frames bij zoals browsers doen
+            this.accCanvas = document.createElement('canvas');
+            this.accCtx = this.accCanvas.getContext('2d');
+            
             this.texture = null;
             this.gifData = null;
             this.currentFrame = 0;
@@ -196,6 +201,14 @@
                 this.scaledWidth = width;
                 this.scaledHeight = height;
                 
+                // Setup accumulator canvas (zelfde grootte)
+                this.accCanvas.width = width;
+                this.accCanvas.height = height;
+                
+                // Vul accumulator met wit (zoals GIFs standaard zijn)
+                this.accCtx.fillStyle = '#FFFFFF';
+                this.accCtx.fillRect(0, 0, width, height);
+                
                 // Teken eerste frame
                 this.drawFrame(0);
                 
@@ -226,10 +239,12 @@
             
             const frame = this.gifData.frames[index];
             
-            // Frames zijn al gecomposite met witte achtergrond tijdens parsing
-            // Gewoon direct tekenen zonder extra fill
+            // Teken frame op accumulator canvas (accumulatie zoals browsers doen)
+            this.accCtx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
+            
+            // Copy accumulator naar display canvas
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
+            this.ctx.drawImage(this.accCanvas, 0, 0);
         },
         
         createTexture: function() {
