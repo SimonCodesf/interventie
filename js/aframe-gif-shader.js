@@ -565,9 +565,18 @@
 	   * @private
 	   */
 	  __draw: function __draw() {
-	    this.__clearCanvas(); 
-	    this.__ctx.drawImage(this.__frames[this.__frameIdx], 0, 0, this.__width, this.__height); 
-	    this.__texture.needsUpdate = true;
+	    try {
+	      this.__clearCanvas();
+	      var frame = this.__frames[this.__frameIdx];
+	      if (frame && frame.width && frame.height) {
+	        // Draw frame at its original size, scaled to fit canvas
+	        // Use the frame's actual dimensions as source
+	        this.__ctx.drawImage(frame, 0, 0, frame.width, frame.height, 0, 0, this.__width, this.__height);
+	      }
+	      this.__texture.needsUpdate = true;
+	    } catch (e) {
+	      console.warn('GIF draw error:', e);
+	    }
 	  },
 
 	  /**
@@ -592,14 +601,28 @@
 	    this.__frameCnt = times.length;
 	    this.__startTime = Date.now();
 	    
-	    // Robust MathUtils check
+	    // Store original frame dimensions for proper scaling
+	    this.__frameWidth = frames[0].width;
+	    this.__frameHeight = frames[0].height;
+	    
+	    // Robust MathUtils check - round up to power of 2 for WebGL compatibility
 	    var MathUtils = THREE.MathUtils || THREE.Math;
 	    this.__width = MathUtils.ceilPowerOfTwo(frames[0].width);
 	    this.__height = MathUtils.ceilPowerOfTwo(frames[0].height);
 	    
+	    // Limit max texture size to prevent memory issues (max 1024px)
+	    if (this.__width > 1024) this.__width = 1024;
+	    if (this.__height > 1024) this.__height = 1024;
+	    
 	    this.__cnv.width = this.__width;
 	    this.__cnv.height = this.__height;
-	    this.__draw();
+	    
+	    // Initial draw
+	    try {
+	      this.__draw();
+	    } catch (e) {
+	      console.warn('GIF initial draw failed:', e);
+	    }
 	    
 	    /* Emit loaded event with bubbling */
 	    console.log('🎞️ GIF Shader Ready:', src);
