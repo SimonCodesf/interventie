@@ -689,26 +689,47 @@ function handleUpdatePoster($db, $id) {
         }
         
         // Voeg nieuwe gallery afbeeldingen toe
+        error_log("[GALLERY] Checking for gallery uploads...");
+        error_log("[GALLERY] FILES array: " . print_r($_FILES, true));
+        
         if (!empty($_FILES['gallery_images']['name'][0])) {
+            error_log("[GALLERY] Found gallery files to upload");
             $galleryDir = UPLOADS_DIR . '/gallery';
+            error_log("[GALLERY] Gallery dir: " . $galleryDir);
+            
             if (!is_dir($galleryDir)) {
-                mkdir($galleryDir, 0755, true);
+                $mkdirResult = mkdir($galleryDir, 0755, true);
+                error_log("[GALLERY] Created dir: " . ($mkdirResult ? 'yes' : 'no'));
             }
             
             $nextIndex = count($existingGallery) + 1;
             foreach ($_FILES['gallery_images']['name'] as $key => $filename) {
+                error_log("[GALLERY] Processing file $key: $filename");
                 if ($_FILES['gallery_images']['error'][$key] === UPLOAD_ERR_OK) {
                     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    error_log("[GALLERY] Extension: $ext");
                     if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                         $newFilename = $id . '_gallery_' . time() . '_' . ($nextIndex + $key) . '.' . $ext;
                         $destPath = $galleryDir . '/' . $newFilename;
+                        error_log("[GALLERY] Destination: $destPath");
                         if (move_uploaded_file($_FILES['gallery_images']['tmp_name'][$key], $destPath)) {
                             $existingGallery[] = '/uploads/gallery/' . $newFilename;
+                            error_log("[GALLERY] SUCCESS: Uploaded $newFilename");
+                        } else {
+                            error_log("[GALLERY] FAILED: Could not move file to $destPath");
                         }
+                    } else {
+                        error_log("[GALLERY] SKIPPED: Invalid extension $ext");
                     }
+                } else {
+                    error_log("[GALLERY] ERROR code: " . $_FILES['gallery_images']['error'][$key]);
                 }
             }
+        } else {
+            error_log("[GALLERY] No gallery files in request");
         }
+        
+        error_log("[GALLERY] Final gallery array: " . json_encode($existingGallery));
         
         $stmt = $db->prepare("
             UPDATE posters SET 

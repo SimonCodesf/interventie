@@ -3096,13 +3096,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // Gallery images - verwijderen en toevoegen
             if (window.deleteGalleryImages && window.deleteGalleryImages.length > 0) {
                 formData.append('delete_gallery_images', JSON.stringify(window.deleteGalleryImages));
+                console.log('[Edit] Deleting gallery images:', window.deleteGalleryImages);
             }
             
             const editGalleryInput = document.getElementById('edit-gallery-images');
             if (editGalleryInput && editGalleryInput.files.length > 0) {
+                console.log('[Edit] Adding gallery files:', editGalleryInput.files.length);
                 for (let i = 0; i < editGalleryInput.files.length; i++) {
-                    formData.append('gallery_images[]', editGalleryInput.files[i]);
+                    const file = editGalleryInput.files[i];
+                    console.log(`[Edit] Gallery file ${i}: ${file.name} (${file.size} bytes)`);
+                    formData.append('gallery_images[]', file);
                 }
+            } else {
+                console.log('[Edit] No gallery files selected');
             }
             
             // Build summary of changes
