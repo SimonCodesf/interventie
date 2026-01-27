@@ -793,10 +793,17 @@ function updatePreviewFromInputs() {
         if (isEditMode && currentPosterData?.layers) {
             const layerKey = `layer_${i}`;
             const layerDataFromPoster = currentPosterData.layers[layerKey];
-            if (layerDataFromPoster?.filename) {
+            
+            // Check of media gemarkeerd is voor verwijdering
+            const deleteMediaFlag = document.getElementById(`${prefix}layer-${i}-delete-media`);
+            const deleteGlbFlag = document.getElementById(`${prefix}layer-${i}-delete-glb`);
+            const mediaMarkedForDelete = deleteMediaFlag?.value === '1';
+            const glbMarkedForDelete = deleteGlbFlag?.value === '1';
+            
+            if (layerDataFromPoster?.filename && !mediaMarkedForDelete) {
                 existingFilename = layerDataFromPoster.filename;
             }
-            if (layerDataFromPoster?.glb_model) {
+            if (layerDataFromPoster?.glb_model && !glbMarkedForDelete) {
                 existingGlbModel = layerDataFromPoster.glb_model;
             }
         }
