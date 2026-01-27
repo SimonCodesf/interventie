@@ -474,7 +474,7 @@ function createWindow(poster) {
                     <div class="term-row"><span class="term-key">TITEL</span><span class="term-val">${escapeHtml(poster.title || 'Onbekend')}</span></div>
                     ${poster.description ? `<div class="term-row"><span class="term-key">DESC</span><span class="term-val">${escapeHtml(poster.description)}</span></div>` : ''}
                     ${poster.location_description ? `<div class="term-row"><span class="term-key">LOC</span><span class="term-val">${escapeHtml(poster.location_description)}</span></div>` : ''}
-                    ${poster.photographer_credit ? `<div class="term-row"><span class="term-key">FOTO</span><span class="term-val">${escapeHtml(poster.photographer_credit)}</span></div>` : ''}
+                    ${formatCredits(poster)}
                     <div class="term-row"><span class="term-key">DL_COUNT</span><span class="term-val">${poster.downloads || 0}</span></div>
                     <div class="term-row"><span class="term-key">STATUS</span><span class="term-val term-ok">ONLINE</span></div>
                 </div>
@@ -751,6 +751,36 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Utility: Format credits voor terminal weergave
+function formatCredits(poster) {
+    // Probeer eerst het nieuwe credits veld (JSON array)
+    if (poster.credits) {
+        try {
+            let creditsArray = poster.credits;
+            // Parse als het een string is
+            if (typeof creditsArray === 'string') {
+                creditsArray = JSON.parse(creditsArray);
+            }
+            // Check of het een array is met items
+            if (Array.isArray(creditsArray) && creditsArray.length > 0) {
+                return creditsArray
+                    .filter(c => c.item && c.owner) // Filter lege entries
+                    .map(c => `<div class="term-row"><span class="term-key">${escapeHtml(c.item.toUpperCase())}</span><span class="term-val">${escapeHtml(c.owner)}</span></div>`)
+                    .join('');
+            }
+        } catch (e) {
+            console.warn('Kon credits niet parsen:', e);
+        }
+    }
+    
+    // Fallback naar oud photographer_credit veld
+    if (poster.photographer_credit) {
+        return `<div class="term-row"><span class="term-key">FOTO</span><span class="term-val">${escapeHtml(poster.photographer_credit)}</span></div>`;
+    }
+    
+    return '';
 }
 
 // Export for use
