@@ -228,13 +228,13 @@ function handleUploadPoster($db) {
                 $isVideoFile = in_array($realMimeType, ['video/mp4', 'video/webm']);
                 
                 if ($isGif) {
-                    // Check GIF file size - large GIFs crash the browser's GIF shader
-                    $gifMaxSize = 500 * 1024; // 500KB max voor GIFs
+                    // Check GIF file size - met nieuwe frame parser is 2MB veilig
+                    $gifMaxSize = 2 * 1024 * 1024; // 2MB max voor GIFs
                     if ($uploadedFile['size'] > $gifMaxSize) {
                         $sizeKB = round($uploadedFile['size'] / 1024);
-                        error_log("[LAYER_{$i}] GIF te groot: {$sizeKB}KB (max: 500KB)");
+                        error_log("[LAYER_{$i}] GIF te groot: {$sizeKB}KB (max: 2MB)");
                         jsonResponse([
-                            'message' => "GIF te groot ({$sizeKB}KB). Maximum is 500KB voor stabiele AR weergave. Tip: gebruik ezgif.com om je GIF te optimaliseren."
+                            'message' => "GIF te groot ({$sizeKB}KB). Maximum is 2MB. Tip: gebruik ezgif.com om je GIF te optimaliseren."
                         ], 400);
                         return;
                     }
@@ -594,12 +594,13 @@ function handleUpdatePoster($db, $id) {
                 $isVideoFile = in_array($realMimeType, ['video/mp4', 'video/webm']);
 
                 if ($isGif) {
-                    // Check GIF file size - large GIFs crash the browser's GIF shader
-                    $gifMaxSize = 500 * 1024; // 500KB max voor GIFs
+                    // Check GIF file size - met nieuwe frame parser is 2MB veilig
+                    $gifMaxSize = 2 * 1024 * 1024; // 2MB max voor GIFs
                     if ($uploadedFile['size'] > $gifMaxSize) {
-                        error_log("[UPDATE_LAYER_{$i}] GIF te groot: {$uploadedFile['size']} bytes (max: {$gifMaxSize})");
+                        $sizeKB = round($uploadedFile['size'] / 1024);
+                        error_log("[UPDATE_LAYER_{$i}] GIF te groot: {$sizeKB}KB (max: 2MB)");
                         jsonResponse([
-                            'message' => "GIF te groot ({$uploadedFile['size']} bytes). Maximum is 500KB voor stabiele AR weergave. Optimaliseer de GIF of gebruik een kleiner formaat."
+                            'message' => "GIF te groot ({$sizeKB}KB). Maximum is 2MB. Optimaliseer de GIF of gebruik een kleiner formaat."
                         ], 400);
                         return;
                     }
