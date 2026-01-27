@@ -452,6 +452,25 @@ function handleUpdatePoster($db, $id) {
                 continue; // Skip upload processing
             }
             
+            // Check voor specifieke media delete flags VOOR initialisatie
+            $deleteMedia = isset($_POST["layer_{$i}_delete_media"]) && (int)$_POST["layer_{$i}_delete_media"] === 1;
+            $deleteGlb = isset($_POST["layer_{$i}_delete_glb"]) && (int)$_POST["layer_{$i}_delete_glb"] === 1;
+            $deleteAudio = isset($_POST["layer_{$i}_delete_audio"]) && (int)$_POST["layer_{$i}_delete_audio"] === 1;
+            
+            // Verwijder bestanden indien delete flag is gezet
+            if ($deleteMedia && !empty($existingLayer['filename'])) {
+                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['filename']);
+                error_log("[UPDATE_LAYER_{$i}] Media verwijderd op verzoek");
+            }
+            if ($deleteGlb && !empty($existingLayer['glb_model'])) {
+                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['glb_model']);
+                error_log("[UPDATE_LAYER_{$i}] GLB model verwijderd op verzoek");
+            }
+            if ($deleteAudio && !empty($existingLayer['audio_file'])) {
+                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['audio_file']);
+                error_log("[UPDATE_LAYER_{$i}] Audio verwijderd op verzoek");
+            }
+            
             $layerData = [
                 'z' => isset($_POST["layer_{$i}_z"]) ? (float)$_POST["layer_{$i}_z"] : ($existingLayer['z'] ?? 0),
                 'pos_x' => isset($_POST["layer_{$i}_pos_x"]) ? (float)$_POST["layer_{$i}_pos_x"] : ($existingLayer['pos_x'] ?? 0),
@@ -471,8 +490,8 @@ function handleUpdatePoster($db, $id) {
                 'anim_duration' => isset($_POST["layer_{$i}_anim_duration"]) ? (int)$_POST["layer_{$i}_anim_duration"] : ($existingLayer['anim_duration'] ?? 0),
                 'transparent' => isset($_POST["layer_{$i}_transparent"]) ? ((int)$_POST["layer_{$i}_transparent"] === 1) : ($existingLayer['transparent'] ?? false),
                 'exclusion_filter' => isset($_POST["layer_{$i}_exclusion"]) ? ((int)$_POST["layer_{$i}_exclusion"] === 1) : ($existingLayer['exclusion_filter'] ?? false),
-                'filename' => $existingLayer['filename'] ?? null,
-                'is_video' => $existingLayer['is_video'] ?? false
+                'filename' => $deleteMedia ? null : ($existingLayer['filename'] ?? null),
+                'is_video' => $deleteMedia ? false : ($existingLayer['is_video'] ?? false)
             ];
             
             // Handle new layer image upload
@@ -523,26 +542,8 @@ function handleUpdatePoster($db, $id) {
                 }
             }
             
-            // Check voor specifieke media delete flags (niet hele layer delete)
-            $deleteMedia = isset($_POST["layer_{$i}_delete_media"]) && (int)$_POST["layer_{$i}_delete_media"] === 1;
-            $deleteGlb = isset($_POST["layer_{$i}_delete_glb"]) && (int)$_POST["layer_{$i}_delete_glb"] === 1;
-            $deleteAudio = isset($_POST["layer_{$i}_delete_audio"]) && (int)$_POST["layer_{$i}_delete_audio"] === 1;
-            
-            // Verwijder media (afbeelding/video) indien gevraagd
-            if ($deleteMedia && !empty($layerData['filename'])) {
-                @unlink(AR_LAYERS_DIR . '/' . $layerData['filename']);
-                $layerData['filename'] = null;
-                $layerData['is_video'] = false;
-                error_log("[UPDATE_LAYER_{$i}] Media verwijderd op verzoek");
-            }
-            
             // Handle per-layer GLB model update
-            if ($deleteGlb && !empty($existingLayer['glb_model'])) {
-                // Verwijder GLB op verzoek
-                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['glb_model']);
-                $layerData['glb_model'] = null;
-                error_log("[UPDATE_LAYER_{$i}] GLB model verwijderd op verzoek");
-            } elseif (isset($_FILES["layer_{$i}_glb"]) && $_FILES["layer_{$i}_glb"]['error'] === UPLOAD_ERR_OK) {
+            if (isset($_FILES["layer_{$i}_glb"]) && $_FILES["layer_{$i}_glb"]['error'] === UPLOAD_ERR_OK) {
                 $glbFile = $_FILES["layer_{$i}_glb"];
                 if ($glbFile['size'] <= 10485760) { // 10MB max
                     // Verwijder oude GLB indien aanwezig
@@ -555,17 +556,12 @@ function handleUpdatePoster($db, $id) {
                     error_log("[UPDATE_LAYER_{$i}] GLB model bijgewerkt: {$glbFilename}");
                 }
             } else {
-                // Behoud bestaand GLB model
-                $layerData['glb_model'] = $existingLayer['glb_model'] ?? null;
+                // Behoud bestaand GLB model (tenzij delete flag gezet was)
+                $layerData['glb_model'] = $deleteGlb ? null : ($existingLayer['glb_model'] ?? null);
             }
             
             // Handle per-layer audio file update
-            if ($deleteAudio && !empty($existingLayer['audio_file'])) {
-                // Verwijder audio op verzoek
-                @unlink(AR_LAYERS_DIR . '/' . $existingLayer['audio_file']);
-                $layerData['audio_file'] = null;
-                error_log("[UPDATE_LAYER_{$i}] Audio verwijderd op verzoek");
-            } elseif (isset($_FILES["layer_{$i}_audio"]) && $_FILES["layer_{$i}_audio"]['error'] === UPLOAD_ERR_OK) {
+            if (isset($_FILES["layer_{$i}_audio"]) && $_FILES["layer_{$i}_audio"]['error'] === UPLOAD_ERR_OK) {
                 $audioFile = $_FILES["layer_{$i}_audio"];
                 if ($audioFile['size'] <= 10485760) { // 10MB max
                     // Verwijder oude audio indien aanwezig
@@ -579,8 +575,8 @@ function handleUpdatePoster($db, $id) {
                     error_log("[UPDATE_LAYER_{$i}] Audio bijgewerkt: {$audioFilename}");
                 }
             } else {
-                // Behoud bestaand audio bestand
-                $layerData['audio_file'] = $existingLayer['audio_file'] ?? null;
+                // Behoud bestaand audio bestand (tenzij delete flag gezet was)
+                $layerData['audio_file'] = $deleteAudio ? null : ($existingLayer['audio_file'] ?? null);
             }
             
             $layersData["layer_$i"] = $layerData;
