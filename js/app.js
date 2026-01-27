@@ -841,6 +841,14 @@ function loadChunkScene(chunkIndex) {
     
     console.log(` Loading Chunk ${chunkIndex}: ${chunk.file}`);
     
+    // Update scan button met chunk nummer (direct feedback)
+    const scanBtn = document.getElementById('chunk-cycle-btn');
+    if (scanBtn && window.isChunkScanning) {
+        const totalChunks = window.arManifest.chunks.length;
+        scanBtn.textContent = `${chunkIndex + 1}/${totalChunks}`;
+        console.log(`📟 Knop update via loadChunkScene: ${scanBtn.textContent}`);
+    }
+    
     // Remove existing scene
     const existingScene = document.getElementById('ar-scene');
     if (existingScene) existingScene.remove();
