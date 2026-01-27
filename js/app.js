@@ -152,35 +152,38 @@ const BASE_URL = window.location.origin; // Voor statische bestanden
 // ==================== CREDITS HELPER ====================
 // Parse credits en geef HTML terug voor weergave
 function formatCredits(poster) {
-    let credits = [];
+    let creditItems = [];
     
-    // Probeer nieuw credits veld (JSON)
+    // Probeer eerst het nieuwe credits veld (JSON array)
     if (poster.credits) {
         try {
-            if (typeof poster.credits === 'string') {
-                credits = JSON.parse(poster.credits);
-            } else if (Array.isArray(poster.credits)) {
-                credits = poster.credits;
+            let creditsArray = poster.credits;
+            // Parse als het een string is
+            if (typeof creditsArray === 'string') {
+                creditsArray = JSON.parse(creditsArray);
+            }
+            // Check of het een array is met items
+            if (Array.isArray(creditsArray) && creditsArray.length > 0) {
+                creditItems = creditsArray.filter(c => c.item && c.owner);
             }
         } catch (e) {
-            // Fallback: behandel als oude photographer_credit string
-            credits = [{ item: 'Foto', owner: poster.credits }];
+            console.warn('Kon credits niet parsen:', e);
         }
     }
-    // Fallback naar oud veld
-    else if (poster.photographer_credit) {
-        credits = [{ item: 'Foto', owner: poster.photographer_credit }];
+    
+    // Fallback naar oud photographer_credit veld
+    if (creditItems.length === 0 && poster.photographer_credit) {
+        creditItems = [{ item: 'Foto', owner: poster.photographer_credit }];
     }
     
-    if (credits.length === 0) return '';
+    if (creditItems.length === 0) return '';
     
-    // Genereer HTML voor elke credit
-    return credits.map(c => {
-        if (!c.item && !c.owner) return '';
-        const label = c.item || 'Credit';
-        const owner = c.owner || '-';
-        return `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">${label.toUpperCase()}</span><br><span style="color: #888; font-size: 0.58rem;">${owner}</span></div>`;
-    }).filter(html => html).join('');
+    // Format als CREDITS sectie met items op één regel
+    const creditLines = creditItems
+        .map(c => `${c.item}: ${c.owner}`)
+        .join(' | ');
+    
+    return `<div class="term-row"><span class="term-key">CREDITS</span><span class="term-val">${creditLines}</span></div>`;
 }
 
 // ==================== DEVICE DETECTION & AR INITIALIZATION ====================
