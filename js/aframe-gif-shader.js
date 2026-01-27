@@ -57,23 +57,35 @@
 	/* get util from AFRAME */
 	var parseUrl = AFRAME.utils.srcLoader.parseUrl;
 	var debug = AFRAME.utils.debug;
-	// Enable debug logs
-	debug.enable('shader:gif:*')
+	// Disable debug logs for production (reduces console spam)
+	// debug.enable('shader:gif:*')
 
 	debug.enable('shader:gif:warn');
 	var warn = debug('shader:gif:warn');
-	var log = debug('shader:gif:debug');
+	var log = function() {}; // Disabled debug logging
 
 	/* store data so that you won't load same data */
 	var gifData = {};
 	
-	/* Clear cache on page unload to prevent stale data on reload */
-	window.addEventListener('beforeunload', function() {
-	  gifData = {};
-	});
-	/* Also clear on pagehide for iOS Safari */
-	window.addEventListener('pagehide', function() {
-	  gifData = {};
+	/* CRITICAL: Clear cache immediately on script load (fixes reload issues) */
+	/* This ensures fresh state on every page load/reload */
+	gifData = {};
+	
+	/* Also clear on visibility change (tab switch, app switch on mobile) */
+	document.addEventListener('visibilitychange', function() {
+	  if (document.visibilityState === 'hidden') {
+	    // Clear all blob URLs to free memory
+	    Object.keys(gifData).forEach(function(key) {
+	      if (gifData[key] && gifData[key].frames) {
+	        gifData[key].frames.forEach(function(frame) {
+	          if (frame && frame.startsWith && frame.startsWith('blob:')) {
+	            URL.revokeObjectURL(frame);
+	          }
+	        });
+	      }
+	    });
+	    gifData = {};
+	  }
 	});
 
 	/* create error message */
@@ -326,7 +338,7 @@
 	    var srcData = gifData[src];
 	    if (!srcData || !srcData.callbacks) {
 	      /* create callback */
-	      srcData = gifData[src] = { callbacks: [] };
+	      srcData = gifData[src] = { callbacks: [], loading: true };
 	      srcData.callbacks.push(cb);
 	    } else if (srcData.src) {
 	      cb(srcData);
@@ -336,17 +348,29 @@
 	      srcData.callbacks.push(cb);
 	      return;
 	    }
+	    
+	    /* Timeout to prevent infinite loading */
+	    var loadTimeout = setTimeout(function() {
+	      if (srcData.loading) {
+	        console.warn('GIF load timeout for:', src);
+	        onError('GIF load timeout - file may be too large');
+	      }
+	    }, 15000); // 15 second timeout
+	    
 	    var tester = new Image();
 	    tester.crossOrigin = 'Anonymous';
 	    tester.addEventListener('load', function (e) {
 	      /* check if it is gif */
 	      _this.__getUnit8Array(src, function (arr) {
 	        if (!arr) {
+	          clearTimeout(loadTimeout);
 	          onError('This is not gif. Please use `shader:flat` instead');
 	          return;
 	        }
 	        /* parse data */
 	        (0, _gifsparser.parseGIF)(arr, function (times, cnt, frames) {
+	          clearTimeout(loadTimeout);
+	          srcData.loading = false;
 	          /* store data */
 	          var newData = { status: 'success', src: src, times: times, cnt: cnt, frames: frames, timestamp: Date.now() };
 	          /* callbacks */
@@ -358,14 +382,17 @@
 	            gifData[src] = newData;
 	          }
 	        }, function (err) {
+	          clearTimeout(loadTimeout);
 	          return onError(err);
 	        });
 	      });
 	    });
 	    tester.addEventListener('error', function (e) {
+	      clearTimeout(loadTimeout);
 	      return onError('Could be the following issue\n - Not Image\n - Not Found\n - Server Error\n - Cross-Origin Issue');
 	    });
 	    function onError(message) {
+	      srcData.loading = false;
 	      /* create error data */
 	      var errData = createError(message, src);
 	      /* callbacks */

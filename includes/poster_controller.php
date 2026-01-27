@@ -550,13 +550,22 @@ function handleUpdatePoster($db, $id) {
                 $isVideoFile = in_array($realMimeType, ['video/mp4', 'video/webm']);
 
                 if ($isGif) {
-                    error_log("[UPDATE_LAYER_{$i}] GIF detected, saving as video");
-                    // Use GIF directly as video (A-Frame can play GIFs)
+                    // Check GIF file size - large GIFs crash the browser's GIF shader
+                    $gifMaxSize = 500 * 1024; // 500KB max voor GIFs
+                    if ($uploadedFile['size'] > $gifMaxSize) {
+                        error_log("[UPDATE_LAYER_{$i}] GIF te groot: {$uploadedFile['size']} bytes (max: {$gifMaxSize})");
+                        jsonResponse([
+                            'message' => "GIF te groot ({$uploadedFile['size']} bytes). Maximum is 500KB voor stabiele AR weergave. Optimaliseer de GIF of gebruik een kleiner formaat."
+                        ], 400);
+                        return;
+                    }
+                    
+                    error_log("[UPDATE_LAYER_{$i}] GIF detected, size OK: {$uploadedFile['size']} bytes");
                     $gifFilename = $id . "_layer_{$i}.gif";
                     move_uploaded_file($uploadedFile['tmp_name'], AR_LAYERS_DIR . '/' . $gifFilename);
                     $layerData['filename'] = $gifFilename;
                     $layerData['is_video'] = true;
-                    error_log("[UPDATE_LAYER_{$i}] ✅ GIF saved as video: {$gifFilename}");
+                    error_log("[UPDATE_LAYER_{$i}] ✅ GIF saved: {$gifFilename}");
                 } elseif ($isVideoFile) {
                     error_log("[UPDATE_LAYER_{$i}] Native video file detected");
                     $ext = $realMimeType === 'video/webm' ? 'webm' : 'mp4';
