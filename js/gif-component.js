@@ -84,57 +84,28 @@
                 return;
             }
             
-            // Laad alle frames als Image objecten EN composite op wit
+            // Laad alle frames als Image objecten
             const loadedFrames = new Array(frames.length);
             let loaded = 0;
-            
-            // Temporary canvas voor compositing
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            let previousFrame = null;
             
             frames.forEach((blobUrl, i) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Set canvas size op eerste frame
-                    if (i === 0) {
-                        tempCanvas.width = img.width;
-                        tempCanvas.height = img.height;
-                    }
+                    loadedFrames[i] = img;
+                    loaded++;
                     
-                    // Composite frame op vorige frame (GIF animatie gedrag)
-                    // Of op wit als eerste frame
-                    if (i === 0 || !previousFrame) {
-                        tempCtx.fillStyle = '#FFFFFF';
-                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                    } else {
-                        tempCtx.drawImage(previousFrame, 0, 0);
-                    }
-                    
-                    // Teken nieuw frame eroverheen
-                    tempCtx.drawImage(img, 0, 0);
-                    
-                    // Maak nieuwe Image van gecomposite frame
-                    const compositeImg = new Image();
-                    compositeImg.onload = () => {
-                        loadedFrames[i] = compositeImg;
-                        previousFrame = compositeImg;
-                        loaded++;
+                    if (loaded === frames.length) {
+                        // Cleanup blob URLs
+                        frames.forEach(url => URL.revokeObjectURL(url));
                         
-                        if (loaded === frames.length) {
-                            // Cleanup blob URLs
-                            frames.forEach(url => URL.revokeObjectURL(url));
-                            
-                            resolve({
-                                frames: loadedFrames,
-                                delays: delayTimes,
-                                loopCount: loopCnt,
-                                width: loadedFrames[0].width,
-                                height: loadedFrames[0].height
-                            });
-                        }
-                    };
-                    compositeImg.src = tempCanvas.toDataURL();
+                        resolve({
+                            frames: loadedFrames,
+                            delays: delayTimes,
+                            loopCount: loopCnt,
+                            width: loadedFrames[0].width,
+                            height: loadedFrames[0].height
+                        });
+                    }
                 };
                 img.onerror = () => {
                     reject(new Error('Failed to load frame ' + i));
@@ -269,15 +240,13 @@
             this.texture = new THREE.CanvasTexture(this.canvas);
             this.texture.minFilter = THREE.LinearFilter;
             this.texture.magFilter = THREE.LinearFilter;
-            this.texture.format = THREE.RGBAFormat; // MOET RGBAFormat zijn
+            this.texture.format = THREE.RGBAFormat;
             this.texture.needsUpdate = true;
             
             const mesh = this.el.getObject3D('mesh');
             if (mesh && mesh.material) {
                 mesh.material.map = this.texture;
-                // Canvas heeft witte achtergrond, dus geen transparantie nodig
-                mesh.material.transparent = false;
-                mesh.material.depthWrite = true;
+                mesh.material.transparent = true;
                 mesh.material.needsUpdate = true;
             }
         },
