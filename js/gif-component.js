@@ -226,10 +226,10 @@
             
             const frame = this.gifData.frames[index];
             
-            // Vul canvas met wit/ondoorzichtig voordat we het frame tekenen
-            // Dit voorkomt transparantie issues bij niet-transparante GIFs
-            this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            // Clear canvas voor volgend frame
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Teken het frame
             this.ctx.drawImage(frame, 0, 0, this.scaledWidth, this.scaledHeight);
         },
         
@@ -242,16 +242,12 @@
             this.texture.minFilter = THREE.LinearFilter;
             this.texture.magFilter = THREE.LinearFilter;
             this.texture.format = THREE.RGBAFormat;
-            this.texture.colorSpace = THREE.SRGBColorSpace;
             this.texture.needsUpdate = true;
             
             const mesh = this.el.getObject3D('mesh');
             if (mesh && mesh.material) {
                 mesh.material.map = this.texture;
-                // Alleen transparent voor GIFs die echt alpha hebben
-                // De meeste GIFs zijn niet transparant
-                mesh.material.transparent = false;
-                mesh.material.alphaTest = 0;
+                mesh.material.transparent = true;
                 mesh.material.needsUpdate = true;
             }
         },
