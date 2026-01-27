@@ -3245,11 +3245,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         const progressContainer = document.getElementById('edit-upload-progress');
                         if (progressContainer) progressContainer.style.display = 'none';
+                        
+                        console.error('[Edit] HTTP Error:', xhr.status);
+                        console.error('[Edit] Response Text:', xhr.responseText);
+                        
                         let errorData;
                         try {
                             errorData = JSON.parse(xhr.responseText);
                         } catch (e) {
-                            errorData = { message: 'Onbekende fout' };
+                            // Als JSON parse faalt, toon eerste 500 chars van response
+                            console.error('[Edit] Could not parse response as JSON:', e);
+                            errorData = { message: xhr.responseText.substring(0, 500) || 'Onbekende fout' };
                         }
                         if (errorMsg) errorMsg.textContent = `Update mislukt: ${errorData.message || 'Onbekende fout'}`;
                     }
