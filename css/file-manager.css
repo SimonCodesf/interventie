@@ -506,7 +506,14 @@
 .term-val {
     color: var(--white);
     flex: 1;
-    word-break: break-word;
+    word-break: keep-all;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+/* Credits specifiek: elk item blijft samen */
+.term-val:has(+ *), .term-row:has(.term-key:contains("CREDITS")) .term-val {
+    word-break: keep-all;
 }
 
 .term-val a {
