@@ -1878,24 +1878,28 @@ function buildLayersHTML(poster) {
                 }
 
                 if (isGif) {
-                    // Use a-plane with GIF shader for GIF playback
-                    // Start with square, let fixLayerAspectRatios handle the rest
+                    // Treat GIF as video for stability (native browser support)
+                    // Vermijd GIF shader parser issues bij fresh page load
                     const gifSize = 1.4 * baseScale;
-                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
                     layersHTML += `
-                        <a-plane 
+                        <a-video 
                             id="ar-layer-${i}"
-                            class="gif-layer"
+                            class="gif-video"
+                            src="${mediaPath}" 
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
                             rotation="${rotX} ${rotY} ${rotZ}"
-                            material="shader: gif; src: url(${mediaPath}); ${transparentSettings}"
-                            data-preserve-aspect="true"
-                            data-image-src="${mediaPath}"
+                            autoplay="true"
+                            loop="true"
+                            muted="true"
+                            playsinline="true"
+                            webkit-playsinline="true"
+                            crossorigin="anonymous"
+                            material="shader: flat; transparent: ${isTransparent}; ${isTransparent ? 'alphaTest: 0.5;' : ''}"
                             ${customScaleAttr}
                             ${animationStr}
-                            ${exclusionAttr}></a-plane>`;
+                            ${exclusionAttr}></a-video>`;
                 } else if (isVideo) {
                     // Use a-video for MP4/WebM layers
                     // Video: gebruik default aspect ratio 16:9
