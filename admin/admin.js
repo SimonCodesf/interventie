@@ -787,10 +787,9 @@ function updatePreviewFromInputs() {
                         console.warn('Kon afbeelding niet laden:', existingFilename);
                         layerData.imageLoaded = true; // Toon placeholder bij error
                     };
-                    // Cache buster voor GIFs om herstarten te forceren indien nodig, 
-                    // maar browser cache is meestal prima voor preview.
-                    // Gebruik filename direct
-                    img.src = `../uploads/ar-layers/${existingFilename}`;
+                    // Cache buster om verse afbeelding te laden na update
+                    const cacheBuster = Date.now();
+                    img.src = `../uploads/ar-layers/${existingFilename}?_=${cacheBuster}`;
                 }
             }
             
@@ -2382,8 +2381,11 @@ function setupEditFilePreview() {
 
 async function openEditModal(posterId) {
     try {
-        // Fetch poster data
-        const response = await fetch(`${API_URL}/posters/${posterId}`);
+        // Fetch poster data (met cache busting om verse data te krijgen)
+        const cacheBuster = Date.now();
+        const response = await fetch(`${API_URL}/posters/${posterId}?_=${cacheBuster}`, {
+            cache: 'no-store'
+        });
         if (!response.ok) throw new Error('Poster niet gevonden');
         
         const poster = await response.json();
