@@ -692,7 +692,13 @@ function showChunkCycleButton() {
     
     btn.onclick = () => {
         console.log('🖱️ SCAN knop geklikt!');
-        startChunkScan();
+        try {
+            console.log('⏩ Roep startChunkScan aan...');
+            startChunkScan();
+            console.log('✅ startChunkScan aangeroepen');
+        } catch (error) {
+            console.error('❌ Error bij aanroepen startChunkScan:', error);
+        }
     };
     
     document.body.appendChild(btn);
