@@ -488,8 +488,9 @@ function handleUpdatePoster($db, $id) {
                 'anim_scale' => isset($_POST["layer_{$i}_anim_scale"]) ? (float)$_POST["layer_{$i}_anim_scale"] : ($existingLayer['anim_scale'] ?? 1.0),
                 'anim_opacity' => isset($_POST["layer_{$i}_anim_opacity"]) ? (float)$_POST["layer_{$i}_anim_opacity"] : ($existingLayer['anim_opacity'] ?? 1.0),
                 'anim_duration' => isset($_POST["layer_{$i}_anim_duration"]) ? (int)$_POST["layer_{$i}_anim_duration"] : ($existingLayer['anim_duration'] ?? 0),
-                'transparent' => isset($_POST["layer_{$i}_transparent"]) ? ((int)$_POST["layer_{$i}_transparent"] === 1) : ($existingLayer['transparent'] ?? false),
-                'exclusion_filter' => isset($_POST["layer_{$i}_exclusion"]) ? ((int)$_POST["layer_{$i}_exclusion"] === 1) : ($existingLayer['exclusion_filter'] ?? false),
+                // Checkbox: afwezigheid = false (unchecked), aanwezigheid = true (checked)
+                'transparent' => isset($_POST["layer_{$i}_transparent"]) && (int)$_POST["layer_{$i}_transparent"] === 1,
+                'exclusion_filter' => isset($_POST["layer_{$i}_exclusion"]) && (int)$_POST["layer_{$i}_exclusion"] === 1,
                 'filename' => $deleteMedia ? null : ($existingLayer['filename'] ?? null),
                 'is_video' => $deleteMedia ? false : ($existingLayer['is_video'] ?? false)
             ];
