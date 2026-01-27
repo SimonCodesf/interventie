@@ -669,17 +669,17 @@ function showChunkCycleButton() {
     btn.textContent = 'SCAN';
     btn.style.cssText = `
         position: fixed;
-        bottom: 100px;
+        bottom: 120px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 10000;
         background: transparent;
         color: #fff;
-        border: 1px solid #fff;
+        border: 0.5px solid #fff;
         border-radius: 0;
-        padding: 8px 16px;
+        padding: 6px 12px;
         font-family: 'Roboto', sans-serif;
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 2px;
         cursor: pointer;
     `;
