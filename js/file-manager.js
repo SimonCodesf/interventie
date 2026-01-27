@@ -755,6 +755,8 @@ function escapeHtml(text) {
 
 // Utility: Format credits voor terminal weergave
 function formatCredits(poster) {
+    let creditItems = [];
+    
     // Probeer eerst het nieuwe credits veld (JSON array)
     if (poster.credits) {
         try {
@@ -765,10 +767,7 @@ function formatCredits(poster) {
             }
             // Check of het een array is met items
             if (Array.isArray(creditsArray) && creditsArray.length > 0) {
-                return creditsArray
-                    .filter(c => c.item && c.owner) // Filter lege entries
-                    .map(c => `<div class="term-row"><span class="term-key">${escapeHtml(c.item.toUpperCase())}</span><span class="term-val">${escapeHtml(c.owner)}</span></div>`)
-                    .join('');
+                creditItems = creditsArray.filter(c => c.item && c.owner);
             }
         } catch (e) {
             console.warn('Kon credits niet parsen:', e);
@@ -776,11 +775,18 @@ function formatCredits(poster) {
     }
     
     // Fallback naar oud photographer_credit veld
-    if (poster.photographer_credit) {
-        return `<div class="term-row"><span class="term-key">FOTO</span><span class="term-val">${escapeHtml(poster.photographer_credit)}</span></div>`;
+    if (creditItems.length === 0 && poster.photographer_credit) {
+        creditItems = [{ item: 'Foto', owner: poster.photographer_credit }];
     }
     
-    return '';
+    if (creditItems.length === 0) return '';
+    
+    // Format als CREDITS sectie met items op één regel
+    const creditLines = creditItems
+        .map(c => `${escapeHtml(c.item)}: ${escapeHtml(c.owner)}`)
+        .join(' | ');
+    
+    return `<div class="term-row"><span class="term-key">CREDITS</span><span class="term-val">${creditLines}</span></div>`;
 }
 
 // Export for use

@@ -488,17 +488,19 @@
 
 .term-row {
     display: flex;
-    margin-bottom: 0.2rem;
+    flex-direction: row;
+    margin-bottom: 0.3rem;
     align-items: flex-start;
 }
 
 .term-key {
     color: var(--white);
     opacity: 0.6;
-    min-width: 100px;
+    width: 90px;
+    min-width: 90px;
     flex-shrink: 0;
     text-align: right;
-    margin-right: 0.8rem;
+    margin-right: 1rem;
 }
 
 .term-val {
