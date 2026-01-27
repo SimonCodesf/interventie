@@ -123,9 +123,12 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <!-- Quick Options Row -->
                 <div class="layer-options">
                     <label class="option-toggle">
-                        <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1">
+                        <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
                         <span>TRANSPARANT</span>
                     </label>
+                    <div class="bg-color-picker" id="${prefix}layer-${layerNum}-bg-color-container" style="display: none;">
+                        <input type="color" id="${prefix}layer-${layerNum}-bg-color" name="layer_${layerNum}_bg_color" value="#000000" title="Achtergrondkleur">
+                    </div>
                     <label class="option-toggle">
                         <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
                         <span>MASKER</span>
@@ -271,6 +274,15 @@ function deleteLayer(layerNum) {
     }
     
     alert(`Laag ${layerNum} is verwijderd!`);
+}
+
+// Toggle achtergrondkleur picker zichtbaarheid
+function toggleBgColorPicker(checkbox, prefix, layerNum) {
+    const colorContainer = document.getElementById(`${prefix}layer-${layerNum}-bg-color-container`);
+    if (colorContainer) {
+        // Toon kleurkiezer alleen als NIET transparant
+        colorContainer.style.display = checkbox.checked ? 'none' : 'inline-flex';
+    }
 }
 
 // Verwijder specifiek media type van een laag (afbeelding, glb, of audio)
@@ -2582,6 +2594,17 @@ async function openEditModal(posterId) {
                 const transparentCheckbox = document.getElementById(`edit-layer-${layerNum}-transparent`);
                 if (transparentCheckbox) {
                     transparentCheckbox.checked = layerData.transparent || false;
+                    // Toon/verberg kleurkiezer op basis van transparantie
+                    const bgColorContainer = document.getElementById(`edit-layer-${layerNum}-bg-color-container`);
+                    if (bgColorContainer) {
+                        bgColorContainer.style.display = transparentCheckbox.checked ? 'none' : 'inline-flex';
+                    }
+                }
+                
+                // Set background color
+                const bgColorInput = document.getElementById(`edit-layer-${layerNum}-bg-color`);
+                if (bgColorInput) {
+                    bgColorInput.value = layerData.bg_color || '#000000';
                 }
                 
                 // Set exclusion filter checkbox
@@ -2847,6 +2870,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const transparentEl = document.getElementById(`edit-layer-${i}-transparent`);
                 const transparent = transparentEl ? (transparentEl.checked ? '1' : '0') : '0';
                 
+                // Get background color
+                const bgColorEl = document.getElementById(`edit-layer-${i}-bg-color`);
+                const bgColor = bgColorEl ? bgColorEl.value : '#000000';
+                
                 // Get delete flag (hele laag)
                 const deleteEl = document.getElementById(`edit-layer-${i}-delete`);
                 const deleteFlag = deleteEl ? deleteEl.value : '0';
@@ -2863,6 +2890,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_z`, layerZ || '0');
                 formData.append(`layer_${i}_exclusion`, exclusion);
                 formData.append(`layer_${i}_transparent`, transparent);
+                formData.append(`layer_${i}_bg_color`, bgColor);
                 formData.append(`layer_${i}_delete`, deleteFlag);
                 formData.append(`layer_${i}_delete_media`, deleteMedia);
                 formData.append(`layer_${i}_delete_glb`, deleteGlb);
@@ -3083,6 +3111,7 @@ window.closeEditModal = closeEditModal;
 window.applyAnimPreset = applyAnimPreset;
 window.deleteLayer = deleteLayer;
 window.deleteLayerMedia = deleteLayerMedia;
+window.toggleBgColorPicker = toggleBgColorPicker;
 window.deletePoster = deletePoster;
 
 // Setup animation toggles for all layers

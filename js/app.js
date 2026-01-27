@@ -1791,6 +1791,7 @@ function buildLayersHTML(poster) {
                 const mediaPath = `uploads/ar-layers/${layerData.filename}`;
                 const exclusionAttr = layerData.exclusion_filter ? `data-exclusion="true"` : '';
                 const isTransparent = layerData.transparent === true;
+                const bgColor = layerData.bg_color || '#000000';
                 
                 // Check if it's a video (MP4, WebM) or GIF or image
                 const isGif = layerData.filename.endsWith('.gif');
@@ -1841,7 +1842,7 @@ function buildLayersHTML(poster) {
                     // Use a-plane with GIF shader for GIF playback
                     // Start with square, let fixLayerAspectRatios handle the rest
                     const gifSize = 1.4 * baseScale;
-                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : 'transparent: false;';
+                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
@@ -1881,7 +1882,7 @@ function buildLayersHTML(poster) {
                 } else {
                     // Use a-plane for static images
                     // Zet initial dimensions op placeholder, wordt dynamisch aangepast via Image loader
-                    const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.1; side: double;' : 'transparent: false; side: double;';
+                    const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.1; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
                     const materialAttr = `material="${materialSettings}"`;
                     
                     layersHTML += `
