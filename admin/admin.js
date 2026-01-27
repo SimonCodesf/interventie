@@ -123,7 +123,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <!-- Quick Options Row -->
                 <div class="layer-options">
                     <label class="option-toggle">
-                        <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
+                        <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" checked onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
                         <span>TRANSPARANT</span>
                     </label>
                     <div class="bg-color-picker" id="${prefix}layer-${layerNum}-bg-color-container" style="display: none;">

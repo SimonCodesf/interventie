@@ -449,7 +449,7 @@ function handleUpdatePoster($db, $id) {
                     'anim_scale' => 1.0,
                     'anim_opacity' => 1.0,
                     'anim_scale_duration' => 0,
-                    'transparent' => false,
+                    'transparent' => true,
                     'bg_color' => '#000000',
                     'exclusion_filter' => false,
                     'filename' => null,
