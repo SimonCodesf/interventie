@@ -658,17 +658,15 @@ async function initializeChunkAR() {
     }, 30000);
 }
 
-// Toon chunk cycle knop
+// Toon chunk scan knop
 function showChunkCycleButton() {
     // Verwijder bestaande knop
     const existing = document.getElementById('chunk-cycle-btn');
     if (existing) existing.remove();
     
-    const totalChunks = window.arManifest.chunks.length;
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
-    btn.innerHTML = `MEER POSTERS (${window.currentChunkIndex + 1}/${totalChunks})`;
-    btn.title = 'Laad andere posters';
+    btn.textContent = 'SCAN';
     btn.style.cssText = `
         position: fixed;
         bottom: 100px;
@@ -677,16 +675,16 @@ function showChunkCycleButton() {
         z-index: 10000;
         background: transparent;
         color: #fff;
-        border: 1px solid rgba(255,255,255,0.5);
-        border-radius: 4px;
-        padding: 10px 20px;
-        font-family: 'Courier New', monospace;
-        font-size: 11px;
-        letter-spacing: 1px;
+        border: 1px solid #fff;
+        border-radius: 0;
+        padding: 8px 16px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 12px;
+        letter-spacing: 2px;
         cursor: pointer;
     `;
     
-    btn.onclick = cycleChunk;
+    btn.onclick = startChunkScan;
     document.body.appendChild(btn);
 }
 
@@ -702,28 +700,58 @@ function showChunkCycleButtonAgain() {
     if (btn) btn.style.display = 'block';
 }
 
-// Cycle naar volgende chunk
-function cycleChunk() {
-    // Niet cyclen als we een poster gevonden hebben
+// Start chunk scan - cycle door chunks tot poster gevonden
+function startChunkScan() {
     if (window.chunkLocked) {
         console.log('Chunk vergrendeld - poster gevonden');
         return;
     }
     
     const totalChunks = window.arManifest.chunks.length;
-    const nextIndex = (window.currentChunkIndex + 1) % totalChunks;
     
-    console.log(`Switching to chunk ${nextIndex + 1}/${totalChunks}`);
-    window.currentChunkIndex = nextIndex;
-    
-    // Update knop tekst
-    const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) {
-        btn.innerHTML = `MEER POSTERS (${nextIndex + 1}/${totalChunks})`;
+    // Als er maar 1 chunk is, reload gewoon
+    if (totalChunks === 1) {
+        console.log('Single chunk - reloading');
+        loadChunkScene(0);
+        return;
     }
     
-    // Laad nieuwe chunk
-    loadChunkScene(nextIndex);
+    // Start scan cycle
+    window.isChunkScanning = true;
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) btn.textContent = 'SCANNING...';
+    
+    let scannedChunks = 0;
+    
+    const scanNextChunk = () => {
+        if (!window.isChunkScanning || window.chunkLocked) {
+            // Stop scanning
+            if (btn) btn.textContent = 'SCAN';
+            return;
+        }
+        
+        scannedChunks++;
+        
+        // Stop na alle chunks gescand
+        if (scannedChunks >= totalChunks) {
+            window.isChunkScanning = false;
+            if (btn) btn.textContent = 'SCAN';
+            console.log('Alle chunks gescand');
+            return;
+        }
+        
+        // Naar volgende chunk
+        const nextIndex = (window.currentChunkIndex + 1) % totalChunks;
+        console.log(`Scanning chunk ${nextIndex + 1}/${totalChunks}`);
+        window.currentChunkIndex = nextIndex;
+        loadChunkScene(nextIndex);
+        
+        // Wacht 3 seconden voor detectie, dan volgende
+        setTimeout(scanNextChunk, 3000);
+    };
+    
+    // Start met huidige chunk, dan volgende na 3 sec
+    setTimeout(scanNextChunk, 3000);
 }
 
 // Load a specific chunk scene
@@ -823,6 +851,7 @@ function setupChunkEventListeners(scene, chunk) {
             
             // Vergrendel deze chunk - we hebben een poster gevonden!
             window.chunkLocked = true;
+            window.isChunkScanning = false; // Stop chunk scan
             hideChunkCycleButton();
             
             revealARScene();
