@@ -273,19 +273,6 @@ function deleteLayer(layerNum) {
 function deleteLayerMedia(layerNum, mediaType) {
     console.log('[Admin] deleteLayerMedia aangeroepen voor laag', layerNum, 'type:', mediaType);
     
-    const typeNames = {
-        'image': 'afbeelding/video',
-        'glb': '3D model',
-        'audio': 'audio bestand'
-    };
-    
-    const confirmed = confirm(`Weet je zeker dat je de ${typeNames[mediaType]} van laag ${layerNum} wilt verwijderen?`);
-    console.log('[Admin] Gebruiker bevestigd:', confirmed);
-    
-    if (!confirmed) {
-        return;
-    }
-    
     const prefix = 'edit-';
     
     if (mediaType === 'image') {
@@ -348,6 +335,8 @@ function deleteLayerMedia(layerNum, mediaType) {
         const deleteBtn = document.getElementById(`${prefix}layer-${layerNum}-delete-audio-btn`);
         if (deleteBtn) deleteBtn.style.display = 'none';
     }
+    
+    console.log('[Admin] Media delete gemarkeerd voor laag', layerNum, 'type:', mediaType);
     
     // Update preview
     updatePreviewFromInputs();
