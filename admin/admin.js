@@ -2843,14 +2843,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 const exclusionEl = document.getElementById(`edit-layer-${i}-exclusion`);
                 const exclusion = exclusionEl ? (exclusionEl.checked ? '1' : '0') : '0';
                 
-                // Get delete flag
+                // Get transparent checkbox
+                const transparentEl = document.getElementById(`edit-layer-${i}-transparent`);
+                const transparent = transparentEl ? (transparentEl.checked ? '1' : '0') : '0';
+                
+                // Get delete flag (hele laag)
                 const deleteEl = document.getElementById(`edit-layer-${i}-delete`);
                 const deleteFlag = deleteEl ? deleteEl.value : '0';
+                
+                // Get delete media flags (per media type)
+                const deleteMediaEl = document.getElementById(`edit-layer-${i}-delete-media`);
+                const deleteGlbEl = document.getElementById(`edit-layer-${i}-delete-glb`);
+                const deleteAudioEl = document.getElementById(`edit-layer-${i}-delete-audio`);
+                const deleteMedia = deleteMediaEl ? deleteMediaEl.value : '0';
+                const deleteGlb = deleteGlbEl ? deleteGlbEl.value : '0';
+                const deleteAudio = deleteAudioEl ? deleteAudioEl.value : '0';
                 
                 // Always send configuration (updates existing layer config)
                 formData.append(`layer_${i}_z`, layerZ || '0');
                 formData.append(`layer_${i}_exclusion`, exclusion);
+                formData.append(`layer_${i}_transparent`, transparent);
                 formData.append(`layer_${i}_delete`, deleteFlag);
+                formData.append(`layer_${i}_delete_media`, deleteMedia);
+                formData.append(`layer_${i}_delete_glb`, deleteGlb);
+                formData.append(`layer_${i}_delete_audio`, deleteAudio);
                 
                 // Base position and scale
                 formData.append(`layer_${i}_pos_x`, posXEl ? posXEl.value || '0' : '0');
