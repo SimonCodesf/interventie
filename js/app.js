@@ -716,6 +716,9 @@ function setupChunkEventListeners(scene, chunk) {
         console.log(' Chunk AR Ready');
         fixLayerAspectRatios();
         
+        // Activeer GIF shaders nu AR klaar is (lazy loading)
+        activateGifShaders();
+        
         // Hide loader
         const loader = document.getElementById('arjs-loader');
         if (loader) loader.classList.add('hidden');
@@ -1878,28 +1881,25 @@ function buildLayersHTML(poster) {
                 }
 
                 if (isGif) {
-                    // Treat GIF as video for stability (native browser support)
-                    // Vermijd GIF shader parser issues bij fresh page load
+                    // GIF shader met lazy loading - shader wordt pas geactiveerd na arReady
+                    // Dit voorkomt race condition bij page refresh
                     const gifSize = 1.4 * baseScale;
+                    const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
                     layersHTML += `
-                        <a-video 
+                        <a-plane 
                             id="ar-layer-${i}"
-                            class="gif-video"
-                            src="${mediaPath}" 
+                            class="gif-layer-pending"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
                             rotation="${rotX} ${rotY} ${rotZ}"
-                            autoplay="true"
-                            loop="true"
-                            muted="true"
-                            playsinline="true"
-                            webkit-playsinline="true"
-                            crossorigin="anonymous"
-                            material="shader: flat; transparent: ${isTransparent}; ${isTransparent ? 'alphaTest: 0.5;' : ''}"
+                            material="shader: flat; src: url(${mediaPath}); ${transparentSettings}"
+                            data-gif-src="${mediaPath}"
+                            data-transparent="${isTransparent}"
+                            data-bg-color="${bgColor}"
                             ${customScaleAttr}
                             ${animationStr}
-                            ${exclusionAttr}></a-video>`;
+                            ${exclusionAttr}></a-plane>`;
                 } else if (isVideo) {
                     // Use a-video for MP4/WebM layers
                     // Video: gebruik default aspect ratio 16:9
@@ -2009,6 +2009,30 @@ function buildLayersHTML(poster) {
     }
     
     return layersHTML;
+}
+
+// Activeer GIF shaders nadat AR scene klaar is (lazy loading)
+// Dit voorkomt race condition bij page refresh
+function activateGifShaders() {
+    const pendingGifs = document.querySelectorAll('.gif-layer-pending');
+    console.log(`🎞️ Activating ${pendingGifs.length} GIF shaders...`);
+    
+    pendingGifs.forEach((plane, index) => {
+        const gifSrc = plane.getAttribute('data-gif-src');
+        const isTransparent = plane.getAttribute('data-transparent') === 'true';
+        const bgColor = plane.getAttribute('data-bg-color') || '#000000';
+        
+        if (gifSrc) {
+            // Kleine delay tussen elke GIF om overbelasting te voorkomen
+            setTimeout(() => {
+                const transparentSettings = isTransparent ? 'transparent: true; alphaTest: 0.5;' : `transparent: false; color: ${bgColor};`;
+                plane.setAttribute('material', `shader: gif; src: url(${gifSrc}); ${transparentSettings}`);
+                plane.classList.remove('gif-layer-pending');
+                plane.classList.add('gif-layer-active');
+                console.log(`🎞️ GIF ${index + 1} activated: ${gifSrc}`);
+            }, index * 200); // 200ms tussen elke GIF
+        }
+    });
 }
 
 // Fix aspect ratios for each layer based on image dimensions
