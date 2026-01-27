@@ -15,15 +15,16 @@ if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// Haal poster IDs op uit de database
+// Haal poster IDs op uit de database, gesorteerd op upload datum (nieuwste eerst)
 function getValidPosterIds() {
     try {
         // Gebruik better-sqlite3 als het beschikbaar is, anders lees JSON via PHP bridge
         const Database = require('better-sqlite3');
         const db = new Database(DB_PATH, { readonly: true });
-        const rows = db.prepare('SELECT id FROM posters').all();
+        // Sorteer op created_at DESC zodat nieuwste posters eerst komen (chunk 0)
+        const rows = db.prepare('SELECT id, created_at FROM posters ORDER BY created_at DESC').all();
         db.close();
-        return rows.map(r => r.id);
+        return rows.map(r => ({ id: r.id, created_at: r.created_at }));
     } catch (e) {
         // Fallback: lees alle poster IDs uit een tijdelijk JSON bestand
         // Dit wordt aangemaakt door PHP voordat dit script draait
@@ -32,6 +33,7 @@ function getValidPosterIds() {
             try {
                 const ids = JSON.parse(fs.readFileSync(tempFile, 'utf8'));
                 console.log('Using poster IDs from JSON fallback');
+                // JSON fallback moet ook gesorteerd zijn op datum (PHP regelt dit)
                 return ids;
             } catch (e2) {
                 console.error('Error reading poster_ids.json:', e2.message);
@@ -45,10 +47,10 @@ function getValidPosterIds() {
 async function mergeMindFiles() {
     console.log('Starting MindAR file merge...');
     
-    // Haal geldige poster IDs op uit database
-    const validPosterIds = getValidPosterIds();
-    if (validPosterIds) {
-        console.log(`Database bevat ${validPosterIds.length} posters`);
+    // Haal geldige poster IDs op uit database (al gesorteerd op datum, nieuwste eerst)
+    const validPosterData = getValidPosterIds();
+    if (validPosterData) {
+        console.log(`Database bevat ${validPosterData.length} posters (gesorteerd op datum)`);
     }
     
     // 1. Find all .mind files
@@ -60,7 +62,8 @@ async function mergeMindFiles() {
         const itemPath = path.join(ASSETS_DIR, item);
         if (fs.statSync(itemPath).isDirectory()) {
             // Skip als poster niet in database staat
-            if (validPosterIds && !validPosterIds.includes(item)) {
+            const posterData = validPosterData ? validPosterData.find(p => p.id === item) : null;
+            if (validPosterData && !posterData) {
                 console.log(`Skipping ${item} - niet in database`);
                 continue;
             }
@@ -70,7 +73,8 @@ async function mergeMindFiles() {
             if (fs.existsSync(mindFile)) {
                 mindFiles.push({
                     id: item,
-                    path: mindFile
+                    path: mindFile,
+                    created_at: posterData ? posterData.created_at : null
                 });
             }
         }
@@ -83,14 +87,25 @@ async function mergeMindFiles() {
         return;
     }
 
-    // 2. Process in chunks
+    // 2. Process in chunks - sorteer op datum (nieuwste eerst voor chunk 0)
+    // Als we database data hebben, sorteer op created_at DESC
+    // Anders fallback op alfabetisch (deterministic)
+    if (validPosterData) {
+        // Sorteer op basis van positie in validPosterData (al gesorteerd op datum)
+        mindFiles.sort((a, b) => {
+            const indexA = validPosterData.findIndex(p => p.id === a.id);
+            const indexB = validPosterData.findIndex(p => p.id === b.id);
+            return indexA - indexB; // Behoud database volgorde (nieuwste eerst)
+        });
+        console.log('Gesorteerd op upload datum (nieuwste eerst in chunk 0)');
+    } else {
+        mindFiles.sort((a, b) => a.id.localeCompare(b.id));
+        console.log('Gesorteerd alfabetisch (fallback)');
+    }
+    
     const chunks = [];
     let currentChunk = [];
     let chunkIndex = 0;
-    
-    // Sort files alphabetically by ID (deterministic, matches database order)
-    // This ensures targetIndex in .mind files always matches poster array order
-    mindFiles.sort((a, b) => a.id.localeCompare(b.id));
     
     const manifest = {
         generatedAt: new Date().toISOString(),

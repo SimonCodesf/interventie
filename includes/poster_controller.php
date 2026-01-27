@@ -61,16 +61,22 @@ function triggerMindMerge($captureOutput = false) {
     global $db;
     
     // Schrijf alle poster IDs naar een JSON bestand zodat Node script weet welke geldig zijn
+    // Gesorteerd op created_at DESC (nieuwste eerst) voor chunk 0
     // Dit is een fallback voor als better-sqlite3 niet beschikbaar is
     try {
         if (!isset($db)) {
             $db = initDatabaseWithMigrations();
         }
-        $stmt = $db->query("SELECT id FROM posters");
-        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        // Sorteer op created_at DESC zodat nieuwste posters in chunk 0 komen
+        $stmt = $db->query("SELECT id, created_at FROM posters ORDER BY created_at DESC");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Format als array van objects met id en created_at
+        $posterData = array_map(function($row) {
+            return ['id' => $row['id'], 'created_at' => $row['created_at']];
+        }, $rows);
         $jsonPath = dirname(__DIR__) . '/data/poster_ids.json';
-        file_put_contents($jsonPath, json_encode($ids));
-        error_log("Wrote " . count($ids) . " poster IDs to $jsonPath");
+        file_put_contents($jsonPath, json_encode($posterData));
+        error_log("Wrote " . count($posterData) . " poster IDs to $jsonPath (sorted by date DESC)");
     } catch (Exception $e) {
         error_log("Could not write poster IDs: " . $e->getMessage());
     }

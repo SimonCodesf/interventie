@@ -629,15 +629,21 @@ async function initializeARMode() {
 async function initializeChunkAR() {
     console.log(' Initializing Chunk AR System');
     
-    // Start with first chunk
+    // Start with first chunk (nieuwste posters)
     window.currentChunkIndex = 0;
+    window.chunkLocked = false; // True als we een poster gevonden hebben
     const firstChunk = window.arManifest.chunks[0];
     
     // Initialize static feed
     await initializeStaticCameraFeed();
     
-    // Load first chunk scene
+    // Load first chunk scene (alleen de nieuwste 10 posters)
     loadChunkScene(0);
+    
+    // Toon chunk cycle knop als er meer dan 1 chunk is
+    if (window.arManifest.chunks.length > 1) {
+        showChunkCycleButton();
+    }
     
     // Show Scan Button always (allows user to reset/scan)
     setTimeout(() => showScanButton('Scan'), 2000);
@@ -650,6 +656,63 @@ async function initializeChunkAR() {
             loader.classList.add('hidden');
         }
     }, 30000);
+}
+
+// Toon chunk cycle knop
+function showChunkCycleButton() {
+    // Verwijder bestaande knop
+    const existing = document.getElementById('chunk-cycle-btn');
+    if (existing) existing.remove();
+    
+    const totalChunks = window.arManifest.chunks.length;
+    const btn = document.createElement('button');
+    btn.id = 'chunk-cycle-btn';
+    btn.innerHTML = `<span class="chunk-icon">◀▶</span> <span class="chunk-text">${window.currentChunkIndex + 1}/${totalChunks}</span>`;
+    btn.title = 'Wissel naar andere posters';
+    btn.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        left: 16px;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.7);
+        color: #0f0;
+        border: 1px solid #0f0;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    `;
+    
+    btn.onclick = cycleChunk;
+    document.body.appendChild(btn);
+}
+
+// Cycle naar volgende chunk
+function cycleChunk() {
+    // Niet cyclen als we een poster gevonden hebben
+    if (window.chunkLocked) {
+        console.log('Chunk vergrendeld - poster gevonden');
+        return;
+    }
+    
+    const totalChunks = window.arManifest.chunks.length;
+    const nextIndex = (window.currentChunkIndex + 1) % totalChunks;
+    
+    console.log(`Switching to chunk ${nextIndex + 1}/${totalChunks}`);
+    window.currentChunkIndex = nextIndex;
+    
+    // Update knop tekst
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) {
+        btn.querySelector('.chunk-text').textContent = `${nextIndex + 1}/${totalChunks}`;
+    }
+    
+    // Laad nieuwe chunk
+    loadChunkScene(nextIndex);
 }
 
 // Load a specific chunk scene
@@ -747,6 +810,15 @@ function setupChunkEventListeners(scene, chunk) {
             const poster = window.allPosters.find(p => p.id === posterId);
             console.log(` Found poster: ${poster?.title}`);
             
+            // Vergrendel deze chunk - we hebben een poster gevonden!
+            window.chunkLocked = true;
+            const btn = document.getElementById('chunk-cycle-btn');
+            if (btn) {
+                btn.style.opacity = '0.3';
+                btn.style.pointerEvents = 'none';
+                btn.title = 'Chunk vergrendeld - poster gevonden';
+            }
+            
             revealARScene();
             stopScanCycles('found');
             
@@ -770,6 +842,15 @@ function setupChunkEventListeners(scene, chunk) {
             console.log(' Target lost');
             hideARScene();
             hideDetectedPosterState();
+            
+            // Ontgrendel chunk - gebruiker kan weer cyclen
+            window.chunkLocked = false;
+            const btn = document.getElementById('chunk-cycle-btn');
+            if (btn) {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.title = 'Wissel naar andere posters';
+            }
             
             // UNLOAD GIFs: Verwijder GIF shaders om geheugen vrij te maken
             unloadLazyGifsForTarget(target);
