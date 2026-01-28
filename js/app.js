@@ -689,15 +689,15 @@ function injectSpinnerCSS() {
         @keyframes spin { to { transform: rotate(360deg); } }
         .scan-spinner {
             display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid transparent;
-            border-top-color: #0f0;
-            border-right-color: #0f0;
-            border-bottom-color: #0f0;
+            width: 8px;
+            height: 8px;
+            border: 1.5px solid transparent;
+            border-top-color: #fff;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 6px;
+            animation: spin 0.6s linear infinite;
+            margin-left: 6px;
             vertical-align: middle;
         }
     `;
@@ -740,8 +740,8 @@ function showChunkCycleButton() {
     btn.onclick = () => {
         console.log('🖱️ SCAN knop geklikt!');
         try {
-            // Toon spinner direct
-            btn.innerHTML = '<span class="scan-spinner"></span>';
+            // Toon spinner naast SCAN tekst
+            btn.innerHTML = 'SCAN<span class="scan-spinner"></span>';
             startChunkScan();
         } catch (error) {
             console.error('❌ Error bij aanroepen startChunkScan:', error);
@@ -884,8 +884,8 @@ function startChunkScan() {
         updateScanDisplay();
         loadChunkScene(currentChunk);
         
-        // Wacht 3 seconden voor detectie, dan volgende
-        setTimeout(scanNextChunk, 3000);
+        // Wacht 1.5 seconden voor detectie, dan volgende
+        setTimeout(scanNextChunk, 1500);
     };
     
     // Start met huidige chunk, dan volgende na 3 sec
