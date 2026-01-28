@@ -632,10 +632,14 @@ async function initializeChunkAR() {
     // Start with first chunk (nieuwste posters)
     window.currentChunkIndex = 0;
     window.chunkLocked = false; // True als we een poster gevonden hebben
-    const firstChunk = window.arManifest.chunks[0];
+    window.preloadedChunks = {}; // Cache voor preloaded chunks
     
     // Initialize static feed
     await initializeStaticCameraFeed();
+    
+    // Preload ALLE chunk .mind bestanden voor snellere switching
+    console.log(' Preloading all chunk files...');
+    await preloadAllChunks();
     
     // Load first chunk scene (alleen de nieuwste 10 posters)
     loadChunkScene(0);
@@ -658,9 +662,52 @@ async function initializeChunkAR() {
     }, 30000);
 }
 
+// Preload alle chunk bestanden
+async function preloadAllChunks() {
+    const chunks = window.arManifest.chunks;
+    const preloadPromises = chunks.map(async (chunk, i) => {
+        try {
+            const response = await fetch(`assets/chunks/${chunk.file}`);
+            if (response.ok) {
+                window.preloadedChunks[i] = await response.arrayBuffer();
+                console.log(` Preloaded chunk ${i}: ${chunk.file}`);
+            }
+        } catch (e) {
+            console.warn(`⚠️ Could not preload chunk ${i}`);
+        }
+    });
+    await Promise.all(preloadPromises);
+    console.log(' All chunks preloaded');
+}
+
+// Injecteer spinner CSS
+function injectSpinnerCSS() {
+    if (document.getElementById('scan-spinner-css')) return;
+    const style = document.createElement('style');
+    style.id = 'scan-spinner-css';
+    style.textContent = `
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .scan-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid transparent;
+            border-top-color: #0f0;
+            border-right-color: #0f0;
+            border-bottom-color: #0f0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // Toon chunk scan knop
 function showChunkCycleButton() {
     console.log('🔘 showChunkCycleButton aangeroepen');
+    injectSpinnerCSS();
     
     // Verwijder bestaande knop
     const existing = document.getElementById('chunk-cycle-btn');
@@ -693,11 +740,12 @@ function showChunkCycleButton() {
     btn.onclick = () => {
         console.log('🖱️ SCAN knop geklikt!');
         try {
-            console.log('⏩ Roep startChunkScan aan...');
+            // Toon spinner direct
+            btn.innerHTML = '<span class="scan-spinner"></span>';
             startChunkScan();
-            console.log('✅ startChunkScan aangeroepen');
         } catch (error) {
             console.error('❌ Error bij aanroepen startChunkScan:', error);
+            btn.innerHTML = 'SCAN';
         }
     };
     
@@ -796,7 +844,7 @@ function startChunkScan() {
             // Stop scanning - reset knop styling
             clearInterval(dotInterval);
             if (btn) {
-                btn.textContent = 'SCAN';
+                btn.innerHTML = 'SCAN';
                 btn.style.background = 'transparent';
                 btn.style.borderColor = '#fff';
                 btn.style.color = '#fff';
@@ -817,7 +865,7 @@ function startChunkScan() {
                 window.isChunkScanning = false;
                 clearInterval(dotInterval);
                 if (btn) {
-                    btn.textContent = 'SCAN';
+                    btn.innerHTML = 'SCAN';
                     btn.style.background = 'transparent';
                     btn.style.borderColor = '#fff';
                     btn.style.color = '#fff';
