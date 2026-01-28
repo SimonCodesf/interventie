@@ -508,19 +508,15 @@ async function openFileWindow(posterId) {
         return;
     }
     
-    try {
-        // Fetch poster data
-        const response = await fetch(`${window.API_URL || (window.location.origin + '/api.php')}/posters/${posterId}`);
-        if (!response.ok) throw new Error('Cannot load file');
-        
-        const poster = await response.json();
-        
-        // Create window
-        createWindow(poster);
-        
-    } catch (error) {
-        console.error('Error opening file:', error);
+    // Haal poster data uit window.allPosters (al geladen)
+    const poster = window.allPosters?.find(p => p.id === posterId);
+    if (!poster) {
+        console.error('Poster niet gevonden:', posterId);
+        return;
     }
+    
+    // Create window
+    createWindow(poster);
 }
 
 // Create a draggable, resizable window
