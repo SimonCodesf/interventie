@@ -756,13 +756,26 @@ function showChunkCycleButton() {
 // Verberg chunk knop
 function hideChunkCycleButton() {
     const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) btn.style.display = 'none';
+    if (btn) {
+        // Reset naar originele staat voordat we verbergen
+        btn.innerHTML = 'SCAN';
+        btn.style.background = 'transparent';
+        btn.style.borderColor = '#fff';
+        btn.style.color = '#fff';
+        btn.style.display = 'none';
+    }
 }
 
 // Toon chunk knop
 function showChunkCycleButtonAgain() {
     const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) btn.style.display = 'block';
+    if (btn) {
+        btn.innerHTML = 'SCAN'; // Reset naar SCAN zonder spinner
+        btn.style.background = 'transparent';
+        btn.style.borderColor = '#fff';
+        btn.style.color = '#fff';
+        btn.style.display = 'block';
+    }
 }
 
 // Start chunk scan - cycle door chunks tot poster gevonden
