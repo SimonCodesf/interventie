@@ -69,6 +69,18 @@ function createFileManagerUI() {
                     </div>
                     
                     <div class="sidebar-section">
+                        <div class="sidebar-box" id="chunk-box">
+                            <div class="box-header"><span class="box-title">AR CHUNKS</span></div>
+                            <div class="box-content">
+                                <nav class="sidebar-nav" id="chunk-nav">
+                                    <!-- Dynamisch gevuld met chunks -->
+                                </nav>
+                            </div>
+                            <div class="box-footer"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
                         <div class="sidebar-box" id="loc-box">
                             <div class="box-header"><span class="box-title">LOCATIES</span></div>
                             <div class="box-content">
@@ -301,6 +313,13 @@ function renderFiles(posters, filter = 'all') {
         case 'ar':
             filtered = posters.filter(p => p.ar_marker);
             break;
+        default:
+            // Check voor chunk filter (chunk-0, chunk-1, etc)
+            if (filter.startsWith('chunk-')) {
+                const chunkIndex = parseInt(filter.replace('chunk-', ''));
+                filtered = posters.filter(p => p.chunkIndex === chunkIndex);
+            }
+            break;
     }
     
     if (filtered.length === 0) {
@@ -385,6 +404,67 @@ function setupSidebar() {
             renderFiles(window.allPosters || [], filter);
         });
     });
+    
+    // Setup chunk navigation
+    setupChunkNavigation();
+}
+
+// Setup chunk filter navigatie
+function setupChunkNavigation() {
+    const chunkNav = document.getElementById('chunk-nav');
+    if (!chunkNav) return;
+    
+    // Wacht tot posters geladen zijn met chunk info
+    setTimeout(() => {
+        const posters = window.allPosters || [];
+        
+        // Verzamel unieke chunks
+        const chunks = new Map();
+        posters.forEach(p => {
+            if (p.chunkIndex !== undefined) {
+                if (!chunks.has(p.chunkIndex)) {
+                    chunks.set(p.chunkIndex, { index: p.chunkIndex, count: 0 });
+                }
+                chunks.get(p.chunkIndex).count++;
+            }
+        });
+        
+        // Sorteer op index
+        const sortedChunks = Array.from(chunks.values()).sort((a, b) => a.index - b.index);
+        
+        if (sortedChunks.length === 0) {
+            chunkNav.innerHTML = '<span class="nav-label" style="opacity: 0.5; font-size: 10px;">Geen chunks gevonden</span>';
+            return;
+        }
+        
+        // Genereer nav items
+        chunkNav.innerHTML = sortedChunks.map(chunk => `
+            <a href="#" class="nav-item" data-filter="chunk-${chunk.index}">
+                <span class="nav-icon">▸</span>
+                <span class="nav-label">CHUNK_${chunk.index + 1}/</span>
+                <span class="nav-count">${chunk.count}</span>
+            </a>
+        `).join('');
+        
+        // Event listeners voor chunk filters
+        chunkNav.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const filter = item.dataset.filter;
+                
+                // Update active state
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Update path
+                const chunkNum = filter.replace('chunk-', '');
+                document.getElementById('current-path').textContent = `~/AR_CHUNKS/CHUNK_${parseInt(chunkNum) + 1}/`;
+                
+                // Render filtered files
+                renderFiles(window.allPosters || [], filter);
+            });
+        });
+    }, 500); // Wacht op poster data
 }
 
 // Update selection count

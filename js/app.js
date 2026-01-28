@@ -541,6 +541,18 @@ async function initializeARMode() {
                 window.arManifest = manifest;
                 window.useChunkSystem = true;
                 
+                // Voeg chunk info toe aan elke poster
+                manifest.chunks.forEach((chunk, chunkIndex) => {
+                    chunk.posterIds.forEach(posterId => {
+                        const poster = window.allPosters.find(p => p.id === posterId);
+                        if (poster) {
+                            poster.chunkIndex = chunkIndex;
+                            poster.chunkName = `Chunk ${chunkIndex + 1}`;
+                        }
+                    });
+                });
+                console.log(' Chunk info toegevoegd aan posters');
+                
                 // Initialize Chunk System
                 initializeChunkAR();
                 return;
