@@ -231,6 +231,29 @@ async function loadFilesFromPosters() {
             }
         }
         
+        // Laad chunk manifest en voeg chunk info toe aan posters
+        try {
+            const manifestResp = await fetch('assets/chunks/manifest.json');
+            if (manifestResp.ok) {
+                const manifest = await manifestResp.json();
+                window.arManifest = manifest;
+                
+                // Voeg chunk info toe aan elke poster
+                manifest.chunks.forEach((chunk, chunkIndex) => {
+                    chunk.posterIds.forEach(posterId => {
+                        const poster = window.allPosters.find(p => p.id === posterId);
+                        if (poster) {
+                            poster.chunkIndex = chunkIndex;
+                            poster.chunkName = `Chunk ${chunkIndex + 1}`;
+                        }
+                    });
+                });
+                console.log(' Chunk info toegevoegd aan posters (desktop)');
+            }
+        } catch (e) {
+            console.log('Geen chunk manifest gevonden');
+        }
+        
         const posters = window.allPosters || [];
         
         // Update stats
@@ -245,6 +268,9 @@ async function loadFilesFromPosters() {
         
         // Build location nav
         buildLocationNav(posters);
+        
+        // Build chunk nav
+        buildChunkNav(posters);
         
         // Render files
         renderFiles(posters);
@@ -409,62 +435,62 @@ function setupSidebar() {
     setupChunkNavigation();
 }
 
-// Setup chunk filter navigatie
-function setupChunkNavigation() {
+// Build chunk navigation from posters
+function buildChunkNav(posters) {
     const chunkNav = document.getElementById('chunk-nav');
     if (!chunkNav) return;
     
-    // Wacht tot posters geladen zijn met chunk info
-    setTimeout(() => {
-        const posters = window.allPosters || [];
-        
-        // Verzamel unieke chunks
-        const chunks = new Map();
-        posters.forEach(p => {
-            if (p.chunkIndex !== undefined) {
-                if (!chunks.has(p.chunkIndex)) {
-                    chunks.set(p.chunkIndex, { index: p.chunkIndex, count: 0 });
-                }
-                chunks.get(p.chunkIndex).count++;
+    // Verzamel unieke chunks
+    const chunks = new Map();
+    posters.forEach(p => {
+        if (p.chunkIndex !== undefined) {
+            if (!chunks.has(p.chunkIndex)) {
+                chunks.set(p.chunkIndex, { index: p.chunkIndex, count: 0 });
             }
-        });
-        
-        // Sorteer op index
-        const sortedChunks = Array.from(chunks.values()).sort((a, b) => a.index - b.index);
-        
-        if (sortedChunks.length === 0) {
-            chunkNav.innerHTML = '<span class="nav-label" style="opacity: 0.5; font-size: 10px;">Geen chunks gevonden</span>';
-            return;
+            chunks.get(p.chunkIndex).count++;
         }
-        
-        // Genereer nav items
-        chunkNav.innerHTML = sortedChunks.map(chunk => `
-            <a href="#" class="nav-item" data-filter="chunk-${chunk.index}">
-                <span class="nav-icon">▸</span>
-                <span class="nav-label">CHUNK_${chunk.index + 1}/</span>
-                <span class="nav-count">${chunk.count}</span>
-            </a>
-        `).join('');
-        
-        // Event listeners voor chunk filters
-        chunkNav.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const filter = item.dataset.filter;
-                
-                // Update active state
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                
-                // Update path
-                const chunkNum = filter.replace('chunk-', '');
-                document.getElementById('current-path').textContent = `~/AR_CHUNKS/CHUNK_${parseInt(chunkNum) + 1}/`;
-                
-                // Render filtered files
-                renderFiles(window.allPosters || [], filter);
-            });
+    });
+    
+    // Sorteer op index
+    const sortedChunks = Array.from(chunks.values()).sort((a, b) => a.index - b.index);
+    
+    if (sortedChunks.length === 0) {
+        chunkNav.innerHTML = '<span class="nav-label" style="opacity: 0.5; font-size: 10px;">Geen chunks gevonden</span>';
+        return;
+    }
+    
+    // Genereer nav items
+    chunkNav.innerHTML = sortedChunks.map(chunk => `
+        <a href="#" class="nav-item" data-filter="chunk-${chunk.index}">
+            <span class="nav-icon">▸</span>
+            <span class="nav-label">CHUNK_${chunk.index + 1}/</span>
+            <span class="nav-count">[${chunk.count}]</span>
+        </a>
+    `).join('');
+    
+    // Event listeners voor chunk filters
+    chunkNav.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filter = item.dataset.filter;
+            
+            // Update active state
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Update path
+            const chunkNum = filter.replace('chunk-', '');
+            document.getElementById('current-path').textContent = `~/AR_CHUNKS/CHUNK_${parseInt(chunkNum) + 1}/`;
+            
+            // Render filtered files
+            renderFiles(window.allPosters || [], filter);
         });
-    }, 500); // Wacht op poster data
+    });
+}
+
+// Setup chunk filter navigatie (legacy - wordt nu door buildChunkNav gedaan)
+function setupChunkNavigation() {
+    // Niet meer nodig - buildChunkNav wordt direct aangeroepen na laden
 }
 
 // Update selection count
