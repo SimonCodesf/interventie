@@ -9,6 +9,50 @@ header('Content-Type: text/plain; charset=utf-8');
 
 echo "=== MindAR Rebuild Test ===\n\n";
 
+// 0. Direct database query test
+echo "0. Database query test:\n";
+try {
+    $dbPath = __DIR__ . '/data/posters.db';
+    $pdo = new PDO("sqlite:$dbPath");
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $stmt = $pdo->query("SELECT id, title, created_at FROM posters ORDER BY created_at DESC");
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo "   [DB] Totaal posters in database: " . count($rows) . "\n";
+    foreach ($rows as $i => $row) {
+        echo "   " . ($i + 1) . ". " . $row['title'] . " (" . substr($row['id'], 0, 8) . "...)\n";
+    }
+    
+    // Check specifiek voor MANIFESTO
+    $manifestoId = '5cc01927-7de3-440e-b567-379eff931922';
+    $stmt2 = $pdo->prepare("SELECT * FROM posters WHERE id = ?");
+    $stmt2->execute([$manifestoId]);
+    $manifesto = $stmt2->fetch(PDO::FETCH_ASSOC);
+    if ($manifesto) {
+        echo "\n   [OK] MANIFESTO gevonden in database!\n";
+    } else {
+        echo "\n   [FOUT] MANIFESTO NIET in database!\n";
+    }
+    
+    // Nu poster_ids.json updaten met correcte data
+    echo "\n   Schrijf nieuwe poster_ids.json...\n";
+    $posterData = array_map(function($row) {
+        return ['id' => $row['id'], 'created_at' => $row['created_at']];
+    }, $rows);
+    $jsonPath = __DIR__ . '/data/poster_ids.json';
+    $result = file_put_contents($jsonPath, json_encode($posterData, JSON_PRETTY_PRINT));
+    if ($result) {
+        echo "   [OK] Geschreven: " . count($posterData) . " IDs naar poster_ids.json\n";
+    } else {
+        echo "   [FOUT] Kon poster_ids.json niet schrijven!\n";
+    }
+    
+} catch (Exception $e) {
+    echo "   [FOUT] Database error: " . $e->getMessage() . "\n";
+}
+
+echo "\n";
+
 // 1. Check Node.js beschikbaarheid
 echo "1. Node.js check:\n";
 $nodePaths = [
