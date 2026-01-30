@@ -16,7 +16,25 @@ try {
     $pdo = new PDO("sqlite:$dbPath");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    $stmt = $pdo->query("SELECT id, title, created_at FROM posters ORDER BY created_at DESC");
+    // Check of created_at kolom bestaat
+    $columns = $pdo->query("PRAGMA table_info(posters)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasCreatedAt = false;
+    foreach ($columns as $col) {
+        if ($col['name'] === 'created_at') {
+            $hasCreatedAt = true;
+            break;
+        }
+    }
+    
+    if (!$hasCreatedAt) {
+        echo "   [MIGRATIE] created_at kolom ontbreekt - wordt toegevoegd...\n";
+        $pdo->exec("ALTER TABLE posters ADD COLUMN created_at TEXT");
+        // Zet created_at gelijk aan upload_date voor bestaande records
+        $pdo->exec("UPDATE posters SET created_at = upload_date WHERE created_at IS NULL");
+        echo "   [OK] Migratie voltooid!\n";
+    }
+    
+    $stmt = $pdo->query("SELECT id, title, created_at, upload_date FROM posters ORDER BY created_at DESC");
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo "   [DB] Totaal posters in database: " . count($rows) . "\n";
     foreach ($rows as $i => $row) {
@@ -37,7 +55,7 @@ try {
     // Nu poster_ids.json updaten met correcte data
     echo "\n   Schrijf nieuwe poster_ids.json...\n";
     $posterData = array_map(function($row) {
-        return ['id' => $row['id'], 'created_at' => $row['created_at']];
+        return ['id' => $row['id'], 'created_at' => $row['created_at'] ?? $row['upload_date']];
     }, $rows);
     $jsonPath = __DIR__ . '/data/poster_ids.json';
     $result = file_put_contents($jsonPath, json_encode($posterData, JSON_PRETTY_PRINT));
