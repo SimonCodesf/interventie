@@ -498,7 +498,7 @@ async function initializeARMode() {
     try {
         // Fetch all posters from API
         console.log(' Fetching posters from API...');
-        const response = await fetch(`${API_URL}/posters`);
+        const response = await fetch(`${API_URL}/posters`, { cache: 'no-store' });
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ API Error Response:', errorText);
@@ -534,7 +534,7 @@ async function initializeARMode() {
         
         // Check for Chunk Manifest (New System)
         try {
-            const manifestResp = await fetch('assets/chunks/manifest.json');
+            const manifestResp = await fetch('assets/chunks/manifest.json', { cache: 'no-store' });
             if (manifestResp.ok) {
                 const manifest = await manifestResp.json();
                 console.log(' Found Chunk Manifest:', manifest);

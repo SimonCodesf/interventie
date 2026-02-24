@@ -224,16 +224,15 @@ async function loadFilesFromPosters() {
     
     try {
         // Use existing poster data or fetch
-        if (!window.allPosters || window.allPosters.length === 0) {
-            const response = await fetch(`${window.API_URL || (window.location.origin + '/api.php')}/posters`);
-            if (response.ok) {
-                window.allPosters = await response.json();
-            }
+        // Altijd verse data ophalen (geen browser cache)
+        const response = await fetch(`${window.API_URL || (window.location.origin + '/api.php')}/posters`, { cache: 'no-store' });
+        if (response.ok) {
+            window.allPosters = await response.json();
         }
         
         // Laad chunk manifest en voeg chunk info toe aan posters
         try {
-            const manifestResp = await fetch('assets/chunks/manifest.json');
+            const manifestResp = await fetch('assets/chunks/manifest.json', { cache: 'no-store' });
             if (manifestResp.ok) {
                 const manifest = await manifestResp.json();
                 window.arManifest = manifest;
@@ -257,13 +256,17 @@ async function loadFilesFromPosters() {
         const posters = window.allPosters || [];
         
         // Update stats
+        // Gebruik manifest total als autoriteit voor AR count (accurater dan ar_marker veld)
+        const manifestArCount = window.arManifest
+            ? window.arManifest.chunks.reduce((sum, c) => sum + c.posterIds.length, 0)
+            : posters.filter(p => p.ar_marker).length;
         document.getElementById('total-files').textContent = posters.length;
-        document.getElementById('total-ar').textContent = posters.filter(p => p.ar_marker).length;
+        document.getElementById('total-ar').textContent = manifestArCount;
         document.getElementById('total-downloads').textContent = posters.reduce((sum, p) => sum + Number(p.downloads || 0), 0);
         
         // Update nav counts
         document.querySelector('[data-filter="all"] .nav-count').textContent = `[${posters.length}]`;
-        document.querySelector('[data-filter="ar"] .nav-count').textContent = `[${posters.filter(p => p.ar_marker).length}]`;
+        document.querySelector('[data-filter="ar"] .nav-count').textContent = `[${manifestArCount}]`;
         document.querySelector('[data-filter="recent"] .nav-count').textContent = `[${Math.min(10, posters.length)}]`;
         
         // Build location nav
@@ -337,7 +340,8 @@ function renderFiles(posters, filter = 'all') {
             filtered = posters.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 10);
             break;
         case 'ar':
-            filtered = posters.filter(p => p.ar_marker);
+            // AR = heeft ar_marker OF zit in manifest (chunkIndex is gezet door manifest loader)
+            filtered = posters.filter(p => p.ar_marker || p.chunkIndex !== undefined);
             break;
         default:
             // Check voor chunk filter (chunk-0, chunk-1, etc)
