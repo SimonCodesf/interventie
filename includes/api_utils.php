@@ -187,8 +187,9 @@ function resizeImage($source, $dest, $maxWidth, $maxHeight, $quality = 85) {
             imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
             
             imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-            // PNG quality is compression level (0-9), not 0-100
-            imagepng($newImage, $dest, 6); 
+            // PNG compressielevel: 1 = snel (minder CPU, iets groter bestand)
+            // Lagen zijn client-side al naar 1024px geschaald, zelden nog resize nodig
+            imagepng($newImage, $dest, 1); 
             break;
             
         default:

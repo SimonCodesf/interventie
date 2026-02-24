@@ -33,6 +33,68 @@ async function convertGifFileToMp4(file, label = 'layer') {
     return file;
 }
 
+// ========== Client-side layer image resize ==========
+// Schaalt layer afbeeldingen clientside naar max 1024px voor snellere upload
+// en minder server belasting. GIFs en videos worden overgeslagen.
+async function prepareLayerImage(file, maxPx = 1024) {
+    // Alleen statische afbeeldingen verwerken
+    const isStaticImage = file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/webp';
+    if (!isStaticImage) {
+        return file; // GIF, video etc. ongewijzigd teruggeven
+    }
+    
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            
+            // Als het al binnen de limiet valt, origineel bestand gebruiken
+            if (img.width <= maxPx && img.height <= maxPx) {
+                console.log(`[RESIZE] Layer al optimaal (${img.width}×${img.height}): ${file.name}`);
+                resolve(file);
+                return;
+            }
+            
+            // Schaal het beeld naar max 1024px (verhouding behouden)
+            const ratio = Math.min(maxPx / img.width, maxPx / img.height);
+            const newW = Math.round(img.width * ratio);
+            const newH = Math.round(img.height * ratio);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = newW;
+            canvas.height = newH;
+            const ctx = canvas.getContext('2d');
+            
+            // PNG transparantie behouden
+            if (file.type === 'image/png') {
+                ctx.clearRect(0, 0, newW, newH);
+            }
+            ctx.drawImage(img, 0, 0, newW, newH);
+            
+            // Behoud origineel formaat (PNG voor transparantie, JPEG voor foto's)
+            const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+            const outputQuality = outputType === 'image/jpeg' ? 0.88 : undefined;
+            
+            canvas.toBlob((blob) => {
+                const kleinsteBlob = blob.size < file.size ? blob : file;
+                const naam = kleinsteBlob === file ? file.name : file.name;
+                console.log(`[RESIZE] ${file.name}: ${(file.size/1024).toFixed(0)}KB → ${(kleinsteBlob.size/1024).toFixed(0)}KB (${newW}×${newH})`);
+                resolve(new File([kleinsteBlob], naam, { type: outputType }));
+            }, outputType, outputQuality);
+        };
+        
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            console.warn(`[RESIZE] Kon afbeelding niet laden, origineel gebruiken: ${file.name}`);
+            resolve(file); // Fallback: origineel sturen
+        };
+        
+        img.src = url;
+    });
+}
+
 
 
 // Generate HTML for a single layer - COMPACT VERSION with visual preview
@@ -1864,8 +1926,11 @@ function setupUploadForm() {
             // Only append if layer has an image
             if (layerImage) {
                 if (layerImage.type === 'image/gif') {
-                    // Convert GIF to MP4 client-side to avoid server dependency on ffmpeg
+                    // GIF direct doorsturen (A-Frame GIF shader speelt ze af)
                     layerImage = await convertGifFileToMp4(layerImage, `upload_layer_${i}`);
+                } else {
+                    // Schaal statische afbeeldingen clientside naar max 1024px
+                    layerImage = await prepareLayerImage(layerImage);
                 }
                 formData.append(`layer_${i}_image`, layerImage);
             }
@@ -3004,8 +3069,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Only append image if a new one is selected
                 if (layerImage) {
                     if (layerImage.type === 'image/gif') {
-                        // Convert GIF to MP4 client-side
+                        // GIF direct doorsturen (A-Frame GIF shader speelt ze af)
                         layerImage = await convertGifFileToMp4(layerImage, `edit_layer_${i}`);
+                    } else {
+                        // Schaal statische afbeeldingen clientside naar max 1024px
+                        layerImage = await prepareLayerImage(layerImage);
                     }
                     formData.append(`layer_${i}_image`, layerImage);
                 }
