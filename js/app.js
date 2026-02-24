@@ -923,6 +923,9 @@ function startChunkScan() {
     setTimeout(scanNextChunk, 3000);
 }
 
+// Bijhouden van actieve chunk blob URLs voor cleanup
+let activeChunkBlobUrls = {};
+
 // Load a specific chunk scene
 function loadChunkScene(chunkIndex) {
     const chunk = window.arManifest.chunks[chunkIndex];
@@ -953,6 +956,25 @@ function loadChunkScene(chunkIndex) {
         existingScene.remove();
     }
     
+    // Bepaal de imageTargetSrc voor MindAR
+    // Gebruik preloaded ArrayBuffer als blob URL zodat CDN caching volledig omzeild wordt
+    let imageTargetSrc;
+    if (window.preloadedChunks[chunkIndex]) {
+        // Verwijder oude blob URL voor deze chunk (geheugen vrijmaken)
+        if (activeChunkBlobUrls[chunkIndex]) {
+            URL.revokeObjectURL(activeChunkBlobUrls[chunkIndex]);
+        }
+        const blob = new Blob([window.preloadedChunks[chunkIndex]], { type: 'application/octet-stream' });
+        imageTargetSrc = URL.createObjectURL(blob);
+        activeChunkBlobUrls[chunkIndex] = imageTargetSrc;
+        console.log(` Chunk ${chunkIndex}: blob URL aangemaakt vanuit preloaded data`);
+    } else {
+        // Fallback: directe URL met cache-bust
+        const v = window.arCacheBust || Date.now();
+        imageTargetSrc = `assets/chunks/${chunk.file}?v=${v}`;
+        console.warn(`⚠️ Chunk ${chunkIndex} niet preloaded, directe URL gebruikt`);
+    }
+    
     // Build entities for all posters in this chunk
     let entitiesHTML = '';
     chunk.posterIds.forEach((posterId, targetIndex) => {
@@ -970,7 +992,7 @@ function loadChunkScene(chunkIndex) {
     const sceneHTML = `
         <a-scene
             id="ar-scene"
-            mindar-image="imageTargetSrc: assets/chunks/${chunk.file}?v=${window.arCacheBust || ''}; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 0; missTolerance: 2;"
+            mindar-image="imageTargetSrc: ${imageTargetSrc}; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 0; missTolerance: 2;"
             color-space="sRGB"
             renderer="colorManagement: true; physicallyCorrectLights: true;"
             vr-mode-ui="enabled: false"
