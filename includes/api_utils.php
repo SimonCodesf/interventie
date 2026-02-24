@@ -51,7 +51,8 @@ function initDatabaseWithMigrations() {
         'layers_data' => 'TEXT',
         'glb_model' => 'TEXT',
         'audio_file' => 'TEXT',
-        'gallery_images' => 'TEXT'
+        'gallery_images' => 'TEXT',
+        'ar_camera_feed' => 'INTEGER DEFAULT 0'
     ];
     
     foreach ($columnsToAdd as $column => $type) {

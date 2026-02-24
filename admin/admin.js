@@ -1799,6 +1799,10 @@ function setupUploadForm() {
         const artikelLink = document.getElementById('poster-artikel-link').value;
         if (artikelLink) formData.append('artikel_link', artikelLink);
         
+        // AR camera feed instelling (checkbox: 1 = camera tonen, 0 = zwart)
+        const arCameraFeed = document.getElementById('poster-ar-camera-feed')?.checked ? '1' : '0';
+        formData.append('ar_camera_feed', arCameraFeed);
+        
         // Add credits (JSON array)
         const credits = collectCredits('credits-container');
         if (credits.length > 0) {
@@ -2622,6 +2626,10 @@ async function openEditModal(posterId) {
         document.getElementById('edit-location').value = poster.location_description || '';
         document.getElementById('edit-artikel-link').value = poster.artikel_link || '';
         
+        // AR camera feed checkbox instellen
+        const arCameraCheckbox = document.getElementById('edit-ar-camera-feed');
+        if (arCameraCheckbox) arCameraCheckbox.checked = !!parseInt(poster.ar_camera_feed);
+        
         // Populate credits (nieuw systeem of fallback van photographer_credit)
         const creditsData = poster.credits || poster.photographer_credit || '';
         populateCredits('edit-credits-container', creditsData);
@@ -2949,6 +2957,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (longitude) formData.append('longitude', longitude);
             if (location) formData.append('location_description', location);
             if (artikelLink) formData.append('artikel_link', artikelLink);
+            
+            // AR camera feed instelling (checkbox: 1 = camera tonen, 0 = zwart)
+            const editArCameraFeed = document.getElementById('edit-ar-camera-feed')?.checked ? '1' : '0';
+            formData.append('ar_camera_feed', editArCameraFeed);
             
             // Add credits (JSON array)
             const credits = collectCredits('edit-credits-container');

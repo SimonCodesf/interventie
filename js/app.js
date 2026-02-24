@@ -1047,7 +1047,7 @@ function setupChunkEventListeners(scene, chunk) {
             window.isChunkScanning = false; // Stop chunk scan
             hideChunkCycleButton();
             
-            revealARScene();
+            revealARScene(poster);
             stopScanCycles('found');
             
             currentTrackedPoster = poster;
@@ -1297,7 +1297,9 @@ async function initializeStaticCameraFeed() {
 }
 
 // Reveal the AR scene (hide static feed) - called when poster detected
-function revealARScene() {
+// Als poster.ar_camera_feed = 1: camera feed zichtbaar als achtergrond
+// Als poster.ar_camera_feed = 0 (standaard): zwarte achtergrond
+function revealARScene(poster) {
     const staticFeed = document.getElementById('static-camera-feed');
     if (staticFeed) {
         staticFeed.style.opacity = '0';
@@ -1307,11 +1309,16 @@ function revealARScene() {
         }, 300);
     }
     
-    // Hide ALL video elements (both static feed and AR scene videos)
-    // The black background layer (ar-layer-0) will show instead
-    document.querySelectorAll('video').forEach(v => {
-        v.style.opacity = '0';
-    });
+    if (poster && parseInt(poster.ar_camera_feed)) {
+        // Camera feed modus: AR scene video's NIET verbergen (camera zichtbaar als achtergrond)
+        console.log(' Camera feed modus actief voor:', poster.title);
+    } else {
+        // Standaard modus: verberg ALLE video\'s voor zwarte achtergrond
+        // The black background layer (ar-layer-0) will show instead
+        document.querySelectorAll('video').forEach(v => {
+            v.style.opacity = '0';
+        });
+    }
     
     // Ensure the AR scene canvas is visible for 3D content
     const arScene = document.getElementById('ar-scene');
@@ -2067,9 +2074,9 @@ async function quickSwitchPoster(posterIndex) {
 function buildLayersHTML(poster) {
     let layersHTML = '';
     
-    // Add black background layer - BEHIND all other layers (negative Z)
-    // Make it larger than the poster to cover any gaps
-    layersHTML += `
+    // Voeg zwarte achtergrond laag toe - TENZIJ camera feed ingeschakeld
+    if (!poster.ar_camera_feed || !parseInt(poster.ar_camera_feed)) {
+        layersHTML += `
         <a-plane 
             id="ar-layer-0"
             position="0 0 -0.01" 
@@ -2077,6 +2084,7 @@ function buildLayersHTML(poster) {
             width="1.5" 
             rotation="0 0 0"
             material="color: #000000; transparent: false; side: double; shader: flat;"></a-plane>`;
+    }
     
     if (poster.layers) {
         for (let i = 1; i <= 8; i++) {
@@ -2424,7 +2432,7 @@ function setupSceneEventListeners(scene, currentPoster) {
             console.log(` TARGET FOUND! ${currentPoster.title}`);
             
             // REVEAL AR SCENE - fade out static camera feed
-            revealARScene();
+            revealARScene(currentPoster);
             
             // Hide scan frame
             const scanFrame = document.getElementById('scan-frame');

@@ -301,9 +301,10 @@ function handleUploadPoster($db) {
         }
         
         // Database insert (GLB/audio nu in layers_data, niet meer op poster niveau)
+        $arCameraFeed = isset($_POST['ar_camera_feed']) && $_POST['ar_camera_feed'] === '1' ? 1 : 0;
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)
         ");
         
         // Verwerk gallery afbeeldingen
@@ -331,7 +332,7 @@ function handleUploadPoster($db) {
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages)
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed
         ]);
         
         logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id)");
@@ -417,6 +418,9 @@ function handleUpdatePoster($db, $id) {
         
         // Credits: gebruik nieuw veld of behoud bestaande waarde
         $credits = isset($_POST['credits']) ? $_POST['credits'] : ($poster['credits'] ?? '');
+        
+        // AR camera feed: checkbox instelling (0 = zwarte achtergrond, 1 = camera feed)
+        $arCameraFeed = isset($_POST['ar_camera_feed']) ? (int)$_POST['ar_camera_feed'] : (int)($poster['ar_camera_feed'] ?? 0);
         
         // File paths (keep existing unless new file uploaded)
         $jpegFilename = $poster['jpeg_filename'];
@@ -769,14 +773,14 @@ function handleUpdatePoster($db, $id) {
             UPDATE posters SET 
                 title = ?, description = ?, jpeg_filename = ?, pdf_medium_filename = ?, pdf_large_filename = ?,
                 thumbnail = ?, latitude = ?, longitude = ?, location_description = ?, 
-                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?
+                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?, ar_camera_feed = ?
             WHERE id = ?
         ");
         
         $stmt->execute([
             $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             $thumbnailPath, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $id
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $arCameraFeed, $id
         ]);
         
         logAdminActivity('UPDATE_POSTER', "$title (ID: $id)");
