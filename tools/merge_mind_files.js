@@ -80,10 +80,14 @@ async function mergeMindFiles() {
             // Look for .mind file inside (usually same name as folder)
             const mindFile = path.join(itemPath, `${item}.mind`);
             if (fs.existsSync(mindFile)) {
+                // Gebruik mtime van het .mind bestand als primaire sorteerbasis
+                // Dit reflecteert wanneer de marker écht is aangemaakt/bijgewerkt
+                const mtime = fs.statSync(mindFile).mtime.getTime();
                 mindFiles.push({
                     id: item,
                     path: mindFile,
-                    created_at: posterData && typeof posterData === 'object' ? posterData.created_at : null
+                    created_at: posterData && typeof posterData === 'object' ? posterData.created_at : null,
+                    mtime: mtime
                 });
             }
         }
@@ -96,20 +100,12 @@ async function mergeMindFiles() {
         return;
     }
 
-    // 2. Process in chunks - sorteer op datum (nieuwste eerst voor chunk 0)
-    if (validPosterData && validPosterData.length > 0) {
-        // Sorteer op basis van positie in validPosterData (al gesorteerd op datum DESC)
-        mindFiles.sort((a, b) => {
-            const indexA = validPosterData.findIndex(p => (typeof p === 'string' ? p : p.id) === a.id);
-            const indexB = validPosterData.findIndex(p => (typeof p === 'string' ? p : p.id) === b.id);
-            return indexA - indexB; // Behoud database volgorde (nieuwste eerst)
-        });
-        console.log('Gesorteerd op upload datum (nieuwste eerst in chunk 0)');
-        console.log('Volgorde na sortering:', mindFiles.slice(0, 3).map(f => f.id));
-    } else {
-        mindFiles.sort((a, b) => a.id.localeCompare(b.id));
-        console.log('Gesorteerd alfabetisch (fallback)');
-    }
+    // 2. Process in chunks - sorteer op mtime van .mind bestand (nieuwste eerst voor chunk 0)
+    // mtime is betrouwbaarder dan created_at in de DB: reflecteert wanneer het bestand
+    // écht is aangemaakt/overschreven, ongeacht of DB timestamps correct zijn.
+    mindFiles.sort((a, b) => b.mtime - a.mtime);
+    console.log('Gesorteerd op .mind bestand datum (nieuwste eerst in chunk 0)');
+    console.log('Volgorde na sortering:', mindFiles.slice(0, 3).map(f => f.id));
     
     const chunks = [];
     let currentChunk = [];
