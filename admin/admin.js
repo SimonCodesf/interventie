@@ -1921,22 +1921,22 @@ function setupUploadForm() {
         const pdfMediumFile = document.getElementById('poster-pdf-medium').files[0];
         const pdfLargeFile = document.getElementById('poster-pdf-large').files[0];
         
-        // Validate files
-        if (!jpegFile || !pdfMediumFile || !pdfLargeFile) {
-            errorMsg.textContent = 'Alle bestanden zijn verplicht';
+        // Validate files (PDF is optioneel)
+        if (!jpegFile) {
+            errorMsg.textContent = 'JPEG afbeelding is verplicht';
             return;
         }
         
         // Check file sizes (max 300MB total for high-quality posters)
-        const totalSize = jpegFile.size + pdfMediumFile.size + pdfLargeFile.size;
+        const totalSize = jpegFile.size + (pdfMediumFile?.size || 0) + (pdfLargeFile?.size || 0);
         if (totalSize > 300 * 1024 * 1024) {
             errorMsg.textContent = 'Totale bestandsgrootte is te groot (max 300MB)';
             return;
         }
         
         formData.append('jpeg', jpegFile);
-        formData.append('pdfMedium', pdfMediumFile);
-        formData.append('pdfLarge', pdfLargeFile);
+        if (pdfMediumFile) formData.append('pdfMedium', pdfMediumFile);
+        if (pdfLargeFile) formData.append('pdfLarge', pdfLargeFile);
         
         // Show loading state and progress bar
         uploadBtn.disabled = true;
@@ -1958,7 +1958,7 @@ function setupUploadForm() {
         progressPercentage.textContent = '0%';
         
         // Calculate total size for progress display
-        const uploadTotalSize = jpegFile.size + pdfMediumFile.size + pdfLargeFile.size;
+        const uploadTotalSize = jpegFile.size + (pdfMediumFile?.size || 0) + (pdfLargeFile?.size || 0);
         progressText.textContent = `Voorbereiden upload van ${formatFileSize(uploadTotalSize)}...`;
         
         let startTime = Date.now();

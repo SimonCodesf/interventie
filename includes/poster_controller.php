@@ -125,9 +125,9 @@ function handleUploadPoster($db) {
     $arMarkerFile = isset($_FILES['ar_marker_file']) ? $_FILES['ar_marker_file'] : 
                     (isset($_FILES['ar_marker_file_hq']) ? $_FILES['ar_marker_file_hq'] : null);
     
-    if (empty($_FILES['jpeg']) || empty($_FILES['pdfMedium']) || empty($_FILES['pdfLarge']) || empty($arMarkerFile)) {
+    if (empty($_FILES['jpeg']) || empty($arMarkerFile)) {
         logAdminActivity('UPLOAD_FAILED', 'Missing required files');
-        jsonResponse(['message' => 'Alle bestanden (JPEG, PDF Medium, PDF Large, .mind bestand) zijn verplicht'], 400);
+        jsonResponse(['message' => 'JPEG en .mind bestand zijn verplicht'], 400);
     }
     
     $title = $_POST['title'] ?? '';
@@ -154,11 +154,15 @@ function handleUploadPoster($db) {
     $jpegValidation = validateUploadedFile($_FILES['jpeg'], ['image/jpeg'], 52428800);
     if (!$jpegValidation['valid']) jsonResponse(['message' => 'JPEG: ' . $jpegValidation['message']], 400);
     
-    $pdfValidation1 = validateUploadedFile($_FILES['pdfMedium'], ['application/pdf'], 104857600);
-    if (!$pdfValidation1['valid']) jsonResponse(['message' => 'PDF Medium: ' . $pdfValidation1['message']], 400);
-    
-    $pdfValidation2 = validateUploadedFile($_FILES['pdfLarge'], ['application/pdf'], 104857600);
-    if (!$pdfValidation2['valid']) jsonResponse(['message' => 'PDF Large: ' . $pdfValidation2['message']], 400);
+    // PDF is optioneel - alleen valideren als aanwezig
+    if (!empty($_FILES['pdfMedium']) && $_FILES['pdfMedium']['error'] === UPLOAD_ERR_OK) {
+        $pdfValidation1 = validateUploadedFile($_FILES['pdfMedium'], ['application/pdf'], 104857600);
+        if (!$pdfValidation1['valid']) jsonResponse(['message' => 'PDF Medium: ' . $pdfValidation1['message']], 400);
+    }
+    if (!empty($_FILES['pdfLarge']) && $_FILES['pdfLarge']['error'] === UPLOAD_ERR_OK) {
+        $pdfValidation2 = validateUploadedFile($_FILES['pdfLarge'], ['application/pdf'], 104857600);
+        if (!$pdfValidation2['valid']) jsonResponse(['message' => 'PDF Large: ' . $pdfValidation2['message']], 400);
+    }
     
     $hqValidation = validateUploadedFile($arMarkerFile, ['application/octet-stream', 'application/json'], 10485760);
     if (!$hqValidation['valid']) jsonResponse(['message' => 'AR Marker: ' . $hqValidation['message']], 400);
@@ -167,16 +171,23 @@ function handleUploadPoster($db) {
     try {
         $id = generateUUID();
         $jpegFilename = $id . '_' . basename($_FILES['jpeg']['name']);
-        $pdfMediumFilename = $id . '_medium.pdf';
-        $pdfLargeFilename = $id . '_large.pdf';
         $thumbnailFilename = 'thumb_' . $jpegFilename;
         
         move_uploaded_file($_FILES['jpeg']['tmp_name'], UPLOADS_DIR . '/' . $jpegFilename);
         // Optimize JPEG (max 2500px for good balance between quality/size, 92% quality)
         resizeImage(UPLOADS_DIR . '/' . $jpegFilename, UPLOADS_DIR . '/' . $jpegFilename, 2500, 2500, 92);
         
-        move_uploaded_file($_FILES['pdfMedium']['tmp_name'], UPLOADS_DIR . '/' . $pdfMediumFilename);
-        move_uploaded_file($_FILES['pdfLarge']['tmp_name'], UPLOADS_DIR . '/' . $pdfLargeFilename);
+        // PDF is optioneel
+        $pdfMediumFilename = '';
+        if (!empty($_FILES['pdfMedium']) && $_FILES['pdfMedium']['error'] === UPLOAD_ERR_OK) {
+            $pdfMediumFilename = $id . '_medium.pdf';
+            move_uploaded_file($_FILES['pdfMedium']['tmp_name'], UPLOADS_DIR . '/' . $pdfMediumFilename);
+        }
+        $pdfLargeFilename = '';
+        if (!empty($_FILES['pdfLarge']) && $_FILES['pdfLarge']['error'] === UPLOAD_ERR_OK) {
+            $pdfLargeFilename = $id . '_large.pdf';
+            move_uploaded_file($_FILES['pdfLarge']['tmp_name'], UPLOADS_DIR . '/' . $pdfLargeFilename);
+        }
         
         createThumbnail(UPLOADS_DIR . '/' . $jpegFilename, THUMBNAILS_DIR . '/' . $thumbnailFilename);
         
