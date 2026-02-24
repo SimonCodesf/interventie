@@ -45,6 +45,19 @@ RewriteRule ^admin\.html$ /admin/ [R=301,L]
         Header set Expires 0
     </FilesMatch>
     
+    # AR chunk bestanden en manifest mogen NOOIT gecached worden (altijd vers ophalen)
+    # Query-parameter cache-busting in JS is de primaire methode, maar dit is de fallback
+    <FilesMatch "\.(mind)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+    <FilesMatch "manifest\.json$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+    
     # Specific CORS for images and AR resources
     <FilesMatch "\.(jpg|jpeg|png|gif|svg|mind|fset|fset3|iset)$">
         Header set Access-Control-Allow-Origin "*"

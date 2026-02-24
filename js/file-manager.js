@@ -232,7 +232,7 @@ async function loadFilesFromPosters() {
         
         // Laad chunk manifest en voeg chunk info toe aan posters
         try {
-            const manifestResp = await fetch('assets/chunks/manifest.json', { cache: 'no-store' });
+            const manifestResp = await fetch(`assets/chunks/manifest.json?t=${Date.now()}`, { cache: 'no-store' });
             if (manifestResp.ok) {
                 const manifest = await manifestResp.json();
                 window.arManifest = manifest;

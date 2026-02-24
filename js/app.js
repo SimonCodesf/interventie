@@ -534,9 +534,14 @@ async function initializeARMode() {
         
         // Check for Chunk Manifest (New System)
         try {
-            const manifestResp = await fetch('assets/chunks/manifest.json', { cache: 'no-store' });
+            // Voeg timestamp toe zodat ook CDN/Cloudflare cache omzeild wordt
+            const manifestResp = await fetch(`assets/chunks/manifest.json?t=${Date.now()}`, { cache: 'no-store' });
             if (manifestResp.ok) {
                 const manifest = await manifestResp.json();
+                // Sla cache-bust versie op vanuit manifest timestamp
+                window.arCacheBust = manifest.generatedAt
+                    ? new Date(manifest.generatedAt).getTime()
+                    : Date.now();
                 console.log(' Found Chunk Manifest:', manifest);
                 window.arManifest = manifest;
                 window.useChunkSystem = true;
@@ -677,9 +682,10 @@ async function initializeChunkAR() {
 // Preload alle chunk bestanden
 async function preloadAllChunks() {
     const chunks = window.arManifest.chunks;
+    const v = window.arCacheBust || Date.now();
     const preloadPromises = chunks.map(async (chunk, i) => {
         try {
-            const response = await fetch(`assets/chunks/${chunk.file}`);
+            const response = await fetch(`assets/chunks/${chunk.file}?v=${v}`, { cache: 'no-store' });
             if (response.ok) {
                 window.preloadedChunks[i] = await response.arrayBuffer();
                 console.log(` Preloaded chunk ${i}: ${chunk.file}`);
@@ -964,7 +970,7 @@ function loadChunkScene(chunkIndex) {
     const sceneHTML = `
         <a-scene
             id="ar-scene"
-            mindar-image="imageTargetSrc: assets/chunks/${chunk.file}; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 0; missTolerance: 2;"
+            mindar-image="imageTargetSrc: assets/chunks/${chunk.file}?v=${window.arCacheBust || ''}; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 0; missTolerance: 2;"
             color-space="sRGB"
             renderer="colorManagement: true; physicallyCorrectLights: true;"
             vr-mode-ui="enabled: false"
