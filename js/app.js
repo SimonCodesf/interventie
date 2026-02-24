@@ -1050,6 +1050,9 @@ function setupChunkEventListeners(scene, chunk) {
             revealARScene(poster);
             stopScanCycles('found');
             
+            // Stel juiste AR filter snelheid in voor gevonden poster
+            applyARFilterForPoster(poster);
+            
             currentTrackedPoster = poster;
             showDetectedPosterState(poster);
             
@@ -1070,6 +1073,9 @@ function setupChunkEventListeners(scene, chunk) {
             console.log(' Target lost');
             hideARScene();
             hideDetectedPosterState();
+            
+            // Zet filter terug naar vloeiend bij verlies van target
+            applyARFilterForPoster(null);
             
             // Ontgrendel chunk - gebruiker kan weer cyclen
             window.chunkLocked = false;
@@ -1293,6 +1299,47 @@ async function initializeStaticCameraFeed() {
         console.warn('⚠️ Could not create static camera feed:', error);
         // Continue without static feed - user will see some flicker
         arSceneHidden = false;
+    }
+}
+
+// ==================== AR FILTER SNELHEID ====================
+// Pas MindAR One Euro Filter parameters aan op basis van poster instelling
+// Camera feed posters: snelle tracking (filterMinCF hoog = minder smooth)
+// Zwarte achtergrond posters: vloeiende tracking (verbergt jitter)
+function applyARFilterForPoster(poster) {
+    const scene = document.getElementById('ar-scene');
+    if (!scene) return;
+
+    const useFast = poster && parseInt(poster.ar_camera_feed);
+    const minCF = useFast ? 1 : 0.0001;
+    const beta  = useFast ? 1000 : 0.001;
+
+    // Methode 1: A-Frame component attribute update
+    try {
+        scene.setAttribute('mindar-image',
+            `imageTargetSrc: ${scene.getAttribute('mindar-image').match(/imageTargetSrc: ([^;]+)/)?.[1] ?? ''}; filterMinCF: ${minCF}; filterBeta: ${beta}; warmupTolerance: 0; missTolerance: 2;`
+        );
+    } catch(e) {}
+
+    // Methode 2: Direct de interne One Euro Filter instances aanpassen (meest betrouwbaar)
+    try {
+        const mindarSystem = scene.systems?.['mindar-image-system'];
+        if (mindarSystem?.controller?.trackingBackend?.trackingFilters) {
+            mindarSystem.controller.trackingBackend.trackingFilters.forEach(filter => {
+                if (!filter) return;
+                // One Euro Filter heeft minCutoff, beta en dCutoff properties
+                if (filter.minCutoff !== undefined) filter.minCutoff = minCF;
+                if (filter.beta     !== undefined) filter.beta      = beta;
+                // Sommige versies gebruiken x/y/z sub-filters
+                ['x', 'y', 'z', 'rx', 'ry', 'rz', 'rw'].forEach(k => {
+                    if (filter[k]?.minCutoff !== undefined) filter[k].minCutoff = minCF;
+                    if (filter[k]?.beta     !== undefined) filter[k].beta      = beta;
+                });
+            });
+            console.log(` AR filter ${useFast ? 'SNEL (camera feed)' : 'VLOEIEND (zwart)'}`);
+        }
+    } catch(e) {
+        console.warn('Kon AR filter niet aanpassen:', e);
     }
 }
 
@@ -2434,6 +2481,9 @@ function setupSceneEventListeners(scene, currentPoster) {
             // REVEAL AR SCENE - fade out static camera feed
             revealARScene(currentPoster);
             
+            // Stel juiste AR filter snelheid in voor gevonden poster
+            applyARFilterForPoster(currentPoster);
+            
             // Hide scan frame
             const scanFrame = document.getElementById('scan-frame');
             if (scanFrame) scanFrame.classList.add('hidden');
@@ -2463,6 +2513,9 @@ function setupSceneEventListeners(scene, currentPoster) {
             
             // HIDE AR SCENE - show static camera feed again
             hideARScene();
+            
+            // Zet filter terug naar vloeiend bij verlies van target
+            applyARFilterForPoster(null);
             
             // UNLOAD GIFs: Verwijder GIF shaders om geheugen vrij te maken
             unloadLazyGifsForTarget(target);
