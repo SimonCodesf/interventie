@@ -145,8 +145,7 @@ function getMemebordenTerminalHTML(poster) {
 
 /**
  * Bouw de Memeborden AR scene
- * Wordt aangeroepen vanuit loadChunkScene() wanneer het de Memeborden chunk is
- * @returns {string} A-Frame scene HTML
+ * Alleen A-Frame entities voor target-detectie - GIF wordt als HTML overlay getoond
  */
 function buildMemebordenScene() {
     if (!signsData || signsData.length === 0) {
@@ -154,9 +153,10 @@ function buildMemebordenScene() {
         return '';
     }
     
-    // Bouw entities voor elk verkeersbord (28 targets)
+    // Alleen target-entiteiten - geen A-Frame planes voor GIF
+    // (Animated GIFs werken niet als WebGL texture; we gebruiken een HTML overlay)
     let entitiesHTML = '';
-    signsData.forEach((sign, index) => {
+    signsData.forEach((sign) => {
         entitiesHTML += `
             <a-entity 
                 mindar-image-target="targetIndex: ${sign.targetIndex}" 
@@ -164,33 +164,96 @@ function buildMemebordenScene() {
                 data-sign-name="${sign.name}"
                 data-search-query="${sign.search_query || ''}"
                 data-memeborden="true">
-                
-                <!-- GIF overlay plane - begint onzichtbaar, wordt gevuld bij detectie -->
-                <a-plane 
-                    id="memebord-gif-${sign.id}"
-                    position="0 0 0.05"
-                    width="${MEMEBORDEN_CONFIG.gifDisplaySize}"
-                    height="${MEMEBORDEN_CONFIG.gifDisplaySize}"
-                    material="transparent: true; opacity: 0; side: double; shader: flat;"
-                    visible="false">
-                </a-plane>
-                
-                <!-- Laad-indicator (draaiende ring) -->
-                <a-ring
-                    id="memebord-loader-${sign.id}"
-                    position="0 0 0.06"
-                    radius-inner="0.15"
-                    radius-outer="0.2"
-                    color="#00ff00"
-                    material="shader: flat;"
-                    visible="false"
-                    animation="property: rotation; from: 0 0 0; to: 0 0 360; dur: 1000; easing: linear; loop: true;">
-                </a-ring>
             </a-entity>
         `;
     });
     
     return entitiesHTML;
+}
+
+// ==================== HTML GIF OVERLAY ====================
+
+/**
+ * Maak (eenmalig) de HTML overlay div voor de GIF weergave
+ * Animated GIFs werken native in een <img> tag - veel betrouwbaarder dan WebGL texture
+ */
+function ensureGifOverlayDOM() {
+    if (document.getElementById('memeborden-gif-overlay')) return;
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'memeborden-gif-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9500;
+        pointer-events: none;
+    `;
+    
+    overlay.innerHTML = `
+        <div id="memeborden-gif-wrapper" style="
+            position: relative;
+            max-width: 75vw;
+            max-height: 60vh;
+            border: 1px solid rgba(0,255,0,0.4);
+            box-shadow: 0 0 20px rgba(0,255,0,0.2);
+            background: transparent;
+        ">
+            <!-- GIF beeld -->
+            <img id="memeborden-gif-img"
+                crossorigin="anonymous"
+                style="
+                    display: block;
+                    max-width: 75vw;
+                    max-height: 60vh;
+                    width: auto;
+                    height: auto;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                "
+            />
+            <!-- Laad-indicator -->
+            <div id="memeborden-gif-loader" style="
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0,0,0,0.6);
+            ">
+                <div style="
+                    width: 32px; height: 32px;
+                    border: 2px solid transparent;
+                    border-top-color: #0f0;
+                    border-right-color: #0f0;
+                    border-radius: 50%;
+                    animation: memeborden-spin 0.8s linear infinite;
+                "></div>
+            </div>
+        </div>
+        <!-- Bordnaam label -->
+        <div id="memeborden-sign-label" style="
+            margin-top: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            color: rgba(0,255,0,0.8);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        "></div>
+    `;
+    
+    // Voeg CSS animatie toe
+    if (!document.getElementById('memeborden-spin-css')) {
+        const style = document.createElement('style');
+        style.id = 'memeborden-spin-css';
+        style.textContent = `@keyframes memeborden-spin { to { transform: rotate(360deg); } }`;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(overlay);
 }
 
 /**
@@ -303,23 +366,22 @@ function setupMemebordenEventListeners(scene) {
             
             console.log(`[Memeborden] Bord gevonden: ${signId} - ${signName}`);
             
-            // Vergrendel chunk cycling
+            // Vergrendel chunk cycling en stop scan
             window.chunkLocked = true;
             window.isChunkScanning = false;
-            
-            // Toon laad indicator
-            const loaderRing = document.getElementById(`memebord-loader-${signId}`);
-            if (loaderRing) loaderRing.setAttribute('visible', 'true');
+            if (typeof stopScanCycles === 'function') stopScanCycles('found');
+            if (typeof hideChunkCycleButton === 'function') hideChunkCycleButton();
             
             // Reveal AR scene (als die verborgen was)
             if (typeof revealARScene === 'function') {
                 revealARScene(null);
             }
             
-            // Toon detected state
+            // Toon detected state in UI + label in overlay
             showMemebordenDetected(signId, signName);
+            updateSignLabel(signId, signName);
             
-            // Haal GIF op en toon
+            // Toon GIF overlay (HTML overlay - animated GIFs werken native)
             fetchAndDisplayGif(signId, searchQuery);
             
             // Start GIF refresh timer
@@ -333,8 +395,8 @@ function setupMemebordenEventListeners(scene) {
             // Ontgrendel chunk cycling
             window.chunkLocked = false;
             
-            // Verberg GIF overlay
-            hideGifOverlay(signId);
+            // Verberg HTML GIF overlay
+            hideGifOverlay();
             
             // Stop refresh timer
             stopGifRefreshTimer();
@@ -386,89 +448,66 @@ async function fetchAndDisplayGif(signId, searchQuery) {
             console.log(`[Memeborden] GIF geladen: ${data.gif.url.substring(0, 80)}...`);
         } else {
             console.warn('[Memeborden] Geen GIF URL in response:', data);
-            // Toon fallback tekst of placeholder
-            displayFallbackOverlay(signId);
+            hideGifOverlay(); // Verberg overlay bij geen resultaat
         }
     } catch (e) {
         console.error(`[Memeborden] Fout bij ophalen GIF voor ${signId}:`, e);
-        displayFallbackOverlay(signId);
+        hideGifOverlay();
     }
 }
 
 /**
- * Toon GIF als AR overlay op het gedetecteerde verkeersbord
- * @param {string} signId - Het verkeersbord ID
+ * Toon GIF in de HTML overlay
+ * Animated GIFs werken native in een <img> tag - geen WebGL texture nodig
+ * @param {string} signId - Het verkeersbord ID (voor label)
  * @param {string} gifUrl - URL van de GIF
  */
 function displayGifOverlay(signId, gifUrl) {
-    const plane = document.getElementById(`memebord-gif-${signId}`);
-    const loaderRing = document.getElementById(`memebord-loader-${signId}`);
+    ensureGifOverlayDOM();
     
-    if (!plane) return;
+    const overlay = document.getElementById('memeborden-gif-overlay');
+    const gifImg = document.getElementById('memeborden-gif-img');
+    const loader = document.getElementById('memeborden-gif-loader');
     
-    // Preload de GIF afbeelding
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-        // Bereken aspect ratio
-        const aspectRatio = this.width / this.height;
-        let width = MEMEBORDEN_CONFIG.gifDisplaySize;
-        let height = MEMEBORDEN_CONFIG.gifDisplaySize;
-        
-        if (aspectRatio > 1) {
-            height = width / aspectRatio;
-        } else {
-            width = height * aspectRatio;
-        }
-        
-        // Update plane dimensies
-        plane.setAttribute('width', width.toFixed(3));
-        plane.setAttribute('height', height.toFixed(3));
-        
-        // Stel GIF in als texture
-        plane.setAttribute('material', `src: url(${gifUrl}); transparent: true; side: double; shader: flat; alphaTest: 0.1;`);
-        plane.setAttribute('visible', 'true');
-        plane.setAttribute('material', 'opacity', '1');
-        
-        // Verberg loader ring
-        if (loaderRing) loaderRing.setAttribute('visible', 'false');
-        
-        console.log(`[Memeborden] GIF overlay zichtbaar: ${width.toFixed(1)}x${height.toFixed(1)}`);
+    if (!overlay || !gifImg) return;
+    
+    // Toon overlay met loader
+    overlay.style.display = 'flex';
+    if (loader) loader.style.display = 'flex';
+    gifImg.style.opacity = '0';
+    
+    // Laad de GIF via een nieuw img-object om onload te detecteren
+    const testImg = new Image();
+    testImg.crossOrigin = 'anonymous';
+    
+    testImg.onload = function() {
+        // Stel de src in op het zichtbare img element (animated GIF speelt automatisch)
+        gifImg.src = gifUrl;
+        gifImg.style.opacity = '1';
+        if (loader) loader.style.display = 'none';
+        console.log(`[Memeborden] GIF overlay zichtbaar voor ${signId}`);
     };
-    img.onerror = function() {
-        console.warn(`[Memeborden] GIF kon niet geladen worden: ${gifUrl}`);
-        if (loaderRing) loaderRing.setAttribute('visible', 'false');
-        displayFallbackOverlay(signId);
+    
+    testImg.onerror = function() {
+        console.warn(`[Memeborden] GIF laden mislukt: ${gifUrl}`);
+        if (loader) loader.style.display = 'none';
+        // Fallback: toon groene placeholder
+        gifImg.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="%2300ff0033" width="200" height="200"/><text fill="%2300ff00" x="50%" y="50%" text-anchor="middle" font-size="14">GIF LADEN...</text></svg>';
+        gifImg.style.opacity = '1';
     };
-    img.src = gifUrl;
+    
+    testImg.src = gifUrl;
+    currentGifUrl = gifUrl;
 }
 
 /**
- * Toon een fallback overlay als er geen GIF beschikbaar is
- * @param {string} signId - Het verkeersbord ID
+ * Verberg de HTML GIF overlay
  */
-function displayFallbackOverlay(signId) {
-    const plane = document.getElementById(`memebord-gif-${signId}`);
-    const loaderRing = document.getElementById(`memebord-loader-${signId}`);
-    
-    if (plane) {
-        // Groene semi-transparante plane als fallback
-        plane.setAttribute('material', 'color: #00ff00; transparent: true; opacity: 0.3; side: double; shader: flat;');
-        plane.setAttribute('visible', 'true');
-    }
-    if (loaderRing) loaderRing.setAttribute('visible', 'false');
-}
-
-/**
- * Verberg GIF overlay wanneer target verloren gaat
- * @param {string} signId - Het verkeersbord ID
- */
-function hideGifOverlay(signId) {
-    const plane = document.getElementById(`memebord-gif-${signId}`);
-    if (plane) {
-        plane.setAttribute('visible', 'false');
-        plane.setAttribute('material', 'opacity', '0');
-    }
+function hideGifOverlay() {
+    const overlay = document.getElementById('memeborden-gif-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const gifImg = document.getElementById('memeborden-gif-img');
+    if (gifImg) { gifImg.src = ''; gifImg.style.opacity = '0'; }
     currentGifUrl = null;
 }
 
@@ -481,9 +520,12 @@ function hideGifOverlay(signId) {
 function startGifRefreshTimer(signId, searchQuery) {
     stopGifRefreshTimer(); // Stop eventuele bestaande timer
     
-    gifRefreshTimer = setInterval(() => {
+    gifRefreshTimer = setInterval(async () => {
         console.log(`[Memeborden] GIF vernieuwen voor ${signId}...`);
-        fetchAndDisplayGif(signId, searchQuery);
+        // Reset img opacity voor fade-effect
+        const gifImg = document.getElementById('memeborden-gif-img');
+        if (gifImg) gifImg.style.opacity = '0';
+        await fetchAndDisplayGif(signId, searchQuery);
     }, MEMEBORDEN_CONFIG.gifRefreshInterval);
 }
 
@@ -537,6 +579,16 @@ function isMemeBordenChunk(chunkIndex) {
 }
 
 // ==================== INITIALISATIE ====================
+
+/**
+ * Update het bordnaam label in de overlay
+ */
+function updateSignLabel(signId, signName) {
+    const label = document.getElementById('memeborden-sign-label');
+    if (label) {
+        label.textContent = `${signId} — ${signName}`;
+    }
+}
 
 /**
  * Initialiseer Memeborden module
