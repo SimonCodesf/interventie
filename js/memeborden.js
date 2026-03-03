@@ -39,6 +39,10 @@ let signsLoaded = false;
 let currentGifUrl = null;
 let gifRefreshTimer = null;
 
+// AR-tracking van de actieve target entity
+let activeTargetEntity = null;
+let trackingRafId = null;
+
 // ==================== SIGNS DATA LADEN ====================
 
 /**
@@ -174,8 +178,91 @@ function buildMemebordenScene() {
 // ==================== HTML GIF OVERLAY ====================
 
 /**
+ * Bereken de schermgrenzen (x, y, width, height) van de actieve AR target
+ * via Three.js world-to-screen projectie
+ * @returns {{ x, y, width, height } | null}
+ */
+function getTargetScreenBounds() {
+    if (!activeTargetEntity) return null;
+    
+    const scene = document.querySelector('a-scene');
+    if (!scene || !scene.camera || !scene.renderer) return null;
+    
+    const canvas = scene.renderer.domElement;
+    const camera = scene.camera;
+    const matWorld = activeTargetEntity.object3D.matrixWorld;
+    
+    // Hoekpunten van de marker in lokale ruimte (iets groter dan 1x1 voor mooiere overlap)
+    const s = 0.75;
+    const hoekpunten = [
+        new THREE.Vector3(-s,  s, 0),
+        new THREE.Vector3( s,  s, 0),
+        new THREE.Vector3( s, -s, 0),
+        new THREE.Vector3(-s, -s, 0),
+    ];
+    
+    // Transformeer naar world space en project naar clip space
+    const screenPunten = hoekpunten.map(v => {
+        v.applyMatrix4(matWorld);
+        v.project(camera);
+        return {
+            x: (v.x * 0.5 + 0.5) * canvas.clientWidth,
+            y: (-v.y * 0.5 + 0.5) * canvas.clientHeight,
+        };
+    });
+    
+    const xs = screenPunten.map(p => p.x);
+    const ys = screenPunten.map(p => p.y);
+    
+    return {
+        x:      Math.min(...xs),
+        y:      Math.min(...ys),
+        width:  Math.max(...xs) - Math.min(...xs),
+        height: Math.max(...ys) - Math.min(...ys),
+    };
+}
+
+/**
+ * Start een rAF-loop die de GIF overlay aan het AR target koppelt
+ * De overlay volgt het bord in positie en grootte terwijl de camera beweegt
+ * @param {Element} entity - De A-Frame target entity
+ */
+function startTargetTracking(entity) {
+    activeTargetEntity = entity;
+    if (trackingRafId) cancelAnimationFrame(trackingRafId);
+    
+    function tick() {
+        const bounds = getTargetScreenBounds();
+        const gifImg = document.getElementById('memeborden-gif-img');
+        const overlay = document.getElementById('memeborden-gif-overlay');
+        
+        if (bounds && gifImg && overlay && overlay.style.display !== 'none') {
+            gifImg.style.left   = `${bounds.x}px`;
+            gifImg.style.top    = `${bounds.y}px`;
+            gifImg.style.width  = `${bounds.width}px`;
+            gifImg.style.height = `${bounds.height}px`;
+        }
+        
+        trackingRafId = requestAnimationFrame(tick);
+    }
+    
+    trackingRafId = requestAnimationFrame(tick);
+}
+
+/**
+ * Stop de tracking rAF-loop
+ */
+function stopTargetTracking() {
+    activeTargetEntity = null;
+    if (trackingRafId) {
+        cancelAnimationFrame(trackingRafId);
+        trackingRafId = null;
+    }
+}
+
+/**
  * Maak (eenmalig) de HTML overlay div voor de GIF weergave
- * Animated GIFs werken native in een <img> tag - veel betrouwbaarder dan WebGL texture
+ * De img wordt via startTargetTracking() op het bord gepositioneerd
  */
 function ensureGifOverlayDOM() {
     if (document.getElementById('memeborden-gif-overlay')) return;
@@ -184,27 +271,22 @@ function ensureGifOverlayDOM() {
     overlay.id = 'memeborden-gif-overlay';
     overlay.style.cssText = `
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: 0; left: 0; width: 100%; height: 100%;
         display: none;
-        align-items: center;
-        justify-content: center;
         z-index: 9500;
         pointer-events: none;
         background: transparent;
     `;
     
-    // Enkel de GIF zelf - geen border, geen label, geen loader achtergrond
+    // De img wordt via de tracking loop absoluut gepositioneerd op het bord
     overlay.innerHTML = `
         <img id="memeborden-gif-img"
             crossorigin="anonymous"
             style="
-                display: block;
-                max-width: 80vw;
-                max-height: 70vh;
-                width: auto;
-                height: auto;
+                position: absolute;
                 opacity: 0;
                 transition: opacity 0.25s;
+                object-fit: fill;
             "
         />
     `;
@@ -333,9 +415,11 @@ function setupMemebordenEventListeners(scene) {
                 revealARScene(null);
             }
             
-            // Toon detected state in UI + label in overlay
+            // Toon detected state in UI
             showMemebordenDetected(signId, signName);
-            updateSignLabel(signId, signName);
+            
+            // Koppel GIF overlay aan de AR target positie
+            startTargetTracking(target);
             
             // Toon GIF overlay (HTML overlay - animated GIFs werken native)
             fetchAndDisplayGif(signId, searchQuery);
@@ -350,6 +434,9 @@ function setupMemebordenEventListeners(scene) {
             
             // Ontgrendel chunk cycling
             window.chunkLocked = false;
+            
+            // Stop positie tracking
+            stopTargetTracking();
             
             // Verberg HTML GIF overlay
             hideGifOverlay();
@@ -427,7 +514,7 @@ function displayGifOverlay(signId, gifUrl) {
     if (!overlay || !gifImg) return;
     
     // Toon overlay, GIF nog onzichtbaar tijdens laden
-    overlay.style.display = 'flex';
+    overlay.style.display = 'block';
     gifImg.style.opacity = '0';
     
     // Laad de GIF via een nieuw img-object om onload te detecteren
