@@ -1,0 +1,317 @@
+{
+  "_meta": {
+    "generated": "2026-03-03T16:07:30.049Z",
+    "description": "Top 30 Belgische verkeersborden voor MindAR tracking",
+    "count": 28
+  },
+  "signs": [
+    {
+      "id": "A1a",
+      "name": "Gevaarlijke bocht naar links",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "sharp left turn",
+      "image": "verkeersborden/images/A1a.png",
+      "wiki_filename": "Belgian_road_sign_A1a.svg",
+      "top30": true,
+      "targetIndex": 0
+    },
+    {
+      "id": "A1b",
+      "name": "Gevaarlijke bocht naar rechts",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "sharp right turn",
+      "image": "verkeersborden/images/A1b.png",
+      "wiki_filename": "Belgian_road_sign_A1b.svg",
+      "top30": true,
+      "targetIndex": 1
+    },
+    {
+      "id": "A7a",
+      "name": "Rijbaanversmalling",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "road narrows",
+      "image": "verkeersborden/images/A7a.png",
+      "wiki_filename": "Belgian_road_sign_A7a.svg",
+      "top30": true,
+      "targetIndex": 2
+    },
+    {
+      "id": "A13",
+      "name": "Overdwarse uitholling of ezelsrug",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "speed bump road",
+      "image": "verkeersborden/images/A13.png",
+      "wiki_filename": "Belgian_road_sign_A13.svg",
+      "top30": true,
+      "targetIndex": 3
+    },
+    {
+      "id": "A14",
+      "name": "Verhoogde inrichting(en)",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "speed bump",
+      "image": "verkeersborden/images/A14.png",
+      "wiki_filename": "Belgian_road_sign_A14.svg",
+      "top30": true,
+      "targetIndex": 4
+    },
+    {
+      "id": "A15",
+      "name": "Glibberige rijbaan (slipgevaar)",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "slippery road ice",
+      "image": "verkeersborden/images/A15.png",
+      "wiki_filename": "Belgian_road_sign_A15.svg",
+      "top30": true,
+      "targetIndex": 5
+    },
+    {
+      "id": "A21",
+      "name": "Oversteekplaats voor voetgangers",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "pedestrian crossing",
+      "image": "verkeersborden/images/A21.png",
+      "wiki_filename": "Belgian_road_sign_A21.svg",
+      "top30": true,
+      "targetIndex": 6
+    },
+    {
+      "id": "A23",
+      "name": "Plaats waar speciaal veel kinderen komen",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "children school",
+      "image": "verkeersborden/images/A23.png",
+      "wiki_filename": "Belgian_road_sign_A23.svg",
+      "top30": true,
+      "targetIndex": 7
+    },
+    {
+      "id": "A25",
+      "name": "Oversteekplaats voor fietsers en bestuurders van tweewielige bromfietsen of plaats waar die bestuurders van een fietspad op de rijbaan komen",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "cyclists crossing",
+      "image": "verkeersborden/images/A25.png",
+      "wiki_filename": "Belgian_road_sign_A25.svg",
+      "top30": true,
+      "targetIndex": 8
+    },
+    {
+      "id": "A31",
+      "name": "Werken",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "road construction",
+      "image": "verkeersborden/images/A31.png",
+      "wiki_filename": "Belgian_road_sign_A31.svg",
+      "top30": true,
+      "targetIndex": 9
+    },
+    {
+      "id": "A33",
+      "name": "Verkeerslichten",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "traffic light red",
+      "image": "verkeersborden/images/A33.png",
+      "wiki_filename": "Belgian_road_sign_A33.svg",
+      "top30": true,
+      "targetIndex": 10
+    },
+    {
+      "id": "A39",
+      "name": "Verkeer toegelaten in twee richtingen na een gedeelte van de rijbaan met eenrichtingsverkeer",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "two way traffic",
+      "image": "verkeersborden/images/A39.png",
+      "wiki_filename": "Belgian_road_sign_A39.svg",
+      "top30": true,
+      "targetIndex": 11
+    },
+    {
+      "id": "A49",
+      "name": "Kruising van een openbare weg door een of meer in de rijbaan aangelegde sporen",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "tram tracks road",
+      "image": "verkeersborden/images/A49.png",
+      "wiki_filename": "Belgian_road_sign_A49.svg",
+      "top30": true,
+      "targetIndex": 12
+    },
+    {
+      "id": "A50",
+      "name": "File",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "traffic jam rage",
+      "image": "verkeersborden/images/A50.png",
+      "wiki_filename": "Belgian_road_sign_A50.svg",
+      "top30": true,
+      "targetIndex": 13
+    },
+    {
+      "id": "A51",
+      "name": "Gevaar dat niet door een speciaal symbool wordt bepaald. Een onderbord duidt de aard van het gevaar aan",
+      "serie": "A",
+      "serie_name": "Gevaarsborden",
+      "search_query": "danger warning",
+      "image": "verkeersborden/images/A51.png",
+      "wiki_filename": "Belgian_road_sign_A51.svg",
+      "top30": true,
+      "targetIndex": 14
+    },
+    {
+      "id": "B1",
+      "name": "Voorrang verlenen",
+      "serie": "B",
+      "serie_name": "Voorrangsborden",
+      "search_query": "yield sign",
+      "image": "verkeersborden/images/B1.png",
+      "wiki_filename": "Belgian_road_sign_B1.svg",
+      "top30": true,
+      "targetIndex": 15
+    },
+    {
+      "id": "B5",
+      "name": "Stoppen en voorrang verlenen",
+      "serie": "B",
+      "serie_name": "Voorrangsborden",
+      "search_query": "stop sign",
+      "image": "verkeersborden/images/B5.png",
+      "wiki_filename": "Belgian_road_sign_B5.svg",
+      "top30": true,
+      "targetIndex": 16
+    },
+    {
+      "id": "B9",
+      "name": "Voorrangsweg",
+      "serie": "B",
+      "serie_name": "Voorrangsborden",
+      "search_query": "priority road",
+      "image": "verkeersborden/images/B9.png",
+      "wiki_filename": "Belgian_road_sign_B9.svg",
+      "top30": true,
+      "targetIndex": 17
+    },
+    {
+      "id": "B15",
+      "name": "Voorrang. De horizontale streep van het symbool mag worden gewijzigd om duidelijker plaatsgesteldheid weer te geven",
+      "serie": "B",
+      "serie_name": "Voorrangsborden",
+      "search_query": "roundabout",
+      "image": "verkeersborden/images/B15.png",
+      "wiki_filename": "Belgian_road_sign_B15.svg",
+      "top30": true,
+      "targetIndex": 18
+    },
+    {
+      "id": "C1",
+      "name": "Verboden richting voor iedere bestuurder",
+      "serie": "C",
+      "serie_name": "Verbodsborden",
+      "search_query": "wrong way",
+      "image": "verkeersborden/images/C1.png",
+      "wiki_filename": "Belgian_road_sign_C1.svg",
+      "top30": true,
+      "targetIndex": 19
+    },
+    {
+      "id": "C3",
+      "name": "Verboden toegang, in beide richtingen, voor ieder bestuurder",
+      "serie": "C",
+      "serie_name": "Verbodsborden",
+      "search_query": "no entry",
+      "image": "verkeersborden/images/C3.png",
+      "wiki_filename": "Belgian_road_sign_C3.svg",
+      "top30": true,
+      "targetIndex": 20
+    },
+    {
+      "id": "C43",
+      "name": "Vanaf het verkeersbord tot het volgend kruispunt, verbod te rijden met een grotere snelheid dan deze die is aangeduid",
+      "serie": "C",
+      "serie_name": "Verbodsborden",
+      "search_query": "speed limit",
+      "image": "verkeersborden/images/C43.png",
+      "wiki_filename": "Belgian_road_sign_C43.svg",
+      "top30": true,
+      "targetIndex": 21
+    },
+    {
+      "id": "D5",
+      "name": "Verplicht",
+      "serie": "D",
+      "serie_name": "Gebodsborden",
+      "search_query": "roundabout mandatory",
+      "image": "verkeersborden/images/D5.png",
+      "wiki_filename": "Belgian_road_sign_D05.svg",
+      "top30": true,
+      "targetIndex": 22
+    },
+    {
+      "id": "E1",
+      "name": "Parkeerverbod",
+      "serie": "E",
+      "serie_name": "Parkeer- en stilstaanborden",
+      "search_query": "no parking",
+      "image": "verkeersborden/images/E1.png",
+      "wiki_filename": "Belgian_road_sign_E1.svg",
+      "top30": true,
+      "targetIndex": 23
+    },
+    {
+      "id": "E3",
+      "name": "Stilstaan en parkeren verboden",
+      "serie": "E",
+      "serie_name": "Parkeer- en stilstaanborden",
+      "search_query": "no stopping",
+      "image": "verkeersborden/images/E3.png",
+      "wiki_filename": "Belgian_road_sign_E3.svg",
+      "top30": true,
+      "targetIndex": 24
+    },
+    {
+      "id": "F1",
+      "name": "Begin van een bebouwde kom. (afgeschaft sinds 2015)",
+      "serie": "F",
+      "serie_name": "Aanwijzingsborden",
+      "search_query": "entering village town",
+      "image": "verkeersborden/images/F1.png",
+      "wiki_filename": "Belgian_road_sign_F1.svg",
+      "top30": true,
+      "targetIndex": 25
+    },
+    {
+      "id": "F3",
+      "name": "Einde van een bebouwde kom. (afgeschaft sinds 2015)",
+      "serie": "F",
+      "serie_name": "Aanwijzingsborden",
+      "search_query": "leaving town",
+      "image": "verkeersborden/images/F3.png",
+      "wiki_filename": "Belgian_road_sign_F3.svg",
+      "top30": true,
+      "targetIndex": 26
+    },
+    {
+      "id": "F19",
+      "name": "Openbare weg met",
+      "serie": "F",
+      "serie_name": "Aanwijzingsborden",
+      "search_query": "one way street",
+      "image": "verkeersborden/images/F19.png",
+      "wiki_filename": "Belgian_road_sign_F19.svg",
+      "top30": true,
+      "targetIndex": 27
+    }
+  ]
+}

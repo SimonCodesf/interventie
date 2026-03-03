@@ -34,6 +34,7 @@ require_once 'includes/config.php';
 require_once 'includes/security.php';
 require_once 'includes/api_utils.php';
 require_once 'includes/poster_controller.php';
+require_once 'includes/klipy_proxy.php';
 
 // Headers
 header('Content-Type: application/json');
@@ -126,6 +127,16 @@ if ($method === 'GET' && $path === '/posters') {
         file_put_contents($settingsFile, json_encode($input));
         jsonResponse(['message' => 'Saved']);
     }
+// === Verkeersborden / Memeborden API routes ===
+} elseif ($method === 'GET' && $path === '/verkeersborden/signs') {
+    // Haal alle verkeersborden op (of top 30 met ?top30=true)
+    handleGetSigns();
+} elseif ($method === 'GET' && $path === '/verkeersborden/gif') {
+    // Haal random GIF op voor een verkeersbord (?sign=A1a of ?q=zoekterm)
+    handleGetGif();
+} elseif ($method === 'GET' && preg_match('#^/verkeersborden/sign/([A-Za-z0-9]+)$#', $path, $matches)) {
+    // Haal details van één verkeersbord op
+    handleGetSign($matches[1]);
 } else {
     jsonResponse(['message' => 'Endpoint niet gevonden'], 404);
 }

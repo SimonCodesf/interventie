@@ -14,6 +14,7 @@ data/posters.db
 data/ar-markers.db
 data/admin_activity.log
 data/login_attempts.json
+data/klipy_cache/
 assets/ar-settings.json
 
 # AR Markers (Upload via admin system, not git!)

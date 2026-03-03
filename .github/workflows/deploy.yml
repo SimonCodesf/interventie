@@ -28,7 +28,7 @@ jobs:
             **/backups/**
             **/scripts/**
             **/uploads/**
-            **/data/**
+            data/**
             admin/database.db
             .gitignore
             README.md

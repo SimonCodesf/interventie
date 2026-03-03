@@ -255,6 +255,20 @@ async function loadFilesFromPosters() {
         
         const posters = window.allPosters || [];
         
+        // Injecteer Memeborden synthetische poster (indien module geladen)
+        if (typeof window.initMemeborden === 'function') {
+            try {
+                const memebordenPoster = await window.initMemeborden();
+                if (memebordenPoster && !posters.find(p => p.id === 'memeborden')) {
+                    posters.unshift(memebordenPoster); // Voeg toe aan begin
+                    window.allPosters = posters;
+                    console.log('[FileManager] Memeborden poster geïnjecteerd');
+                }
+            } catch (e) {
+                console.warn('[FileManager] Memeborden kon niet geladen worden:', e);
+            }
+        }
+        
         // Update stats
         // Gebruik manifest total als autoriteit voor AR count (accurater dan ar_marker veld)
         const manifestArCount = window.arManifest
@@ -545,6 +559,10 @@ function createWindow(poster) {
         extraImages.forEach(img => {
             if (img) galleryImages.push(baseUrl + img);
         });
+        // Bij Memeborden: alle borden als gallery, verwijder placeholder thumbnail
+        if (poster.isMemeborden && extraImages.length > 0) {
+            galleryImages = extraImages.map(img => baseUrl + img);
+        }
     }
     const hasMultipleImages = galleryImages.length > 1;
     
@@ -593,7 +611,9 @@ function createWindow(poster) {
                 ${hasMultipleImages ? `<div class="slideshow-dots">${galleryImages.map((_, i) => `<span class="slideshow-dot${i === 0 ? ' active' : ''}" onclick="slideshowGoTo(this, ${i})"></span>`).join('')}</div>` : ''}
             </div>
             <div class="window-terminal">
-                <div class="term-line"><span class="term-prompt">$</span> cat ./poster_${poster.id}.info</div>
+                ${poster.isMemeborden && typeof window.getMemebordenTerminalHTML === 'function'
+                    ? window.getMemebordenTerminalHTML(poster)
+                    : `<div class="term-line"><span class="term-prompt">$</span> cat ./poster_${poster.id}.info</div>
                 <div class="term-output">
                     <div class="term-row"><span class="term-key">TITEL</span><span class="term-val">${escapeHtml(poster.title || 'Onbekend')}</span></div>
                     ${poster.description ? `<div class="term-row"><span class="term-key">DESC</span><span class="term-val">${escapeHtml(poster.description)}</span></div>` : ''}
@@ -615,7 +635,8 @@ function createWindow(poster) {
                     <button class="term-btn" data-action="download-a3" data-poster-id="${poster.id}">[A3_PDF]</button>
                     <button class="term-btn" data-action="download-a0" data-poster-id="${poster.id}">[A0_PDF]</button>
                 </div>
-                <div class="term-line term-cursor"><span class="term-prompt">$</span> <span class="cursor">_</span></div>
+                <div class="term-line term-cursor"><span class="term-prompt">$</span> <span class="cursor">_</span></div>`
+                }
             </div>
         </div>
         <div class="resize-handle resize-se"></div>

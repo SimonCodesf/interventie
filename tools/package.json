@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@msgpack/msgpack": "^3.1.2"
+    "@msgpack/msgpack": "^3.1.2",
+    "mind-ar": "^1.2.5"
   }
 }

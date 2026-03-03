@@ -558,6 +558,21 @@ async function initializeARMode() {
                 });
                 console.log(' Chunk info toegevoegd aan posters');
                 
+                // Voeg Memeborden toe als virtuele chunk (indien module geladen)
+                if (typeof window.loadSignsData === 'function') {
+                    try {
+                        await window.loadSignsData();
+                        manifest.chunks.push({
+                            file: window.MEMEBORDEN_CONFIG?.mindFile || 'verkeersborden/signs-top30.mind',
+                            posterIds: ['memeborden'],
+                            isMemeborden: true
+                        });
+                        console.log(' Memeborden chunk toegevoegd als chunk', manifest.chunks.length - 1);
+                    } catch (e) {
+                        console.warn('⚠️ Memeborden chunk kon niet toegevoegd worden:', e);
+                    }
+                }
+                
                 // Initialize Chunk System
                 initializeChunkAR();
                 return;
@@ -685,10 +700,15 @@ async function preloadAllChunks() {
     const v = window.arCacheBust || Date.now();
     const preloadPromises = chunks.map(async (chunk, i) => {
         try {
-            const response = await fetch(`assets/chunks/${chunk.file}?v=${v}`, { cache: 'no-store' });
+            // Memeborden chunk heeft een ander pad (niet in assets/chunks/)
+            const chunkUrl = chunk.isMemeborden 
+                ? `${chunk.file}?v=${v}`
+                : `assets/chunks/${chunk.file}?v=${v}`;
+            
+            const response = await fetch(chunkUrl, { cache: 'no-store' });
             if (response.ok) {
                 window.preloadedChunks[i] = await response.arrayBuffer();
-                console.log(` Preloaded chunk ${i}: ${chunk.file}`);
+                console.log(` Preloaded chunk ${i}: ${chunk.file}${chunk.isMemeborden ? ' (MEMEBORDEN)' : ''}`);
             }
         } catch (e) {
             console.warn(`⚠️ Could not preload chunk ${i}`);
@@ -930,6 +950,24 @@ let activeChunkBlobUrls = {};
 function loadChunkScene(chunkIndex) {
     const chunk = window.arManifest.chunks[chunkIndex];
     if (!chunk) return;
+    
+    // Memeborden chunk: delegeer naar speciale handler
+    if (chunk.isMemeborden && typeof window.loadMemebordenARScene === 'function') {
+        console.log(` Loading MEMEBORDEN chunk (index ${chunkIndex})`);
+        
+        // Update scan button voor Memeborden feedback
+        const scanBtn = document.getElementById('chunk-cycle-btn');
+        if (scanBtn && window.isChunkScanning) {
+            const totalChunks = window.arManifest.chunks.length;
+            scanBtn.textContent = `MB/${totalChunks}`;
+            scanBtn.style.background = 'rgba(255,255,255,0.15)';
+            scanBtn.style.borderColor = '#0f0';
+            scanBtn.style.color = '#0f0';
+        }
+        
+        window.loadMemebordenARScene();
+        return;
+    }
     
     console.log(` Loading Chunk ${chunkIndex}: ${chunk.file}`);
     
