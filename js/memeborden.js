@@ -186,72 +186,28 @@ function ensureGifOverlayDOM() {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         display: none;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         z-index: 9500;
         pointer-events: none;
+        background: transparent;
     `;
     
+    // Enkel de GIF zelf - geen border, geen label, geen loader achtergrond
     overlay.innerHTML = `
-        <div id="memeborden-gif-wrapper" style="
-            position: relative;
-            max-width: 75vw;
-            max-height: 60vh;
-            border: 1px solid rgba(0,255,0,0.4);
-            box-shadow: 0 0 20px rgba(0,255,0,0.2);
-            background: transparent;
-        ">
-            <!-- GIF beeld -->
-            <img id="memeborden-gif-img"
-                crossorigin="anonymous"
-                style="
-                    display: block;
-                    max-width: 75vw;
-                    max-height: 60vh;
-                    width: auto;
-                    height: auto;
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                "
-            />
-            <!-- Laad-indicator -->
-            <div id="memeborden-gif-loader" style="
-                position: absolute;
-                inset: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(0,0,0,0.6);
-            ">
-                <div style="
-                    width: 32px; height: 32px;
-                    border: 2px solid transparent;
-                    border-top-color: #0f0;
-                    border-right-color: #0f0;
-                    border-radius: 50%;
-                    animation: memeborden-spin 0.8s linear infinite;
-                "></div>
-            </div>
-        </div>
-        <!-- Bordnaam label -->
-        <div id="memeborden-sign-label" style="
-            margin-top: 8px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 11px;
-            color: rgba(0,255,0,0.8);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        "></div>
+        <img id="memeborden-gif-img"
+            crossorigin="anonymous"
+            style="
+                display: block;
+                max-width: 80vw;
+                max-height: 70vh;
+                width: auto;
+                height: auto;
+                opacity: 0;
+                transition: opacity 0.25s;
+            "
+        />
     `;
-    
-    // Voeg CSS animatie toe
-    if (!document.getElementById('memeborden-spin-css')) {
-        const style = document.createElement('style');
-        style.id = 'memeborden-spin-css';
-        style.textContent = `@keyframes memeborden-spin { to { transform: rotate(360deg); } }`;
-        document.head.appendChild(style);
-    }
     
     document.body.appendChild(overlay);
 }
@@ -467,13 +423,11 @@ function displayGifOverlay(signId, gifUrl) {
     
     const overlay = document.getElementById('memeborden-gif-overlay');
     const gifImg = document.getElementById('memeborden-gif-img');
-    const loader = document.getElementById('memeborden-gif-loader');
     
     if (!overlay || !gifImg) return;
     
-    // Toon overlay met loader
+    // Toon overlay, GIF nog onzichtbaar tijdens laden
     overlay.style.display = 'flex';
-    if (loader) loader.style.display = 'flex';
     gifImg.style.opacity = '0';
     
     // Laad de GIF via een nieuw img-object om onload te detecteren
@@ -484,16 +438,13 @@ function displayGifOverlay(signId, gifUrl) {
         // Stel de src in op het zichtbare img element (animated GIF speelt automatisch)
         gifImg.src = gifUrl;
         gifImg.style.opacity = '1';
-        if (loader) loader.style.display = 'none';
         console.log(`[Memeborden] GIF overlay zichtbaar voor ${signId}`);
     };
     
     testImg.onerror = function() {
         console.warn(`[Memeborden] GIF laden mislukt: ${gifUrl}`);
-        if (loader) loader.style.display = 'none';
-        // Fallback: toon groene placeholder
-        gifImg.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="%2300ff0033" width="200" height="200"/><text fill="%2300ff00" x="50%" y="50%" text-anchor="middle" font-size="14">GIF LADEN...</text></svg>';
-        gifImg.style.opacity = '1';
+        // Geen fallback placeholder - gewoon niets tonen bij fout
+        hideGifOverlay();
     };
     
     testImg.src = gifUrl;
@@ -581,13 +532,10 @@ function isMemeBordenChunk(chunkIndex) {
 // ==================== INITIALISATIE ====================
 
 /**
- * Update het bordnaam label in de overlay
+ * Update het bordnaam label in de overlay (niet meer zichtbaar, bewaard voor compatibiliteit)
  */
 function updateSignLabel(signId, signName) {
-    const label = document.getElementById('memeborden-sign-label');
-    if (label) {
-        label.textContent = `${signId} — ${signName}`;
-    }
+    // Label verwijderd uit de overlay - clean AR projectie zonder extra info
 }
 
 /**
