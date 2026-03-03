@@ -39,10 +39,6 @@ let signsLoaded = false;
 let currentGifUrl = null;
 let gifRefreshTimer = null;
 
-// AR-tracking van de actieve target entity
-let activeTargetEntity = null;
-let trackingRafId = null;
-
 // ==================== SIGNS DATA LADEN ====================
 
 /**
@@ -149,7 +145,8 @@ function getMemebordenTerminalHTML(poster) {
 
 /**
  * Bouw de Memeborden AR scene
- * Alleen A-Frame entities voor target-detectie - GIF wordt als HTML overlay getoond
+ * Elke target entity krijgt een <a-plane gif> kind dat geactiveerd wordt bij detectie
+ * Identiek aan hoe de normale poster AR werkt - geen HTML overlay nodig
  */
 function buildMemebordenScene() {
     if (!signsData || signsData.length === 0) {
@@ -157,10 +154,10 @@ function buildMemebordenScene() {
         return '';
     }
     
-    // Alleen target-entiteiten - geen A-Frame planes voor GIF
-    // (Animated GIFs werken niet als WebGL texture; we gebruiken een HTML overlay)
     let entitiesHTML = '';
     signsData.forEach((sign) => {
+        // Elk bord krijgt een <a-plane gif> kind - initieel verborgen, src wordt dynamisch ingesteld
+        // ar_camera_feed is niet ingesteld voor Memeborden → géén zwarte achtergrond plane
         entitiesHTML += `
             <a-entity 
                 mindar-image-target="targetIndex: ${sign.targetIndex}" 
@@ -168,130 +165,19 @@ function buildMemebordenScene() {
                 data-sign-name="${sign.name}"
                 data-search-query="${sign.search_query || ''}"
                 data-memeborden="true">
+                <a-plane
+                    id="meme-gif-plane-${sign.id}"
+                    position="0 0 0.01"
+                    width="1.5"
+                    height="1.5"
+                    visible="false"
+                    material="transparent: true; alphaTest: 0.1; shader: flat; side: double;">
+                </a-plane>
             </a-entity>
         `;
     });
     
     return entitiesHTML;
-}
-
-// ==================== HTML GIF OVERLAY ====================
-
-/**
- * Bereken de schermgrenzen (x, y, width, height) van de actieve AR target
- * via Three.js world-to-screen projectie
- * @returns {{ x, y, width, height } | null}
- */
-function getTargetScreenBounds() {
-    if (!activeTargetEntity) return null;
-    
-    const scene = document.querySelector('a-scene');
-    if (!scene || !scene.camera || !scene.renderer) return null;
-    
-    const canvas = scene.renderer.domElement;
-    const camera = scene.camera;
-    const matWorld = activeTargetEntity.object3D.matrixWorld;
-    
-    // Hoekpunten van de marker in lokale ruimte (iets groter dan 1x1 voor mooiere overlap)
-    const s = 0.75;
-    const hoekpunten = [
-        new THREE.Vector3(-s,  s, 0),
-        new THREE.Vector3( s,  s, 0),
-        new THREE.Vector3( s, -s, 0),
-        new THREE.Vector3(-s, -s, 0),
-    ];
-    
-    // Transformeer naar world space en project naar clip space
-    const screenPunten = hoekpunten.map(v => {
-        v.applyMatrix4(matWorld);
-        v.project(camera);
-        return {
-            x: (v.x * 0.5 + 0.5) * canvas.clientWidth,
-            y: (-v.y * 0.5 + 0.5) * canvas.clientHeight,
-        };
-    });
-    
-    const xs = screenPunten.map(p => p.x);
-    const ys = screenPunten.map(p => p.y);
-    
-    return {
-        x:      Math.min(...xs),
-        y:      Math.min(...ys),
-        width:  Math.max(...xs) - Math.min(...xs),
-        height: Math.max(...ys) - Math.min(...ys),
-    };
-}
-
-/**
- * Start een rAF-loop die de GIF overlay aan het AR target koppelt
- * De overlay volgt het bord in positie en grootte terwijl de camera beweegt
- * @param {Element} entity - De A-Frame target entity
- */
-function startTargetTracking(entity) {
-    activeTargetEntity = entity;
-    if (trackingRafId) cancelAnimationFrame(trackingRafId);
-    
-    function tick() {
-        const bounds = getTargetScreenBounds();
-        const gifImg = document.getElementById('memeborden-gif-img');
-        const overlay = document.getElementById('memeborden-gif-overlay');
-        
-        if (bounds && gifImg && overlay && overlay.style.display !== 'none') {
-            gifImg.style.left   = `${bounds.x}px`;
-            gifImg.style.top    = `${bounds.y}px`;
-            gifImg.style.width  = `${bounds.width}px`;
-            gifImg.style.height = `${bounds.height}px`;
-        }
-        
-        trackingRafId = requestAnimationFrame(tick);
-    }
-    
-    trackingRafId = requestAnimationFrame(tick);
-}
-
-/**
- * Stop de tracking rAF-loop
- */
-function stopTargetTracking() {
-    activeTargetEntity = null;
-    if (trackingRafId) {
-        cancelAnimationFrame(trackingRafId);
-        trackingRafId = null;
-    }
-}
-
-/**
- * Maak (eenmalig) de HTML overlay div voor de GIF weergave
- * De img wordt via startTargetTracking() op het bord gepositioneerd
- */
-function ensureGifOverlayDOM() {
-    if (document.getElementById('memeborden-gif-overlay')) return;
-    
-    const overlay = document.createElement('div');
-    overlay.id = 'memeborden-gif-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        display: none;
-        z-index: 9500;
-        pointer-events: none;
-        background: transparent;
-    `;
-    
-    // De img wordt via de tracking loop absoluut gepositioneerd op het bord
-    overlay.innerHTML = `
-        <img id="memeborden-gif-img"
-            crossorigin="anonymous"
-            style="
-                position: absolute;
-                opacity: 0;
-                transition: opacity 0.25s;
-                object-fit: fill;
-            "
-        />
-    `;
-    
-    document.body.appendChild(overlay);
 }
 
 /**
@@ -418,14 +304,11 @@ function setupMemebordenEventListeners(scene) {
             // Toon detected state in UI
             showMemebordenDetected(signId, signName);
             
-            // Koppel GIF overlay aan de AR target positie
-            startTargetTracking(target);
-            
-            // Toon GIF overlay (HTML overlay - animated GIFs werken native)
-            fetchAndDisplayGif(signId, searchQuery);
+            // Toon GIF op de <a-plane> binnen deze target entity (echte A-Frame AR)
+            fetchAndDisplayGif(signId, searchQuery, target);
             
             // Start GIF refresh timer
-            startGifRefreshTimer(signId, searchQuery);
+            startGifRefreshTimer(signId, searchQuery, target);
         });
         
         target.addEventListener('targetLost', () => {
@@ -435,11 +318,8 @@ function setupMemebordenEventListeners(scene) {
             // Ontgrendel chunk cycling
             window.chunkLocked = false;
             
-            // Stop positie tracking
-            stopTargetTracking();
-            
-            // Verberg HTML GIF overlay
-            hideGifOverlay();
+            // Verberg GIF plane
+            hideGifOverlay(target);
             
             // Stop refresh timer
             stopGifRefreshTimer();
@@ -465,11 +345,12 @@ function setupMemebordenEventListeners(scene) {
 // ==================== GIF OPHALEN & TONEN ====================
 
 /**
- * Haal een random GIF op van Klipy en toon als AR overlay
- * @param {string} signId - Het verkeersbord ID (bijv. "A1a")
+ * Haal een random GIF op van Klipy en toon als A-Frame plane op het AR bord
+ * @param {string} signId - Het verkeersbord ID
  * @param {string} searchQuery - De Engelse zoekterm voor Klipy
+ * @param {Element} targetEntity - De A-Frame target entity waar de GIF plane in zit
  */
-async function fetchAndDisplayGif(signId, searchQuery) {
+async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
     if (!searchQuery) {
         console.warn(`[Memeborden] Geen zoekterm voor bord ${signId}`);
         return;
@@ -486,16 +367,33 @@ async function fetchAndDisplayGif(signId, searchQuery) {
         const data = await response.json();
         
         if (data.success && data.gif && data.gif.url) {
-            displayGifOverlay(signId, data.gif.url);
-            currentGifUrl = data.gif.url;
-            console.log(`[Memeborden] GIF geladen: ${data.gif.url.substring(0, 80)}...`);
+            const gifUrl = data.gif.url;
+            currentGifUrl = gifUrl;
+            console.log(`[Memeborden] GIF geladen: ${gifUrl.substring(0, 80)}...`);
+            
+            // Zoek de <a-plane> binnen deze target entity
+            const plane = targetEntity ? targetEntity.querySelector(`#meme-gif-plane-${signId}`) : null;
+            if (!plane) {
+                console.warn(`[Memeborden] Geen plane gevonden voor ${signId}`);
+                return;
+            }
+            
+            // Stel de gif component in op de plane - identiek aan hoe normale AR layers werken
+            plane.setAttribute('gif', `src: ${gifUrl}; autoplay: true; transparent: true`);
+            plane.setAttribute('visible', 'true');
+            
+            // Herstart gif animatie (zoals in arReady listener)
+            setTimeout(() => {
+                if (plane.components && plane.components.gif) {
+                    plane.components.gif.isPlaying = true;
+                    plane.components.gif.lastFrameTime = performance.now();
+                }
+            }, 100);
         } else {
             console.warn('[Memeborden] Geen GIF URL in response:', data);
-            hideGifOverlay(); // Verberg overlay bij geen resultaat
         }
     } catch (e) {
         console.error(`[Memeborden] Fout bij ophalen GIF voor ${signId}:`, e);
-        hideGifOverlay();
     }
 }
 
@@ -506,46 +404,26 @@ async function fetchAndDisplayGif(signId, searchQuery) {
  * @param {string} gifUrl - URL van de GIF
  */
 function displayGifOverlay(signId, gifUrl) {
-    ensureGifOverlayDOM();
-    
-    const overlay = document.getElementById('memeborden-gif-overlay');
-    const gifImg = document.getElementById('memeborden-gif-img');
-    
-    if (!overlay || !gifImg) return;
-    
-    // Toon overlay, GIF nog onzichtbaar tijdens laden
-    overlay.style.display = 'block';
-    gifImg.style.opacity = '0';
-    
-    // Laad de GIF via een nieuw img-object om onload te detecteren
-    const testImg = new Image();
-    testImg.crossOrigin = 'anonymous';
-    
-    testImg.onload = function() {
-        // Stel de src in op het zichtbare img element (animated GIF speelt automatisch)
-        gifImg.src = gifUrl;
-        gifImg.style.opacity = '1';
-        console.log(`[Memeborden] GIF overlay zichtbaar voor ${signId}`);
-    };
-    
-    testImg.onerror = function() {
-        console.warn(`[Memeborden] GIF laden mislukt: ${gifUrl}`);
-        // Geen fallback placeholder - gewoon niets tonen bij fout
-        hideGifOverlay();
-    };
-    
-    testImg.src = gifUrl;
-    currentGifUrl = gifUrl;
+    // Bewaard voor backwards compatibiliteit maar niet meer gebruikt
+    // fetchAndDisplayGif werkt nu rechtstreeks op de A-Frame plane
+    console.warn('[Memeborden] displayGifOverlay() is deprecated');
 }
 
 /**
- * Verberg de HTML GIF overlay
+ * Verberg de GIF plane op de target entity
+ * @param {Element} targetEntity - De A-Frame target entity (optioneel)
  */
-function hideGifOverlay() {
-    const overlay = document.getElementById('memeborden-gif-overlay');
-    if (overlay) overlay.style.display = 'none';
-    const gifImg = document.getElementById('memeborden-gif-img');
-    if (gifImg) { gifImg.src = ''; gifImg.style.opacity = '0'; }
+function hideGifOverlay(targetEntity) {
+    if (targetEntity) {
+        const plane = targetEntity.querySelector('[id^="meme-gif-plane-"]');
+        if (plane) {
+            plane.setAttribute('visible', 'false');
+            // Stop gif animatie
+            if (plane.components && plane.components.gif) {
+                plane.components.gif.isPlaying = false;
+            }
+        }
+    }
     currentGifUrl = null;
 }
 
@@ -553,17 +431,16 @@ function hideGifOverlay() {
 
 /**
  * Start timer die periodiek een nieuwe GIF laadt
- * Zorgt voor variatie in de overlay (elke X seconden een nieuwe GIF)
+ * @param {string} signId
+ * @param {string} searchQuery
+ * @param {Element} targetEntity - De A-Frame target entity
  */
-function startGifRefreshTimer(signId, searchQuery) {
-    stopGifRefreshTimer(); // Stop eventuele bestaande timer
+function startGifRefreshTimer(signId, searchQuery, targetEntity) {
+    stopGifRefreshTimer();
     
     gifRefreshTimer = setInterval(async () => {
         console.log(`[Memeborden] GIF vernieuwen voor ${signId}...`);
-        // Reset img opacity voor fade-effect
-        const gifImg = document.getElementById('memeborden-gif-img');
-        if (gifImg) gifImg.style.opacity = '0';
-        await fetchAndDisplayGif(signId, searchQuery);
+        await fetchAndDisplayGif(signId, searchQuery, targetEntity);
     }, MEMEBORDEN_CONFIG.gifRefreshInterval);
 }
 
