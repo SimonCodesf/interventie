@@ -49,6 +49,19 @@ let activeGifComp = null;
 // Eerste scan = random GIF. Binnen 30s opnieuw = zelfde GIF. Na 30s = nieuwe random GIF.
 const gifCooldownCache = new Map();
 
+// Als een GIF mislukt te laden, verwijder die URL uit de cache zodat de volgende detectie
+// een verse GIF ophaalt bij Klipy i.p.v. de kapotte URL te hergebruiken
+window.addEventListener('gif-error', (e) => {
+    if (!e.detail || !e.detail.src) return;
+    for (const [signId, cached] of gifCooldownCache.entries()) {
+        if (cached.url === e.detail.src) {
+            gifCooldownCache.delete(signId);
+            console.log(`[Memeborden] Mislukte GIF verwijderd uit cache voor ${signId}, volgende detectie haalt verse GIF op`);
+            break;
+        }
+    }
+});
+
 // ==================== SIGNS DATA LADEN ====================
 
 /**

@@ -677,6 +677,10 @@ async function initializeChunkAR() {
     // Load first chunk scene (alleen de nieuwste 10 posters)
     loadChunkScene(0);
     
+    // Start direct met preloaden van chunk 1 op de achtergrond
+    // (niet wachten op scan loop: als poster snel gevonden wordt, is scan loop nog niet gestart)
+    preloadNextChunk(0);
+    
     // Toon chunk cycle knop als er meer dan 1 chunk is
     if (window.arManifest.chunks.length > 1) {
         showChunkCycleButton();
