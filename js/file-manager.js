@@ -223,13 +223,18 @@ async function loadFilesFromPosters() {
     `;
     
     try {
-        // Use existing poster data or fetch
         // Altijd verse data ophalen (geen browser cache)
-        const response = await fetch(`${window.API_URL || (window.location.origin + '/api.php')}/posters`, { cache: 'no-store' });
-        if (response.ok) {
-            window.allPosters = await response.json();
+        // Eigen try/catch zodat een API-fout de rest van de UI niet blokkeert
+        try {
+            const response = await fetch(`${window.API_URL || (window.location.origin + '/api.php')}/posters`, { cache: 'no-store' });
+            if (response.ok) {
+                window.allPosters = await response.json();
+            }
+        } catch (fetchErr) {
+            console.warn('[FileManager] API niet bereikbaar, doorgaan zonder server-posters:', fetchErr.message);
+            if (!window.allPosters) window.allPosters = [];
         }
-        
+
         // Laad chunk manifest en voeg chunk info toe aan posters
         try {
             const manifestResp = await fetch(`assets/chunks/manifest.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -299,7 +304,13 @@ async function loadFilesFromPosters() {
         
     } catch (error) {
         console.error('Error loading files:', error);
-        fileList.innerHTML = `<div class="file-error">ERROR: Kan bestanden niet laden</div>`;
+        // Probeer alsnog te renderen met wat we hebben (bijv. alleen memeborden)
+        const fallback = window.allPosters;
+        if (Array.isArray(fallback) && fallback.length > 0) {
+            renderFiles(fallback);
+        } else {
+            fileList.innerHTML = `<div class="file-error">FOUT: Kan bestanden niet laden<br><small>${error.message}</small></div>`;
+        }
     }
 }
 
