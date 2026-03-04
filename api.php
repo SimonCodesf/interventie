@@ -134,6 +134,48 @@ if ($method === 'GET' && $path === '/posters') {
 } elseif ($method === 'GET' && $path === '/verkeersborden/gif') {
     // Haal random GIF op voor een verkeersbord (?sign=A1a of ?q=zoekterm)
     handleGetGif();
+} elseif ($method === 'GET' && $path === '/verkeersborden/gif-proxy') {
+    // Proxy externe GIF URL naar eigen domein (lost CORS op voor gif-component fetch)
+    $gifUrl = isset($_GET['url']) ? $_GET['url'] : '';
+    if (!$gifUrl) {
+        http_response_code(400);
+        exit('Geen URL opgegeven');
+    }
+    // Valideer dat het een Klipy URL is (veiligheidscheck)
+    $allowedDomains = ['klipy.com', 'klipy.co', 'media.klipy.com', 'media.klipy.co', 'cdn.klipy.com'];
+    $host = parse_url($gifUrl, PHP_URL_HOST);
+    $allowed = false;
+    foreach ($allowedDomains as $domain) {
+        if ($host === $domain || str_ends_with($host, '.' . $domain)) {
+            $allowed = true;
+            break;
+        }
+    }
+    if (!$allowed) {
+        http_response_code(403);
+        exit('Niet toegestaan');
+    }
+    // Haal GIF op via cURL en stream naar browser
+    $ch = curl_init($gifUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_USERAGENT => 'Memeborden/1.0 (interventie.org)',
+    ]);
+    $data = curl_exec($ch);
+    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if (!$data || $httpCode !== 200) {
+        http_response_code(502);
+        exit('GIF ophalen mislukt');
+    }
+    header('Content-Type: ' . ($contentType ?: 'image/gif'));
+    header('Cache-Control: public, max-age=3600');
+    header('Access-Control-Allow-Origin: *');
+    echo $data;
+    exit;
 } elseif ($method === 'GET' && preg_match('#^/verkeersborden/sign/([A-Za-z0-9]+)$#', $path, $matches)) {
     // Haal details van één verkeersbord op
     handleGetSign($matches[1]);

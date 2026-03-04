@@ -366,9 +366,11 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         const data = await response.json();
         
         if (data.success && data.gif && data.gif.url) {
-            const gifUrl = data.gif.url;
-            currentGifUrl = gifUrl;
-            console.log(`[Memeborden] GIF geladen: ${gifUrl.substring(0, 80)}...`);
+            // Gebruik gif-proxy om CORS te omzeilen (gif-component doet een fetch() op de URL)
+            const apiUrl = window.API_URL || (window.location.origin + '/api.php');
+            const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
+            currentGifUrl = proxyUrl;
+            console.log(`[Memeborden] GIF via proxy: ${data.gif.url.substring(0, 60)}...`);
             
             // Zoek de <a-plane> binnen deze target entity
             const plane = targetEntity ? targetEntity.querySelector(`#meme-gif-plane-${signId}`) : null;
@@ -377,11 +379,12 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
                 return;
             }
             
-            // Stel de gif component in op de plane - identiek aan hoe normale AR layers werken
-            plane.setAttribute('gif', `src: ${gifUrl}; autoplay: true; transparent: true`);
+            // Gebruik object-syntax om URL-parsing problemen te vermijden
+            // (string-syntax breekt bij URLs met & en = tekens)
+            plane.setAttribute('gif', { src: proxyUrl, autoplay: true, transparent: true });
             plane.setAttribute('visible', 'true');
             
-            // Herstart gif animatie (zoals in arReady listener)
+            // Herstart gif animatie na laden
             setTimeout(() => {
                 if (plane.components && plane.components.gif) {
                     plane.components.gif.isPlaying = true;
