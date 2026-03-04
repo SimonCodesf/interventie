@@ -160,6 +160,7 @@
             this.isPlaying = false;
             this.isLoaded = false;
             this.loadedSrc = null;
+            this._animLogDone = false; // Reset animatie log flag
             
             if (this.data.src) {
                 this.loadGif(this.data.src);
@@ -177,6 +178,7 @@
                 return;
             }
             this.loadedSrc = src;
+            this._animLogDone = false;
             
             console.log('[gif-component] Laden:', src);
             
@@ -308,8 +310,9 @@
                 const prevFrame = this.currentFrame;
                 this.currentFrame = (this.currentFrame + 1) % this.gifData.frames.length;
                 
-                // Debug log (alleen bij frame 0 → 1)
-                if (prevFrame === 0 && this.currentFrame === 1) {
+                // Debug log (eenmalig per GIF load)
+                if (prevFrame === 0 && this.currentFrame === 1 && !this._animLogDone) {
+                    this._animLogDone = true;
                     console.log('[gif-component] Animatie draait voor:', this.data.src.split('/').pop());
                 }
                 

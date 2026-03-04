@@ -669,9 +669,10 @@ async function initializeChunkAR() {
     // Initialize static feed
     await initializeStaticCameraFeed();
     
-    // Preload ALLE chunk .mind bestanden voor snellere switching
-    console.log(' Preloading all chunk files...');
-    await preloadAllChunks();
+    // Preload alleen chunk 0 (nieuwste posters) bij startup
+    // Andere chunks worden on-demand geladen bij scan
+    console.log(' Preloading chunk 0...');
+    await preloadChunk(0);
     
     // Load first chunk scene (alleen de nieuwste 10 posters)
     loadChunkScene(0);
@@ -694,28 +695,38 @@ async function initializeChunkAR() {
     }, 30000);
 }
 
-// Preload alle chunk bestanden
-async function preloadAllChunks() {
+// Preload een specifieke chunk on-demand
+async function preloadChunk(chunkIndex) {
+    // Skip als al gepreload
+    if (window.preloadedChunks[chunkIndex]) return;
+    
     const chunks = window.arManifest.chunks;
+    const chunk = chunks[chunkIndex];
+    if (!chunk) return;
+    
     const v = window.arCacheBust || Date.now();
-    const preloadPromises = chunks.map(async (chunk, i) => {
-        try {
-            // Memeborden chunk heeft een ander pad (niet in assets/chunks/)
-            const chunkUrl = chunk.isMemeborden 
-                ? `${chunk.file}?v=${v}`
-                : `assets/chunks/${chunk.file}?v=${v}`;
-            
-            const response = await fetch(chunkUrl, { cache: 'no-store' });
-            if (response.ok) {
-                window.preloadedChunks[i] = await response.arrayBuffer();
-                console.log(` Preloaded chunk ${i}: ${chunk.file}${chunk.isMemeborden ? ' (MEMEBORDEN)' : ''}`);
-            }
-        } catch (e) {
-            console.warn(`⚠️ Could not preload chunk ${i}`);
+    try {
+        const chunkUrl = chunk.isMemeborden 
+            ? `${chunk.file}?v=${v}`
+            : `assets/chunks/${chunk.file}?v=${v}`;
+        
+        const response = await fetch(chunkUrl, { cache: 'no-store' });
+        if (response.ok) {
+            window.preloadedChunks[chunkIndex] = await response.arrayBuffer();
+            console.log(` Preloaded chunk ${chunkIndex}: ${chunk.file}${chunk.isMemeborden ? ' (MEMEBORDEN)' : ''}`);
         }
-    });
-    await Promise.all(preloadPromises);
-    console.log(' All chunks preloaded');
+    } catch (e) {
+        console.warn(`Could not preload chunk ${chunkIndex}`);
+    }
+}
+
+// Preload de volgende chunk op de achtergrond (prefix voor scan snelheid)
+async function preloadNextChunk(currentChunkIndex) {
+    const totalChunks = window.arManifest.chunks.length;
+    const nextIndex = (currentChunkIndex + 1) % totalChunks;
+    if (!window.preloadedChunks[nextIndex]) {
+        preloadChunk(nextIndex); // Fire-and-forget, geen await
+    }
 }
 
 // Injecteer spinner CSS
@@ -888,7 +899,7 @@ function startChunkScan() {
     
     updateScanDisplay();
     
-    const scanNextChunk = () => {
+    const scanNextChunk = async () => {
         console.log('scanNextChunk called, isChunkScanning:', window.isChunkScanning);
         
         if (!window.isChunkScanning || window.chunkLocked) {
@@ -929,11 +940,17 @@ function startChunkScan() {
             currentChunk = 0;
         }
         
-        // Laad volgende chunk
+        // Preload deze chunk on-demand als die nog niet geladen is
         console.log(`Scanning chunk ${currentChunk + 1}/${totalChunks} (cyclus ${cycleCount + 1}/${maxCycles})`);
         window.currentChunkIndex = currentChunk;
         updateScanDisplay();
+        
+        // Zorg dat chunk gepreload is voordat we de scene bouwen
+        await preloadChunk(currentChunk);
         loadChunkScene(currentChunk);
+        
+        // Preload de volgende chunk alvast op de achtergrond
+        preloadNextChunk(currentChunk);
         
         // Wacht 1.5 seconden voor detectie, dan volgende
         setTimeout(scanNextChunk, 1500);
@@ -1066,13 +1083,13 @@ function setupChunkEventListeners(scene, chunk) {
         console.log(' Chunk AR Ready');
         fixLayerAspectRatios();
         
-        // Herstart GIF animaties na scene rebuild
+        // Herstart GIF animaties die al geladen zijn na scene rebuild
+        // (GIFs zonder src worden pas geladen bij targetFound via loadLazyGifsForTarget)
         setTimeout(() => {
             scene.querySelectorAll('[gif]').forEach(el => {
-                if (el.components && el.components.gif) {
+                if (el.components && el.components.gif && el.components.gif.isLoaded) {
                     el.components.gif.isPlaying = true;
                     el.components.gif.lastFrameTime = performance.now();
-                    console.log('[gif-component] Herstart animatie na chunk load');
                 }
             });
         }, 100);
@@ -1167,21 +1184,37 @@ function setupChunkEventListeners(scene, chunk) {
 }
 
 /**
- * LAZY LOAD GIFs: Nu niet meer nodig - GIFs worden als normale images geladen
- * Behouden voor backwards compatibility
+ * LAZY LOAD GIFs: Activeer gif-components voor deze target.
+ * Bij scene build hebben GIFs geen src attribuut (deferred loading).
+ * Pas bij targetFound worden ze daadwerkelijk geladen.
  */
 function loadLazyGifsForTarget(target) {
-    // GIFs worden nu als <a-image> geladen, geen lazy loading nodig
-    console.log('[GIF] GIFs worden als normale images geladen (geen lazy loading)');
+    const gifPlanes = target.querySelectorAll('[data-gif-src]');
+    if (gifPlanes.length === 0) return;
+    
+    console.log(`[GIF] Lazy load: ${gifPlanes.length} GIF(s) activeren voor target`);
+    gifPlanes.forEach(plane => {
+        const gifSrc = plane.getAttribute('data-gif-src');
+        if (!gifSrc) return;
+        
+        const gifComp = plane.components && plane.components.gif;
+        if (gifComp && !gifComp.isLoaded) {
+            gifComp.loadGif(gifSrc);
+        }
+    });
 }
 
 /**
- * UNLOAD GIFs: Nu niet meer nodig - GIFs zijn normale images
- * Behouden voor backwards compatibility  
+ * UNLOAD GIFs: Stop GIF animaties bij targetLost.
  */
 function unloadLazyGifsForTarget(target) {
-    // GIFs zijn nu normale images, geen speciale cleanup nodig
-    console.log('[GIF] GIF cleanup niet nodig (normale images)');
+    const gifPlanes = target.querySelectorAll('[data-gif-src]');
+    gifPlanes.forEach(plane => {
+        const gifComp = plane.components && plane.components.gif;
+        if (gifComp) {
+            gifComp.isPlaying = false;
+        }
+    });
 }
 
 function checkAndShowLoader(poster) {
@@ -2328,16 +2361,16 @@ function buildLayersHTML(poster) {
                 }
 
                 if (isGif) {
-                    // GIF: gebruik de gif component voor animatie
-                    // De component captured browser's native GIF animatie naar WebGL texture
-                    // isTransparent bepaalt of GIF transparantie moet behouden (checkbox in admin)
+                    // GIF: defer loading - component heeft src nog niet, wordt geactiveerd bij targetFound
+                    // Dit voorkomt dat GIFs van alle posters in de chunk meteen geparsed worden
                     const gifSize = 1.4 * baseScale;
                     const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
                             class="gif-layer"
-                            gif="src: ${mediaPath}; autoplay: true; transparent: ${isTransparent}"
+                            gif="autoplay: true; transparent: ${isTransparent}"
+                            data-gif-src="${mediaPath}"
                             position="${posX} ${posY} ${posZ}" 
                             height="${gifSize.toFixed(3)}" 
                             width="${gifSize.toFixed(3)}" 
