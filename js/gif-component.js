@@ -183,6 +183,12 @@
             try {
                 this.gifData = await loadGIF(src);
                 
+                // Controleer of component nog actief is (kan verwijderd zijn terwijl async laden bezig was)
+                if (!this.canvas) {
+                    console.warn('[gif-component] Component verwijderd tijdens laden van:', src);
+                    return;
+                }
+                
                 console.log('[gif-component] Geparsed:', this.gifData.frames.length, 'frames,', 
                     this.gifData.width, 'x', this.gifData.height);
                 
@@ -279,6 +285,17 @@
         tick: function(time) {
             if (!this.isPlaying || !this.isLoaded || !this.gifData) return;
             if (this.gifData.frames.length <= 1) return;
+            
+            // Zorg dat de texture aan het mesh material gekoppeld is
+            // (bij dynamisch geladen GIFs kan createTexture() te vroeg aangemaakt zijn)
+            if (this.texture) {
+                const mesh = this.el.getObject3D('mesh');
+                if (mesh && mesh.material && mesh.material.map !== this.texture) {
+                    mesh.material.map = this.texture;
+                    mesh.material.transparent = true;
+                    mesh.material.needsUpdate = true;
+                }
+            }
             
             // Check of het tijd is voor het volgende frame
             const delay = this.gifData.delays[this.currentFrame] || 100;
