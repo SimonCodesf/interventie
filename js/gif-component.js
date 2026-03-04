@@ -277,7 +277,8 @@
             const mesh = this.el.getObject3D('mesh');
             if (mesh && mesh.material) {
                 mesh.material.map = this.texture;
-                mesh.material.transparent = true;
+                // Gebruik instelling van component: transparent of opaque
+                mesh.material.transparent = this.data.transparent;
                 mesh.material.needsUpdate = true;
             }
         },
@@ -292,7 +293,7 @@
                 const mesh = this.el.getObject3D('mesh');
                 if (mesh && mesh.material && mesh.material.map !== this.texture) {
                     mesh.material.map = this.texture;
-                    mesh.material.transparent = true;
+                    mesh.material.transparent = this.data.transparent;
                     mesh.material.needsUpdate = true;
                 }
             }

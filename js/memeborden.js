@@ -175,8 +175,8 @@ function buildMemebordenScene() {
     
     let entitiesHTML = '';
     signsData.forEach((sign) => {
-        // Elk bord krijgt een <a-plane gif> kind - initieel verborgen, src wordt dynamisch ingesteld
-        // ar_camera_feed is niet ingesteld voor Memeborden → géén zwarte achtergrond plane
+        // Elk bord krijgt een rode border plane + gif plane - initieel verborgen
+        // Breedte = 1.1 (110% van marker), hoogte wordt berekend op basis van GIF aspect ratio
         entitiesHTML += `
             <a-entity 
                 mindar-image-target="targetIndex: ${sign.targetIndex}" 
@@ -184,14 +184,26 @@ function buildMemebordenScene() {
                 data-sign-name="${sign.name}"
                 data-search-query="${sign.search_query || ''}"
                 data-memeborden="true">
+                
+                <!-- Dikke rode border (verkeersbord stijl) - iets groter dan de GIF plane -->
+                <a-plane
+                    data-meme-border="${sign.id}"
+                    position="0 0 0.005"
+                    width="1.4"
+                    height="1.4"
+                    color="#CC0000"
+                    visible="false">
+                </a-plane>
+                
+                <!-- GIF overlay plane - niet transparant, 110% marker breedte -->
                 <a-plane
                     id="meme-gif-plane-${sign.id}"
                     data-meme-sign="${sign.id}"
                     position="0 0 0.01"
-                    width="1.5"
-                    height="1.5"
+                    width="1.1"
+                    height="1.1"
                     visible="false"
-                    gif="autoplay: true; transparent: true">
+                    gif="autoplay: true; transparent: false">
                 </a-plane>
             </a-entity>
         `;
@@ -443,7 +455,7 @@ function activateGifOnPlane(plane, gifUrl) {
         if (gifComp) {
             gifComp.loadedSrc = null; // Reset zodat herladen mogelijk is
             gifComp.data.src = gifUrl;
-            gifComp.data.transparent = true;
+            gifComp.data.transparent = false; // Niet transparant: GIF op witte achtergrond
             gifComp.loadGif(gifUrl);
             console.log('[Memeborden] loadGif() aangeroepen');
             
@@ -469,6 +481,7 @@ function activateGifOnPlane(plane, gifUrl) {
 function startManualGifAnimation(gifComp) {
     stopManualGifAnimation();
     activeGifComp = gifComp;
+    let dimensionsUpdated = false; // Eenmalig aspect ratio instellen na laden
     
     function animate() {
         // Stop als component verdwenen is
@@ -480,12 +493,18 @@ function startManualGifAnimation(gifComp) {
             return;
         }
         
-        // Koppel texture aan mesh als dat nog niet gebeurd is
+        // Eenmalig: pas plane- en border-afmetingen aan op basis van GIF aspect ratio
+        if (!dimensionsUpdated) {
+            dimensionsUpdated = true;
+            updateGifPlaneDimensions(gifComp);
+        }
+        
+        // Koppel texture aan mesh als dat nog niet gebeurd is (niet transparant)
         if (gifComp.texture) {
             const mesh = gifComp.el.getObject3D('mesh');
             if (mesh && mesh.material && mesh.material.map !== gifComp.texture) {
                 mesh.material.map = gifComp.texture;
-                mesh.material.transparent = true;
+                mesh.material.transparent = false; // Opaque: volledige kleur
                 mesh.material.needsUpdate = true;
                 console.log('[Memeborden] Texture gekoppeld aan mesh');
             }
@@ -523,6 +542,45 @@ function startManualGifAnimation(gifComp) {
 }
 
 /**
+ * Pas de GIF plane en border afmetingen aan op basis van de originele GIF aspect ratio.
+ * Breedte = 1.1 (110% van de marker), hoogte berekend vanuit ratio.
+ * 
+ * @param {Object} gifComp - De gif A-Frame component instantie
+ */
+function updateGifPlaneDimensions(gifComp) {
+    if (!gifComp.gifData) return;
+    
+    const el = gifComp.el;
+    const signId = el.getAttribute('data-meme-sign');
+    const parent = el.parentEl || el.parentNode;
+    
+    // 110% van marker breedte
+    const gifWidth = 1.1;
+    // Hoogte op basis van originele pixel-ratio van de GIF
+    const ratio = gifComp.gifData.height / gifComp.gifData.width;
+    const gifHeight = gifWidth * ratio;
+    
+    // Border padding: vast 0.18 unit aan elke kant
+    const borderPad = 0.18;
+    
+    // Update GIF plane afmetingen
+    el.setAttribute('width', gifWidth);
+    el.setAttribute('height', gifHeight);
+    
+    // Update rode border plane afmetingen en toon hem
+    if (parent && signId) {
+        const border = parent.querySelector(`[data-meme-border="${signId}"]`);
+        if (border) {
+            border.setAttribute('width', gifWidth + borderPad);
+            border.setAttribute('height', gifHeight + borderPad);
+            border.setAttribute('visible', 'true');
+        }
+    }
+    
+    console.log(`[Memeborden] Afmetingen: ${gifWidth}x${gifHeight.toFixed(2)} (GIF ratio: ${ratio.toFixed(2)})`);
+}
+
+/**
  * Stop de manuele GIF animatie loop
  */
 function stopManualGifAnimation() {
@@ -539,6 +597,7 @@ function stopManualGifAnimation() {
  */
 function hideGifOverlay(targetEntity) {
     if (targetEntity) {
+        // Verberg GIF plane
         const plane = targetEntity.querySelector('[id^="meme-gif-plane-"]');
         if (plane) {
             plane.setAttribute('visible', 'false');
@@ -546,6 +605,11 @@ function hideGifOverlay(targetEntity) {
             if (plane.components && plane.components.gif) {
                 plane.components.gif.isPlaying = false;
             }
+        }
+        // Verberg rode border plane
+        const border = targetEntity.querySelector('[data-meme-border]');
+        if (border) {
+            border.setAttribute('visible', 'false');
         }
     }
     currentGifUrl = null;
