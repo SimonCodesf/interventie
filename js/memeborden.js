@@ -167,10 +167,12 @@ function buildMemebordenScene() {
                 data-memeborden="true">
                 <a-plane
                     id="meme-gif-plane-${sign.id}"
+                    data-meme-sign="${sign.id}"
                     position="0 0 0.01"
                     width="1.5"
                     height="1.5"
-                    visible="false">
+                    visible="false"
+                    gif="autoplay: true; transparent: true">
                 </a-plane>
             </a-entity>
         `;
@@ -367,30 +369,35 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         
         if (data.success && data.gif && data.gif.url) {
             // Gebruik gif-proxy om CORS te omzeilen (gif-component doet een fetch() op de URL)
-            const apiUrl = window.API_URL || (window.location.origin + '/api.php');
             const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
             currentGifUrl = proxyUrl;
             console.log(`[Memeborden] GIF via proxy: ${data.gif.url.substring(0, 60)}...`);
             
-            // Zoek de <a-plane> binnen deze target entity
-            const plane = targetEntity ? targetEntity.querySelector(`#meme-gif-plane-${signId}`) : null;
+            // Gebruik querySelector op data attribuut (vermijdt CSS selector problemen met sign IDs)
+            const plane = targetEntity ? targetEntity.querySelector(`[data-meme-sign="${signId}"]`) : null;
             if (!plane) {
                 console.warn(`[Memeborden] Geen plane gevonden voor ${signId}`);
                 return;
             }
             
-            // Gebruik object-syntax om URL-parsing problemen te vermijden
-            // (string-syntax breekt bij URLs met & en = tekens)
-            plane.setAttribute('gif', { src: proxyUrl, autoplay: true, transparent: true });
+            // Maak plane zichtbaar
             plane.setAttribute('visible', 'true');
             
-            // Herstart gif animatie na laden
-            setTimeout(() => {
-                if (plane.components && plane.components.gif) {
-                    plane.components.gif.isPlaying = true;
-                    plane.components.gif.lastFrameTime = performance.now();
+            // Wacht tot gif component geïnitialiseerd is, dan laad direct
+            const loadViaComponent = () => {
+                const gifComp = plane.components && plane.components.gif;
+                if (gifComp) {
+                    gifComp.loadedSrc = null; // Reset zodat herladen mogelijk is
+                    gifComp.data.src = proxyUrl;
+                    gifComp.data.transparent = true;
+                    gifComp.loadGif(proxyUrl);
+                    console.log('[Memeborden] loadGif() direct aangeroepen');
+                } else {
+                    console.warn('[Memeborden] gif component nog niet klaar, retry...');
+                    setTimeout(loadViaComponent, 200);
                 }
-            }, 100);
+            };
+            loadViaComponent();
         } else {
             console.warn('[Memeborden] Geen GIF URL in response:', data);
         }
