@@ -600,7 +600,7 @@ function createWindow(poster) {
     const titleDisplay = `┌─[ ${titleText} ]─┐`;
     
     const windowEl = document.createElement('div');
-    windowEl.className = 'terminal-window';
+    windowEl.className = `terminal-window${poster.isMemeborden ? ' memeborden-window' : ''}`;
     windowEl.id = windowId;
     windowEl.style.cssText = `
         left: ${posX}px;

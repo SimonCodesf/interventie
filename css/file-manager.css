@@ -445,6 +445,12 @@
     width: 45%;
     min-width: 200px;
     background: var(--black);
+}
+
+/* Witte achtergrond voor verkeersborden: MindAR scant in zwart-wit,
+   rood op zwart wordt slecht herkend */
+.memeborden-window .window-image {
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
