@@ -170,8 +170,7 @@ function buildMemebordenScene() {
                     position="0 0 0.01"
                     width="1.5"
                     height="1.5"
-                    visible="false"
-                    material="transparent: true; alphaTest: 0.1; shader: flat; side: double;">
+                    visible="false">
                 </a-plane>
             </a-entity>
         `;
@@ -296,9 +295,9 @@ function setupMemebordenEventListeners(scene) {
             if (typeof stopScanCycles === 'function') stopScanCycles('found');
             if (typeof hideChunkCycleButton === 'function') hideChunkCycleButton();
             
-            // Reveal AR scene (als die verborgen was)
+            // Reveal AR scene met camera feed zichtbaar (geen zwarte achtergrond)
             if (typeof revealARScene === 'function') {
-                revealARScene(null);
+                revealARScene({ ar_camera_feed: 1 });
             }
             
             // Toon detected state in UI
