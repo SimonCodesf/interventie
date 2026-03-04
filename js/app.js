@@ -558,18 +558,17 @@ async function initializeARMode() {
                 });
                 console.log(' Chunk info toegevoegd aan posters');
                 
-                // Voeg Memeborden toe als virtuele chunk (indien module geladen)
-                if (typeof window.loadSignsData === 'function') {
+                // Voeg Memeborden toe als virtuele chunks (meerdere chunks uit chunks.json)
+                if (typeof window.getMemebordenManifestChunks === 'function') {
                     try {
                         await window.loadSignsData();
-                        manifest.chunks.push({
-                            file: window.MEMEBORDEN_CONFIG?.mindFile || 'verkeersborden/signs-top30.mind',
-                            posterIds: ['memeborden'],
-                            isMemeborden: true
+                        const memeChunks = window.getMemebordenManifestChunks();
+                        memeChunks.forEach(mc => {
+                            manifest.chunks.push(mc);
                         });
-                        console.log(' Memeborden chunk toegevoegd als chunk', manifest.chunks.length - 1);
+                        console.log(` Memeborden: ${memeChunks.length} chunks toegevoegd (totaal ${manifest.chunks.length} chunks)`);
                     } catch (e) {
-                        console.warn('⚠️ Memeborden chunk kon niet toegevoegd worden:', e);
+                        console.warn('Memeborden chunks konden niet toegevoegd worden:', e);
                     }
                 }
                 
@@ -972,9 +971,10 @@ function loadChunkScene(chunkIndex) {
     const chunk = window.arManifest.chunks[chunkIndex];
     if (!chunk) return;
     
-    // Memeborden chunk: delegeer naar speciale handler
+    // Memeborden chunk: delegeer naar speciale handler met chunkId
     if (chunk.isMemeborden && typeof window.loadMemebordenARScene === 'function') {
-        console.log(` Loading MEMEBORDEN chunk (index ${chunkIndex})`);
+        const chunkLabel = chunk.memebordenChunkId || 'memeborden';
+        console.log(` Loading MEMEBORDEN chunk: ${chunkLabel} (index ${chunkIndex})`);
         
         // Update scan button voor Memeborden feedback
         const scanBtn = document.getElementById('chunk-cycle-btn');
@@ -986,7 +986,7 @@ function loadChunkScene(chunkIndex) {
             scanBtn.style.color = '#0f0';
         }
         
-        window.loadMemebordenARScene();
+        window.loadMemebordenARScene(chunk.memebordenChunkId);
         return;
     }
     

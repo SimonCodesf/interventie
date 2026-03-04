@@ -1,11 +1,15 @@
 /**
- * Memeborden Module - Belgische verkeersborden AR + GIF overlay
+ * Memeborden Module v2 - Belgische verkeersborden AR + GIF overlay
  * 
- * Dit bestand beheert de Memeborden functionaliteit:
- * - Synthetische poster voor file manager
- * - AR scene opbouw met verkeersborden .mind bestand
+ * Multi-chunk versie: 55 borden verdeeld over 3 AR chunks (chunkA, chunkBC, chunkDEFZ).
+ * Elke chunk heeft een eigen .mind bestand zodat niet alle 55 borden tegelijk geladen worden.
+ * 
+ * Dit bestand beheert:
+ * - Laden van chunks.json met alle borden en chunk-verdeling
+ * - Synthetische poster voor file manager (toont alle borden in slideshow)
+ * - AR scene opbouw per chunk met MindAR targets
  * - GIF ophalen via Klipy API proxy bij target detectie
- * - Overlay weergave van GIFs op gedetecteerde borden
+ * - Overlay weergave van geanimeerde GIFs op gedetecteerde borden
  */
 
 // ==================== CONFIGURATIE ====================
@@ -16,9 +20,8 @@ const MEMEBORDEN_CONFIG = {
     title: 'MEMEBORDEN',
     description: 'Scan een Belgisch verkeersbord en ontdek de verborgen meme!',
     
-    // Bestands-paden (DEV: a15-only.mind voor enkel A15 bord)
-    mindFile: 'verkeersborden/a15-only.mind',
-    dataFile: 'verkeersborden/data/top30.json',
+    // Bestands-paden (multi-chunk: chunks.json bevat alle borden + .mind paden)
+    dataFile: 'verkeersborden/data/chunks.json',
     imagesDir: 'verkeersborden/images/',
     
     // API endpoint
@@ -29,23 +32,24 @@ const MEMEBORDEN_CONFIG = {
     filterBeta: 0.001,
     gifDisplaySize: 1.2,        // Grootte van GIF overlay in AR
     gifCooldownMs: 30000,       // 30 seconden cooldown voordat nieuwe GIF gezocht wordt
-    
-    // DEV: Filter naar specifiek bord (null = alle borden)
-    devFilterSign: 'A15',
 };
 
 // ==================== DATA ====================
 
-// Geladen sign data (top30.json)
-let signsData = null;
+// Geladen chunk data (chunks.json)
+let chunksData = null;        // Volledige chunks.json data
+let allSignsFlat = null;      // Platte array van alle borden (voor gallery)
 let signsLoaded = false;
 let currentGifUrl = null;
+
+// Actief chunk ID voor de huidige AR scene (bijv. 'chunkA')
+let activeChunkId = null;
 
 // Manuele GIF animatie loop (bypass A-Frame tick die niet altijd triggert)
 let memeAnimFrame = null;
 let activeGifComp = null;
 
-// GIF cooldown cache: signId → { url, timestamp }
+// GIF cooldown cache: signId -> { url, timestamp }
 // Eerste scan = random GIF. Binnen 30s opnieuw = zelfde GIF. Na 30s = nieuwe random GIF.
 const gifCooldownCache = new Map();
 
@@ -62,112 +66,144 @@ window.addEventListener('gif-error', (e) => {
     }
 });
 
-// ==================== SIGNS DATA LADEN ====================
+// ==================== DATA LADEN ====================
 
 /**
- * Laad verkeersborden data (top30.json)
- * @returns {Promise<Array>} Array van sign objecten
+ * Laad chunks.json met alle verkeersborden en chunk-verdeling.
+ * Bouwt ook een platte array van alle borden voor de desktop gallery.
+ * @returns {Promise<Array>} Platte array van alle sign objecten
  */
 async function loadSignsData() {
-    if (signsLoaded && signsData) return signsData;
+    if (signsLoaded && allSignsFlat) return allSignsFlat;
     
     try {
         const response = await fetch(`${MEMEBORDEN_CONFIG.dataFile}?t=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
-        const data = await response.json();
-        signsData = data.signs || [];
+        chunksData = await response.json();
         
-        // DEV: Filter naar specifiek bord als geconfigureerd
-        if (MEMEBORDEN_CONFIG.devFilterSign) {
-            signsData = signsData.filter(s => s.id === MEMEBORDEN_CONFIG.devFilterSign);
-            // Reset targetIndex naar 0 want we werken met een single-target .mind file
-            signsData.forEach((s, i) => { s.targetIndex = i; });
-            console.log(`[Memeborden] DEV MODUS: gefilterd naar ${MEMEBORDEN_CONFIG.devFilterSign} (${signsData.length} bord, targetIndex reset naar 0)`);
+        // Bouw platte array van alle borden met chunk info en targetIndex
+        allSignsFlat = [];
+        for (const chunk of chunksData.chunks) {
+            chunk.signs.forEach((sign, index) => {
+                allSignsFlat.push({
+                    ...sign,
+                    chunkId: chunk.id,
+                    chunkName: chunk.name,
+                    serie: chunk.serie,
+                    serieName: chunk.name,
+                    targetIndex: index  // targetIndex binnen de chunk (0-based)
+                });
+            });
         }
         
         signsLoaded = true;
-        console.log(`[Memeborden] ${signsData.length} verkeersborden geladen`);
-        return signsData;
+        console.log(`[Memeborden] ${allSignsFlat.length} verkeersborden geladen over ${chunksData.chunks.length} chunks`);
+        return allSignsFlat;
     } catch (e) {
-        console.error('[Memeborden] Kon signs data niet laden:', e);
+        console.error('[Memeborden] Kon chunks data niet laden:', e);
         return [];
     }
 }
 
-// ==================== SYNTHETISCHE POSTER ====================
+/**
+ * Geef de borden terug voor een specifieke chunk
+ * @param {string} chunkId - De chunk ID (bijv. 'chunkA')
+ * @returns {Array} Array van sign objecten voor die chunk
+ */
+function getSignsForChunk(chunkId) {
+    if (!allSignsFlat) return [];
+    return allSignsFlat.filter(s => s.chunkId === chunkId);
+}
 
 /**
- * Maak een synthetisch poster-object voor de file manager
- * Wordt geïnjecteerd in window.allPosters
- * @returns {Object} Poster object compatible met file-manager.js
+ * Geef chunk metadata terug (uit chunks.json)
+ * @param {string} chunkId - De chunk ID
+ * @returns {Object|null} Chunk object met id, name, serie, description, mindFile
  */
-function createMemebordenPoster() {
-    // Bouw gallery images array van alle 28 borden
-    const signs = signsData || [];
-    const galleryImages = signs.map(s => `/${s.image}`);
+function getChunkMeta(chunkId) {
+    if (!chunksData || !chunksData.chunks) return null;
+    return chunksData.chunks.find(c => c.id === chunkId) || null;
+}
+
+// ==================== SYNTHETISCHE POSTERS ====================
+
+/**
+ * Maak per chunk een apart synthetisch poster-object voor de file manager.
+ * Elke poster toont enkel de borden van die chunk in de slideshow gallery,
+ * zodat gebruikers weten welke borden ze moeten scannen per AR sessie.
+ * @returns {Array<Object>} Array van poster objecten (1 per chunk)
+ */
+function createMemebordenPosters() {
+    if (!chunksData || !chunksData.chunks) return [];
     
-    return {
-        id: MEMEBORDEN_CONFIG.id,
-        title: MEMEBORDEN_CONFIG.title,
-        description: MEMEBORDEN_CONFIG.description,
-        location_description: 'België, overal',
-        created_at: new Date().toISOString(),
-        downloads: 0,
-        thumbnail: galleryImages.length > 0 ? galleryImages[0] : 'img/placeholder.png',
-        gallery_images: galleryImages,
-        ar_marker: 'memeborden', // Markeer als AR-enabled
-        isMemeborden: true,      // Speciale vlag voor herkenning
-        // Geen layers - Memeborden heeft dynamische GIF overlay
-        layers: null,
-        // Geen download bestanden
-        jpeg_url: null,
-        pdf_a3_url: null,
-        pdf_a0_url: null,
-    };
+    return chunksData.chunks.map(chunk => {
+        const chunkSigns = getSignsForChunk(chunk.id);
+        const galleryImages = chunkSigns.map(s => `/${s.image}`);
+        
+        return {
+            id: `memeborden-${chunk.id}`,
+            title: `MEMEBORDEN: ${chunk.name}`,
+            description: `${chunk.description} (${chunk.signs.length} borden)`,
+            location_description: 'Belgie, overal',
+            created_at: new Date().toISOString(),
+            downloads: 0,
+            thumbnail: galleryImages.length > 0 ? galleryImages[0] : 'img/placeholder.png',
+            gallery_images: galleryImages,
+            ar_marker: 'memeborden',    // Markeer als AR-enabled
+            isMemeborden: true,          // Speciale vlag voor herkenning
+            memebordenChunkId: chunk.id, // Chunk ID voor AR scene koppeling
+            memebordenChunkName: chunk.name,
+            // Geen layers - Memeborden heeft dynamische GIF overlay
+            layers: null,
+            // Geen download bestanden
+            jpeg_url: null,
+            pdf_a3_url: null,
+            pdf_a0_url: null,
+        };
+    });
 }
 
 // ==================== FILE MANAGER WINDOW ====================
 
 /**
  * Genereer aangepaste window HTML voor Memeborden poster
- * Vervangt de standaard download knoppen met borden-info
- * @param {Object} poster - Het Memeborden poster object
+ * Per-chunk versie: toont info specifiek voor de chunk van deze poster
+ * @param {Object} poster - Het Memeborden poster object (met memebordenChunkId)
  * @returns {string} Terminal output HTML
  */
 function getMemebordenTerminalHTML(poster) {
-    const signCount = signsData ? signsData.length : 1;
+    const chunkId = poster.memebordenChunkId;
+    const chunkMeta = chunkId ? getChunkMeta(chunkId) : null;
+    const chunkSigns = chunkId ? getSignsForChunk(chunkId) : [];
+    const totalSigns = allSignsFlat ? allSignsFlat.length : 0;
     
-    // Bouw serie-overzicht
-    const series = {};
-    if (signsData) {
-        signsData.forEach(s => {
-            if (!series[s.serie]) series[s.serie] = { name: s.serie_name, count: 0 };
-            series[s.serie].count++;
-        });
+    // Bouw borden-lijst voor deze chunk
+    let signsHTML = '';
+    if (chunkSigns.length > 0) {
+        signsHTML = chunkSigns.map(sign => {
+            return `<div class="term-row"><span class="term-key">${sign.id}</span><span class="term-val">${sign.name}</span></div>`;
+        }).join('');
     }
     
-    const seriesHTML = Object.entries(series).map(([code, info]) => 
-        `<div class="term-row"><span class="term-key">SERIE_${code}</span><span class="term-val">${info.name} [${info.count}]</span></div>`
-    ).join('');
+    const chunkName = chunkMeta ? chunkMeta.name : 'Onbekend';
+    const chunkDesc = chunkMeta ? chunkMeta.description : '';
     
     return `
-        <div class="term-line"><span class="term-prompt">$</span> cat ./memeborden.info</div>
+        <div class="term-line"><span class="term-prompt">$</span> cat ./${chunkId || 'memeborden'}.info</div>
         <div class="term-output">
-            <div class="term-row"><span class="term-key">PROJECT</span><span class="term-val">MEMEBORDEN v1.0</span></div>
-            <div class="term-row"><span class="term-key">DESC</span><span class="term-val">Belgische verkeersborden + AR meme generator</span></div>
-            <div class="term-row"><span class="term-key">BORDEN</span><span class="term-val">${signCount} herkenbare verkeersborden</span></div>
-            <div class="term-row"><span class="term-key">LOC</span><span class="term-val">België, overal</span></div>
+            <div class="term-row"><span class="term-key">CHUNK</span><span class="term-val">${chunkName}</span></div>
+            <div class="term-row"><span class="term-key">DESC</span><span class="term-val">${chunkDesc}</span></div>
+            <div class="term-row"><span class="term-key">BORDEN</span><span class="term-val">${chunkSigns.length} van ${totalSigns} totaal</span></div>
             <div class="term-row"><span class="term-key">STATUS</span><span class="term-val term-ok">ONLINE</span></div>
         </div>
-        <div class="term-line"><span class="term-prompt">$</span> ls ./series/</div>
+        <div class="term-line"><span class="term-prompt">$</span> ls ./borden/</div>
         <div class="term-output">
-            ${seriesHTML}
+            ${signsHTML}
         </div>
-        <div class="term-line"><span class="term-prompt">$</span> echo "Scan een verkeersbord met je camera!"</div>
+        <div class="term-line"><span class="term-prompt">$</span> echo "Scan een van deze borden!"</div>
         <div class="term-output">
-            <div class="term-row"><span class="term-val" style="color: #0f0;">Open deze pagina op je telefoon en richt de camera op een Belgisch verkeersbord.</span></div>
-            <div class="term-row"><span class="term-val" style="color: #0f0;">Een random GIF verschijnt als overlay!</span></div>
+            <div class="term-row"><span class="term-val" style="color: #0f0;">Open op je telefoon en richt de camera op een bord uit deze chunk.</span></div>
         </div>
         <div class="term-line term-cursor"><span class="term-prompt">$</span> <span class="cursor">_</span></div>
     `;
@@ -176,27 +212,32 @@ function getMemebordenTerminalHTML(poster) {
 // ==================== AR SCENE BUILDER ====================
 
 /**
- * Bouw de Memeborden AR scene
- * Elke target entity krijgt een <a-plane gif> kind dat geactiveerd wordt bij detectie
- * Identiek aan hoe de normale poster AR werkt - geen HTML overlay nodig
+ * Bouw de Memeborden AR scene voor een specifieke chunk.
+ * Elke target entity krijgt een <a-plane gif> kind dat geactiveerd wordt bij detectie.
+ * 
+ * @param {string} chunkId - De chunk ID (bijv. 'chunkA')
+ * @returns {string} HTML string met A-Frame entities
  */
-function buildMemebordenScene() {
-    if (!signsData || signsData.length === 0) {
-        console.error('[Memeborden] Geen signs data beschikbaar voor AR scene');
+function buildMemebordenScene(chunkId) {
+    const signs = getSignsForChunk(chunkId);
+    
+    if (!signs || signs.length === 0) {
+        console.error(`[Memeborden] Geen signs data voor chunk ${chunkId}`);
         return '';
     }
     
     let entitiesHTML = '';
-    signsData.forEach((sign) => {
+    signs.forEach((sign) => {
         // Elk bord krijgt een rode border plane + gif plane - initieel verborgen
-        // Breedte = 1.1 (110% van marker), hoogte wordt berekend op basis van GIF aspect ratio
+        // targetIndex = positie binnen deze chunk (0-based)
         entitiesHTML += `
             <a-entity 
                 mindar-image-target="targetIndex: ${sign.targetIndex}" 
                 data-sign-id="${sign.id}"
                 data-sign-name="${sign.name}"
                 data-search-query="${sign.search_query || ''}"
-                data-memeborden="true">
+                data-memeborden="true"
+                data-chunk-id="${chunkId}">
                 
                 <!-- Dikke rode border (verkeersbord stijl) - iets groter dan de GIF plane -->
                 <a-plane
@@ -226,14 +267,30 @@ function buildMemebordenScene() {
 }
 
 /**
- * Laad de volledige Memeborden AR scene (vervangt chunk scene)
- * Preloadt de .mind file en bouwt de A-Frame scene
+ * Laad de Memeborden AR scene voor een specifieke chunk.
+ * Preloadt de .mind file en bouwt de A-Frame scene.
+ * 
+ * @param {string} chunkId - De chunk ID (bijv. 'chunkA', 'chunkBC', 'chunkDEFZ')
+ *                           Als null/undefined, gebruik eerste chunk
  */
-async function loadMemebordenARScene() {
-    console.log('[Memeborden] AR scene laden...');
-    
-    // Zorg dat signs data geladen is
+async function loadMemebordenARScene(chunkId) {
+    // Zorg dat data geladen is
     await loadSignsData();
+    
+    // Bepaal welke chunk te laden
+    if (!chunkId && chunksData && chunksData.chunks.length > 0) {
+        chunkId = chunksData.chunks[0].id;
+    }
+    
+    const chunkMeta = getChunkMeta(chunkId);
+    if (!chunkMeta) {
+        console.error(`[Memeborden] Chunk ${chunkId} niet gevonden`);
+        return;
+    }
+    
+    activeChunkId = chunkId;
+    const signs = getSignsForChunk(chunkId);
+    console.log(`[Memeborden] AR scene laden voor ${chunkId} (${signs.length} borden)...`);
     
     // Verwijder bestaande scene
     const existingScene = document.getElementById('ar-scene');
@@ -248,24 +305,24 @@ async function loadMemebordenARScene() {
     
     // Bepaal mind file URL (gebruik preloaded data indien beschikbaar)
     let imageTargetSrc;
-    const memebordenChunkIndex = getMemebordenChunkIndex();
+    const manifestChunkIndex = getMemebordenManifestIndex(chunkId);
     
-    if (memebordenChunkIndex !== -1 && window.preloadedChunks && window.preloadedChunks[memebordenChunkIndex]) {
-        // Gebruik preloaded ArrayBuffer
+    if (manifestChunkIndex !== -1 && window.preloadedChunks && window.preloadedChunks[manifestChunkIndex]) {
+        // Gebruik preloaded ArrayBuffer -> blob URL
         if (window._memebordenBlobUrl) {
             URL.revokeObjectURL(window._memebordenBlobUrl);
         }
-        const blob = new Blob([window.preloadedChunks[memebordenChunkIndex]], { type: 'application/octet-stream' });
+        const blob = new Blob([window.preloadedChunks[manifestChunkIndex]], { type: 'application/octet-stream' });
         imageTargetSrc = URL.createObjectURL(blob);
         window._memebordenBlobUrl = imageTargetSrc;
-        console.log('[Memeborden] Blob URL aangemaakt vanuit preloaded data');
+        console.log(`[Memeborden] Blob URL vanuit preloaded data (manifest index ${manifestChunkIndex})`);
     } else {
-        // Directe fetch
-        imageTargetSrc = `${MEMEBORDEN_CONFIG.mindFile}?v=${Date.now()}`;
-        console.log('[Memeborden] Directe URL gebruikt (niet preloaded)');
+        // Directe fetch met cache-bust
+        imageTargetSrc = `${chunkMeta.mindFile}?v=${Date.now()}`;
+        console.log(`[Memeborden] Directe URL: ${chunkMeta.mindFile}`);
     }
     
-    const entitiesHTML = buildMemebordenScene();
+    const entitiesHTML = buildMemebordenScene(chunkId);
     
     const sceneHTML = `
         <a-scene
@@ -289,7 +346,7 @@ async function loadMemebordenARScene() {
     const scene = document.getElementById('ar-scene');
     setupMemebordenEventListeners(scene);
     
-    console.log('[Memeborden] AR scene geladen met', signsData.length, 'targets');
+    console.log(`[Memeborden] AR scene geladen: ${chunkId} met ${signs.length} targets`);
 }
 
 // ==================== AR EVENT HANDLERS ====================
@@ -390,10 +447,6 @@ function setupMemebordenEventListeners(scene) {
  * Haal een random GIF op van Klipy en toon als A-Frame plane op het AR bord.
  * 30-seconden cooldown: eerste scan = random GIF, herscan binnen 30s = zelfde GIF,
  * herscan na 30s = nieuwe random GIF.
- * 
- * @param {string} signId - Het verkeersbord ID
- * @param {string} searchQuery - De Engelse zoekterm voor Klipy
- * @param {Element} targetEntity - De A-Frame target entity waar de GIF plane in zit
  */
 async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
     if (!searchQuery) {
@@ -416,7 +469,6 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
     
     if (cached && (now - cached.timestamp < MEMEBORDEN_CONFIG.gifCooldownMs)) {
         console.log(`[Memeborden] Cooldown actief voor ${signId}, hergebruik cached GIF`);
-        // Hergebruik de cached GIF URL — activeer plane en start animatie
         plane.setAttribute('visible', 'true');
         activateGifOnPlane(plane, cached.url);
         return;
@@ -431,7 +483,7 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         const data = await response.json();
         
         if (data.success && data.gif && data.gif.url) {
-            // Gebruik gif-proxy om CORS te omzeilen (gif-component doet een fetch() op de URL)
+            // Gebruik gif-proxy om CORS te omzeilen
             const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
             currentGifUrl = proxyUrl;
             console.log(`[Memeborden] GIF via proxy: ${data.gif.url.substring(0, 60)}...`);
@@ -452,27 +504,18 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
 
 /**
  * Activeer GIF op een A-Frame plane via gif-component + manuele animatie loop.
- * A-Frame's tick() wordt niet altijd getriggered voor dynamisch geladen GIFs,
- * daarom gebruiken we een eigen requestAnimationFrame loop.
- * 
- * @param {Element} plane - De A-Frame <a-plane> entity
- * @param {string} gifUrl - De (proxy) URL van de GIF
  */
 function activateGifOnPlane(plane, gifUrl) {
-    // Stop eventuele vorige animatie
     stopManualGifAnimation();
     
-    // Wacht tot gif component geïnitialiseerd is, dan laad direct
     const loadViaComponent = () => {
         const gifComp = plane.components && plane.components.gif;
         if (gifComp) {
-            gifComp.loadedSrc = null; // Reset zodat herladen mogelijk is
+            gifComp.loadedSrc = null;
             gifComp.data.src = gifUrl;
-            gifComp.data.transparent = false; // Niet transparant: GIF op witte achtergrond
+            gifComp.data.transparent = false;
             gifComp.loadGif(gifUrl);
             console.log('[Memeborden] loadGif() aangeroepen');
-            
-            // Start manuele animatie loop (bypass A-Frame tick)
             startManualGifAnimation(gifComp);
         } else {
             console.warn('[Memeborden] gif component nog niet klaar, retry...');
@@ -486,38 +529,33 @@ function activateGifOnPlane(plane, gifUrl) {
 
 /**
  * Start een requestAnimationFrame loop die de gif-component frames handmatig aanstuurt.
- * Dit bypassed A-Frame's tick systeem dat niet betrouwbaar triggert voor
- * dynamisch geladen GIFs op MindAR target entities.
- * 
- * @param {Object} gifComp - De gif A-Frame component instantie
+ * Bypassed A-Frame's tick systeem dat niet betrouwbaar triggert voor dynamisch geladen GIFs.
  */
 function startManualGifAnimation(gifComp) {
     stopManualGifAnimation();
     activeGifComp = gifComp;
-    let dimensionsUpdated = false; // Eenmalig aspect ratio instellen na laden
+    let dimensionsUpdated = false;
     
     function animate() {
-        // Stop als component verdwenen is
         if (!activeGifComp || activeGifComp !== gifComp) return;
         
-        // Wacht tot GIF volledig geladen is
         if (!gifComp.isLoaded || !gifComp.gifData || gifComp.gifData.frames.length <= 1) {
             memeAnimFrame = requestAnimationFrame(animate);
             return;
         }
         
-        // Eenmalig: pas plane- en border-afmetingen aan op basis van GIF aspect ratio
+        // Eenmalig: pas afmetingen aan op basis van GIF aspect ratio
         if (!dimensionsUpdated) {
             dimensionsUpdated = true;
             updateGifPlaneDimensions(gifComp);
         }
         
-        // Koppel texture aan mesh als dat nog niet gebeurd is (niet transparant)
+        // Koppel texture aan mesh (niet transparant)
         if (gifComp.texture) {
             const mesh = gifComp.el.getObject3D('mesh');
             if (mesh && mesh.material && mesh.material.map !== gifComp.texture) {
                 mesh.material.map = gifComp.texture;
-                mesh.material.transparent = false; // Opaque: volledige kleur
+                mesh.material.transparent = false;
                 mesh.material.needsUpdate = true;
                 console.log('[Memeborden] Texture gekoppeld aan mesh');
             }
@@ -532,15 +570,12 @@ function startManualGifAnimation(gifComp) {
             const prevFrame = gifComp.currentFrame;
             gifComp.currentFrame = (gifComp.currentFrame + 1) % gifComp.gifData.frames.length;
             
-            // Log eenmalig bij eerste frame-overgang
             if (prevFrame === 0 && gifComp.currentFrame === 1) {
                 console.log('[Memeborden] GIF animatie gestart!');
             }
             
-            // Teken nieuw frame op canvas
             gifComp.drawFrame(gifComp.currentFrame);
             
-            // Vertel Three.js dat de texture geüpdated moet worden
             if (gifComp.texture) {
                 gifComp.texture.needsUpdate = true;
             }
@@ -549,16 +584,12 @@ function startManualGifAnimation(gifComp) {
         memeAnimFrame = requestAnimationFrame(animate);
     }
     
-    // Start de loop
     memeAnimFrame = requestAnimationFrame(animate);
     console.log('[Memeborden] Manuele animatie loop gestart');
 }
 
 /**
- * Pas de GIF plane en border afmetingen aan op basis van de originele GIF aspect ratio.
- * Breedte = 1.1 (110% van de marker), hoogte berekend vanuit ratio.
- * 
- * @param {Object} gifComp - De gif A-Frame component instantie
+ * Pas GIF plane en border afmetingen aan op basis van de originele GIF aspect ratio
  */
 function updateGifPlaneDimensions(gifComp) {
     if (!gifComp.gifData) return;
@@ -567,20 +598,14 @@ function updateGifPlaneDimensions(gifComp) {
     const signId = el.getAttribute('data-meme-sign');
     const parent = el.parentEl || el.parentNode;
     
-    // 110% van marker breedte
     const gifWidth = 1.1;
-    // Hoogte op basis van originele pixel-ratio van de GIF
     const ratio = gifComp.gifData.height / gifComp.gifData.width;
     const gifHeight = gifWidth * ratio;
-    
-    // Border padding: vast 0.18 unit aan elke kant
     const borderPad = 0.18;
     
-    // Update GIF plane afmetingen
     el.setAttribute('width', gifWidth);
     el.setAttribute('height', gifHeight);
     
-    // Update rode border plane afmetingen en toon hem
     if (parent && signId) {
         const border = parent.querySelector(`[data-meme-border="${signId}"]`);
         if (border) {
@@ -593,9 +618,6 @@ function updateGifPlaneDimensions(gifComp) {
     console.log(`[Memeborden] Afmetingen: ${gifWidth}x${gifHeight.toFixed(2)} (GIF ratio: ${ratio.toFixed(2)})`);
 }
 
-/**
- * Stop de manuele GIF animatie loop
- */
 function stopManualGifAnimation() {
     if (memeAnimFrame) {
         cancelAnimationFrame(memeAnimFrame);
@@ -604,22 +626,15 @@ function stopManualGifAnimation() {
     activeGifComp = null;
 }
 
-/**
- * Verberg de GIF plane op de target entity en stop animatie
- * @param {Element} targetEntity - De A-Frame target entity (optioneel)
- */
 function hideGifOverlay(targetEntity) {
     if (targetEntity) {
-        // Verberg GIF plane
         const plane = targetEntity.querySelector('[id^="meme-gif-plane-"]');
         if (plane) {
             plane.setAttribute('visible', 'false');
-            // Stop gif animatie (component state)
             if (plane.components && plane.components.gif) {
                 plane.components.gif.isPlaying = false;
             }
         }
-        // Verberg rode border plane
         const border = targetEntity.querySelector('[data-meme-border]');
         if (border) {
             border.setAttribute('visible', 'false');
@@ -630,13 +645,7 @@ function hideGifOverlay(targetEntity) {
 
 // ==================== UI HELPERS ====================
 
-/**
- * Toon gedetecteerd bord info in de UI
- * @param {string} signId - Het verkeersbord ID
- * @param {string} signName - Naam van het bord
- */
 function showMemebordenDetected(signId, signName) {
-    // Gebruik bestaande detected poster state UI als die er is
     const posterInfo = document.getElementById('detected-poster-info');
     if (posterInfo) {
         posterInfo.innerHTML = `
@@ -647,9 +656,23 @@ function showMemebordenDetected(signId, signName) {
     }
 }
 
+// ==================== MANIFEST HELPERS ====================
+
 /**
- * Geeft de chunk index terug van de Memeborden chunk in het manifest
- * @returns {number} Chunk index of -1 als niet gevonden
+ * Geeft de index terug van een specifieke memeborden chunk in het AR manifest.
+ * @param {string} chunkId - De chunk ID (bijv. 'chunkA')
+ * @returns {number} Manifest chunk index of -1
+ */
+function getMemebordenManifestIndex(chunkId) {
+    if (!window.arManifest || !window.arManifest.chunks) return -1;
+    return window.arManifest.chunks.findIndex(c => 
+        c.isMemeborden === true && c.memebordenChunkId === chunkId
+    );
+}
+
+/**
+ * Geeft de eerste memeborden chunk index in het manifest
+ * @returns {number} Index of -1
  */
 function getMemebordenChunkIndex() {
     if (!window.arManifest || !window.arManifest.chunks) return -1;
@@ -657,8 +680,8 @@ function getMemebordenChunkIndex() {
 }
 
 /**
- * Check of een chunk de Memeborden chunk is
- * @param {number} chunkIndex - De index van de chunk
+ * Check of een chunk in het manifest een Memeborden chunk is
+ * @param {number} chunkIndex - De manifest chunk index
  * @returns {boolean}
  */
 function isMemeBordenChunk(chunkIndex) {
@@ -667,34 +690,45 @@ function isMemeBordenChunk(chunkIndex) {
     return chunk && chunk.isMemeborden === true;
 }
 
+/**
+ * Geeft alle memeborden chunk entries terug voor het AR manifest.
+ * Wordt aangeroepen door app.js bij het opbouwen van het manifest.
+ * @returns {Array} Array van chunk entries voor het manifest
+ */
+function getMemebordenManifestChunks() {
+    if (!chunksData || !chunksData.chunks) return [];
+    
+    return chunksData.chunks.map(chunk => ({
+        file: chunk.mindFile,
+        posterIds: [`memeborden-${chunk.id}`],
+        isMemeborden: true,
+        memebordenChunkId: chunk.id,
+        memebordenChunkName: chunk.name,
+        memebordenSignCount: chunk.signs.length
+    }));
+}
+
 // ==================== INITIALISATIE ====================
 
 /**
- * Update het bordnaam label in de overlay (niet meer zichtbaar, bewaard voor compatibiliteit)
- */
-function updateSignLabel(signId, signName) {
-    // Label verwijderd uit de overlay - clean AR projectie zonder extra info
-}
-
-/**
- * Initialiseer Memeborden module
- * Laadt signs data en maakt de synthetische poster aan
- * Wordt aangeroepen vanuit loadFilesFromPosters()
+ * Initialiseer Memeborden module.
+ * Laadt chunks.json en maakt per chunk een synthetische poster aan.
+ * @returns {Promise<Array<Object>|null>} Array van poster objecten (1 per chunk) of null bij fout
  */
 async function initMemeborden() {
-    console.log('[Memeborden] Module initialiseren...');
+    console.log('[Memeborden] Module initialiseren (v2 multi-chunk)...');
     
     await loadSignsData();
     
-    if (!signsData || signsData.length === 0) {
+    if (!allSignsFlat || allSignsFlat.length === 0) {
         console.warn('[Memeborden] Geen verkeersborden data - module overgeslagen');
         return null;
     }
     
-    const poster = createMemebordenPoster();
-    console.log(`[Memeborden] Synthetische poster aangemaakt met ${signsData.length} borden in gallery`);
+    const posters = createMemebordenPosters();
+    console.log(`[Memeborden] ${posters.length} chunk-posters aangemaakt: ${allSignsFlat.length} borden, ${chunksData.chunks.length} chunks`);
     
-    return poster;
+    return posters;
 }
 
 // ==================== EXPORTS ====================
@@ -706,4 +740,5 @@ window.loadMemebordenARScene = loadMemebordenARScene;
 window.isMemeBordenChunk = isMemeBordenChunk;
 window.getMemebordenChunkIndex = getMemebordenChunkIndex;
 window.getMemebordenTerminalHTML = getMemebordenTerminalHTML;
+window.getMemebordenManifestChunks = getMemebordenManifestChunks;
 window.loadSignsData = loadSignsData;

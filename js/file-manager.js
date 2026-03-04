@@ -255,14 +255,19 @@ async function loadFilesFromPosters() {
         
         const posters = window.allPosters || [];
         
-        // Injecteer Memeborden synthetische poster (indien module geladen)
+        // Injecteer Memeborden synthetische posters (1 per chunk, indien module geladen)
         if (typeof window.initMemeborden === 'function') {
             try {
-                const memebordenPoster = await window.initMemeborden();
-                if (memebordenPoster && !posters.find(p => p.id === 'memeborden')) {
-                    posters.unshift(memebordenPoster); // Voeg toe aan begin
+                const memebordenPosters = await window.initMemeborden();
+                if (Array.isArray(memebordenPosters) && memebordenPosters.length > 0) {
+                    // Voeg elke chunk-poster toe als die nog niet bestaat
+                    for (const mbPoster of memebordenPosters) {
+                        if (!posters.find(p => p.id === mbPoster.id)) {
+                            posters.unshift(mbPoster);
+                        }
+                    }
                     window.allPosters = posters;
-                    console.log('[FileManager] Memeborden poster geïnjecteerd');
+                    console.log(`[FileManager] ${memebordenPosters.length} Memeborden chunk-posters geïnjecteerd`);
                 }
             } catch (e) {
                 console.warn('[FileManager] Memeborden kon niet geladen worden:', e);

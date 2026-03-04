@@ -1,0 +1,422 @@
+{
+  "_meta": {
+    "generated": "2026-03-04",
+    "description": "Memeborden chunk-verdeling: 54 Belgische verkeersborden over 3 AR chunks",
+    "total_signs": 54,
+    "chunks": 3
+  },
+  "chunks": [
+    {
+      "id": "chunkA",
+      "name": "Gevaarsborden",
+      "serie": "A",
+      "description": "A-serie: Gevaarsborden (driehoekig, rode rand)",
+      "mindFile": "verkeersborden/chunks/chunkA.mind",
+      "signs": [
+        {
+          "id": "A1B",
+          "name": "Gevaarlijke bocht naar rechts",
+          "search_query": "Sharp right turn",
+          "image": "verkeersborden/images/A1b.png",
+          "wiki_filename": "Belgian_road_sign_A1b.svg"
+        },
+        {
+          "id": "A1C",
+          "name": "Dubbele bocht, de eerste naar links",
+          "search_query": "Winding road",
+          "image": "verkeersborden/images/A1c.png",
+          "wiki_filename": "Belgian_road_sign_A1c.svg"
+        },
+        {
+          "id": "A3",
+          "name": "Gevaarlijke daling",
+          "search_query": "Steep downhill",
+          "image": "verkeersborden/images/A3.png",
+          "wiki_filename": "Belgian_road_sign_A3.svg"
+        },
+        {
+          "id": "A5",
+          "name": "Steile helling",
+          "search_query": "Steep hill",
+          "image": "verkeersborden/images/A5.png",
+          "wiki_filename": "Belgian_road_sign_A5.svg"
+        },
+        {
+          "id": "A9",
+          "name": "Beweegbare brug",
+          "search_query": "Opening bridge",
+          "image": "verkeersborden/images/A9.png",
+          "wiki_filename": "Belgian_road_sign_A9.svg"
+        },
+        {
+          "id": "A11",
+          "name": "Uitweg op een kaai of oever",
+          "search_query": "Edge",
+          "image": "verkeersborden/images/A11.png",
+          "wiki_filename": "Belgian_road_sign_A11.svg"
+        },
+        {
+          "id": "A13",
+          "name": "Dwarse uitholling of ezelsrug",
+          "search_query": "Uneven road",
+          "image": "verkeersborden/images/A13.png",
+          "wiki_filename": "Belgian_road_sign_A13.svg"
+        },
+        {
+          "id": "A14",
+          "name": "Verhoogde inrichting (verkeersdrempel)",
+          "search_query": "Speed bump",
+          "image": "verkeersborden/images/A14.png",
+          "wiki_filename": "Belgian_road_sign_A14.svg"
+        },
+        {
+          "id": "A15",
+          "name": "Glibberige rijbaan",
+          "search_query": "Slippery road",
+          "image": "verkeersborden/images/A15.png",
+          "wiki_filename": "Belgian_road_sign_A15.svg"
+        },
+        {
+          "id": "A19",
+          "name": "Vallende stenen",
+          "search_query": "Falling rocks",
+          "image": "verkeersborden/images/A19.png",
+          "wiki_filename": "Belgian_road_sign_A19.svg"
+        },
+        {
+          "id": "A21",
+          "name": "Oversteekplaats voor voetgangers",
+          "search_query": "Pedestrian crossing",
+          "image": "verkeersborden/images/A21.png",
+          "wiki_filename": "Belgian_road_sign_A21.svg"
+        },
+        {
+          "id": "A23",
+          "name": "Plaats waar speciaal veel kinderen komen",
+          "search_query": "School",
+          "image": "verkeersborden/images/A23.png",
+          "wiki_filename": "Belgian_road_sign_A23.svg"
+        },
+        {
+          "id": "A25",
+          "name": "Oversteekplaats voor fietsers en bromfietsers",
+          "search_query": "Cyclist crossing",
+          "image": "verkeersborden/images/A25.png",
+          "wiki_filename": "Belgian_road_sign_A25.svg"
+        },
+        {
+          "id": "A27",
+          "name": "Doortocht van groot wild",
+          "search_query": "Deer road",
+          "image": "verkeersborden/images/A27.png",
+          "wiki_filename": "Belgian_road_sign_A27.svg"
+        },
+        {
+          "id": "A29",
+          "name": "Doortocht van vee",
+          "search_query": "Cows road",
+          "image": "verkeersborden/images/A29.png",
+          "wiki_filename": "Belgian_road_sign_A29.svg"
+        },
+        {
+          "id": "A31",
+          "name": "Werken in uitvoering",
+          "search_query": "Roadworks",
+          "image": "verkeersborden/images/A31.png",
+          "wiki_filename": "Belgian_road_sign_A31.svg"
+        },
+        {
+          "id": "A33",
+          "name": "Verkeerslichten",
+          "search_query": "Traffic lights",
+          "image": "verkeersborden/images/A33.png",
+          "wiki_filename": "Belgian_road_sign_A33.svg"
+        },
+        {
+          "id": "A35",
+          "name": "Vliegtuigen op geringe hoogte",
+          "search_query": "Low-flying aircraft",
+          "image": "verkeersborden/images/A35.png",
+          "wiki_filename": "Belgian_road_sign_A35.svg"
+        },
+        {
+          "id": "A37",
+          "name": "Gevaarlijke zijwind",
+          "search_query": "Crosswind",
+          "image": "verkeersborden/images/A37.png",
+          "wiki_filename": "Belgian_road_sign_A37.svg"
+        },
+        {
+          "id": "A39",
+          "name": "Verkeer toegelaten in twee richtingen",
+          "search_query": "Two-way traffic",
+          "image": "verkeersborden/images/A39.png",
+          "wiki_filename": "Belgian_road_sign_A39.svg"
+        },
+        {
+          "id": "A43",
+          "name": "Overweg zonder slagbomen",
+          "search_query": "Train",
+          "image": "verkeersborden/images/A43.png",
+          "wiki_filename": "Belgian_road_sign_A43.svg"
+        },
+        {
+          "id": "A50",
+          "name": "File",
+          "search_query": "Traffic jam",
+          "image": "verkeersborden/images/A50.png",
+          "wiki_filename": "Belgian_road_sign_A50.svg"
+        },
+        {
+          "id": "A51",
+          "name": "Gevaar dat niet door een speciaal symbool wordt bepaald",
+          "search_query": "Danger",
+          "image": "verkeersborden/images/A51.png",
+          "wiki_filename": "Belgian_road_sign_A51.svg"
+        }
+      ]
+    },
+    {
+      "id": "chunkBC",
+      "name": "Voorrangs- en Verbodsborden",
+      "serie": "B+C",
+      "description": "B-serie: Voorrangsborden + C-serie: Verbodsborden",
+      "mindFile": "verkeersborden/chunks/chunkBC.mind",
+      "signs": [
+        {
+          "id": "B5",
+          "name": "Stop, verleen voorrang",
+          "search_query": "Stop",
+          "image": "verkeersborden/images/B5.png",
+          "wiki_filename": "Belgian_road_sign_B5.svg"
+        },
+        {
+          "id": "B19",
+          "name": "Smalle doorgang: voorrang verlenen aan tegenliggers",
+          "search_query": "Yield",
+          "image": "verkeersborden/images/B19.png",
+          "wiki_filename": "Belgian_road_sign_B19.svg"
+        },
+        {
+          "id": "B21",
+          "name": "Smalle doorgang: voorrang op tegenliggers",
+          "search_query": "Priority",
+          "image": "verkeersborden/images/B21.png",
+          "wiki_filename": "Belgian_road_sign_B21.svg"
+        },
+        {
+          "id": "C5",
+          "name": "Verboden toegang in beide richtingen",
+          "search_query": "No cars allowed",
+          "image": "verkeersborden/images/C5.png",
+          "wiki_filename": "Belgian_road_sign_C5.svg"
+        },
+        {
+          "id": "C7",
+          "name": "Verboden toegang voor motorfietsen",
+          "search_query": "No motorcycles",
+          "image": "verkeersborden/images/C7.png",
+          "wiki_filename": "Belgian_road_sign_C7.svg"
+        },
+        {
+          "id": "C9",
+          "name": "Verboden toegang voor bromfietsen",
+          "search_query": "No mopeds",
+          "image": "verkeersborden/images/C9.png",
+          "wiki_filename": "Belgian_road_sign_C9.svg"
+        },
+        {
+          "id": "C11",
+          "name": "Verboden toegang voor fietsen",
+          "search_query": "No bicycles",
+          "image": "verkeersborden/images/C11.png",
+          "wiki_filename": "Belgian_road_sign_C11.svg"
+        },
+        {
+          "id": "C15",
+          "name": "Verboden toegang voor ruiters",
+          "search_query": "No horses",
+          "image": "verkeersborden/images/C15.png",
+          "wiki_filename": "Belgian_road_sign_C15.svg"
+        },
+        {
+          "id": "C22",
+          "name": "Verboden toegang voor autobussen",
+          "search_query": "No buses",
+          "image": "verkeersborden/images/C22.png",
+          "wiki_filename": "Belgian_road_sign_C22.svg"
+        },
+        {
+          "id": "C23",
+          "name": "Verboden voor voertuigen voor het vervoer van zaken",
+          "search_query": "No trucks",
+          "image": "verkeersborden/images/C23.png",
+          "wiki_filename": "Belgian_road_sign_C23.svg"
+        },
+        {
+          "id": "C24B",
+          "name": "Verboden voor voertuigen met ontvlambare/gevaarlijke stoffen",
+          "search_query": "No flammables",
+          "image": "verkeersborden/images/C24b.png",
+          "wiki_filename": "Belgian_road_sign_C24b.svg"
+        },
+        {
+          "id": "C24C",
+          "name": "Verboden voor voertuigen met waterverontreinigende stoffen",
+          "search_query": "No pollutants",
+          "image": "verkeersborden/images/C24c.png",
+          "wiki_filename": "Belgian_road_sign_C24c.svg"
+        },
+        {
+          "id": "C25",
+          "name": "Verboden voor voertuigen langer dan de aangeduide lengte",
+          "search_query": "no long vehicles",
+          "image": "verkeersborden/images/C25.png",
+          "wiki_filename": "Belgian_road_sign_C25.svg"
+        },
+        {
+          "id": "C35",
+          "name": "Inhaalverbod",
+          "search_query": "No overtaking",
+          "image": "verkeersborden/images/C35.png",
+          "wiki_filename": "Belgian_road_sign_C35.svg"
+        },
+        {
+          "id": "C37",
+          "name": "Einde inhaalverbod",
+          "search_query": "no truck passing",
+          "image": "verkeersborden/images/C37.png",
+          "wiki_filename": "Belgian_road_sign_C37.svg"
+        },
+        {
+          "id": "C43",
+          "name": "Snelheidsbeperking",
+          "search_query": "Speed limit",
+          "image": "verkeersborden/images/C43.png",
+          "wiki_filename": "Belgian_road_sign_C43.svg"
+        },
+        {
+          "id": "C45",
+          "name": "Einde snelheidsbeperking",
+          "search_query": "End speed limit",
+          "image": "verkeersborden/images/C45.png",
+          "wiki_filename": "Belgian_road_sign_C45.svg"
+        },
+        {
+          "id": "C47",
+          "name": "Tolpost, verbod voorbij te rijden zonder te stoppen",
+          "search_query": "Toll booth",
+          "image": "verkeersborden/images/C47.png",
+          "wiki_filename": "Belgian_road_sign_C47.svg"
+        }
+      ]
+    },
+    {
+      "id": "chunkDEFZ",
+      "name": "Gebods-, Parkeer-, Aanwijzings- en Zonale borden",
+      "serie": "D+E+F+Z",
+      "description": "D-serie: Gebodsborden + E-serie: Parkeerborden + F-serie: Aanwijzingsborden + Z-serie: Zonale borden",
+      "mindFile": "verkeersborden/chunks/chunkDEFZ.mind",
+      "signs": [
+        {
+          "id": "D1A",
+          "name": "Verplichte rijrichting rechtdoor",
+          "search_query": "Straight",
+          "image": "verkeersborden/images/D1a.png",
+          "wiki_filename": "Belgian_road_sign_D01a.svg"
+        },
+        {
+          "id": "D1B",
+          "name": "Verplichte rijrichting rechtsaf",
+          "search_query": "left turn",
+          "image": "verkeersborden/images/D1b.png",
+          "wiki_filename": "Belgian_road_sign_D01b.svg"
+        },
+        {
+          "id": "D1B2",
+          "name": "Verplichte rijrichting schuin rechts",
+          "search_query": "right turn",
+          "image": "verkeersborden/images/D1b2.png",
+          "wiki_filename": "Belgian_road_sign_D1_ru.svg"
+        },
+        {
+          "id": "D5",
+          "name": "Rondpunt",
+          "search_query": "Roundabout",
+          "image": "verkeersborden/images/D5.png",
+          "wiki_filename": "Belgian_road_sign_D05.svg"
+        },
+        {
+          "id": "D7",
+          "name": "Verplicht fietpad",
+          "search_query": "Bikelane",
+          "image": "verkeersborden/images/D7.png",
+          "wiki_filename": "Belgian_road_sign_D07.svg"
+        },
+        {
+          "id": "E1",
+          "name": "Parkeerverbod",
+          "search_query": "No parking",
+          "image": "verkeersborden/images/E1.png",
+          "wiki_filename": "Belgian_road_sign_E1.svg"
+        },
+        {
+          "id": "E3",
+          "name": "Stilstaan- en parkeerverbod",
+          "search_query": "No stopping",
+          "image": "verkeersborden/images/E3.png",
+          "wiki_filename": "Belgian_road_sign_E3.svg"
+        },
+        {
+          "id": "F1B",
+          "name": "Begin van een bebouwde kom",
+          "search_query": "Entering Town",
+          "image": "verkeersborden/images/F1b.png",
+          "wiki_filename": "Belgian_traffic_sign_F1b_horizontaal.svg"
+        },
+        {
+          "id": "F3A",
+          "name": "Einde van een bebouwde kom",
+          "search_query": "Leaving town",
+          "image": "verkeersborden/images/F3a.png",
+          "wiki_filename": "Belgian_traffic_sign_F3a_horizontaal.svg"
+        },
+        {
+          "id": "F47",
+          "name": "Einde van de werken",
+          "search_query": "End of roadworks",
+          "image": "verkeersborden/images/F47.png",
+          "wiki_filename": "Belgian_road_sign_F47.svg"
+        },
+        {
+          "id": "F49",
+          "name": "Oversteekplaats voor voetgangers (aanwijzing)",
+          "search_query": "Pedestrian crossing",
+          "image": "verkeersborden/images/F49.png",
+          "wiki_filename": "Belgian_road_sign_F49.svg"
+        },
+        {
+          "id": "F57",
+          "name": "Waterloop",
+          "search_query": "Watercourse",
+          "image": "verkeersborden/images/F57.png",
+          "wiki_filename": "Belgian_road_sign_F57.svg"
+        },
+        {
+          "id": "F111",
+          "name": "Begin van een fietsstraat",
+          "search_query": "Bicycle street",
+          "image": "verkeersborden/images/F111.png",
+          "wiki_filename": "Belgian_road_sign_F111.svg"
+        },
+        {
+          "id": "ZC5",
+          "name": "Zonale verboden toegang in beide richtingen",
+          "search_query": "No cars zone",
+          "image": "verkeersborden/images/ZC5.png",
+          "wiki_filename": "Belgian_road_sign_ZC21.svg"
+        }
+      ]
+    }
+  ]
+}
