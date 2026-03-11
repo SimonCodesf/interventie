@@ -3388,6 +3388,11 @@ async function openEditModal(posterId) {
         // Render all 8 layers for edit form
         renderLayers(true);
         
+        // Herinjecteer API source UI voor edit formulier (renderLayers wist de container)
+        for (let n = 1; n <= 8; n++) {
+            injectApiSourceUI(n, 'edit-');
+        }
+        
         // Setup file previews for edit form
         setupEditFilePreview();
         
@@ -3674,6 +3679,10 @@ function closeEditModal() {
     // Reset active layers to default (1 layer) for the create form
     // setActiveLayers([1]); // Removed as function is not defined
     renderLayers(false);
+    // Herinjecteer API source UI voor upload formulier (renderLayers wist de container)
+    for (let n = 1; n <= 8; n++) {
+        injectApiSourceUI(n, '');
+    }
 }
 
 // Setup edit form submission
