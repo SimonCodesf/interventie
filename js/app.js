@@ -1305,7 +1305,8 @@ async function loadApiRandomLayersForTarget(target, posterId) {
  * Activeer een GLB 3D model op een API random <a-entity>.
  */
 function activateApi3DModel(entity, modelUrl) {
-    entity.setAttribute('gltf-model', `url(${modelUrl})`);
+    // Directe URL meegeven (geen url() wrapper — dat is alleen voor A-Frame asset selectors)
+    entity.setAttribute('gltf-model', modelUrl);
     entity.addEventListener('model-loaded', () => {
         console.log('[API-3D] Model geladen:', modelUrl);
     }, { once: true });
@@ -2422,7 +2423,7 @@ function buildLayersHTML(poster) {
                     <a-entity
                         id="ar-layer-${i}"
                         class="ar-model api-3d-layer"
-                        gltf-model="url(${modelUrl})"
+                        gltf-model="${modelUrl}"
                         data-layer-key="layer_${i}"
                         position="${posX} ${posY} ${baseZ}"
                         scale="${glbScale} ${glbScale} ${glbScale}"
