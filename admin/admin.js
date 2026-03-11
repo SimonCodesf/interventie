@@ -90,6 +90,8 @@ const LAYER_CONFIG = {
 
 // Huidige poster data voor AR preview
 let currentPosterData = null;
+// Geladen poster thumbnail voor AR preview achtergrond
+let previewPosterImage = null;
 
 
 // ========== GIF handling: use GIF directly as video ==========
@@ -1131,11 +1133,20 @@ function renderARPreview() {
     if (activeView === 'front') {
         ctx.fillRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
         ctx.strokeRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
-        // Label
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '10px Roboto Mono';
-        ctx.textAlign = 'center';
-        ctx.fillText('POSTER', cx, cy);
+        // Toon echte poster thumbnail als die beschikbaar is
+        if (previewPosterImage && previewPosterImage.complete && previewPosterImage.naturalWidth > 0) {
+            ctx.drawImage(previewPosterImage, cx - posterW/2, cy - posterH/2, posterW, posterH);
+            // Subtiele rand over de afbeelding heen
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cx - posterW/2, cy - posterH/2, posterW, posterH);
+        } else {
+            // Fallback label
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = '10px Roboto Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText('POSTER', cx, cy);
+        }
     } else if (activeView === 'side') {
         ctx.fillRect(cx - 3, cy - posterH/2, 6, posterH);
         ctx.strokeRect(cx - 3, cy - posterH/2, 6, posterH);
@@ -1310,6 +1321,51 @@ function renderARPreview() {
                 el.style.display = 'flex';
                 el.style.alignItems = 'center';
                 el.style.justifyContent = 'center';
+                el.style.cursor = 'move';
+                el.title = `Layer ${layerNum} — sleep om te herpositioneren`;
+                
+                // Drag-to-reposition: sleep de layer om pos_x/pos_y aan te passen
+                el.addEventListener('pointerdown', (startEvt) => {
+                    startEvt.preventDefault();
+                    el.setPointerCapture(startEvt.pointerId);
+                    const startMouseX = startEvt.clientX;
+                    const startMouseY = startEvt.clientY;
+                    const startPosX = data.posX;
+                    const startPosY = data.posY;
+                    el.style.opacity = '0.7';
+                    
+                    const onMove = (moveEvt) => {
+                        const dx = (moveEvt.clientX - startMouseX) / pxPerMeter;
+                        const dy = -(moveEvt.clientY - startMouseY) / pxPerMeter;
+                        const newX = Math.round((startPosX + dx) * 1000) / 1000;
+                        const newY = Math.round((startPosY + dy) * 1000) / 1000;
+                        
+                        // Update de input velden
+                        const isEditMode = document.getElementById('edit-modal')?.style.display === 'block';
+                        const pfx = isEditMode ? 'edit-' : '';
+                        const posXInput = document.getElementById(`${pfx}layer-${layerNum}-pos-x`);
+                        const posYInput = document.getElementById(`${pfx}layer-${layerNum}-pos-y`);
+                        if (posXInput) posXInput.value = newX.toFixed(3);
+                        if (posYInput) posYInput.value = newY.toFixed(3);
+                        
+                        // Update de data meteen voor vloeiende preview
+                        data.posX = newX;
+                        data.posY = newY;
+                        el.style.left = `${x - domW/2 + (newX - startPosX) * pxPerMeter}px`;
+                        el.style.top = `${y - domH/2 - (newY - startPosY) * pxPerMeter}px`;
+                    };
+                    
+                    const onUp = () => {
+                        el.style.opacity = '1';
+                        el.removeEventListener('pointermove', onMove);
+                        el.removeEventListener('pointerup', onUp);
+                        // Herrender volledig na loslaten
+                        updatePreviewFromInputs();
+                    };
+                    
+                    el.addEventListener('pointermove', onMove);
+                    el.addEventListener('pointerup', onUp);
+                });
                 
                 // Basis transform (rotatie)
                 const baseTransform = `rotateX(${data.rotX}deg) rotateY(${data.rotY}deg) rotateZ(${data.rotZ}deg)`;
@@ -2811,6 +2867,10 @@ function setupFilePreview() {
             reader.onload = (e) => {
                 previewImage.src = e.target.result;
                 previewContainer.style.display = 'block';
+                // Gebruik de geüploade JPEG ook als preview achtergrond
+                const img = new Image();
+                img.onload = () => { previewPosterImage = img; renderARPreview(); };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
             
@@ -3217,10 +3277,25 @@ async function openEditModal(posterId) {
         // Sla poster data globaal op voor AR preview
         currentPosterData = poster;
         
+        // Laad de thumbnail voor gebruik als achtergrond in de preview
+        previewPosterImage = null;
+        if (poster.thumbnail) {
+            const thumbImg = new Image();
+            thumbImg.crossOrigin = 'anonymous';
+            thumbImg.onload = () => {
+                previewPosterImage = thumbImg;
+                renderARPreview();
+            };
+            thumbImg.src = poster.thumbnail + '?_=' + Date.now();
+        }
+        
         // Populate form
         document.getElementById('edit-poster-id').value = poster.id;
         document.getElementById('edit-title').value = poster.title || '';
         document.getElementById('edit-description').value = poster.description || '';
+        
+        // Stel upload type in zodat edit modal weet of het reclame of poster is
+        currentUploadType = poster.upload_type === 'reclame' ? 'reclame' : 'poster';
         
         // Combine lat/lng into single coordinates field
         const lat = poster.latitude || '';
