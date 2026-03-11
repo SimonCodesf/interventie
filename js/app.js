@@ -1250,39 +1250,68 @@ async function loadApiRandomLayersForTarget(target, posterId) {
         const cached = apiLayerCooldownCache.get(cacheKey);
         
         if (cached && (now - cached.timestamp < API_LAYER_COOLDOWN_MS)) {
-            // Cooldown actief: hergebruik dezelfde GIF
+            // Cooldown actief: hergebruik dezelfde content
             console.log(`[API-LAYER] Cooldown actief voor ${cacheKey}, hergebruik cached URL`);
             plane.setAttribute('visible', 'true');
-            activateApiLayerGif(plane, cached.url);
+            if (source === 'sketchfab') {
+                activateApi3DModel(plane, cached.url);
+            } else {
+                activateApiLayerGif(plane, cached.url);
+            }
             continue;
         }
         
-        // Cooldown verlopen of eerste scan: haal nieuwe random GIF op
+        // Cooldown verlopen of eerste scan: haal nieuwe content op
         try {
-            console.log(`[API-LAYER] Random GIF ophalen voor query "${query}" (bron: ${source})...`);
             const apiUrl = window.API_URL || (window.location.origin + '/api.php');
-            const response = await fetch(`${apiUrl}/verkeersborden/gif?q=${encodeURIComponent(query)}&t=${Date.now()}`);
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            
-            if (data.success && data.gif && data.gif.url) {
-                // Gebruik gif-proxy voor CORS
-                const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
-                
-                // Cache met timestamp
-                apiLayerCooldownCache.set(cacheKey, { url: proxyUrl, timestamp: Date.now() });
-                
-                plane.setAttribute('visible', 'true');
-                activateApiLayerGif(plane, proxyUrl);
-                console.log(`[API-LAYER] GIF geladen voor ${cacheKey}`);
+            if (source === 'sketchfab') {
+                // 3D random Sketchfab model ophalen
+                console.log(`[API-3D] Random 3D model ophalen voor query "${query}"...`);
+                const response = await fetch(`${apiUrl}/api-search/3d/random?q=${encodeURIComponent(query)}&t=${Date.now()}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data.success && data.model_url) {
+                    apiLayerCooldownCache.set(cacheKey, { url: data.model_url, timestamp: Date.now() });
+                    plane.setAttribute('visible', 'true');
+                    activateApi3DModel(plane, data.model_url);
+                    console.log(`[API-3D] Model geladen voor ${cacheKey}: ${data.name}`);
+                } else {
+                    console.warn(`[API-3D] Geen model gevonden voor query "${query}":`, data.message);
+                }
             } else {
-                console.warn(`[API-LAYER] Geen GIF gevonden voor query "${query}"`);
+                // Klipy/meme GIF ophalen
+                console.log(`[API-LAYER] Random GIF ophalen voor query "${query}" (bron: ${source})...`);
+                const response = await fetch(`${apiUrl}/verkeersborden/gif?q=${encodeURIComponent(query)}&t=${Date.now()}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data.success && data.gif && data.gif.url) {
+                    const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
+                    apiLayerCooldownCache.set(cacheKey, { url: proxyUrl, timestamp: Date.now() });
+                    plane.setAttribute('visible', 'true');
+                    activateApiLayerGif(plane, proxyUrl);
+                    console.log(`[API-LAYER] GIF geladen voor ${cacheKey}`);
+                } else {
+                    console.warn(`[API-LAYER] Geen GIF gevonden voor query "${query}"`);
+                }
             }
         } catch (e) {
-            console.error(`[API-LAYER] Fout bij ophalen GIF voor "${query}":`, e);
+            console.error(`[API-LAYER] Fout bij ophalen content voor "${query}" (${source}):`, e);
         }
     }
+}
+
+/**
+ * Activeer een GLB 3D model op een API random <a-entity>.
+ */
+function activateApi3DModel(entity, modelUrl) {
+    entity.setAttribute('gltf-model', `url(${modelUrl})`);
+    entity.addEventListener('model-loaded', () => {
+        console.log('[API-3D] Model geladen:', modelUrl);
+    }, { once: true });
+    entity.addEventListener('model-error', (e) => {
+        console.error('[API-3D] Model laden mislukt:', modelUrl, e.detail);
+    }, { once: true });
 }
 
 /**
@@ -2334,12 +2363,31 @@ function buildLayersHTML(poster) {
         for (let i = 1; i <= 8; i++) {
             const layerData = poster.layers[`layer_${i}`];
             
-            // API random mode: maak placeholder plane aan, GIF wordt geladen bij targetFound
+            // API random mode: maak placeholder aan, content wordt geladen bij targetFound
             if (layerData && layerData.api_mode === 'random' && layerData.api_query) {
                 const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
                 const posX = parseFloat(layerData.pos_x) || 0;
                 const posY = parseFloat(layerData.pos_y) || 0;
                 const baseScale = parseFloat(layerData.scale) || 1.0;
+                
+                // Sketchfab 3D random: maak een <a-entity> aan (geen gif plane)
+                if (layerData.api_source === 'sketchfab') {
+                    const glbScale = baseScale * 0.1;
+                    layersHTML += `
+                        <a-entity
+                            id="ar-layer-${i}"
+                            class="api-random-layer api-3d-layer"
+                            data-api-random="true"
+                            data-api-source="sketchfab"
+                            data-api-query="${layerData.api_query.replace(/"/g, '&quot;')}"
+                            data-layer-key="layer_${i}"
+                            data-custom-scale="${baseScale}"
+                            position="${posX} ${posY} ${baseZ}"
+                            scale="${glbScale} ${glbScale} ${glbScale}"
+                            visible="false"></a-entity>`;
+                    continue;
+                }
+
                 const gifSize = 1.4 * baseScale;
                 const apiIsTransparent = layerData.transparent === true;
                 const apiMaterial = apiIsTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : 'transparent: false; side: double;';
@@ -2359,6 +2407,27 @@ function buildLayersHTML(poster) {
                         material="${apiMaterial}"
                         visible="false"></a-plane>`;
                 continue; // Overige layer verwerking overslaan
+            }
+            
+            // Specifiek 3D model (Sketchfab UID opgeslagen in api_query): laad gecached GLB
+            if (layerData && layerData.api_mode === '3d_model' && layerData.api_source === 'sketchfab' && layerData.api_query) {
+                const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
+                const posX = parseFloat(layerData.pos_x) || 0;
+                const posY = parseFloat(layerData.pos_y) || 0;
+                const baseScale = parseFloat(layerData.scale) || 1.0;
+                const glbScale = baseScale * 0.1;
+                const apiUrl = window.API_URL || (window.location.origin + '/api.php');
+                const modelUrl = `${apiUrl}/api-search/3d/model?uid=${encodeURIComponent(layerData.api_query)}`;
+                layersHTML += `
+                    <a-entity
+                        id="ar-layer-${i}"
+                        class="ar-model api-3d-layer"
+                        gltf-model="url(${modelUrl})"
+                        data-layer-key="layer_${i}"
+                        position="${posX} ${posY} ${baseZ}"
+                        scale="${glbScale} ${glbScale} ${glbScale}"
+                        visible="true"></a-entity>`;
+                continue;
             }
             
             // Define variables accessible to both image block and GLB block

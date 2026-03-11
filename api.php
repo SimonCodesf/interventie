@@ -293,6 +293,179 @@ if ($method === 'GET' && $path === '/posters') {
 } elseif ($method === 'GET' && preg_match('#^/verkeersborden/sign/([A-Za-z0-9]+)$#', $path, $matches)) {
     // Haal details van één verkeersbord op
     handleGetSign($matches[1]);
+} elseif ($method === 'GET' && $path === '/api-search/3d') {
+    // Zoek 3D modellen via Sketchfab publieke API (geen API key nodig voor browse)
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    $query = $_GET['q'] ?? '';
+    $maxTriangles = min((int)($_GET['max_triangles'] ?? 10000), 100000);
+    if (!$query) jsonResponse(['message' => 'Zoekterm is vereist'], 400);
+
+    $sketchfabUrl = 'https://api.sketchfab.com/v3/models?' . http_build_query([
+        'q'               => $query,
+        'type'            => 'models',
+        'downloadable'    => 'true',
+        'max_vertex_count'=> $maxTriangles,
+        'sort_by'         => '-likeCount',
+        'count'           => 20,
+    ]);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $sketchfabUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT      => 'interventie-poster/1.0 (+https://interventie.org)',
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ]);
+    $body     = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$body) {
+        jsonResponse(['success' => false, 'models' => [], 'message' => 'Sketchfab niet bereikbaar']);
+    }
+    $data   = json_decode($body, true);
+    $models = [];
+    foreach ($data['results'] ?? [] as $m) {
+        // Thumbnail: kies een kleine maat (~200-300px)
+        $thumb = '';
+        foreach ($m['thumbnails']['images'] ?? [] as $img) {
+            if ($img['width'] <= 640) { $thumb = $img['url']; break; }
+        }
+        if (!$thumb && !empty($m['thumbnails']['images'])) {
+            $thumb = end($m['thumbnails']['images'])['url'];
+        }
+        $models[] = [
+            'uid'          => $m['uid'],
+            'name'         => $m['name'] ?? '',
+            'thumbnail'    => $thumb,
+            'face_count'   => $m['faceCount'] ?? 0,
+            'vertex_count' => $m['vertexCount'] ?? 0,
+            'license'      => $m['license']['label'] ?? 'onbekend',
+            'author'       => $m['user']['displayName'] ?? '',
+            'glb_size'     => $m['archives']['glb']['size'] ?? 0,
+            'embed_url'    => $m['embedUrl'] ?? '',
+        ];
+    }
+    jsonResponse(['success' => true, 'models' => $models, 'query' => $query]);
+
+} elseif ($method === 'GET' && $path === '/api-search/3d/random') {
+    // AR runtime: haal random Sketchfab GLB op voor een query, cache op server, geef lokale URL terug
+    // (Geen admin auth, wel Sketchfab API key nodig voor download)
+    $query       = $_GET['q'] ?? '';
+    $maxTriangles = min((int)($_GET['max_triangles'] ?? 10000), 100000);
+    if (!$query) jsonResponse(['success' => false, 'message' => 'Geen zoekterm'], 400);
+
+    $apiKey = defined('SKETCHFAB_API_KEY') ? SKETCHFAB_API_KEY : '';
+    if (!$apiKey) jsonResponse(['success' => false, 'message' => 'Geen Sketchfab API key geconfigureerd'], 503);
+
+    // Zoek downloadbare modellen voor de query
+    $searchUrl = 'https://api.sketchfab.com/v3/models?' . http_build_query([
+        'q'               => $query,
+        'type'            => 'models',
+        'downloadable'    => 'true',
+        'max_vertex_count'=> $maxTriangles,
+        'sort_by'         => '-likeCount',
+        'count'           => 20,
+    ]);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $searchUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_USERAGENT      => 'interventie-poster/1.0',
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ]);
+    $body     = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$body) jsonResponse(['success' => false, 'message' => 'Sketchfab niet bereikbaar'], 502);
+    $data    = json_decode($body, true);
+    $results = $data['results'] ?? [];
+    if (empty($results)) jsonResponse(['success' => false, 'message' => 'Geen modellen gevonden voor query'], 404);
+
+    // Pik een random model uit de top resultaten
+    shuffle($results);
+    $chosen = $results[0];
+    $uid    = $chosen['uid'];
+    $name   = $chosen['name'] ?? 'model';
+
+    // Controleer of het GLB al gecached is (max 24 uur)
+    $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : dirname(__DIR__) . '/uploads/glb_cache';
+    $cacheFile = $cacheDir . '/' . preg_replace('/[^a-zA-Z0-9_-]/', '', $uid) . '.glb';
+    if (!file_exists($cacheDir)) mkdir($cacheDir, 0755, true);
+
+    if (!file_exists($cacheFile) || (time() - filemtime($cacheFile)) > 86400) {
+        // Haal download URL op bij Sketchfab (vereist API key)
+        $dlUrl = 'https://api.sketchfab.com/v3/models/' . urlencode($uid) . '/download';
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $dlUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Token ' . $apiKey,
+                'Accept: application/json',
+            ],
+        ]);
+        $dlBody     = curl_exec($ch);
+        $dlHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($dlHttpCode !== 200 || !$dlBody) {
+            jsonResponse(['success' => false, 'message' => 'Download URL ophalen mislukt (code ' . $dlHttpCode . ')'], 502);
+        }
+        $dlData  = json_decode($dlBody, true);
+        $glbUrl  = $dlData['gltf']['url'] ?? ($dlData['glb']['url'] ?? '');
+        if (!$glbUrl) jsonResponse(['success' => false, 'message' => 'Geen GLB URL in Sketchfab response'], 502);
+
+        // Download het GLB bestand (max 15 MB)
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $glbUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_MAXFILESIZE    => 15 * 1024 * 1024,
+        ]);
+        $glbData    = curl_exec($ch);
+        $glbCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $glbSize    = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
+        curl_close($ch);
+
+        if ($glbCode !== 200 || !$glbData || $glbSize > 15 * 1024 * 1024) {
+            jsonResponse(['success' => false, 'message' => 'GLB downloaden mislukt of te groot'], 502);
+        }
+        file_put_contents($cacheFile, $glbData);
+    }
+
+    // Geef de lokale proxy URL terug
+    $baseUrl  = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $localUrl = $baseUrl . '/api.php/api-search/3d/model?uid=' . urlencode($uid);
+    jsonResponse([
+        'success'   => true,
+        'model_url' => $localUrl,
+        'uid'       => $uid,
+        'name'      => $name,
+    ]);
+
+} elseif ($method === 'GET' && $path === '/api-search/3d/model') {
+    // Serveer een gecached GLB bestand (CORS-vrije proxy)
+    $uid = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['uid'] ?? '');
+    if (!$uid) { http_response_code(400); exit('Geen UID'); }
+
+    $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : dirname(__DIR__) . '/uploads/glb_cache';
+    $cacheFile = $cacheDir . '/' . $uid . '.glb';
+    if (!file_exists($cacheFile)) { http_response_code(404); exit('Model niet gecached'); }
+
+    header('Content-Type: model/gltf-binary');
+    header('Content-Length: ' . filesize($cacheFile));
+    header('Cache-Control: public, max-age=86400');
+    header('Access-Control-Allow-Origin: *');
+    readfile($cacheFile);
+    exit;
+
 } else {
     jsonResponse(['message' => 'Endpoint niet gevonden'], 404);
 }

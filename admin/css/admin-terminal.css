@@ -2259,6 +2259,77 @@ body.upload-mode-reclame .poster-only-field {
     text-overflow: ellipsis;
 }
 
+/* 3D model resultaten */
+.api-result-3d {
+    aspect-ratio: unset;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.api-result-3d .model-thumb-wrap {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    min-height: 80px;
+}
+
+.api-result-3d .model-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.api-result-3d .result-label {
+    position: static;
+    background: rgba(0,0,0,0.7);
+    padding: 2px 4px;
+    max-width: 100%;
+}
+
+.api-result-3d .result-meta {
+    font-size: 0.4rem;
+    color: rgba(255,255,255,0.4);
+    font-family: var(--font-data);
+    padding: 0 3px 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Triangle count badge */
+.tri-badge {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    background: rgba(0, 255, 200, 0.85);
+    color: #000;
+    font-size: 0.42rem;
+    font-family: var(--font-data);
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 2px;
+    line-height: 1.4;
+}
+
+.glb-size {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: rgba(0,0,0,0.75);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.38rem;
+    font-family: var(--font-data);
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+/* 3D resultaten grid iets breder dan GIF grid */
+.results-3d.api-results-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+}
+
 .api-loading {
     text-align: center;
     padding: 1rem;

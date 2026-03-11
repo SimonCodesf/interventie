@@ -1888,6 +1888,7 @@ function injectApiSourceUI(layerNum, prefix) {
             <option value="klipy">KLIPY GIF</option>
             <option value="meme">MEMES (Reddit)</option>
             <option value="imgflip">DANK MEMES (Reddit)</option>
+            <option value="sketchfab">3D MODEL (Sketchfab)</option>
         </select>
     `;
     
@@ -1927,9 +1928,10 @@ function injectApiSourceUI(layerNum, prefix) {
             if (fileInput) fileInput.style.display = 'none';
             // Update placeholder per bron
             if (queryInput) {
-                queryInput.placeholder = source === 'klipy' ? 'bv. funny cat, dance, surprise...' :
-                                         source === 'meme' ? 'bv. drake, distracted boyfriend, doge...' :
-                                         source === 'imgflip' ? 'bv. stonks, gigachad, surprised pikachu...' :
+                queryInput.placeholder = source === 'klipy'      ? 'bv. funny cat, dance, surprise...' :
+                                         source === 'meme'        ? 'bv. drake, distracted boyfriend, doge...' :
+                                         source === 'imgflip'     ? 'bv. stonks, gigachad, surprised pikachu...' :
+                                         source === 'sketchfab'   ? 'bv. cat, robot, tree, car (low-poly)...' :
                                          'Zoekterm...';
             }
         }
@@ -1992,6 +1994,7 @@ async function searchApiContent(layerNum, prefix, source, query) {
     
     try {
         let results = [];
+        let is3D = (source === 'sketchfab');
         
         if (source === 'klipy') {
             results = await searchKlipyApi(query);
@@ -1999,10 +2002,28 @@ async function searchApiContent(layerNum, prefix, source, query) {
             results = await searchMemeApi(query);
         } else if (source === 'imgflip') {
             results = await searchImgflipApi(query);
+        } else if (source === 'sketchfab') {
+            results = await searchSketchfab3DApi(query);
         }
         
         if (results.length === 0) {
             resultsContainer.innerHTML = '<div class="api-error">Geen resultaten gevonden</div>';
+            return;
+        }
+        
+        // 3D modellen hebben een eigen grid renderer
+        if (is3D && !isRandom) {
+            render3DResults(layerNum, prefix, results);
+            return;
+        }
+        
+        if (isRandom && is3D) {
+            // RANDOM 3D: sla de zoekterm op, model wordt bij elke scan geladen
+            const key = `${prefix}layer-${layerNum}`;
+            apiLayerData[key] = { api_mode: 'random', source: 'sketchfab', query };
+            resultsContainer.innerHTML = `<div class="api-loading">RANDOM 3D OPGESLAGEN: "${escapeHtml(query)}"<br><small style="opacity:0.6">Elk scan laadt een willekeurig low-poly Sketchfab model (30s cooldown)</small></div>`;
+            const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
+            if (statusEl) { statusEl.textContent = '3D RANDOM'; statusEl.style.color = '#0f0'; }
             return;
         }
         
@@ -2179,6 +2200,105 @@ async function searchImgflipApi(query) {
         console.error('Dank memes API fout:', err);
         return [];
     }
+}
+
+// Sketchfab 3D model API — zoek via server proxy (admin only)
+async function searchSketchfab3DApi(query, maxTriangles = 10000) {
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const url = `${API_URL}/api-search/3d?q=${encodeURIComponent(query)}&max_triangles=${maxTriangles}`;
+        const response = await fetch(url, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || 'Sketchfab zoeken mislukt');
+        }
+        const data = await response.json();
+        if (!data.success || !data.models?.length) return [];
+        return data.models.map(m => ({
+            id:           m.uid,
+            title:        m.name,
+            url:          m.embed_url,
+            preview_url:  m.thumbnail,
+            face_count:   m.face_count,
+            vertex_count: m.vertex_count,
+            license:      m.license,
+            author:       m.author,
+            glb_size_kb:  Math.round((m.glb_size || 0) / 1024),
+            source:       'sketchfab',
+            type:         '3d',
+        }));
+    } catch (err) {
+        console.error('Sketchfab 3D API fout:', err);
+        throw err;
+    }
+}
+
+// Render 3D modelresultaten als speciaal grid met triangle count badge
+function render3DResults(layerNum, prefix, items) {
+    const resultsContainer = document.getElementById(`${prefix}layer-${layerNum}-api-results`);
+    if (!resultsContainer) return;
+    resultsContainer.innerHTML = '';
+    resultsContainer.classList.add('results-3d');
+
+    items.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'api-result-item api-result-3d';
+        const triangleLabel = item.face_count
+            ? `<span class="tri-badge">${item.face_count.toLocaleString()} tri</span>`
+            : '';
+        const sizeLabel = item.glb_size_kb
+            ? `<span class="glb-size">${item.glb_size_kb} KB</span>`
+            : '';
+        el.innerHTML = `
+            <div class="model-thumb-wrap">
+                <img src="${escapeHtml(item.preview_url)}" alt="${escapeHtml(item.title)}" loading="lazy">
+                ${triangleLabel}
+                ${sizeLabel}
+            </div>
+            <span class="result-label" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+            <span class="result-meta">${escapeHtml(item.license || '')} — ${escapeHtml(item.author || '')}</span>
+        `;
+        el.addEventListener('click', () => select3DModel(layerNum, prefix, item, el));
+        resultsContainer.appendChild(el);
+    });
+}
+
+// Selecteer een 3D model als layer content
+function select3DModel(layerNum, prefix, item, element) {
+    const grid = element.closest('.api-results-grid');
+    if (grid) grid.querySelectorAll('.api-result-item').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+
+    const key = `${prefix}layer-${layerNum}`;
+    apiLayerData[key] = {
+        type:         '3d',
+        api_mode:     '3d_model',
+        source:       'sketchfab',
+        uid:          item.id,
+        title:        item.title,
+        thumbnail:    item.preview_url,
+        face_count:   item.face_count,
+    };
+
+    // Preview tonen
+    const selectedDiv = document.getElementById(`${prefix}layer-${layerNum}-api-selected`);
+    if (selectedDiv) {
+        selectedDiv.classList.remove('hidden');
+        selectedDiv.innerHTML = `
+            <img src="${escapeHtml(item.preview_url)}" alt="" style="max-height:80px;">
+            <div class="preview-info">
+                <strong>${escapeHtml(item.title)}</strong><br>
+                <small>${item.face_count?.toLocaleString() || '?'} triangles — ${escapeHtml(item.license || '')}</small>
+            </div>
+            <button type="button" class="preview-clear" onclick="clearApiSelection(${layerNum}, '${prefix}')">×</button>
+        `;
+    }
+
+    // Status badge
+    const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
+    if (statusEl) { statusEl.textContent = '3D'; statusEl.style.color = '#0ff'; }
 }
 
 // HTML escaping helper
@@ -2510,6 +2630,11 @@ function setupUploadForm() {
                 formData.append(`layer_${i}_api_mode`, 'random');
                 formData.append(`layer_${i}_api_source`, apiData.source);
                 formData.append(`layer_${i}_api_query`, apiData.query);
+            } else if (apiData && apiData.type === '3d' && apiData.uid) {
+                // Specifiek 3D model: sla UID op als api_mode=3d_model
+                formData.append(`layer_${i}_api_mode`, '3d_model');
+                formData.append(`layer_${i}_api_source`, 'sketchfab');
+                formData.append(`layer_${i}_api_query`, apiData.uid);
             } else if (apiData && apiData.url) {
                 // Handmatige API selectie: download de content en upload als bestand
                 try {
@@ -3482,6 +3607,10 @@ async function openEditModal(posterId) {
                     currentFileInfo.textContent = `API: ${layerData.api_source || 'klipy'} — "${layerData.api_query || ''}"`;
                     currentFileInfo.style.color = '#2196f3';
                     if (deleteMediaBtn) deleteMediaBtn.style.display = 'none';
+                } else if (currentFileInfo && layerData.api_mode === '3d_model') {
+                    currentFileInfo.textContent = `3D MODEL: Sketchfab UID ${layerData.api_query || ''}`;
+                    currentFileInfo.style.color = '#00bcd4';
+                    if (deleteMediaBtn) deleteMediaBtn.style.display = 'none';
                 } else if (currentFileInfo && layerData.filename) {
                     currentFileInfo.textContent = `Huidig: ${layerData.filename}`;
                     currentFileInfo.style.color = '#27ae60';
@@ -3495,9 +3624,13 @@ async function openEditModal(posterId) {
                 // Update layer status badge in edit modal
                 const statusBadge = document.getElementById(`edit-layer-${layerNum}-status`);
                 if (statusBadge && layerData.api_mode === 'random') {
-                    statusBadge.textContent = 'RANDOM';
+                    statusBadge.textContent = layerData.api_source === 'sketchfab' ? '3D RANDOM' : 'RANDOM';
                     statusBadge.style.background = '#e3f2fd';
                     statusBadge.style.color = '#1565c0';
+                } else if (statusBadge && layerData.api_mode === '3d_model') {
+                    statusBadge.textContent = '3D';
+                    statusBadge.style.background = '#e0f7fa';
+                    statusBadge.style.color = '#006064';
                 } else if (statusBadge && layerData.filename) {
                     statusBadge.textContent = 'Gevuld';
                     statusBadge.style.background = '#e8f5e9';
@@ -3532,7 +3665,24 @@ async function openEditModal(posterId) {
                     // Toon bevestiging in results container
                     const resultsContainer = document.getElementById(`edit-layer-${layerNum}-api-results`);
                     if (resultsContainer) {
-                        resultsContainer.innerHTML = `<div class="api-loading">RANDOM: "${escapeHtml(layerData.api_query || '')}"<br><small style="opacity:0.6">Elke scan: willekeurig resultaat (30s cooldown)</small></div>`;
+                        const isSketchfab = layerData.api_source === 'sketchfab';
+                        resultsContainer.innerHTML = `<div class="api-loading">${isSketchfab ? '3D RANDOM' : 'RANDOM'}: "${escapeHtml(layerData.api_query || '')}"<br><small style="opacity:0.6">Elke scan: willekeurig resultaat (30s cooldown)</small></div>`;
+                    }
+                }
+                
+                // Herstel 3D model state als deze laag een specifiek Sketchfab model is
+                if (layerData.api_mode === '3d_model') {
+                    const sourceSelect = document.getElementById(`edit-layer-${layerNum}-source`);
+                    if (sourceSelect) {
+                        sourceSelect.value = 'sketchfab';
+                        sourceSelect.dispatchEvent(new Event('change'));
+                    }
+                    apiLayerData[`edit-layer-${layerNum}`] = {
+                        type: '3d', api_mode: '3d_model', source: 'sketchfab', uid: layerData.api_query || ''
+                    };
+                    const resultsContainer = document.getElementById(`edit-layer-${layerNum}-api-results`);
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = `<div class="api-loading">3D MODEL: Sketchfab UID <code>${escapeHtml(layerData.api_query || '')}</code></div>`;
                     }
                 }
                 
@@ -3793,6 +3943,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append(`layer_${i}_api_mode`, 'random');
                     formData.append(`layer_${i}_api_source`, saveSource);
                     formData.append(`layer_${i}_api_query`, saveQuery);
+                } else if (editApiData && editApiData.type === '3d' && editApiData.uid) {
+                    // Specifiek 3D model: sla UID op als api_mode=3d_model
+                    formData.append(`layer_${i}_api_mode`, '3d_model');
+                    formData.append(`layer_${i}_api_source`, 'sketchfab');
+                    formData.append(`layer_${i}_api_query`, editApiData.uid);
                 } else if (editApiData && editApiData.url) {
                     // Download de API content en voeg toe als bestand
                     try {
