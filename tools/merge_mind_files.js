@@ -57,9 +57,12 @@ async function mergeMindFiles() {
     
     // 1. Find all .mind files
     const mindFiles = [];
+    const missingMind = []; // Posters in DB maar zonder .mind bestand
     
     // Walk through assets/nft directory
-    const items = fs.readdirSync(ASSETS_DIR);
+    const items = fs.existsSync(ASSETS_DIR) ? fs.readdirSync(ASSETS_DIR) : [];
+    const foundInFilesystem = new Set();
+    
     for (const item of items) {
         const itemPath = path.join(ASSETS_DIR, item);
         if (fs.statSync(itemPath).isDirectory()) {
@@ -77,6 +80,8 @@ async function mergeMindFiles() {
                 }
             }
             
+            foundInFilesystem.add(item);
+            
             // Look for .mind file inside (usually same name as folder)
             const mindFile = path.join(itemPath, `${item}.mind`);
             if (fs.existsSync(mindFile)) {
@@ -89,8 +94,27 @@ async function mergeMindFiles() {
                     created_at: posterData && typeof posterData === 'object' ? posterData.created_at : null,
                     mtime: mtime
                 });
+            } else {
+                console.log(`WAARSCHUWING: Poster ${item} heeft geen .mind bestand (map bestaat wel)`);
+                missingMind.push(item);
             }
         }
+    }
+    
+    // Check ook DB posters die helemaal geen map hebben in assets/nft/
+    if (validPosterData) {
+        for (const p of validPosterData) {
+            const pid = typeof p === 'string' ? p : p.id;
+            if (!foundInFilesystem.has(pid)) {
+                console.log(`WAARSCHUWING: Poster ${pid} heeft geen map in assets/nft/`);
+                missingMind.push(pid);
+            }
+        }
+    }
+    
+    if (missingMind.length > 0) {
+        console.log(`MISSING_MIND_COUNT:${missingMind.length}`);
+        console.log(`MISSING_MIND_IDS:${missingMind.join(',')}`);
     }
     
     console.log(`Gevonden: ${mindFiles.length} geldige .mind files`);

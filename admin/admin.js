@@ -2230,17 +2230,23 @@ function setupLogoutButton() {
                 
                 // Show console output if available
                 if (result.output) {
-                    console.group("🖥️ AR Rebuild Server Output");
+                    console.group("AR Rebuild Server Output");
                     console.log(`%c=== START LOGS ===`, 'color: #00ff00; font-weight: bold;');
                     result.output.forEach(line => console.log(`%c${line}`, 'color: #aaa; font-family: monospace;'));
                     console.log(`%c=== END LOGS ===`, 'color: #00ff00; font-weight: bold;');
                     console.groupEnd();
                 }
                 
-                if (result.success) {
-                    console.log('Success! Rebuild complete.');
-                    // Gebruik setTimeout om alert te ontkoppelen van de click event stack
-                    setTimeout(() => alert('AR rebuild succesvol!\nCheck console voor details.'), 100);
+                // Toon welke posters zonder .mind zijn
+                if (result.missingMind && result.missingMind.length > 0) {
+                    const names = result.missingMind.map(p => `• ${p.title} (${p.id.substring(0, 8)}...)`).join('\n');
+                    console.warn(`[Rebuild] ${result.missingMind.length} poster(s) zonder .mind bestand:\n${names}`);
+                    setTimeout(() => alert(
+                        `AR Rebuild klaar: ${result.missingMind.length} poster(s) missen nog een AR marker:\n\n${names}\n\nOpen deze posters in Edit, upload de JPEG opnieuw, en sla op.`
+                    ), 100);
+                } else if (result.success) {
+                    console.log('Rebuild compleet. Alle posters hebben een .mind bestand.');
+                    setTimeout(() => alert('AR rebuild succesvol!\nAlle posters staan in de chunks.'), 100);
                 } else {
                     console.error('Rebuild failed:', result.message);
                     setTimeout(() => alert('Fout: ' + (result.message || 'Onbekende fout')), 100);

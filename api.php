@@ -107,10 +107,41 @@ if ($method === 'GET' && $path === '/posters') {
     // Trigger MindAR chunk rebuild with output capture
     $result = triggerMindMerge(true);
     logAdminActivity('REBUILD_MIND', 'Handmatige rebuild uitgevoerd');
+    
+    // Zoek welke poster IDs zonder .mind zijn (gerapporteerd door merge script)
+    $missingIds = [];
+    foreach ($result['output'] as $line) {
+        if (strpos($line, 'MISSING_MIND_IDS:') === 0) {
+            $ids = explode(',', substr($line, strlen('MISSING_MIND_IDS:')));
+            $missingIds = array_filter(array_map('trim', $ids));
+        }
+    }
+    
+    // Haal titels op voor de missing IDs
+    $missingPosters = [];
+    if (!empty($missingIds)) {
+        try {
+            $db = getDatabase();
+            foreach ($missingIds as $missingId) {
+                $stmt = $db->prepare("SELECT id, title FROM posters WHERE id = ?");
+                $stmt->execute([$missingId]);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($row) {
+                    $missingPosters[] = ['id' => $row['id'], 'title' => $row['title']];
+                } else {
+                    $missingPosters[] = ['id' => $missingId, 'title' => '(onbekend)'];
+                }
+            }
+        } catch (Exception $e) {
+            // Negeer DB-fout, stuur toch door
+        }
+    }
+    
     jsonResponse([
         'success' => $result['returnVar'] === 0,
         'message' => 'Mind rebuild ' . ($result['returnVar'] === 0 ? 'succesvol' : 'mislukt'),
-        'output' => $result['output']
+        'output' => $result['output'],
+        'missingMind' => $missingPosters
     ]);
 } elseif ($path === '/settings/ar-tracking') {
     // Settings logic
