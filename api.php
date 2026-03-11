@@ -143,6 +143,34 @@ if ($method === 'GET' && $path === '/posters') {
         'output' => $result['output'],
         'missingMind' => $missingPosters
     ]);
+} elseif ($method === 'GET' && $path === '/admin/settings') {
+    // Haal admin-instellingen op (api keys etc.) — opgeslagen in data/settings.json
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    $settingsFile = dirname(__DIR__) . '/data/settings.json';
+    $settings = [];
+    if (file_exists($settingsFile)) {
+        $settings = json_decode(file_get_contents($settingsFile), true) ?: [];
+    }
+    // Verberg de echte sleutel, stuur alleen of die ingesteld is
+    $result = [
+        'sketchfab_key_set' => !empty($settings['sketchfab_api_key']),
+    ];
+    jsonResponse($result);
+} elseif ($method === 'POST' && $path === '/admin/settings') {
+    // Sla admin-instellingen op
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    $input = json_decode(file_get_contents('php://input'), true) ?: [];
+    $settingsFile = dirname(__DIR__) . '/data/settings.json';
+    $settings = [];
+    if (file_exists($settingsFile)) {
+        $settings = json_decode(file_get_contents($settingsFile), true) ?: [];
+    }
+    // Alleen bekende velden opslaan (whitelist)
+    if (isset($input['sketchfab_api_key'])) {
+        $settings['sketchfab_api_key'] = trim($input['sketchfab_api_key']);
+    }
+    file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT));
+    jsonResponse(['success' => true, 'message' => 'Instellingen opgeslagen']);
 } elseif ($path === '/settings/ar-tracking') {
     // Settings logic
     $settingsFile = __DIR__ . '/assets/ar-settings.json';
@@ -356,8 +384,13 @@ if ($method === 'GET' && $path === '/posters') {
     $maxTriangles = min((int)($_GET['max_triangles'] ?? 10000), 100000);
     if (!$query) jsonResponse(['success' => false, 'message' => 'Geen zoekterm'], 400);
 
-    $apiKey = defined('SKETCHFAB_API_KEY') ? SKETCHFAB_API_KEY : '';
-    if (!$apiKey) jsonResponse(['success' => false, 'message' => 'Geen Sketchfab API key geconfigureerd'], 503);
+    // Lees API key: eerst uit data/settings.json, dan uit config.php constant
+    $settingsFile = dirname(__DIR__) . '/data/settings.json';
+    $savedSettings = file_exists($settingsFile) ? (json_decode(file_get_contents($settingsFile), true) ?: []) : [];
+    $apiKey = !empty($savedSettings['sketchfab_api_key'])
+        ? $savedSettings['sketchfab_api_key']
+        : (defined('SKETCHFAB_API_KEY') ? SKETCHFAB_API_KEY : '');
+    if (!$apiKey) jsonResponse(['success' => false, 'message' => 'Geen Sketchfab API key geconfigureerd — voer de key in via Admin > Instellingen'], 503);
 
     // Zoek downloadbare modellen voor de query
     $searchUrl = 'https://api.sketchfab.com/v3/models?' . http_build_query([

@@ -2413,10 +2413,97 @@ async function logout(sessionExpired = false) {
     }
 }
 
+// ========== Instellingen Modal ==========
+
+async function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    // Controleer of Sketchfab key al is opgeslagen
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const resp = await fetch(`${API_URL}/admin/settings`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            const statusEl = document.getElementById('sketchfab-key-status');
+            if (statusEl) {
+                statusEl.textContent = data.sketchfab_key_set
+                    ? 'Sleutel is opgeslagen op de server'
+                    : 'Geen sleutel opgeslagen';
+                statusEl.style.color = data.sketchfab_key_set ? '#0f0' : '#f80';
+            }
+        }
+    } catch (e) { /* stil falen */ }
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeSettingsModal = closeSettingsModal;
+
+function toggleKeyVisibility() {
+    const input = document.getElementById('sketchfab-api-key');
+    const btn = document.getElementById('sketchfab-key-toggle');
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    if (btn) btn.textContent = input.type === 'password' ? 'TOON' : 'VERBERG';
+}
+window.toggleKeyVisibility = toggleKeyVisibility;
+
+async function saveSettings() {
+    const keyInput = document.getElementById('sketchfab-api-key');
+    const statusEl = document.getElementById('sketchfab-key-status');
+    const saveBtn = document.getElementById('save-settings-btn');
+    const key = keyInput ? keyInput.value.trim() : '';
+
+    if (!key) {
+        if (statusEl) { statusEl.textContent = 'Voer een sleutel in'; statusEl.style.color = '#f44'; }
+        return;
+    }
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'OPSLAAN...'; }
+
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const resp = await fetch(`${API_URL}/admin/settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ sketchfab_api_key: key })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+            if (statusEl) { statusEl.textContent = 'Sleutel opgeslagen!'; statusEl.style.color = '#0f0'; }
+            if (keyInput) keyInput.value = '';
+            setTimeout(closeSettingsModal, 1200);
+        } else {
+            if (statusEl) { statusEl.textContent = data.message || 'Opslaan mislukt'; statusEl.style.color = '#f44'; }
+        }
+    } catch (e) {
+        if (statusEl) { statusEl.textContent = 'Fout: ' + e.message; statusEl.style.color = '#f44'; }
+    } finally {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'OPSLAAN'; }
+    }
+}
+
 // Setup logout button
 function setupLogoutButton() {
     const logoutBtn = document.getElementById('logout-btn');
     logoutBtn.onclick = () => logout(false);
+
+    // Setup Instellingen knop
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) settingsBtn.onclick = openSettingsModal;
+
+    // Setup opslaan knop in modal
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    if (saveSettingsBtn) saveSettingsBtn.onclick = saveSettings;
     
     // Setup AR Rebuild button
     const rebuildBtn = document.getElementById('rebuild-mind-btn');

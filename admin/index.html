@@ -40,6 +40,7 @@
                 <a href="../index.html" class="nav-item-link">Terug naar website</a>
                 <button id="logout-btn" class="nav-item-btn">Uitloggen</button>
                 <button id="rebuild-mind-btn" class="nav-item-btn" style="border: 1px solid rgba(255,255,255,0.5); margin-top: 0.5rem;">AR Rebuild</button>
+                <button id="settings-btn" class="nav-item-btn" style="border: 1px solid rgba(0,255,255,0.4); margin-top: 0.5rem; color: #0ff;">Instellingen</button>
             </nav>
 
             <div class="poster-list-title">
@@ -412,7 +413,33 @@
 
     <!-- MindAR browser compiler: compileert JPEG naar .mind zonder server dependencies -->
     <!-- type="module" vereist want het bestand gebruikt ES import syntax -->
+    <!-- Instellingen modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-backdrop" onclick="closeSettingsModal()"></div>
+        <div class="modal-content" style="max-width:480px">
+            <div class="modal-header">
+                <h2>INSTELLINGEN</h2>
+                <button type="button" class="modal-close" onclick="closeSettingsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">SKETCHFAB API KEY</label>
+                    <p style="font-size:0.55rem;opacity:0.6;margin:0 0 6px">Aanmaken op <a href="https://sketchfab.com/settings/password" target="_blank" rel="noopener" style="color:#0ff">sketchfab.com → Account → Password & API → API Token</a></p>
+                    <div style="display:flex;gap:6px;align-items:center">
+                        <input type="password" id="sketchfab-api-key" class="form-control" placeholder="Plak hier je Sketchfab API token..." style="flex:1;font-family:monospace;font-size:0.6rem">
+                        <button type="button" id="sketchfab-key-toggle" class="terminal-btn" style="font-size:0.55rem;padding:4px 8px" onclick="toggleKeyVisibility()">TOON</button>
+                    </div>
+                    <div id="sketchfab-key-status" style="font-size:0.5rem;margin-top:4px;opacity:0.7"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="save-settings-btn" class="btn btn-primary">OPSLAAN</button>
+                <button type="button" class="terminal-btn" onclick="closeSettingsModal()">ANNULEREN</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="admin.js?v=3.11"></script>
+    <script src="admin.js?v=3.12"></script>
 </body>
 </html>
