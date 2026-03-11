@@ -424,12 +424,19 @@ if ($method === 'GET' && $path === '/posters') {
     $uid    = $chosen['uid'];
     $name   = $chosen['name'] ?? 'model';
 
-    // Controleer of het GLB al gecached is (max 24 uur)
+    // Controleer of het GLB al gecached is (max 24 uur) EN geldig GLB is (niet een ZIP)
     $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : __DIR__ . '/uploads/glb_cache';
     $cacheFile = $cacheDir . '/' . preg_replace('/[^a-zA-Z0-9_-]/', '', $uid) . '.glb';
     if (!file_exists($cacheDir)) mkdir($cacheDir, 0755, true);
 
-    if (!file_exists($cacheFile) || (time() - filemtime($cacheFile)) > 86400) {
+    $cacheValid = file_exists($cacheFile)
+        && (time() - filemtime($cacheFile)) <= 86400
+        && substr(file_get_contents($cacheFile, false, null, 0, 2), 0, 2) !== 'PK'; // ZIP detectie
+
+    if (!$cacheValid) {
+        // Verwijder eventueel fout gecachede ZIP
+        if (file_exists($cacheFile)) unlink($cacheFile);
+
         // Haal download URL op bij Sketchfab (vereist API key)
         $dlUrl = 'https://api.sketchfab.com/v3/models/' . urlencode($uid) . '/download';
         $ch = curl_init();
@@ -453,24 +460,49 @@ if ($method === 'GET' && $path === '/posters') {
         $glbUrl  = $dlData['gltf']['url'] ?? ($dlData['glb']['url'] ?? '');
         if (!$glbUrl) jsonResponse(['success' => false, 'message' => 'Geen GLB URL in Sketchfab response'], 502);
 
-        // Download het GLB bestand (max 15 MB)
+        // Download het bestand (max 30 MB — Sketchfab geeft ZIP terug)
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL            => $glbUrl,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT        => 60,
-            CURLOPT_MAXFILESIZE    => 15 * 1024 * 1024,
         ]);
-        $glbData    = curl_exec($ch);
-        $glbCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $glbSize    = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
+        $fileData = curl_exec($ch);
+        $fileCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $fileSize = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
         curl_close($ch);
 
-        if ($glbCode !== 200 || !$glbData || $glbSize > 15 * 1024 * 1024) {
-            jsonResponse(['success' => false, 'message' => 'GLB downloaden mislukt of te groot'], 502);
+        if ($fileCode !== 200 || !$fileData || $fileSize > 30 * 1024 * 1024) {
+            jsonResponse(['success' => false, 'message' => 'Bestand downloaden mislukt of te groot (' . round($fileSize/1024/1024, 1) . 'MB)'], 502);
         }
-        file_put_contents($cacheFile, $glbData);
+
+        // Controleer of het een ZIP is (Sketchfab stuurt ZIP met GLB + texturen)
+        if (substr($fileData, 0, 2) === 'PK') {
+            $tmpZip = sys_get_temp_dir() . '/sketchfab_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $uid) . '.zip';
+            file_put_contents($tmpZip, $fileData);
+            $zip = new ZipArchive();
+            if ($zip->open($tmpZip) !== true) {
+                unlink($tmpZip);
+                jsonResponse(['success' => false, 'message' => 'ZIP van Sketchfab kon niet worden geopend'], 502);
+            }
+            $glbData = null;
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $fname = $zip->getNameIndex($i);
+                if (strtolower(pathinfo($fname, PATHINFO_EXTENSION)) === 'glb') {
+                    $glbData = $zip->getFromIndex($i);
+                    break;
+                }
+            }
+            $zip->close();
+            unlink($tmpZip);
+            if (!$glbData) {
+                jsonResponse(['success' => false, 'message' => 'Geen GLB gevonden in ZIP van Sketchfab'], 502);
+            }
+            $fileData = $glbData;
+        }
+
+        file_put_contents($cacheFile, $fileData);
     }
 
     // Geef de lokale proxy URL terug
