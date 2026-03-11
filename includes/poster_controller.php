@@ -238,9 +238,11 @@ function handleUploadPoster($db) {
             $outputStr = implode("\n", $compileOutput);
             error_log("[UPLOAD] .mind compilatie output: $outputStr");
             
-            if ($compileReturn !== 0) {
-                error_log("[UPLOAD] WAARSCHUWING: .mind compilatie mislukt (exit code: $compileReturn)");
-                // Niet fataal - poster wordt opgeslagen maar zonder werkend AR target
+            if ($compileReturn === 2) {
+                // Exit code 2 = server-side compilatie niet beschikbaar (geen native build tools)
+                error_log("[UPLOAD] INFO: Server-side .mind compilatie niet beschikbaar voor {$id}. Poster opgeslagen zonder AR tracking.");
+            } elseif ($compileReturn !== 0) {
+                error_log("[UPLOAD] WAARSCHUWING: .mind compilatie mislukt (exit code: $compileReturn) voor {$id}");
             } else {
                 error_log("[UPLOAD] .mind succesvol gegenereerd voor {$id}");
             }

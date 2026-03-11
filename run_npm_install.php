@@ -37,7 +37,7 @@ foreach ($possibleNpmPaths as $p) {
 echo "npm pad: $npmPath\n\n";
 
 // Draai npm install
-$cmd = "cd " . escapeshellarg($toolsDir) . " && $npmPath install 2>&1";
+$cmd = "cd " . escapeshellarg($toolsDir) . " && $npmPath install --omit=optional 2>&1";
 echo "Commando: $cmd\n\n";
 echo "--- Output ---\n";
 flush();
