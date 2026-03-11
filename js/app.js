@@ -2352,6 +2352,7 @@ function buildLayersHTML(poster) {
                         data-api-source="${layerData.api_source || 'klipy'}"
                         data-api-query="${layerData.api_query.replace(/"/g, '&quot;')}"
                         data-layer-key="layer_${i}"
+                        data-custom-scale="${baseScale}"
                         position="${posX} ${posY} ${baseZ}"
                         height="${gifSize.toFixed(3)}"
                         width="${gifSize.toFixed(3)}"

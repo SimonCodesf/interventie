@@ -84,34 +84,47 @@
                 return;
             }
             
-            // Laad alle frames als Image objecten
+            // Laad frame 0 eerst zodat we meteen kunnen starten, rest asynchroon
             const loadedFrames = new Array(frames.length);
             let loaded = 0;
+            let firstFrameResolved = false;
             
-            frames.forEach((blobUrl, i) => {
-                const img = new Image();
-                img.onload = () => {
-                    loadedFrames[i] = img;
-                    loaded++;
-                    
-                    if (loaded === frames.length) {
-                        // Cleanup blob URLs
-                        frames.forEach(url => URL.revokeObjectURL(url));
-                        
-                        resolve({
-                            frames: loadedFrames,
-                            delays: delayTimes,
-                            loopCount: loopCnt,
-                            width: loadedFrames[0].width,
-                            height: loadedFrames[0].height
-                        });
-                    }
-                };
-                img.onerror = () => {
-                    reject(new Error('Failed to load frame ' + i));
-                };
-                img.src = blobUrl;
-            });
+            const checkDone = () => {
+                loaded++;
+                if (loaded === frames.length) {
+                    frames.forEach(url => URL.revokeObjectURL(url));
+                }
+            };
+            
+            // Laad frame 0 synchroon als eerste zodat we meteen kunnen beginnen
+            const firstImg = new Image();
+            firstImg.onload = () => {
+                loadedFrames[0] = firstImg;
+                checkDone();
+                if (!firstFrameResolved) {
+                    firstFrameResolved = true;
+                    // Resolve meteen na frame 0 — animatie start alvast, frames worden on-the-fly ingevuld
+                    resolve({
+                        frames: loadedFrames,
+                        delays: delayTimes,
+                        loopCount: loopCnt,
+                        width: firstImg.width,
+                        height: firstImg.height,
+                        totalFrames: frames.length
+                    });
+                }
+                // Laad overige frames na resolve (on-the-fly invullen)
+                for (let i = 1; i < frames.length; i++) {
+                    const img = new Image();
+                    img.onload = () => { loadedFrames[i] = img; checkDone(); };
+                    img.onerror = () => { loadedFrames[i] = firstImg; checkDone(); }; // fallback naar frame 0
+                    img.src = frames[i];
+                }
+            };
+            firstImg.onerror = () => {
+                reject(new Error('Failed to load frame 0'));
+            };
+            firstImg.src = frames[0];
         });
     }
     
@@ -232,6 +245,22 @@
                     this.lastFrameTime = performance.now();
                 }
                 
+                // Pas aspect ratio van de a-plane aan op basis van echte GIF dimensies
+                const gifW = this.gifData.width;
+                const gifH = this.gifData.height;
+                if (gifW > 0 && gifH > 0) {
+                    const customScale = parseFloat(this.el.getAttribute('data-custom-scale')) || 1.0;
+                    const maxHeight = 1.4 * customScale;
+                    const ratio = gifW / gifH;
+                    let planeW = maxHeight * ratio;
+                    let planeH = maxHeight;
+                    // Maximale breedte begrenzen
+                    const maxW = 2.0 * customScale;
+                    if (planeW > maxW) { planeW = maxW; planeH = maxW / ratio; }
+                    this.el.setAttribute('width', planeW.toFixed(3));
+                    this.el.setAttribute('height', planeH.toFixed(3));
+                }
+                
                 // Dispatch loaded event
                 window.dispatchEvent(new CustomEvent('gif-loaded', { 
                     detail: { src: src } 
@@ -249,6 +278,8 @@
             if (!this.gifData || index >= this.gifData.frames.length) return;
             
             const frame = this.gifData.frames[index];
+            // Frame kan nog null zijn als het asynchroon nog niet geladen is → sla over
+            if (!frame) return;
             
             if (this.data.transparent) {
                 // Transparante modus: clear en teken direct (geen accumulation)
