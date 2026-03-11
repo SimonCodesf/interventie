@@ -1886,8 +1886,8 @@ function injectApiSourceUI(layerNum, prefix) {
         <select class="layer-source-select" id="${prefix}layer-${layerNum}-source" data-layer="${layerNum}" data-prefix="${prefix}">
             <option value="manual">BESTAND</option>
             <option value="klipy">KLIPY GIF</option>
-            <option value="meme">MEME API</option>
-            <option value="imgflip">IMGFLIP</option>
+            <option value="meme">MEMES (Reddit)</option>
+            <option value="imgflip">DANK MEMES (Reddit)</option>
         </select>
     `;
     
@@ -1928,8 +1928,8 @@ function injectApiSourceUI(layerNum, prefix) {
             // Update placeholder per bron
             if (queryInput) {
                 queryInput.placeholder = source === 'klipy' ? 'bv. funny cat, dance, surprise...' :
-                                         source === 'meme' ? 'bv. drake, distracted boyfriend...' :
-                                         source === 'imgflip' ? 'bv. change my mind, one does not simply...' :
+                                         source === 'meme' ? 'bv. drake, distracted boyfriend, doge...' :
+                                         source === 'imgflip' ? 'bv. stonks, gigachad, surprised pikachu...' :
                                          'Zoekterm...';
             }
         }
@@ -2131,26 +2131,21 @@ async function searchKlipyApi(query) {
     return [];
 }
 
-// Meme API (memegen.link - gratis, geen key nodig)
+// Meme API — Reddit r/memes via server proxy
 async function searchMemeApi(query) {
     try {
-        // memegen.link API: haal beschikbare templates
-        const response = await fetch('https://api.memegen.link/templates');
+        const token = sessionStorage.getItem('adminToken');
+        const response = await fetch(`${API_URL}/api-search/memes?q=${encodeURIComponent(query)}&source=memes`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         if (!response.ok) throw new Error('Meme API niet bereikbaar');
-        const templates = await response.json();
-        
-        // Filter op zoekterm
-        const q = query.toLowerCase();
-        const matches = templates.filter(t => 
-            t.name.toLowerCase().includes(q) || 
-            (t.keywords && t.keywords.some(k => k.toLowerCase().includes(q)))
-        ).slice(0, 12);
-        
-        return matches.map(t => ({
-            id: t.id,
-            title: t.name,
-            url: t.blank,  // Blank template URL
-            preview_url: t.blank,
+        const data = await response.json();
+        if (!data.success || !data.memes?.length) return [];
+        return data.memes.map(m => ({
+            id: m.id,
+            title: m.title,
+            url: m.url,
+            preview_url: m.preview_url || m.url,
             width: 0,
             height: 0,
             source: 'meme'
@@ -2161,35 +2156,27 @@ async function searchMemeApi(query) {
     }
 }
 
-// Imgflip API (gratis, populaire memes)
+// Dank Memes — Reddit r/dankmemes via server proxy
 async function searchImgflipApi(query) {
     try {
-        const response = await fetch('https://api.imgflip.com/get_memes');
-        if (!response.ok) throw new Error('Imgflip API niet bereikbaar');
+        const token = sessionStorage.getItem('adminToken');
+        const response = await fetch(`${API_URL}/api-search/memes?q=${encodeURIComponent(query)}&source=dankmemes`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!response.ok) throw new Error('Meme API niet bereikbaar');
         const data = await response.json();
-        
-        if (!data.success || !data.data?.memes) return [];
-        
-        // Filter op zoekterm
-        const q = query.toLowerCase();
-        const matches = data.data.memes.filter(m => 
-            m.name.toLowerCase().includes(q)
-        ).slice(0, 12);
-        
-        // Als geen match, toon populairste
-        const results = matches.length > 0 ? matches : data.data.memes.slice(0, 12);
-        
-        return results.map(m => ({
+        if (!data.success || !data.memes?.length) return [];
+        return data.memes.map(m => ({
             id: m.id,
-            title: m.name,
+            title: m.title,
             url: m.url,
-            preview_url: m.url,
-            width: m.width,
-            height: m.height,
+            preview_url: m.preview_url || m.url,
+            width: 0,
+            height: 0,
             source: 'imgflip'
         }));
     } catch (err) {
-        console.error('Imgflip API fout:', err);
+        console.error('Dank memes API fout:', err);
         return [];
     }
 }

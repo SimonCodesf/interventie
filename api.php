@@ -172,6 +172,59 @@ if ($method === 'GET' && $path === '/posters') {
     if (!$query) jsonResponse(['message' => 'Zoekterm is vereist'], 400);
     $results = searchKlipyGifMultiple($query);
     jsonResponse($results);
+} elseif ($method === 'GET' && $path === '/api-search/memes') {
+    // Zoek memes via Reddit JSON API (r/memes of r/dankmemes)
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    $query = $_GET['q'] ?? '';
+    $source = $_GET['source'] ?? 'memes';
+    if (!$query) jsonResponse(['message' => 'Zoekterm is vereist'], 400);
+    // Whitelist van toegestane subreddits
+    $allowedSubs = ['memes', 'dankmemes', 'me_irl', 'AdviceAnimals', 'funny'];
+    if (!in_array($source, $allowedSubs)) $source = 'memes';
+    $url = 'https://www.reddit.com/r/' . urlencode($source) . '/search.json?' . http_build_query([
+        'q' => $query,
+        'restrict_sr' => 1,
+        'sort' => 'top',
+        't' => 'year',
+        'limit' => 25,
+    ]);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        CURLOPT_USERAGENT => 'interventie-poster-app/1.0 (by interventie.org)',
+    ]);
+    $body = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($httpCode !== 200 || !$body) {
+        jsonResponse(['success' => false, 'memes' => [], 'message' => 'Reddit niet bereikbaar']);
+    }
+    $data = json_decode($body, true);
+    $posts = $data['data']['children'] ?? [];
+    $memes = [];
+    foreach ($posts as $post) {
+        $p = $post['data'];
+        $imgUrl = $p['url'] ?? '';
+        // Alleen directe afbeeldingen (jpg/png/gif/webp)
+        if (!preg_match('/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i', $imgUrl)) continue;
+        if (!empty($p['is_video'])) continue;
+        // Reddit HTML-escapeert preview URLs (& → &amp;)
+        $preview = html_entity_decode($p['preview']['images'][0]['source']['url'] ?? $imgUrl);
+        $memes[] = [
+            'id' => $p['id'],
+            'title' => $p['title'],
+            'url' => $imgUrl,
+            'preview_url' => $preview,
+            'author' => $p['author'] ?? '',
+            'ups' => $p['ups'] ?? 0,
+        ];
+        if (count($memes) >= 12) break;
+    }
+    jsonResponse(['success' => true, 'memes' => $memes]);
 } elseif ($method === 'GET' && $path === '/verkeersborden/gif-proxy') {
     // Proxy externe GIF URL naar eigen domein (lost CORS op voor gif-component fetch)
     $gifUrl = isset($_GET['url']) ? $_GET['url'] : '';
@@ -180,7 +233,7 @@ if ($method === 'GET' && $path === '/posters') {
         exit('Geen URL opgegeven');
     }
     // Valideer dat het een toegestane URL is (veiligheidscheck)
-    $allowedDomains = ['klipy.com', 'klipy.co', 'media.klipy.com', 'media.klipy.co', 'cdn.klipy.com', 'i.imgflip.com', 'imgflip.com', 'api.memegen.link'];
+    $allowedDomains = ['klipy.com', 'klipy.co', 'media.klipy.com', 'media.klipy.co', 'cdn.klipy.com', 'i.imgflip.com', 'imgflip.com', 'api.memegen.link', 'i.redd.it', 'preview.redd.it', 'external-preview.redd.it', 'i.imgur.com', 'imgur.com'];
     $host = parse_url($gifUrl, PHP_URL_HOST);
     $allowed = false;
     foreach ($allowedDomains as $domain) {
