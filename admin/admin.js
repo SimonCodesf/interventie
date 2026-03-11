@@ -564,12 +564,14 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLogoutButton();
     setupFileSummaryListeners(); // Core files
     setupCreditsSection(); // Credits dynamic rows
+    setupUploadTypeSelector(); // Upload modus dropdown
     
     // Defer layer listeners slightly to ensure inputs exist
     setTimeout(() => {
         setupLayerSummaryListeners();
         setupLayerAnimationToggles(); // Animation toggles
         setupARPreview(); // Visual preview
+        setupLayerApiSources(); // API bron selectors per laag
     }, 500);
 });
 
@@ -1644,6 +1646,331 @@ function setupEditChangesSummary() {
     updateSummary();
 }
 
+// ========== Upload Type Selector ==========
+// Schakelt tussen "poster" (volledig) en "reclame" (snel) upload modus
+let currentUploadType = 'poster';
+
+function setupUploadTypeSelector() {
+    const dropdown = document.getElementById('upload-type');
+    const hint = document.getElementById('upload-type-hint');
+    const arMarkerInput = document.getElementById('ar-marker-file');
+    
+    if (!dropdown) return;
+    
+    dropdown.addEventListener('change', () => {
+        currentUploadType = dropdown.value;
+        
+        if (currentUploadType === 'reclame') {
+            document.body.classList.add('upload-mode-reclame');
+            document.body.classList.remove('upload-mode-poster');
+            hint.textContent = 'Snelle upload: foto van reclame, .mind wordt automatisch gegenereerd';
+            // AR marker niet meer verplicht
+            if (arMarkerInput) arMarkerInput.removeAttribute('required');
+        } else {
+            document.body.classList.remove('upload-mode-reclame');
+            document.body.classList.add('upload-mode-poster');
+            hint.textContent = 'Volledige poster met GPS, PDFs, AR layers en metadata';
+            // AR marker weer verplicht in poster modus (tenzij je die zelf genereert)
+            // Niet required zetten - in poster modus is het optioneel maar aanbevolen
+        }
+    });
+    
+    // Default state
+    document.body.classList.add('upload-mode-poster');
+}
+
+// ========== API Bron Selectors voor AR Layers ==========
+// Voegt per layer een bron-dropdown toe: Handmatig | Klipy GIF | Meme (Imgflip) | Random
+
+// Bijhouden welke API content per layer is geselecteerd
+const apiLayerData = {};
+
+function setupLayerApiSources() {
+    for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
+        injectApiSourceUI(i, '');        // Upload formulier
+        injectApiSourceUI(i, 'edit-');   // Edit formulier
+    }
+}
+
+function injectApiSourceUI(layerNum, prefix) {
+    const fileSlot = document.querySelector(`#${prefix}layer-${layerNum}-image`)?.closest('.file-slot');
+    if (!fileSlot) return;
+    
+    // Maak source selector
+    const sourceDiv = document.createElement('div');
+    sourceDiv.className = 'layer-source-selector';
+    sourceDiv.innerHTML = `
+        <label>BRON:</label>
+        <select class="layer-source-select" id="${prefix}layer-${layerNum}-source" data-layer="${layerNum}" data-prefix="${prefix}">
+            <option value="manual">BESTAND</option>
+            <option value="klipy">KLIPY GIF</option>
+            <option value="meme">MEME API</option>
+            <option value="imgflip">IMGFLIP</option>
+        </select>
+    `;
+    
+    // Maak API zoek panel
+    const searchPanel = document.createElement('div');
+    searchPanel.className = 'api-search-panel hidden';
+    searchPanel.id = `${prefix}layer-${layerNum}-api-panel`;
+    searchPanel.innerHTML = `
+        <div class="api-search-row">
+            <input type="text" class="api-search-input" id="${prefix}layer-${layerNum}-api-query" placeholder="Zoekterm..." data-layer="${layerNum}">
+            <button type="button" class="api-search-btn" id="${prefix}layer-${layerNum}-api-search-btn" data-layer="${layerNum}" data-prefix="${prefix}">ZOEK</button>
+        </div>
+        <div class="api-results-grid" id="${prefix}layer-${layerNum}-api-results"></div>
+        <div class="api-selected-preview hidden" id="${prefix}layer-${layerNum}-api-selected"></div>
+    `;
+    
+    // Voeg toe voor de file input
+    fileSlot.insertBefore(sourceDiv, fileSlot.firstChild);
+    fileSlot.insertBefore(searchPanel, sourceDiv.nextSibling);
+    
+    // Event: bron wijzigen
+    const sourceSelect = sourceDiv.querySelector('.layer-source-select');
+    sourceSelect.addEventListener('change', () => {
+        const source = sourceSelect.value;
+        const fileInput = document.getElementById(`${prefix}layer-${layerNum}-image`);
+        const panel = document.getElementById(`${prefix}layer-${layerNum}-api-panel`);
+        const queryInput = document.getElementById(`${prefix}layer-${layerNum}-api-query`);
+        
+        if (source === 'manual') {
+            panel.classList.add('hidden');
+            if (fileInput) fileInput.style.display = '';
+        } else {
+            panel.classList.remove('hidden');
+            if (fileInput) fileInput.style.display = 'none';
+            // Update placeholder per bron
+            if (queryInput) {
+                queryInput.placeholder = source === 'klipy' ? 'bv. funny cat, dance, surprise...' :
+                                         source === 'meme' ? 'bv. drake, distracted boyfriend...' :
+                                         source === 'imgflip' ? 'bv. change my mind, one does not simply...' :
+                                         'Zoekterm...';
+            }
+        }
+    });
+    
+    // Event: zoek knop
+    const searchBtn = document.getElementById(`${prefix}layer-${layerNum}-api-search-btn`);
+    searchBtn.addEventListener('click', () => {
+        const source = sourceSelect.value;
+        const query = document.getElementById(`${prefix}layer-${layerNum}-api-query`).value.trim();
+        if (!query) return;
+        searchApiContent(layerNum, prefix, source, query);
+    });
+    
+    // Enter key zoeken
+    const queryInput = document.getElementById(`${prefix}layer-${layerNum}-api-query`);
+    queryInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchBtn.click();
+        }
+    });
+}
+
+// API zoek functie - stuurt naar juiste API
+async function searchApiContent(layerNum, prefix, source, query) {
+    const resultsContainer = document.getElementById(`${prefix}layer-${layerNum}-api-results`);
+    const searchBtn = document.getElementById(`${prefix}layer-${layerNum}-api-search-btn`);
+    
+    resultsContainer.innerHTML = '<div class="api-loading">ZOEKEN...</div>';
+    searchBtn.disabled = true;
+    
+    try {
+        let results = [];
+        
+        if (source === 'klipy') {
+            results = await searchKlipyApi(query);
+        } else if (source === 'meme') {
+            results = await searchMemeApi(query);
+        } else if (source === 'imgflip') {
+            results = await searchImgflipApi(query);
+        }
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="api-error">Geen resultaten gevonden</div>';
+            return;
+        }
+        
+        resultsContainer.innerHTML = '';
+        results.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'api-result-item';
+            el.innerHTML = `
+                <img src="${escapeHtml(item.preview_url || item.url)}" alt="${escapeHtml(item.title || '')}" loading="lazy">
+                <span class="result-label">${escapeHtml(item.title || item.id || '')}</span>
+            `;
+            el.addEventListener('click', () => selectApiResult(layerNum, prefix, item, el));
+            resultsContainer.appendChild(el);
+        });
+    } catch (err) {
+        resultsContainer.innerHTML = `<div class="api-error">Fout: ${escapeHtml(err.message)}</div>`;
+    } finally {
+        searchBtn.disabled = false;
+    }
+}
+
+// Selecteer een API resultaat als layer content
+function selectApiResult(layerNum, prefix, item, element) {
+    // Markeer geselecteerde
+    const grid = element.closest('.api-results-grid');
+    grid.querySelectorAll('.api-result-item').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    
+    // Sla data op
+    const key = `${prefix}layer-${layerNum}`;
+    apiLayerData[key] = {
+        type: 'api',
+        source: document.getElementById(`${prefix}layer-${layerNum}-source`).value,
+        url: item.url,
+        preview_url: item.preview_url || item.url,
+        title: item.title || '',
+        id: item.id || '',
+        width: item.width || 0,
+        height: item.height || 0
+    };
+    
+    // Toon geselecteerde preview
+    const selectedDiv = document.getElementById(`${prefix}layer-${layerNum}-api-selected`);
+    selectedDiv.classList.remove('hidden');
+    selectedDiv.innerHTML = `
+        <img src="${escapeHtml(item.preview_url || item.url)}" alt="">
+        <div class="preview-info">
+            <strong>${escapeHtml(item.title || 'Geselecteerd')}</strong><br>
+            ${item.width ? item.width + '×' + item.height : ''}
+        </div>
+        <button type="button" class="preview-clear" onclick="clearApiSelection(${layerNum}, '${prefix}')">×</button>
+    `;
+    
+    // Update layer status
+    const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
+    if (statusEl) {
+        const sourceLabel = document.getElementById(`${prefix}layer-${layerNum}-source`).value.toUpperCase();
+        statusEl.textContent = sourceLabel;
+        statusEl.style.color = '#0f0';
+    }
+}
+
+function clearApiSelection(layerNum, prefix) {
+    const key = `${prefix}layer-${layerNum}`;
+    delete apiLayerData[key];
+    
+    const selectedDiv = document.getElementById(`${prefix}layer-${layerNum}-api-selected`);
+    if (selectedDiv) {
+        selectedDiv.classList.add('hidden');
+        selectedDiv.innerHTML = '';
+    }
+    
+    // Reset status
+    const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
+    if (statusEl) {
+        statusEl.textContent = 'LEEG';
+        statusEl.style.color = '';
+    }
+    
+    // Deselecteer in grid
+    const grid = document.getElementById(`${prefix}layer-${layerNum}-api-results`);
+    if (grid) grid.querySelectorAll('.api-result-item').forEach(el => el.classList.remove('selected'));
+}
+window.clearApiSelection = clearApiSelection;
+
+// ========== API Zoek Functies ==========
+
+// Klipy GIF API (via server proxy - meerdere resultaten)
+async function searchKlipyApi(query) {
+    const token = sessionStorage.getItem('adminToken');
+    const response = await fetch(`${API_URL}/api-search/gifs?q=${encodeURIComponent(query)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!response.ok) throw new Error('Klipy zoeken mislukt');
+    const data = await response.json();
+    
+    if (data.success && data.gifs && data.gifs.length > 0) {
+        return data.gifs.map(gif => ({
+            id: gif.id,
+            title: gif.title || gif.slug || query,
+            url: gif.url,
+            preview_url: gif.preview_url || gif.url,
+            width: gif.width,
+            height: gif.height,
+            source: 'klipy'
+        }));
+    }
+    return [];
+}
+
+// Meme API (memegen.link - gratis, geen key nodig)
+async function searchMemeApi(query) {
+    try {
+        // memegen.link API: haal beschikbare templates
+        const response = await fetch('https://api.memegen.link/templates');
+        if (!response.ok) throw new Error('Meme API niet bereikbaar');
+        const templates = await response.json();
+        
+        // Filter op zoekterm
+        const q = query.toLowerCase();
+        const matches = templates.filter(t => 
+            t.name.toLowerCase().includes(q) || 
+            (t.keywords && t.keywords.some(k => k.toLowerCase().includes(q)))
+        ).slice(0, 12);
+        
+        return matches.map(t => ({
+            id: t.id,
+            title: t.name,
+            url: t.blank,  // Blank template URL
+            preview_url: t.blank,
+            width: 0,
+            height: 0,
+            source: 'meme'
+        }));
+    } catch (err) {
+        console.error('Meme API fout:', err);
+        return [];
+    }
+}
+
+// Imgflip API (gratis, populaire memes)
+async function searchImgflipApi(query) {
+    try {
+        const response = await fetch('https://api.imgflip.com/get_memes');
+        if (!response.ok) throw new Error('Imgflip API niet bereikbaar');
+        const data = await response.json();
+        
+        if (!data.success || !data.data?.memes) return [];
+        
+        // Filter op zoekterm
+        const q = query.toLowerCase();
+        const matches = data.data.memes.filter(m => 
+            m.name.toLowerCase().includes(q)
+        ).slice(0, 12);
+        
+        // Als geen match, toon populairste
+        const results = matches.length > 0 ? matches : data.data.memes.slice(0, 12);
+        
+        return results.map(m => ({
+            id: m.id,
+            title: m.name,
+            url: m.url,
+            preview_url: m.url,
+            width: m.width,
+            height: m.height,
+            source: 'imgflip'
+        }));
+    } catch (err) {
+        console.error('Imgflip API fout:', err);
+        return [];
+    }
+}
+
+// HTML escaping helper
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // Setup login form
 function setupLoginForm() {
     const form = document.getElementById('login-form');
@@ -1879,14 +2206,19 @@ function setupUploadForm() {
             }
         }
         
-        // Add AR marker file (single marker, required)
+        // Add AR marker file (poster modus: verplicht, reclame modus: optioneel - wordt server-side gegenereerd)
         const arMarkerFile = document.getElementById('ar-marker-file').files[0];
         
-        if (!arMarkerFile) {
-            errorMsg.textContent = 'AR Marker (.mind bestand) is verplicht';
-            return;
+        // Upload type meesturen
+        formData.append('upload_type', currentUploadType);
+        
+        if (currentUploadType === 'poster' && !arMarkerFile) {
+            // In poster modus is .mind aanbevolen maar niet strict verplicht
+            // Server kan het ook genereren
         }
-        formData.append('ar_marker_file', arMarkerFile);
+        if (arMarkerFile) {
+            formData.append('ar_marker_file', arMarkerFile);
+        }
         
         // AR Layers (8 layers with positioning and animation)
         for (let i = 1; i <= 8; i++) {
@@ -1923,8 +2255,29 @@ function setupUploadForm() {
             const layerZ = zInput.value;
             const isExclusion = exclusionInput ? exclusionInput.checked : false;
             
-            // Only append if layer has an image
-            if (layerImage) {
+            // Check of er een API-geselecteerde afbeelding is voor deze laag
+            const apiKey = `layer-${i}`;
+            const apiData = apiLayerData[apiKey];
+            
+            if (apiData && apiData.url) {
+                // Download de API content en voeg toe als bestand
+                try {
+                    const proxyUrl = apiData.source === 'klipy' 
+                        ? `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(apiData.url)}`
+                        : apiData.url;
+                    const imgResponse = await fetch(proxyUrl);
+                    const blob = await imgResponse.blob();
+                    const ext = blob.type.includes('gif') ? 'gif' : blob.type.includes('png') ? 'png' : 'jpg';
+                    const apiFile = new File([blob], `api_${apiData.source}_${i}.${ext}`, { type: blob.type });
+                    formData.append(`layer_${i}_image`, apiFile);
+                    // Sla API metadata op voor de backend
+                    formData.append(`layer_${i}_api_source`, apiData.source);
+                    formData.append(`layer_${i}_api_url`, apiData.url);
+                } catch (apiErr) {
+                    console.warn(`[Layer ${i}] API afbeelding downloaden mislukt:`, apiErr);
+                }
+            } else if (layerImage) {
+                // Handmatige upload (bestaand gedrag)
                 if (layerImage.type === 'image/gif') {
                     // GIF direct doorsturen (A-Frame GIF shader speelt ze af)
                     layerImage = await convertGifFileToMp4(layerImage, `upload_layer_${i}`);
@@ -2417,14 +2770,17 @@ async function loadAdminPosters() {
             return;
         }
         
-        postersList.innerHTML = posters.map(poster => `
+        postersList.innerHTML = posters.map(poster => {
+            const typeLabel = poster.upload_type === 'reclame' ? '<span style="color:#f90;font-size:0.45rem;"> [RECLAME]</span>' : '';
+            return `
             <div class="sidebar-poster-item" data-id="${poster.id}" onclick="openEditModal('${poster.id}')">
                 <div class="poster-item-header">
-                    <h4 class="poster-item-title">${poster.title}</h4>
+                    <h4 class="poster-item-title">${poster.title}${typeLabel}</h4>
                 </div>
                 <p class="poster-item-meta">${formatDate(poster.upload_date || poster.uploadDate)}</p>
             </div>
-        `).join('');
+        `;
+        }).join('');
         
     } catch (error) {
         console.error('Error loading posters:', error);
@@ -3066,13 +3422,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 let layerImage = layerImageEl.files[0];
                 const layerZ = layerZEl.value;
                 
-                // Only append image if a new one is selected
-                if (layerImage) {
+                // Check of er een API-geselecteerde afbeelding is voor deze laag (edit modus)
+                const editApiKey = `edit-layer-${i}`;
+                const editApiData = apiLayerData[editApiKey];
+                
+                if (editApiData && editApiData.url) {
+                    // Download de API content en voeg toe als bestand
+                    try {
+                        const proxyUrl = editApiData.source === 'klipy' 
+                            ? `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(editApiData.url)}`
+                            : editApiData.url;
+                        const imgResponse = await fetch(proxyUrl);
+                        const blob = await imgResponse.blob();
+                        const ext = blob.type.includes('gif') ? 'gif' : blob.type.includes('png') ? 'png' : 'jpg';
+                        const apiFile = new File([blob], `api_${editApiData.source}_${i}.${ext}`, { type: blob.type });
+                        formData.append(`layer_${i}_image`, apiFile);
+                        formData.append(`layer_${i}_api_source`, editApiData.source);
+                        formData.append(`layer_${i}_api_url`, editApiData.url);
+                    } catch (apiErr) {
+                        console.warn(`[Edit Layer ${i}] API afbeelding downloaden mislukt:`, apiErr);
+                    }
+                } else if (layerImage) {
+                    // Handmatige upload (bestaand gedrag)
                     if (layerImage.type === 'image/gif') {
-                        // GIF direct doorsturen (A-Frame GIF shader speelt ze af)
                         layerImage = await convertGifFileToMp4(layerImage, `edit_layer_${i}`);
                     } else {
-                        // Schaal statische afbeeldingen clientside naar max 1024px
                         layerImage = await prepareLayerImage(layerImage);
                     }
                     formData.append(`layer_${i}_image`, layerImage);

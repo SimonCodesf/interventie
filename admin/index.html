@@ -53,11 +53,21 @@
         <!-- Main Content -->
         <main class="admin-main">
             <header class="section-header">
-                <h2>POSTER_CONFIG_EDITOR // V.4.0</h2>
+                <h2>POSTER_CONFIG_EDITOR // V.5.0</h2>
                 <div class="header-status">
                      <span id="upload-status-text">SYSTEM_READY</span>
                 </div>
             </header>
+
+            <!-- Upload Type Selector -->
+            <div class="upload-type-selector">
+                <label for="upload-type" class="upload-type-label">UPLOAD_MODE:</label>
+                <select id="upload-type" class="upload-type-dropdown">
+                    <option value="poster">POSTER (VOLLEDIG)</option>
+                    <option value="reclame">RECLAME (SNEL)</option>
+                </select>
+                <span id="upload-type-hint" class="upload-type-hint">Volledige poster met GPS, PDF's, AR layers en metadata</span>
+            </div>
 
             <form id="upload-form" class="editor-grid">
                 
@@ -78,22 +88,22 @@
                                 <textarea id="poster-description" rows="3" placeholder="..."></textarea>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group poster-only-field">
                                 <label for="poster-coordinates">GPS_COORDS</label>
                                 <input type="text" id="poster-coordinates" placeholder="Lat, Lng">
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group poster-only-field">
                                 <label for="poster-location">LOCATIE_NAAM</label>
                                 <input type="text" id="poster-location" placeholder="bv. Kantienberg">
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group poster-only-field">
                                 <label for="poster-artikel-link">EXT_LINK</label>
                                 <input type="text" id="poster-artikel-link" placeholder="https://...">
                             </div>
 
-                            <div class="form-group credits-section">
+                            <div class="form-group credits-section poster-only-field">
                                 <label>CREDITS</label>
                                 <div id="credits-container" class="credits-container">
                                     <div class="credit-row">
@@ -120,7 +130,7 @@
                         <div class="panel-content">
                             <div class="form-group">
                                 <label for="poster-jpeg">JPEG (WEBSITE_DISPLAY)</label>
-                                <input type="file" id="poster-jpeg" accept="image/jpeg" required>
+                                <input type="file" id="poster-jpeg" accept="image/jpeg,image/png" required>
                                 <div id="jpeg-size-info" class="file-size-info"></div>
                                 <!-- Preview Container (Restored) -->
                                 <div id="preview-container" style="display: none; margin-top: 10px; border: 1px dashed #666; padding: 5px;">
@@ -128,13 +138,14 @@
                                 </div>
                             </div>
 
-                            <div class="form-group hl-zone">
+                            <div class="form-group hl-zone poster-only-field" id="ar-marker-field">
                                 <label for="ar-marker-file">AR_MARKER_FILE (.mind)</label>
-                                <input type="file" id="ar-marker-file" accept=".mind" required>
+                                <input type="file" id="ar-marker-file" accept=".mind">
                                 <div id="mind-size-info" class="file-size-info"></div>
+                                <p class="hint-text" style="margin-top: 0.3rem; opacity: 0.5;">In reclame-modus wordt de .mind automatisch gegenereerd op de server</p>
                             </div>
                             
-                            <div class="form-row">
+                            <div class="form-row poster-only-field">
                                 <div class="form-group half">
                                     <label for="poster-pdf-medium">PDF (A3)</label>
                                     <input type="file" id="poster-pdf-medium" accept="application/pdf">

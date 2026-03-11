@@ -52,7 +52,9 @@ function initDatabaseWithMigrations() {
         'glb_model' => 'TEXT',
         'audio_file' => 'TEXT',
         'gallery_images' => 'TEXT',
-        'ar_camera_feed' => 'INTEGER DEFAULT 0'
+        'ar_camera_feed' => 'INTEGER DEFAULT 0',
+        'upload_type' => "TEXT DEFAULT 'poster'",
+        'created_at' => 'DATETIME DEFAULT CURRENT_TIMESTAMP'
     ];
     
     foreach ($columnsToAdd as $column => $type) {

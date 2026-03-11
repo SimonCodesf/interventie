@@ -134,6 +134,13 @@ if ($method === 'GET' && $path === '/posters') {
 } elseif ($method === 'GET' && $path === '/verkeersborden/gif') {
     // Haal random GIF op voor een verkeersbord (?sign=A1a of ?q=zoekterm)
     handleGetGif();
+} elseif ($method === 'GET' && $path === '/api-search/gifs') {
+    // Zoek meerdere GIFs via Klipy API (voor admin layer selector)
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    $query = $_GET['q'] ?? '';
+    if (!$query) jsonResponse(['message' => 'Zoekterm is vereist'], 400);
+    $results = searchKlipyGifMultiple($query);
+    jsonResponse($results);
 } elseif ($method === 'GET' && $path === '/verkeersborden/gif-proxy') {
     // Proxy externe GIF URL naar eigen domein (lost CORS op voor gif-component fetch)
     $gifUrl = isset($_GET['url']) ? $_GET['url'] : '';
@@ -141,8 +148,8 @@ if ($method === 'GET' && $path === '/posters') {
         http_response_code(400);
         exit('Geen URL opgegeven');
     }
-    // Valideer dat het een Klipy URL is (veiligheidscheck)
-    $allowedDomains = ['klipy.com', 'klipy.co', 'media.klipy.com', 'media.klipy.co', 'cdn.klipy.com'];
+    // Valideer dat het een toegestane URL is (veiligheidscheck)
+    $allowedDomains = ['klipy.com', 'klipy.co', 'media.klipy.com', 'media.klipy.co', 'cdn.klipy.com', 'i.imgflip.com', 'imgflip.com', 'api.memegen.link'];
     $host = parse_url($gifUrl, PHP_URL_HOST);
     $allowed = false;
     foreach ($allowedDomains as $domain) {

@@ -155,6 +155,101 @@ function searchKlipyGif($query) {
 }
 
 /**
+ * Zoek meerdere GIFs via Klipy API (voor admin layer selector)
+ * Geeft alle resultaten terug in plaats van 1 random
+ * 
+ * @param string $query Zoekterm
+ * @return array Array met alle gevonden GIFs
+ */
+function searchKlipyGifMultiple($query) {
+    // Controleer cache eerst
+    $cacheKey = md5('multi_' . $query);
+    $cacheFile = KLIPY_CACHE_DIR . "/{$cacheKey}.json";
+    
+    if (file_exists($cacheFile)) {
+        $cacheAge = time() - filemtime($cacheFile);
+        if ($cacheAge < KLIPY_CACHE_TTL) {
+            $cached = json_decode(file_get_contents($cacheFile), true);
+            if ($cached && !empty($cached['gifs'])) {
+                return ['success' => true, 'gifs' => $cached['gifs'], 'cached' => true, 'query' => $query];
+            }
+        }
+    }
+    
+    $customerId = 'admin-' . md5($_SERVER['REMOTE_ADDR'] ?? 'anonymous');
+    
+    $apiUrl = KLIPY_BASE_URL . '/' . KLIPY_APP_KEY . '/gifs/search?' . http_build_query([
+        'q' => $query,
+        'customer_id' => $customerId,
+        'per_page' => KLIPY_PER_PAGE,
+        'locale' => 'be',
+        'content_filter' => KLIPY_CONTENT_FILTER,
+        'format_filter' => 'gif',
+    ]);
+    
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $apiUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        CURLOPT_USERAGENT => 'Interventie-Admin/1.0 (interventie.org)',
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    
+    if ($curlError) return ['success' => false, 'error' => "Klipy API fout: $curlError"];
+    if ($httpCode !== 200) return ['success' => false, 'error' => "Klipy API HTTP $httpCode"];
+    
+    $data = json_decode($response, true);
+    if (!$data || !$data['result'] || empty($data['data']['data'])) {
+        return ['success' => false, 'error' => 'Geen GIFs gevonden voor: ' . $query, 'gifs' => []];
+    }
+    
+    $gifs = [];
+    foreach ($data['data']['data'] as $item) {
+        if (($item['type'] ?? '') === 'ad') continue;
+        
+        $gif = [
+            'id' => $item['id'],
+            'slug' => $item['slug'] ?? '',
+            'title' => $item['title'] ?? '',
+            'url' => null,
+            'preview_url' => null,
+            'width' => 0,
+            'height' => 0,
+        ];
+        
+        if (isset($item['file']['md']['gif'])) {
+            $gif['url'] = $item['file']['md']['gif']['url'];
+            $gif['width'] = $item['file']['md']['gif']['width'];
+            $gif['height'] = $item['file']['md']['gif']['height'];
+        } elseif (isset($item['file']['sm']['gif'])) {
+            $gif['url'] = $item['file']['sm']['gif']['url'];
+            $gif['width'] = $item['file']['sm']['gif']['width'];
+            $gif['height'] = $item['file']['sm']['gif']['height'];
+        }
+        
+        if (isset($item['file']['xs']['gif'])) {
+            $gif['preview_url'] = $item['file']['xs']['gif']['url'];
+        }
+        
+        if ($gif['url']) $gifs[] = $gif;
+    }
+    
+    // Cache resultaten
+    if (!empty($gifs)) {
+        file_put_contents($cacheFile, json_encode(['gifs' => $gifs, 'cached_at' => time()]));
+    }
+    
+    return ['success' => true, 'gifs' => $gifs, 'cached' => false, 'query' => $query, 'total_results' => count($gifs)];
+}
+
+/**
  * Haal verkeersborden data op
  * 
  * @param bool $top30Only Alleen top 30 teruggeven

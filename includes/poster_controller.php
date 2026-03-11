@@ -121,14 +121,24 @@ function handleUploadPoster($db) {
         jsonResponse(['message' => 'Niet geautoriseerd'], 401);
     }
     
+    // Bepaal upload type: 'poster' (volledig) of 'reclame' (snel)
+    $uploadType = $_POST['upload_type'] ?? 'poster';
+    if (!in_array($uploadType, ['poster', 'reclame'])) {
+        $uploadType = 'poster';
+    }
+    
     // Accept both ar_marker_file (from admin.js) and ar_marker_file_hq (legacy)
     $arMarkerFile = isset($_FILES['ar_marker_file']) ? $_FILES['ar_marker_file'] : 
                     (isset($_FILES['ar_marker_file_hq']) ? $_FILES['ar_marker_file_hq'] : null);
     
-    if (empty($_FILES['jpeg']) || empty($arMarkerFile)) {
-        logAdminActivity('UPLOAD_FAILED', 'Missing required files');
-        jsonResponse(['message' => 'JPEG en .mind bestand zijn verplicht'], 400);
+    // Validatie: JPEG is altijd verplicht
+    if (empty($_FILES['jpeg'])) {
+        logAdminActivity('UPLOAD_FAILED', 'Missing JPEG file');
+        jsonResponse(['message' => 'JPEG afbeelding is verplicht'], 400);
     }
+    
+    // In poster modus: .mind is aanbevolen maar niet strict verplicht
+    // In reclame modus: .mind wordt server-side gegenereerd als niet meegeleverd
     
     $title = $_POST['title'] ?? '';
     $description = $_POST['description'] ?? '';
@@ -151,7 +161,7 @@ function handleUploadPoster($db) {
     }
     
     // Validate files
-    $jpegValidation = validateUploadedFile($_FILES['jpeg'], ['image/jpeg'], 52428800);
+    $jpegValidation = validateUploadedFile($_FILES['jpeg'], ['image/jpeg', 'image/png'], 52428800);
     if (!$jpegValidation['valid']) jsonResponse(['message' => 'JPEG: ' . $jpegValidation['message']], 400);
     
     // PDF is optioneel - alleen valideren als aanwezig
@@ -164,8 +174,11 @@ function handleUploadPoster($db) {
         if (!$pdfValidation2['valid']) jsonResponse(['message' => 'PDF Large: ' . $pdfValidation2['message']], 400);
     }
     
-    $hqValidation = validateUploadedFile($arMarkerFile, ['application/octet-stream', 'application/json'], 10485760);
-    if (!$hqValidation['valid']) jsonResponse(['message' => 'AR Marker: ' . $hqValidation['message']], 400);
+    // AR Marker validatie - alleen als een .mind bestand is meegeleverd
+    if ($arMarkerFile && $arMarkerFile['error'] === UPLOAD_ERR_OK) {
+        $hqValidation = validateUploadedFile($arMarkerFile, ['application/octet-stream', 'application/json'], 10485760);
+        if (!$hqValidation['valid']) jsonResponse(['message' => 'AR Marker: ' . $hqValidation['message']], 400);
+    }
     
     // Upload logic
     try {
@@ -191,14 +204,47 @@ function handleUploadPoster($db) {
         
         createThumbnail(UPLOADS_DIR . '/' . $jpegFilename, THUMBNAILS_DIR . '/' . $thumbnailFilename);
         
-        // Mind files - save as {id}.mind (without _hq suffix for simplicity)
+        // Mind files - save as {id}.mind
+        $arMarkerPath = '';
         $mindDir = __DIR__ . '/../assets/nft/' . $id;
-        if (!file_exists($mindDir)) mkdir($mindDir, 0755, true);
         
-        $mindFilename = $id . '.mind';
-        move_uploaded_file($arMarkerFile['tmp_name'], $mindDir . '/' . $mindFilename);
-        // Path without .mind extension (MindAR adds it automatically)
-        $arMarkerPath = 'assets/nft/' . $id . '/' . $id;
+        if ($arMarkerFile && $arMarkerFile['error'] === UPLOAD_ERR_OK) {
+            // Handmatig geüploade .mind file
+            if (!file_exists($mindDir)) mkdir($mindDir, 0755, true);
+            $mindFilename = $id . '.mind';
+            move_uploaded_file($arMarkerFile['tmp_name'], $mindDir . '/' . $mindFilename);
+            $arMarkerPath = 'assets/nft/' . $id . '/' . $id;
+        } else {
+            // Geen .mind geüpload - genereer automatisch vanuit JPEG
+            $arMarkerPath = 'assets/nft/' . $id . '/' . $id;
+            error_log("[UPLOAD] Geen .mind bestand meegeleverd voor {$id} (type: {$uploadType}) - auto-genereren");
+            
+            // Zoek node executable
+            $nodePath = 'node';
+            if (file_exists('/opt/alt/alt-nodejs20/root/usr/bin/node')) {
+                $nodePath = '/opt/alt/alt-nodejs20/root/usr/bin/node';
+            } elseif (file_exists('/usr/local/bin/node')) {
+                $nodePath = '/usr/local/bin/node';
+            } elseif (file_exists('/usr/bin/node')) {
+                $nodePath = '/usr/bin/node';
+            }
+            
+            $compileScript = __DIR__ . '/../tools/compile_single_mind.js';
+            $jpegFullPath = UPLOADS_DIR . '/' . $jpegFilename;
+            $cmd = $nodePath . ' ' . escapeshellarg($compileScript) . ' ' . escapeshellarg($id) . ' ' . escapeshellarg($jpegFullPath) . ' 2>&1';
+            
+            error_log("[UPLOAD] .mind compilatie commando: $cmd");
+            exec($cmd, $compileOutput, $compileReturn);
+            $outputStr = implode("\n", $compileOutput);
+            error_log("[UPLOAD] .mind compilatie output: $outputStr");
+            
+            if ($compileReturn !== 0) {
+                error_log("[UPLOAD] WAARSCHUWING: .mind compilatie mislukt (exit code: $compileReturn)");
+                // Niet fataal - poster wordt opgeslagen maar zonder werkend AR target
+            } else {
+                error_log("[UPLOAD] .mind succesvol gegenereerd voor {$id}");
+            }
+        }
         
         // Layers
         $layersData = [];
@@ -311,11 +357,19 @@ function handleUploadPoster($db) {
             $layersData["layer_$i"] = $layerData;
         }
         
-        // Database insert (GLB/audio nu in layers_data, niet meer op poster niveau)
+        // Sla API bron metadata op per layer (voor toekomstige referentie)
+        for ($i = 1; $i <= 8; $i++) {
+            if (!empty($_POST["layer_{$i}_api_source"])) {
+                $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"];
+                $layersData["layer_$i"]['api_url'] = $_POST["layer_{$i}_api_url"] ?? '';
+            }
+        }
+        
+        // Database insert
         $arCameraFeed = isset($_POST['ar_camera_feed']) && $_POST['ar_camera_feed'] === '1' ? 1 : 0;
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed, upload_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)
         ");
         
         // Verwerk gallery afbeeldingen
@@ -343,10 +397,10 @@ function handleUploadPoster($db) {
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed
+            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed, $uploadType
         ]);
         
-        logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id)");
+        logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id, type: $uploadType)");
         
         // Trigger MindAR chunk rebuild
         triggerMindMerge();
