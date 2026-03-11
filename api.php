@@ -146,7 +146,7 @@ if ($method === 'GET' && $path === '/posters') {
 } elseif ($method === 'GET' && $path === '/admin/settings') {
     // Haal admin-instellingen op (api keys etc.) — opgeslagen in data/settings.json
     if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
-    $settingsFile = dirname(__DIR__) . '/data/settings.json';
+    $settingsFile = __DIR__ . '/data/settings.json';
     $settings = [];
     if (file_exists($settingsFile)) {
         $settings = json_decode(file_get_contents($settingsFile), true) ?: [];
@@ -160,7 +160,7 @@ if ($method === 'GET' && $path === '/posters') {
     // Sla admin-instellingen op
     if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
     $input = json_decode(file_get_contents('php://input'), true) ?: [];
-    $settingsFile = dirname(__DIR__) . '/data/settings.json';
+    $settingsFile = __DIR__ . '/data/settings.json';
     $settings = [];
     if (file_exists($settingsFile)) {
         $settings = json_decode(file_get_contents($settingsFile), true) ?: [];
@@ -385,7 +385,7 @@ if ($method === 'GET' && $path === '/posters') {
     if (!$query) jsonResponse(['success' => false, 'message' => 'Geen zoekterm'], 400);
 
     // Lees API key: eerst uit data/settings.json, dan uit config.php constant
-    $settingsFile = dirname(__DIR__) . '/data/settings.json';
+    $settingsFile = __DIR__ . '/data/settings.json';
     $savedSettings = file_exists($settingsFile) ? (json_decode(file_get_contents($settingsFile), true) ?: []) : [];
     $apiKey = !empty($savedSettings['sketchfab_api_key'])
         ? $savedSettings['sketchfab_api_key']
@@ -425,7 +425,7 @@ if ($method === 'GET' && $path === '/posters') {
     $name   = $chosen['name'] ?? 'model';
 
     // Controleer of het GLB al gecached is (max 24 uur)
-    $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : dirname(__DIR__) . '/uploads/glb_cache';
+    $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : __DIR__ . '/uploads/glb_cache';
     $cacheFile = $cacheDir . '/' . preg_replace('/[^a-zA-Z0-9_-]/', '', $uid) . '.glb';
     if (!file_exists($cacheDir)) mkdir($cacheDir, 0755, true);
 
@@ -488,7 +488,7 @@ if ($method === 'GET' && $path === '/posters') {
     $uid = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['uid'] ?? '');
     if (!$uid) { http_response_code(400); exit('Geen UID'); }
 
-    $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : dirname(__DIR__) . '/uploads/glb_cache';
+    $cacheDir  = defined('GLB_CACHE_DIR') ? GLB_CACHE_DIR : __DIR__ . '/uploads/glb_cache';
     $cacheFile = $cacheDir . '/' . $uid . '.glb';
     if (!file_exists($cacheFile)) { http_response_code(404); exit('Model niet gecached'); }
 
