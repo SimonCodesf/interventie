@@ -448,11 +448,18 @@ function handleDeletePoster($db, $id) {
     
     if (!$poster) jsonResponse(['message' => 'Poster niet gevonden'], 404);
     
-    // Delete files
-    @unlink(UPLOADS_DIR . '/' . $poster['jpeg_filename']);
-    @unlink(UPLOADS_DIR . '/' . $poster['pdf_medium_filename']);
-    @unlink(UPLOADS_DIR . '/' . $poster['pdf_large_filename']);
-    @unlink(THUMBNAILS_DIR . '/' . basename($poster['thumbnail']));
+    // Verwijder bestanden (alleen als ze bestaan)
+    $toDelete = [
+        UPLOADS_DIR . '/' . $poster['jpeg_filename'],
+        UPLOADS_DIR . '/' . $poster['pdf_medium_filename'],
+        UPLOADS_DIR . '/' . $poster['pdf_large_filename'],
+        THUMBNAILS_DIR . '/' . basename($poster['thumbnail'] ?? ''),
+    ];
+    foreach ($toDelete as $path) {
+        if ($path && file_exists($path)) {
+            unlink($path);
+        }
+    }
     
     // Delete DB entry
     $db->prepare("DELETE FROM posters WHERE id = ?")->execute([$id]);
@@ -507,9 +514,11 @@ function handleUpdatePoster($db, $id) {
             if (!$validation['valid']) {
                 jsonResponse(['message' => 'JPEG: ' . $validation['message']], 400);
             }
-            // Delete old file
-            @unlink(UPLOADS_DIR . '/' . $poster['jpeg_filename']);
-            @unlink(THUMBNAILS_DIR . '/' . basename($poster['thumbnail']));
+            // Verwijder oud bestand (alleen als het bestaat)
+            $oldJpeg = UPLOADS_DIR . '/' . $poster['jpeg_filename'];
+            if ($oldJpeg && file_exists($oldJpeg)) unlink($oldJpeg);
+            $oldThumb = THUMBNAILS_DIR . '/' . basename($poster['thumbnail'] ?? '');
+            if ($oldThumb && file_exists($oldThumb)) unlink($oldThumb);
             
             $jpegFilename = $id . '_' . basename($_FILES['jpeg']['name']);
             move_uploaded_file($_FILES['jpeg']['tmp_name'], UPLOADS_DIR . '/' . $jpegFilename);
@@ -527,7 +536,8 @@ function handleUpdatePoster($db, $id) {
             if (!$validation['valid']) {
                 jsonResponse(['message' => 'PDF Medium: ' . $validation['message']], 400);
             }
-            @unlink(UPLOADS_DIR . '/' . $poster['pdf_medium_filename']);
+            $oldMedium = UPLOADS_DIR . '/' . $poster['pdf_medium_filename'];
+            if ($oldMedium && file_exists($oldMedium)) unlink($oldMedium);
             $pdfMediumFilename = $id . '_medium.pdf';
             move_uploaded_file($_FILES['pdfMedium']['tmp_name'], UPLOADS_DIR . '/' . $pdfMediumFilename);
         }
@@ -538,7 +548,8 @@ function handleUpdatePoster($db, $id) {
             if (!$validation['valid']) {
                 jsonResponse(['message' => 'PDF Large: ' . $validation['message']], 400);
             }
-            @unlink(UPLOADS_DIR . '/' . $poster['pdf_large_filename']);
+            $oldLarge = UPLOADS_DIR . '/' . $poster['pdf_large_filename'];
+            if ($oldLarge && file_exists($oldLarge)) unlink($oldLarge);
             $pdfLargeFilename = $id . '_large.pdf';
             move_uploaded_file($_FILES['pdfLarge']['tmp_name'], UPLOADS_DIR . '/' . $pdfLargeFilename);
         }
@@ -553,9 +564,9 @@ function handleUpdatePoster($db, $id) {
             $mindDir = __DIR__ . '/../assets/nft/' . $id;
             if (!file_exists($mindDir)) mkdir($mindDir, 0755, true);
             
-            // Delete old .mind file if exists
+            // Verwijder oud .mind bestand indien aanwezig
             $oldMindFile = $mindDir . '/' . $id . '.mind';
-            @unlink($oldMindFile);
+            if (file_exists($oldMindFile)) unlink($oldMindFile);
             
             $mindFilename = $id . '.mind';
             move_uploaded_file($_FILES['ar_marker_file']['tmp_name'], $mindDir . '/' . $mindFilename);
@@ -573,9 +584,10 @@ function handleUpdatePoster($db, $id) {
             $shouldDelete = isset($_POST["layer_{$i}_delete"]) && (int)$_POST["layer_{$i}_delete"] === 1;
             
             if ($shouldDelete) {
-                // Delete old file if exists
+                // Verwijder oud bestand indien aanwezig
                 if (!empty($existingLayer['filename'])) {
-                    @unlink(AR_LAYERS_DIR . '/' . $existingLayer['filename']);
+                    $delPath = AR_LAYERS_DIR . '/' . $existingLayer['filename'];
+                    if (file_exists($delPath)) unlink($delPath);
                 }
                 
                 // Reset layer data
