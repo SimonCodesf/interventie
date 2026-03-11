@@ -2418,7 +2418,7 @@ async function logout(sessionExpired = false) {
 async function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
     if (!modal) return;
-    modal.classList.remove('hidden');
+    modal.style.display = 'block';
 
     // Controleer of Sketchfab key al is opgeslagen
     try {
@@ -2441,7 +2441,7 @@ async function openSettingsModal() {
 
 function closeSettingsModal() {
     const modal = document.getElementById('settings-modal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.style.display = 'none';
 }
 window.closeSettingsModal = closeSettingsModal;
 
