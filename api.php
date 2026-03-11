@@ -181,50 +181,73 @@ if ($method === 'GET' && $path === '/posters') {
     // Whitelist van toegestane subreddits
     $allowedSubs = ['memes', 'dankmemes', 'me_irl', 'AdviceAnimals', 'funny'];
     if (!in_array($source, $allowedSubs)) $source = 'memes';
-    $url = 'https://www.reddit.com/r/' . urlencode($source) . '/search.json?' . http_build_query([
-        'q' => $query,
-        'restrict_sr' => 1,
-        'sort' => 'top',
-        't' => 'year',
-        'limit' => 25,
+
+    // Helper: haal posts op van een Reddit URL en filter op afbeeldingen
+    $fetchRedditPosts = function($url) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+            // Reddit vereist een herkenbare user-agent, anders 429/403
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; interventie-poster/1.0; +https://interventie.org)',
+        ]);
+        $body = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpCode !== 200 || !$body) return null;
+        return json_decode($body, true);
+    };
+
+    // Extraheer afbeeldingsresultaten uit Reddit post array
+    $extractMemes = function($posts) {
+        $memes = [];
+        foreach ($posts as $post) {
+            $p = $post['data'] ?? [];
+            if (!empty($p['is_video'])) continue;
+            if (($p['post_hint'] ?? '') === 'self') continue;
+            // Gebruik url_overridden_by_dest (modernere veld) of url
+            $imgUrl = $p['url_overridden_by_dest'] ?? $p['url'] ?? '';
+            if (!$imgUrl) continue;
+            // Sla Reddit gallery/link posts over, accepteer directe afbeeldingen
+            // en posts met post_hint=image (zelfs zonder extensie, bijv. i.redd.it/abc)
+            $isDirectImage = preg_match('/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i', $imgUrl);
+            $isRedditImage = ($p['post_hint'] ?? '') === 'image';
+            $isImgurDirect = (bool) preg_match('#^https?://(i\.)?imgur\.com/#', $imgUrl) && !str_ends_with($imgUrl, '/');
+            if (!$isDirectImage && !$isRedditImage && !$isImgurDirect) continue;
+            if (strpos($imgUrl, 'reddit.com/gallery') !== false) continue;
+            // Reddit HTML-escapeert preview URLs (&amp; → &)
+            $preview = html_entity_decode($p['preview']['images'][0]['source']['url'] ?? $imgUrl);
+            $memes[] = [
+                'id'          => $p['id'] ?? '',
+                'title'       => $p['title'] ?? '',
+                'url'         => $imgUrl,
+                'preview_url' => $preview,
+                'author'      => $p['author'] ?? '',
+                'ups'         => (int)($p['ups'] ?? 0),
+            ];
+            if (count($memes) >= 12) break;
+        }
+        return $memes;
+    };
+
+    // Stap 1: zoek op query in het subreddit
+    $searchUrl = 'https://www.reddit.com/r/' . urlencode($source) . '/search.json?' . http_build_query([
+        'q' => $query, 'restrict_sr' => '1', 'sort' => 'top', 't' => 'year', 'limit' => 50,
     ]);
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTPHEADER => ['Accept: application/json'],
-        CURLOPT_USERAGENT => 'interventie-poster-app/1.0 (by interventie.org)',
-    ]);
-    $body = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($httpCode !== 200 || !$body) {
-        jsonResponse(['success' => false, 'memes' => [], 'message' => 'Reddit niet bereikbaar']);
+    $data = $fetchRedditPosts($searchUrl);
+    $memes = $data ? $extractMemes($data['data']['children'] ?? []) : [];
+
+    // Stap 2: fallback naar hot posts als zoekterm geen resultaten oplevert
+    if (empty($memes)) {
+        $hotUrl = 'https://www.reddit.com/r/' . urlencode($source) . '/hot.json?limit=50';
+        $data = $fetchRedditPosts($hotUrl);
+        $memes = $data ? $extractMemes($data['data']['children'] ?? []) : [];
     }
-    $data = json_decode($body, true);
-    $posts = $data['data']['children'] ?? [];
-    $memes = [];
-    foreach ($posts as $post) {
-        $p = $post['data'];
-        $imgUrl = $p['url'] ?? '';
-        // Alleen directe afbeeldingen (jpg/png/gif/webp)
-        if (!preg_match('/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i', $imgUrl)) continue;
-        if (!empty($p['is_video'])) continue;
-        // Reddit HTML-escapeert preview URLs (& → &amp;)
-        $preview = html_entity_decode($p['preview']['images'][0]['source']['url'] ?? $imgUrl);
-        $memes[] = [
-            'id' => $p['id'],
-            'title' => $p['title'],
-            'url' => $imgUrl,
-            'preview_url' => $preview,
-            'author' => $p['author'] ?? '',
-            'ups' => $p['ups'] ?? 0,
-        ];
-        if (count($memes) >= 12) break;
-    }
-    jsonResponse(['success' => true, 'memes' => $memes]);
+
+    jsonResponse(['success' => true, 'memes' => $memes, 'query' => $query, 'source' => $source]);
 } elseif ($method === 'GET' && $path === '/verkeersborden/gif-proxy') {
     // Proxy externe GIF URL naar eigen domein (lost CORS op voor gif-component fetch)
     $gifUrl = isset($_GET['url']) ? $_GET['url'] : '';
