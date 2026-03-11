@@ -448,16 +448,18 @@ function handleDeletePoster($db, $id) {
     
     if (!$poster) jsonResponse(['message' => 'Poster niet gevonden'], 404);
     
-    // Verwijder bestanden (alleen als ze bestaan)
+    // Verwijder bestanden (alleen als bestandsnaam niet leeg is én het een bestand is, geen map)
     $toDelete = [
-        UPLOADS_DIR . '/' . $poster['jpeg_filename'],
-        UPLOADS_DIR . '/' . $poster['pdf_medium_filename'],
-        UPLOADS_DIR . '/' . $poster['pdf_large_filename'],
-        THUMBNAILS_DIR . '/' . basename($poster['thumbnail'] ?? ''),
+        ['dir' => UPLOADS_DIR,    'file' => $poster['jpeg_filename'] ?? ''],
+        ['dir' => UPLOADS_DIR,    'file' => $poster['pdf_medium_filename'] ?? ''],
+        ['dir' => UPLOADS_DIR,    'file' => $poster['pdf_large_filename'] ?? ''],
+        ['dir' => THUMBNAILS_DIR, 'file' => basename($poster['thumbnail'] ?? '')],
     ];
-    foreach ($toDelete as $path) {
-        if ($path && file_exists($path)) {
-            unlink($path);
+    foreach ($toDelete as $entry) {
+        if (empty($entry['file'])) continue;
+        $fullPath = $entry['dir'] . '/' . $entry['file'];
+        if (is_file($fullPath)) {
+            unlink($fullPath);
         }
     }
     
@@ -514,11 +516,12 @@ function handleUpdatePoster($db, $id) {
             if (!$validation['valid']) {
                 jsonResponse(['message' => 'JPEG: ' . $validation['message']], 400);
             }
-            // Verwijder oud bestand (alleen als het bestaat)
-            $oldJpeg = UPLOADS_DIR . '/' . $poster['jpeg_filename'];
-            if ($oldJpeg && file_exists($oldJpeg)) unlink($oldJpeg);
-            $oldThumb = THUMBNAILS_DIR . '/' . basename($poster['thumbnail'] ?? '');
-            if ($oldThumb && file_exists($oldThumb)) unlink($oldThumb);
+            // Verwijder oud bestand (alleen als bestandsnaam niet leeg en het een bestand is)
+            $oldJpeg = !empty($poster['jpeg_filename']) ? UPLOADS_DIR . '/' . $poster['jpeg_filename'] : null;
+            if ($oldJpeg && is_file($oldJpeg)) unlink($oldJpeg);
+            $thumbBase = basename($poster['thumbnail'] ?? '');
+            $oldThumb = $thumbBase ? THUMBNAILS_DIR . '/' . $thumbBase : null;
+            if ($oldThumb && is_file($oldThumb)) unlink($oldThumb);
             
             $jpegFilename = $id . '_' . basename($_FILES['jpeg']['name']);
             move_uploaded_file($_FILES['jpeg']['tmp_name'], UPLOADS_DIR . '/' . $jpegFilename);
@@ -536,8 +539,8 @@ function handleUpdatePoster($db, $id) {
             if (!$validation['valid']) {
                 jsonResponse(['message' => 'PDF Medium: ' . $validation['message']], 400);
             }
-            $oldMedium = UPLOADS_DIR . '/' . $poster['pdf_medium_filename'];
-            if ($oldMedium && file_exists($oldMedium)) unlink($oldMedium);
+            $oldMedium = !empty($poster['pdf_medium_filename']) ? UPLOADS_DIR . '/' . $poster['pdf_medium_filename'] : null;
+            if ($oldMedium && is_file($oldMedium)) unlink($oldMedium);
             $pdfMediumFilename = $id . '_medium.pdf';
             move_uploaded_file($_FILES['pdfMedium']['tmp_name'], UPLOADS_DIR . '/' . $pdfMediumFilename);
         }
@@ -548,8 +551,8 @@ function handleUpdatePoster($db, $id) {
             if (!$validation['valid']) {
                 jsonResponse(['message' => 'PDF Large: ' . $validation['message']], 400);
             }
-            $oldLarge = UPLOADS_DIR . '/' . $poster['pdf_large_filename'];
-            if ($oldLarge && file_exists($oldLarge)) unlink($oldLarge);
+            $oldLarge = !empty($poster['pdf_large_filename']) ? UPLOADS_DIR . '/' . $poster['pdf_large_filename'] : null;
+            if ($oldLarge && is_file($oldLarge)) unlink($oldLarge);
             $pdfLargeFilename = $id . '_large.pdf';
             move_uploaded_file($_FILES['pdfLarge']['tmp_name'], UPLOADS_DIR . '/' . $pdfLargeFilename);
         }
