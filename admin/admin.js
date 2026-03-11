@@ -1004,8 +1004,23 @@ function updatePreviewFromInputs() {
         const glbInput = document.getElementById(`${prefix}layer-${i}-glb`);
         const hasGlbFile = glbInput?.files?.length > 0;
         
+        // Check voor API random layer (via actieve selectie of opgeslagen posterdata)
+        let isApiRandom = false;
+        let apiRandomQuery = '';
+        const activeApiData = apiLayerData[`${prefix}layer-${i}`];
+        if (activeApiData?.api_mode === 'random') {
+            isApiRandom = true;
+            apiRandomQuery = activeApiData.query || '';
+        } else if (isEditMode && currentPosterData?.layers) {
+            const savedLayerData = currentPosterData.layers[`layer_${i}`];
+            if (savedLayerData?.api_mode === 'random') {
+                isApiRandom = true;
+                apiRandomQuery = savedLayerData.api_query || '';
+            }
+        }
+        
         // ALLEEN layers met content tonen in preview
-        if (hasFile || existingFilename || hasGlbFile || existingGlbModel) {
+        if (hasFile || existingFilename || hasGlbFile || existingGlbModel || isApiRandom) {
             const layerData = { 
                 posX, posY, posZ, scale, rotX, rotY, rotZ, 
                 // Animatie parameters
@@ -1018,7 +1033,9 @@ function updatePreviewFromInputs() {
                 imageEl: null,
                 isVideo: false,
                 isGlb: false,
-                glbFilename: null
+                glbFilename: null,
+                isApiRandom: false,
+                apiRandomQuery: ''
             };
             
             // Laad afbeelding voor preview
@@ -1079,6 +1096,13 @@ function updatePreviewFromInputs() {
                 layerData.glbFilename = existingGlbModel || (hasGlbFile ? glbInput.files[0].name : null);
                 layerData.imageLoaded = true; // Markeer als "geladen" zodat preview rendert
                 console.log(`[Preview] Layer ${i} heeft GLB: ${layerData.glbFilename}`);
+            }
+            
+            // API random layer placeholder
+            if (isApiRandom && !hasFile && !existingFilename) {
+                layerData.isApiRandom = true;
+                layerData.apiRandomQuery = apiRandomQuery;
+                layerData.imageLoaded = true; // Markeer als geladen zodat preview rendert
             }
             
             console.log(`[Preview] Layer ${i} toegevoegd aan previewLayers:`, {
@@ -1283,7 +1307,7 @@ function renderARPreview() {
         if (activeView === 'front' && !is3DModel && overlayContainer) {
             let domW, domH;
             
-            if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename)) {
+            if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename) || data.isApiRandom) {
                 
                 // AR gebruikt dezelfde logica voor alle media:
                 // Base size = 1.4 * scale (= posterH in preview termen, want poster is ~1.4m hoog)
@@ -1307,6 +1331,10 @@ function renderARPreview() {
                     // Video default 16:9
                     domH = baseHeight;
                     domW = baseHeight * (16/9);
+                } else if (data.isApiRandom) {
+                    // API random GIF: vierkante placeholder (1:1 aspect ratio)
+                    domH = baseHeight;
+                    domW = baseHeight;
                 }
                 
                 // Create Overlay Element
@@ -1484,6 +1512,31 @@ function renderARPreview() {
                     playIcon.style.borderTop = '6px solid transparent';
                     playIcon.style.borderBottom = '6px solid transparent';
                     el.appendChild(playIcon);
+                } else if (data.isApiRandom) {
+                    // API Random GIF placeholder
+                    el.style.backgroundColor = '#1a237e33';
+                    el.style.flexDirection = 'column';
+                    el.style.gap = '4px';
+                    el.style.padding = '6px';
+                    el.style.textAlign = 'center';
+                    const apiLabel = document.createElement('div');
+                    apiLabel.style.color = '#90caf9';
+                    apiLabel.style.fontSize = '9px';
+                    apiLabel.style.fontFamily = 'Roboto Mono, monospace';
+                    apiLabel.style.fontWeight = 'bold';
+                    apiLabel.textContent = 'API RANDOM GIF';
+                    const queryLabel = document.createElement('div');
+                    queryLabel.style.color = '#bbdefb';
+                    queryLabel.style.fontSize = '8px';
+                    queryLabel.style.fontFamily = 'Roboto Mono, monospace';
+                    queryLabel.style.maxWidth = '100%';
+                    queryLabel.style.overflow = 'hidden';
+                    queryLabel.style.textOverflow = 'ellipsis';
+                    queryLabel.style.whiteSpace = 'nowrap';
+                    queryLabel.textContent = `"${data.apiRandomQuery}"`;
+                    el.appendChild(apiLabel);
+                    el.appendChild(queryLabel);
+                    el.style.borderColor = '#90caf9';
                 }
                 
                 // Badge
@@ -3277,6 +3330,11 @@ async function openEditModal(posterId) {
         // Sla poster data globaal op voor AR preview
         currentPosterData = poster;
         
+        // Wis stale API layer data van vorige edit sessie
+        for (let n = 1; n <= 8; n++) {
+            delete apiLayerData[`edit-layer-${n}`];
+        }
+        
         // Laad de thumbnail voor gebruik als achtergrond in de preview
         previewPosterImage = null;
         if (poster.thumbnail) {
@@ -3428,7 +3486,11 @@ async function openEditModal(posterId) {
                 // Show current filename if exists
                 const currentFileInfo = document.getElementById(`edit-layer-${layerNum}-current`);
                 const deleteMediaBtn = document.getElementById(`edit-layer-${layerNum}-delete-media-btn`);
-                if (currentFileInfo && layerData.filename) {
+                if (currentFileInfo && layerData.api_mode === 'random') {
+                    currentFileInfo.textContent = `API: ${layerData.api_source || 'klipy'} — "${layerData.api_query || ''}"`;
+                    currentFileInfo.style.color = '#2196f3';
+                    if (deleteMediaBtn) deleteMediaBtn.style.display = 'none';
+                } else if (currentFileInfo && layerData.filename) {
                     currentFileInfo.textContent = `Huidig: ${layerData.filename}`;
                     currentFileInfo.style.color = '#27ae60';
                     if (deleteMediaBtn) deleteMediaBtn.style.display = 'inline-block';
@@ -3440,7 +3502,11 @@ async function openEditModal(posterId) {
                 
                 // Update layer status badge in edit modal
                 const statusBadge = document.getElementById(`edit-layer-${layerNum}-status`);
-                if (statusBadge && layerData.filename) {
+                if (statusBadge && layerData.api_mode === 'random') {
+                    statusBadge.textContent = 'RANDOM';
+                    statusBadge.style.background = '#e3f2fd';
+                    statusBadge.style.color = '#1565c0';
+                } else if (statusBadge && layerData.filename) {
                     statusBadge.textContent = 'Gevuld';
                     statusBadge.style.background = '#e8f5e9';
                     statusBadge.style.color = '#2e7d32';
@@ -3448,6 +3514,34 @@ async function openEditModal(posterId) {
                     statusBadge.textContent = 'Leeg';
                     statusBadge.style.background = '#ffebee';
                     statusBadge.style.color = '#c62828';
+                }
+                
+                // Herstel API layer state als deze laag een random API bron heeft
+                if (layerData.api_mode === 'random') {
+                    const sourceSelect = document.getElementById(`edit-layer-${layerNum}-source`);
+                    if (sourceSelect) {
+                        sourceSelect.value = layerData.api_source || 'klipy';
+                        // Trigger change event: toont API panel en verbergt file input
+                        sourceSelect.dispatchEvent(new Event('change'));
+                    }
+                    const queryInput = document.getElementById(`edit-layer-${layerNum}-api-query`);
+                    if (queryInput) queryInput.value = layerData.api_query || '';
+                    
+                    const randomCb = document.getElementById(`edit-layer-${layerNum}-api-random`);
+                    if (randomCb) randomCb.checked = true;
+                    
+                    // Vul apiLayerData zodat de opslaan-knop de juiste data verstuurt
+                    apiLayerData[`edit-layer-${layerNum}`] = {
+                        api_mode: 'random',
+                        source: layerData.api_source || 'klipy',
+                        query: layerData.api_query || ''
+                    };
+                    
+                    // Toon bevestiging in results container
+                    const resultsContainer = document.getElementById(`edit-layer-${layerNum}-api-results`);
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = `<div class="api-loading">RANDOM: "${escapeHtml(layerData.api_query || '')}"<br><small style="opacity:0.6">Elke scan: willekeurig resultaat (30s cooldown)</small></div>`;
+                    }
                 }
                 
                 // Toon huidige GLB/audio status per laag (in AR EXTRAS toggle)
