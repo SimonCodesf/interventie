@@ -1759,6 +1759,30 @@ function injectApiSourceUI(layerNum, prefix) {
         const source = sourceSelect.value;
         const query = document.getElementById(`${prefix}layer-${layerNum}-api-query`).value.trim();
         if (!query) return;
+        
+        // Check of RANDOM mode actief is
+        const randomCheckbox = document.getElementById(`${prefix}layer-${layerNum}-api-random`);
+        const isRandom = randomCheckbox && randomCheckbox.checked;
+        
+        if (isRandom) {
+            // RANDOM mode: sla enkel de zoekterm op, geen specifiek resultaat ophalen.
+            // De AR frontend kiest bij elke scan zelf een random GIF (30s cooldown).
+            const key = `${prefix}layer-${layerNum}`;
+            apiLayerData[key] = { api_mode: 'random', source, query };
+            
+            // Toon bevestiging in de results container
+            const resultsContainer = document.getElementById(`${prefix}layer-${layerNum}-api-results`);
+            resultsContainer.innerHTML = `<div class="api-loading">RANDOM QUERY OPGESLAGEN: "${escapeHtml(query)}"<br><small style="opacity:0.6">Elke scan krijgt een willekeurig resultaat (30s cooldown)</small></div>`;
+            
+            // Update layer status
+            const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
+            if (statusEl) {
+                statusEl.textContent = 'RANDOM';
+                statusEl.style.color = '#0f0';
+            }
+            return;
+        }
+        
         searchApiContent(layerNum, prefix, source, query);
     });
     
@@ -2284,8 +2308,14 @@ function setupUploadForm() {
             const apiKey = `layer-${i}`;
             const apiData = apiLayerData[apiKey];
             
-            if (apiData && apiData.url) {
-                // Download de API content en voeg toe als bestand
+            if (apiData && apiData.api_mode === 'random') {
+                // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
+                // De AR frontend haalt zelf bij elke scan een random GIF op.
+                formData.append(`layer_${i}_api_mode`, 'random');
+                formData.append(`layer_${i}_api_source`, apiData.source);
+                formData.append(`layer_${i}_api_query`, apiData.query);
+            } else if (apiData && apiData.url) {
+                // Handmatige API selectie: download de content en upload als bestand
                 try {
                     const proxyUrl = apiData.source === 'klipy' 
                         ? `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(apiData.url)}`
@@ -2295,7 +2325,6 @@ function setupUploadForm() {
                     const ext = blob.type.includes('gif') ? 'gif' : blob.type.includes('png') ? 'png' : 'jpg';
                     const apiFile = new File([blob], `api_${apiData.source}_${i}.${ext}`, { type: blob.type });
                     formData.append(`layer_${i}_image`, apiFile);
-                    // Sla API metadata op voor de backend
                     formData.append(`layer_${i}_api_source`, apiData.source);
                     formData.append(`layer_${i}_api_url`, apiData.url);
                 } catch (apiErr) {
@@ -3451,7 +3480,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const editApiKey = `edit-layer-${i}`;
                 const editApiData = apiLayerData[editApiKey];
                 
-                if (editApiData && editApiData.url) {
+                if (editApiData && editApiData.api_mode === 'random') {
+                    // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
+                    formData.append(`layer_${i}_api_mode`, 'random');
+                    formData.append(`layer_${i}_api_source`, editApiData.source);
+                    formData.append(`layer_${i}_api_query`, editApiData.query);
+                } else if (editApiData && editApiData.url) {
                     // Download de API content en voeg toe als bestand
                     try {
                         const proxyUrl = editApiData.source === 'klipy' 

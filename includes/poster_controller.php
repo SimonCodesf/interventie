@@ -361,7 +361,12 @@ function handleUploadPoster($db) {
         
         // Sla API bron metadata op per layer (voor toekomstige referentie)
         for ($i = 1; $i <= 8; $i++) {
-            if (!empty($_POST["layer_{$i}_api_source"])) {
+            if (!empty($_POST["layer_{$i}_api_mode"]) && $_POST["layer_{$i}_api_mode"] === 'random') {
+                // RANDOM mode: geen bestand, enkel zoekterm opslaan voor gebruik bij AR scan
+                $layersData["layer_$i"]['api_mode'] = 'random';
+                $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"] ?? 'klipy';
+                $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_query"] ?? '';
+            } elseif (!empty($_POST["layer_{$i}_api_source"])) {
                 $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"];
                 $layersData["layer_$i"]['api_url'] = $_POST["layer_{$i}_api_url"] ?? '';
             }
@@ -773,6 +778,17 @@ function handleUpdatePoster($db, $id) {
             }
             
             $layersData["layer_$i"] = $layerData;
+        }
+        
+        // Sla API random mode metadata op per layer (update modus)
+        for ($i = 1; $i <= 8; $i++) {
+            if (!empty($_POST["layer_{$i}_api_mode"]) && $_POST["layer_{$i}_api_mode"] === 'random') {
+                $layersData["layer_$i"]['api_mode'] = 'random';
+                $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"] ?? 'klipy';
+                $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_query"] ?? '';
+                // Verwijder eventuele bestaande filename zodat AR de API gebruikt
+                $layersData["layer_$i"]['filename'] = null;
+            }
         }
         
         // Update database (geen globale GLB/audio meer)

@@ -1194,18 +1194,112 @@ function setupChunkEventListeners(scene, chunk) {
  */
 function loadLazyGifsForTarget(target) {
     const gifPlanes = target.querySelectorAll('[data-gif-src]');
-    if (gifPlanes.length === 0) return;
     
-    console.log(`[GIF] Lazy load: ${gifPlanes.length} GIF(s) activeren voor target`);
-    gifPlanes.forEach(plane => {
-        const gifSrc = plane.getAttribute('data-gif-src');
-        if (!gifSrc) return;
-        
-        const gifComp = plane.components && plane.components.gif;
-        if (gifComp && !gifComp.isLoaded) {
-            gifComp.loadGif(gifSrc);
+    if (gifPlanes.length > 0) {
+        console.log(`[GIF] Lazy load: ${gifPlanes.length} GIF(s) activeren voor target`);
+        gifPlanes.forEach(plane => {
+            const gifSrc = plane.getAttribute('data-gif-src');
+            if (!gifSrc) return;
+            
+            const gifComp = plane.components && plane.components.gif;
+            if (gifComp && !gifComp.isLoaded) {
+                gifComp.loadGif(gifSrc);
+            }
+        });
+    }
+    
+    // Laad ook API random layers
+    const posterId = target.getAttribute('data-poster-id');
+    loadApiRandomLayersForTarget(target, posterId);
+}
+
+// Cooldown cache voor API random layers: key = `${posterId}-${layerKey}` → {url, timestamp}
+const apiLayerCooldownCache = new Map();
+const API_LAYER_COOLDOWN_MS = 30000; // 30 seconden
+
+// Verwijder kapotte URL uit cache zodat volgende scan een verse GIF krijgt
+window.addEventListener('gif-error', (e) => {
+    if (!e.detail || !e.detail.src) return;
+    for (const [key, cached] of apiLayerCooldownCache.entries()) {
+        if (cached.url === e.detail.src) {
+            apiLayerCooldownCache.delete(key);
+            break;
         }
-    });
+    }
+});
+
+/**
+ * Haal voor elke API random layer een random GIF op en toon die in AR.
+ * Werkt identiek aan het memeborden systeem: random uit top 20, 30s cooldown.
+ */
+async function loadApiRandomLayersForTarget(target, posterId) {
+    const randomPlanes = target.querySelectorAll('[data-api-random="true"]');
+    if (randomPlanes.length === 0) return;
+    
+    console.log(`[API-LAYER] ${randomPlanes.length} random API layer(s) gevonden voor poster ${posterId}`);
+    
+    for (const plane of randomPlanes) {
+        const query = plane.getAttribute('data-api-query');
+        const source = plane.getAttribute('data-api-source') || 'klipy';
+        const layerKey = plane.getAttribute('data-layer-key');
+        
+        if (!query) continue;
+        
+        const cacheKey = `${posterId}-${layerKey}`;
+        const now = Date.now();
+        const cached = apiLayerCooldownCache.get(cacheKey);
+        
+        if (cached && (now - cached.timestamp < API_LAYER_COOLDOWN_MS)) {
+            // Cooldown actief: hergebruik dezelfde GIF
+            console.log(`[API-LAYER] Cooldown actief voor ${cacheKey}, hergebruik cached URL`);
+            plane.setAttribute('visible', 'true');
+            activateApiLayerGif(plane, cached.url);
+            continue;
+        }
+        
+        // Cooldown verlopen of eerste scan: haal nieuwe random GIF op
+        try {
+            console.log(`[API-LAYER] Random GIF ophalen voor query "${query}" (bron: ${source})...`);
+            const apiUrl = window.API_URL || (window.location.origin + '/api.php');
+            const response = await fetch(`${apiUrl}/verkeersborden/gif?q=${encodeURIComponent(query)}&t=${Date.now()}`);
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            
+            if (data.success && data.gif && data.gif.url) {
+                // Gebruik gif-proxy voor CORS
+                const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
+                
+                // Cache met timestamp
+                apiLayerCooldownCache.set(cacheKey, { url: proxyUrl, timestamp: Date.now() });
+                
+                plane.setAttribute('visible', 'true');
+                activateApiLayerGif(plane, proxyUrl);
+                console.log(`[API-LAYER] GIF geladen voor ${cacheKey}`);
+            } else {
+                console.warn(`[API-LAYER] Geen GIF gevonden voor query "${query}"`);
+            }
+        } catch (e) {
+            console.error(`[API-LAYER] Fout bij ophalen GIF voor "${query}":`, e);
+        }
+    }
+}
+
+/**
+ * Activeer een GIF op een API random layer plane via gif-component.
+ */
+function activateApiLayerGif(plane, gifUrl) {
+    const tryLoad = () => {
+        const gifComp = plane.components && plane.components.gif;
+        if (gifComp) {
+            gifComp.loadedSrc = null;
+            gifComp.data.src = gifUrl;
+            gifComp.loadGif(gifUrl);
+        } else {
+            setTimeout(tryLoad, 200);
+        }
+    };
+    tryLoad();
 }
 
 /**
@@ -2239,6 +2333,30 @@ function buildLayersHTML(poster) {
     if (poster.layers) {
         for (let i = 1; i <= 8; i++) {
             const layerData = poster.layers[`layer_${i}`];
+            
+            // API random mode: maak placeholder plane aan, GIF wordt geladen bij targetFound
+            if (layerData && layerData.api_mode === 'random' && layerData.api_query) {
+                const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
+                const posX = parseFloat(layerData.pos_x) || 0;
+                const posY = parseFloat(layerData.pos_y) || 0;
+                const baseScale = parseFloat(layerData.scale) || 1.0;
+                const gifSize = 1.4 * baseScale;
+                layersHTML += `
+                    <a-plane 
+                        id="ar-layer-${i}"
+                        class="gif-layer api-random-layer"
+                        gif="autoplay: true; transparent: true"
+                        data-api-random="true"
+                        data-api-source="${layerData.api_source || 'klipy'}"
+                        data-api-query="${layerData.api_query.replace(/"/g, '&quot;')}"
+                        data-layer-key="layer_${i}"
+                        position="${posX} ${posY} ${baseZ}"
+                        height="${gifSize.toFixed(3)}"
+                        width="${gifSize.toFixed(3)}"
+                        material="transparent: true; alphaTest: 0.5; side: double;"
+                        visible="false"></a-plane>`;
+                continue; // Overige layer verwerking overslaan
+            }
             
             // Define variables accessible to both image block and GLB block
             let animationStr = '';
