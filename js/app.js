@@ -2341,11 +2341,13 @@ function buildLayersHTML(poster) {
                 const posY = parseFloat(layerData.pos_y) || 0;
                 const baseScale = parseFloat(layerData.scale) || 1.0;
                 const gifSize = 1.4 * baseScale;
+                const apiIsTransparent = layerData.transparent === true;
+                const apiMaterial = apiIsTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : 'transparent: false; side: double;';
                 layersHTML += `
                     <a-plane 
                         id="ar-layer-${i}"
                         class="gif-layer api-random-layer"
-                        gif="autoplay: true; transparent: true"
+                        gif="autoplay: true; transparent: ${apiIsTransparent}"
                         data-api-random="true"
                         data-api-source="${layerData.api_source || 'klipy'}"
                         data-api-query="${layerData.api_query.replace(/"/g, '&quot;')}"
@@ -2353,7 +2355,7 @@ function buildLayersHTML(poster) {
                         position="${posX} ${posY} ${baseZ}"
                         height="${gifSize.toFixed(3)}"
                         width="${gifSize.toFixed(3)}"
-                        material="transparent: true; alphaTest: 0.5; side: double;"
+                        material="${apiMaterial}"
                         visible="false"></a-plane>`;
                 continue; // Overige layer verwerking overslaan
             }
@@ -2486,7 +2488,9 @@ function buildLayersHTML(poster) {
                     // GIF: defer loading - component heeft src nog niet, wordt geactiveerd bij targetFound
                     // Dit voorkomt dat GIFs van alle posters in de chunk meteen geparsed worden
                     const gifSize = 1.4 * baseScale;
-                    const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : `transparent: false; side: double; color: ${bgColor};`;
+                    // Opaque mode: geen color in material (gif-component vult zelf witte achtergrond in canvas).
+                    // Color: black zou texture × 0 = zwart maken in Three.js, waardoor de GIF onzichtbaar is.
+                    const materialSettings = isTransparent ? 'transparent: true; alphaTest: 0.5; side: double;' : 'transparent: false; side: double;';
                     layersHTML += `
                         <a-plane 
                             id="ar-layer-${i}"
