@@ -142,7 +142,7 @@
                                 <label for="ar-marker-file">AR_MARKER_FILE (.mind)</label>
                                 <input type="file" id="ar-marker-file" accept=".mind">
                                 <div id="mind-size-info" class="file-size-info"></div>
-                                <p class="hint-text" style="margin-top: 0.3rem; opacity: 0.5;">In reclame-modus wordt de .mind automatisch gegenereerd op de server</p>
+                                <div id="mind-compile-status" style="margin-top: 0.3rem; font-family: monospace; font-size: 0.75rem; color: rgba(255,255,255,0.5);">AR marker wordt automatisch gecompileerd vanuit de JPEG</div>
                             </div>
                             
                             <div class="form-row poster-only-field">
@@ -410,6 +410,8 @@
         </div>
     </div>
 
-    <script src="admin.js?v=3.3"></script>
+    <!-- MindAR browser compiler: compileert JPEG naar .mind zonder server dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="admin.js?v=3.4"></script>
 </body>
 </html>
