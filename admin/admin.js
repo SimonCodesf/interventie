@@ -3775,11 +3775,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const editApiKey = `edit-layer-${i}`;
                 const editApiData = apiLayerData[editApiKey];
                 
-                if (editApiData && editApiData.api_mode === 'random') {
+                // Lees live DOM-waarden zodat handmatig getypte wijzigingen altijd meegestuurd worden
+                const liveSourceEl = document.getElementById(`edit-layer-${i}-source`);
+                const liveQueryEl = document.getElementById(`edit-layer-${i}-api-query`);
+                const liveRandomEl = document.getElementById(`edit-layer-${i}-api-random`);
+                const liveSource = liveSourceEl?.value || '';
+                const liveQuery = (liveQueryEl?.value || '').trim();
+                const liveIsRandom = liveRandomEl?.checked || false;
+                const isApiRandom = (editApiData?.api_mode === 'random') ||
+                                    (liveSource && liveSource !== 'manual' && liveIsRandom);
+                
+                if (isApiRandom) {
                     // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
+                    // Gebruik live DOM-waarden → vangt handmatig getypte query's op zonder ZOEK te klikken
+                    const saveSource = liveSource || editApiData?.source || 'klipy';
+                    const saveQuery = liveQuery !== '' ? liveQuery : (editApiData?.query || '');
                     formData.append(`layer_${i}_api_mode`, 'random');
-                    formData.append(`layer_${i}_api_source`, editApiData.source);
-                    formData.append(`layer_${i}_api_query`, editApiData.query);
+                    formData.append(`layer_${i}_api_source`, saveSource);
+                    formData.append(`layer_${i}_api_query`, saveQuery);
                 } else if (editApiData && editApiData.url) {
                     // Download de API content en voeg toe als bestand
                     try {
