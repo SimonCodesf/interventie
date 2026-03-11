@@ -1717,6 +1717,9 @@ function injectApiSourceUI(layerNum, prefix) {
         <div class="api-search-row">
             <input type="text" class="api-search-input" id="${prefix}layer-${layerNum}-api-query" placeholder="Zoekterm..." data-layer="${layerNum}">
             <button type="button" class="api-search-btn" id="${prefix}layer-${layerNum}-api-search-btn" data-layer="${layerNum}" data-prefix="${prefix}">ZOEK</button>
+            <label class="api-random-label" title="Kies automatisch een willekeurig resultaat uit de top 20">
+                <input type="checkbox" id="${prefix}layer-${layerNum}-api-random"> RANDOM
+            </label>
         </div>
         <div class="api-results-grid" id="${prefix}layer-${layerNum}-api-results"></div>
         <div class="api-selected-preview hidden" id="${prefix}layer-${layerNum}-api-selected"></div>
@@ -1777,6 +1780,10 @@ async function searchApiContent(layerNum, prefix, source, query) {
     resultsContainer.innerHTML = '<div class="api-loading">ZOEKEN...</div>';
     searchBtn.disabled = true;
     
+    // Controleer of RANDOM mode actief is
+    const randomCheckbox = document.getElementById(`${prefix}layer-${layerNum}-api-random`);
+    const isRandom = randomCheckbox && randomCheckbox.checked;
+    
     try {
         let results = [];
         
@@ -1793,6 +1800,24 @@ async function searchApiContent(layerNum, prefix, source, query) {
             return;
         }
         
+        if (isRandom) {
+            // Kies random uit top 20 resultaten en selecteer automatisch
+            const top20 = results.slice(0, 20);
+            const randomItem = top20[Math.floor(Math.random() * top20.length)];
+            
+            // Toon kort bevestiging in results container
+            resultsContainer.innerHTML = '<div class="api-loading">RANDOM GESELECTEERD...</div>';
+            
+            // Maak een tijdelijk element om selectApiResult mee te kunnen aanroepen
+            const tempEl = document.createElement('div');
+            tempEl.className = 'api-result-item selected';
+            resultsContainer.innerHTML = '';
+            resultsContainer.appendChild(tempEl);
+            selectApiResult(layerNum, prefix, randomItem, tempEl);
+            return;
+        }
+        
+        // Handmatige modus: toon alle resultaten als grid
         resultsContainer.innerHTML = '';
         results.forEach(item => {
             const el = document.createElement('div');
