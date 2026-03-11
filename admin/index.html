@@ -411,7 +411,8 @@
     </div>
 
     <!-- MindAR browser compiler: compileert JPEG naar .mind zonder server dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+    <!-- type="module" vereist want het bestand gebruikt ES import syntax -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
     <script src="admin.js?v=3.6"></script>
 </body>
 </html>
