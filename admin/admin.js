@@ -4,6 +4,10 @@
 let compiledMindBuffer = null;     // Nieuw upload formulier
 let editCompiledMindBuffer = null; // Edit formulier
 
+// Lopende compilatie promises - form submit wacht hierop als compilatie nog bezig is
+let compilingMindPromise = null;     // Nieuw upload formulier
+let editCompilingMindPromise = null; // Edit formulier
+
 /**
  * Compileert een afbeelding naar een .mind bestand via de MindAR browser compiler.
  * Werkt volledig client-side, geen server-side native dependencies nodig.
@@ -2333,11 +2337,30 @@ function setupUploadForm() {
         if (arMarkerFile) {
             // Handmatig geüpload .mind bestand
             formData.append('ar_marker_file', arMarkerFile);
-        } else if (compiledMindBuffer) {
-            // Browser-gecompileerd .mind bestand (automatisch vanuit JPEG)
-            const mindBlob = new Blob([compiledMindBuffer], { type: 'application/octet-stream' });
-            formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
-            console.log('[MIND] Browser-gecompileerd .mind meegezonden met upload');
+        } else {
+            // Wacht op lopende compilatie als die nog bezig is
+            if (compilingMindPromise) {
+                const mindStatusEl = document.getElementById('mind-compile-status');
+                if (mindStatusEl) {
+                    mindStatusEl.textContent = 'Upload wacht op AR-marker compilatie...';
+                    mindStatusEl.style.color = 'rgba(255,200,0,0.8)';
+                }
+                btnText.textContent = 'Wachten op compilatie...';
+                try {
+                    await compilingMindPromise;
+                } catch (e) {
+                    console.warn('[MIND] Compilatie fout tijdens wachten:', e);
+                }
+            }
+            
+            if (compiledMindBuffer) {
+                // Browser-gecompileerd .mind bestand (automatisch vanuit JPEG)
+                const mindBlob = new Blob([compiledMindBuffer], { type: 'application/octet-stream' });
+                formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
+                console.log('[MIND] Browser-gecompileerd .mind meegezonden met upload');
+            } else {
+                console.warn('[MIND] Geen .mind bestand beschikbaar - poster wordt opgeslagen zonder AR tracking');
+            }
         }
         
         // AR Layers (8 layers with positioning and animation)
@@ -2789,9 +2812,17 @@ function setupFilePreview() {
             // zodat het klaar is wanneer de admin op upload klikt
             const mindStatusEl = document.getElementById('mind-compile-status');
             compiledMindBuffer = null; // Reset vorige compilatie
-            compileMindFromImage(file, mindStatusEl, 'summary-mind').then(buf => {
+            compilingMindPromise = compileMindFromImage(file, mindStatusEl, 'summary-mind').then(buf => {
                 compiledMindBuffer = buf;
+                compilingMindPromise = null; // Klaar
+                // Submit knop weer inschakelen als compilatie klaar is
+                const btn = document.getElementById('upload-btn');
+                if (btn) btn.disabled = false;
+                return buf;
             });
+            // Disable submit knop tijdens compilatie zodat admin niet per ongeluk indient
+            const btn = document.getElementById('upload-btn');
+            if (btn) btn.disabled = true;
         }
         
         updateFileSizeDisplay();
@@ -3098,9 +3129,17 @@ function setupEditFilePreview() {
                 
                 // Start automatische .mind compilatie (edit mode)
                 editCompiledMindBuffer = null;
-                compileMindFromImage(file, mindSizeInfo, null).then(buf => {
+                editCompilingMindPromise = compileMindFromImage(file, mindSizeInfo, null).then(buf => {
                     editCompiledMindBuffer = buf;
+                    editCompilingMindPromise = null; // Klaar
+                    // Herstel save knop
+                    const saveBtn = document.getElementById('save-edit-btn');
+                    if (saveBtn) saveBtn.disabled = false;
+                    return buf;
                 });
+                // Disable save knop tijdens compilatie
+                const saveBtn = document.getElementById('save-edit-btn');
+                if (saveBtn) saveBtn.disabled = true;
             } else if (previewContainer) {
                 previewContainer.style.display = 'none';
             }
@@ -3692,11 +3731,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (arMarkerFile) {
                 // Handmatig geüpload .mind bestand
                 formData.append('ar_marker_file', arMarkerFile);
-            } else if (jpegFile && editCompiledMindBuffer) {
-                // Browser-gecompileerd .mind vanuit de nieuwe JPEG
-                const mindBlob = new Blob([editCompiledMindBuffer], { type: 'application/octet-stream' });
-                formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
-                console.log('[MIND] Browser-gecompileerd .mind meegezonden met edit');
+            } else if (jpegFile) {
+                // Wacht op lopende edit compilatie als die nog bezig is
+                if (editCompilingMindPromise) {
+                    const editMindStatusEl = document.getElementById('edit-ar-marker-file-size-info');
+                    if (editMindStatusEl) {
+                        editMindStatusEl.textContent = 'Upload wacht op AR-marker compilatie...';
+                        editMindStatusEl.style.color = 'rgba(255,200,0,0.8)';
+                    }
+                    try {
+                        await editCompilingMindPromise;
+                    } catch (e) {
+                        console.warn('[MIND] Edit compilatie fout tijdens wachten:', e);
+                    }
+                }
+                
+                if (editCompiledMindBuffer) {
+                    // Browser-gecompileerd .mind vanuit de nieuwe JPEG
+                    const mindBlob = new Blob([editCompiledMindBuffer], { type: 'application/octet-stream' });
+                    formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
+                    console.log('[MIND] Browser-gecompileerd .mind meegezonden met edit');
+                } else {
+                    console.warn('[MIND] Geen .mind beschikbaar voor edit - AR marker ongewijzigd');
+                }
             }
             
             // Gallery images - verwijderen en toevoegen
