@@ -374,7 +374,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="text-layer-head">
                             <label class="option-toggle">
                                 <input type="checkbox" id="${prefix}layer-${layerNum}-text-random" name="layer_${layerNum}_text_random" value="1">
-                                <span>RANDOM STIJL INSCHAKELEN</span>
+                                <span>RANDOM STIJL</span>
                             </label>
                         </div>
                         <div class="anim-section-title">INHOUD</div>
@@ -391,16 +391,16 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="text-param-group">
                             <div class="text-param-row">
                                 <div class="mini-input wide text-font-field">
-                                    <span>FONT</span>
+                                    <span>LETTERTYPE</span>
                                     <select id="${prefix}layer-${layerNum}-text-font" name="layer_${layerNum}_text_font_family" class="text-layer-select">
                                         ${getTextFontOptionsHTML()}
                                     </select>
                                 </div>
                             </div>
                             <div class="text-param-row">
-                                <div class="mini-input"><span>SIZE</span><input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1"></div>
-                                <div class="mini-input"><span>ALIGN</span><select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select"><option value="left">L</option><option value="center" selected>C</option><option value="right">R</option></select></div>
-                                <div class="mini-input"><span>Y+</span><input type="number" id="${prefix}layer-${layerNum}-text-offset-y" name="layer_${layerNum}_text_offset_y" value="0.85" step="0.01"></div>
+                                <div class="mini-input"><span>GROOTTE</span><input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1"></div>
+                                <div class="mini-input"><span>UITLIJNING</span><select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select"><option value="left">LINKS</option><option value="center" selected>MIDDEN</option><option value="right">RECHTS</option></select></div>
+                                <div class="mini-input"><span>VERTICAAL</span><input type="number" id="${prefix}layer-${layerNum}-text-offset-y" name="layer_${layerNum}_text_offset_y" value="0.85" step="0.01"></div>
                             </div>
                         </div>
 
@@ -409,22 +409,22 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <div class="text-param-row">
                                 <div class="mini-input"><span>KLEUR</span><input type="color" id="${prefix}layer-${layerNum}-text-color" name="layer_${layerNum}_text_color" value="#ffffff"></div>
                                 <div class="mini-input"><span>RAND</span><input type="color" id="${prefix}layer-${layerNum}-text-outline-color" name="layer_${layerNum}_text_outline_color" value="#000000"></div>
-                                <div class="mini-input"><span>RAND W</span><input type="number" id="${prefix}layer-${layerNum}-text-outline-width" name="layer_${layerNum}_text_outline_width" value="3" min="0" max="12" step="0.5"></div>
+                                <div class="mini-input"><span>RANDDIKTE</span><input type="number" id="${prefix}layer-${layerNum}-text-outline-width" name="layer_${layerNum}_text_outline_width" value="3" min="0" max="12" step="0.5"></div>
                             </div>
                         </div>
 
                         <details class="text-advanced-block">
-                            <summary>GEAVANCEERD: EFFECTEN & 3D</summary>
+                            <summary>GEAVANCEERD: EFFECTEN EN 3D</summary>
                             <div class="text-param-group">
                                 <div class="text-param-row">
                                     <div class="mini-input"><span>EFFECT</span><select id="${prefix}layer-${layerNum}-text-effect" name="layer_${layerNum}_text_effect" class="text-layer-select"><option value="none">NONE</option><option value="glow">GLOW</option><option value="shadow">SHADOW</option><option value="neon">NEON</option></select></div>
-                                    <div class="mini-input"><span>3D FX</span><select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select"><option value="none">NONE</option><option value="extrude">EXTRUDE</option><option value="tilt">TILT</option><option value="float">FLOAT</option></select></div>
+                                    <div class="mini-input"><span>3D STIJL</span><select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select"><option value="none">NONE</option><option value="extrude">EXTRUDE</option><option value="tilt">TILT</option><option value="float">FLOAT</option></select></div>
                                 </div>
                                 <div class="text-param-row">
-                                    <div class="mini-input"><span>DEPTH</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1"></div>
-                                    <div class="mini-input"><span>TILT X</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1"></div>
-                                    <div class="mini-input"><span>TILT Y</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1"></div>
-                                    <div class="mini-input"><span>FLOAT PX</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1"></div>
+                                    <div class="mini-input"><span>DIEPTE</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1"></div>
+                                    <div class="mini-input"><span>HELLING X</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1"></div>
+                                    <div class="mini-input"><span>HELLING Y</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1"></div>
+                                    <div class="mini-input"><span>ZWEEF PX</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1"></div>
                                 </div>
                             </div>
                         </details>
@@ -432,13 +432,13 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <details class="text-advanced-block">
                             <summary>RANDOM PER PARAMETER</summary>
                             <div class="text-random-grid">
-                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1"><span>FONT</span></label>
-                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span>SIZE</span></label>
-                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span>ALIGN</span></label>
+                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1"><span>LETTERTYPE</span></label>
+                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span>GROOTTE</span></label>
+                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span>UITLIJNING</span></label>
                                 <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1"><span>KLEUR</span></label>
                                 <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1"><span>RAND</span></label>
                                 <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1"><span>EFFECT</span></label>
-                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span>3D</span></label>
+                                <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span>3D STIJL</span></label>
                             </div>
                         </details>
                     </div>

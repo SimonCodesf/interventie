@@ -988,6 +988,12 @@ input[type="file"]::file-selector-button:hover {
     gap: 8px;
 }
 
+.text-layer-head .option-toggle {
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.03);
+    padding: 4px 6px;
+}
+
 .text-param-group {
     background: rgba(0,0,0,0.82);
     border: 0.5px solid rgba(255,255,255,0.28);
@@ -1019,6 +1025,14 @@ input[type="file"]::file-selector-button:hover {
     background: rgba(255,255,255,0.02);
     padding: 4px 6px;
     justify-content: space-between;
+    font-size: 0.5rem;
+}
+
+.text-random-grid .option-toggle span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 16px);
 }
 
 .text-random-specs {
@@ -1092,7 +1106,32 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .text-param-group .mini-input span {
-    min-width: 32px;
+    min-width: 58px;
+    font-size: 0.48rem;
+    color: rgba(255,255,255,0.72);
+}
+
+.text-param-group .mini-input input,
+.text-param-group .mini-input select {
+    min-height: 24px;
+}
+
+.text-param-group .mini-input input:focus,
+.text-param-group .mini-input select:focus,
+.text-layer-input:focus {
+    outline: none;
+    border-color: rgba(255,255,255,0.85);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.2) inset;
+}
+
+.text-advanced-block[open] {
+    border-color: rgba(255,255,255,0.34);
+}
+
+.text-random-grid .option-toggle:has(input:checked) {
+    border-color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.09);
+    color: #fff;
 }
 
 /* Delete Media Button (per file slot) */
@@ -1752,6 +1791,10 @@ input[type="file"]::file-selector-button:hover {
 
     .text-param-row .text-font-field {
         grid-column: 1 / -1;
+    }
+
+    .text-param-group .mini-input span {
+        min-width: 46px;
     }
 
     .text-random-grid {
