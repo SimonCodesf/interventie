@@ -2217,6 +2217,7 @@ function checkScanCycleComplete() {
 // OPTIMIZED VERSION: Uses preloaded .mind data as Blob URLs for faster loading
 let isSwitching = false; // Prevent concurrent switches
 let mindBlobUrls = new Map(); // Cache blob URLs for preloaded .mind files
+const arViewerRandomSeed = Math.floor(Date.now() + Math.random() * 1000000);
 
 // Create blob URLs from preloaded data (called once after preloading)
 function createMindBlobUrls() {
@@ -2397,6 +2398,16 @@ function pickRandomTextStyle(seedInput) {
     };
 }
 
+function hashStringToInt(input) {
+    let hash = 2166136261;
+    const str = String(input || '');
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+}
+
 function applyRandomTextStyleBySpec(baseStyle, seedInput, randomSpec = {}) {
     const randomStyle = pickRandomTextStyle(seedInput);
     const finalStyle = { ...baseStyle };
@@ -2508,13 +2519,15 @@ function applyTextLayersTextures(rootEl) {
             align: plane.getAttribute('data-text-random-align') === '1',
         };
 
+        const layerId = plane.getAttribute('id') || '';
+        const layerSeedPart = hashStringToInt(layerId + '|' + textContent);
+        const viewerScopedSeed = (arViewerRandomSeed + layerSeedPart) >>> 0;
+
         const randomEnabled = plane.getAttribute('data-text-random') === '1';
         if (randomEnabled) {
-            const seed = parseInt(plane.getAttribute('data-text-seed') || '0', 10) || Date.now();
-            Object.assign(style, pickRandomTextStyle(seed));
+            Object.assign(style, pickRandomTextStyle(viewerScopedSeed));
         } else if (Object.values(randomSpec).some(Boolean)) {
-            const seed = parseInt(plane.getAttribute('data-text-seed') || '0', 10) || Date.now();
-            Object.assign(style, applyRandomTextStyleBySpec(style, seed, randomSpec));
+            Object.assign(style, applyRandomTextStyleBySpec(style, viewerScopedSeed, randomSpec));
         }
 
         const textureData = renderTextTexture(textContent, style);
