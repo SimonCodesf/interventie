@@ -988,20 +988,37 @@ input[type="file"]::file-selector-button:hover {
     gap: 8px;
 }
 
-.text-section {
-    border: 1px dashed rgba(255,255,255,0.16);
-    background: rgba(255,255,255,0.015);
-    padding: 6px;
+.text-param-group {
+    background: rgba(0,0,0,0.82);
+    border: 0.5px solid rgba(255,255,255,0.28);
+    padding: 0.65rem;
     display: flex;
     flex-direction: column;
+    gap: 0.45rem;
+}
+
+.text-param-row {
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
-.text-section-title {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.5rem;
-    color: rgba(255,255,255,0.66);
-    letter-spacing: 0.9px;
+.text-font-field {
+    min-width: 210px;
+}
+
+.text-random-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0 6px 6px 6px;
+}
+
+.text-random-grid .option-toggle {
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.02);
+    padding: 4px 6px;
+    justify-content: space-between;
 }
 
 .text-random-specs {
@@ -1066,6 +1083,16 @@ input[type="file"]::file-selector-button:hover {
     padding: 3px 4px;
     font-size: 0.62rem;
     font-family: 'Roboto Mono', monospace;
+}
+
+.text-param-group .mini-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 4px 5px;
+}
+
+.text-param-group .mini-input span {
+    min-width: 32px;
 }
 
 /* Delete Media Button (per file slot) */
@@ -1715,6 +1742,20 @@ input[type="file"]::file-selector-button:hover {
 
     .text-layer-grid .mini-input.wide {
         grid-column: 1 / -1;
+    }
+
+    .text-param-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .text-param-row .text-font-field {
+        grid-column: 1 / -1;
+    }
+
+    .text-random-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
