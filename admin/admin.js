@@ -294,6 +294,9 @@ function generateLayerHTML(layerNum, isEditForm = false) {
         <details class="layer-card" data-layer-num="${layerNum}" ${isOpen}>
             <summary class="layer-header">
                 <span class="layer-drag-handle" draggable="true" title="Sleep om laagvolgorde te wijzigen">::</span>
+                <label class="layer-select-toggle" title="Selecteer laag voor batch acties">
+                    <input type="checkbox" id="${prefix}layer-${layerNum}-select">
+                </label>
                 <span class="layer-num">${layerNum}</span>
                 <span class="layer-title">LAAG ${layerNum}</span>
                 <span class="layer-status" id="${prefix}layer-${layerNum}-status">LEEG</span>
@@ -921,6 +924,90 @@ let arPreviewWindow = null;
 let arPreviewZIndex = 1000;
 let adminUXBound = false;
 let editModalUXBound = false;
+
+function getLayerPrefix(isEditForm) {
+    return isEditForm ? 'edit-' : '';
+}
+
+function getSelectedLayerNumbers(isEditForm) {
+    const prefix = getLayerPrefix(isEditForm);
+    return Array.from(document.querySelectorAll(`input[id^="${prefix}layer-"][id$="-select"]:checked`)).map((el) => {
+        const match = el.id.match(/layer-(\d+)-select$/);
+        return match ? Number(match[1]) : 0;
+    }).filter((num) => Number.isFinite(num) && num > 0);
+}
+
+function setLayerSelectionState(isEditForm, checked) {
+    const prefix = getLayerPrefix(isEditForm);
+    document.querySelectorAll(`input[id^="${prefix}layer-"][id$="-select"]`).forEach((el) => {
+        el.checked = checked;
+    });
+
+    if (isEditForm) {
+        refreshEditModalUXState();
+    } else {
+        refreshAdminUXState();
+    }
+}
+
+function applyBatchScaleToSelection(isEditForm) {
+    const prefix = getLayerPrefix(isEditForm);
+    const scaleInput = document.getElementById(`${prefix}layer-batch-scale-value`);
+    const nextScale = Number(scaleInput?.value);
+
+    if (!Number.isFinite(nextScale) || nextScale <= 0) {
+        return;
+    }
+
+    const selectedLayers = getSelectedLayerNumbers(isEditForm);
+    selectedLayers.forEach((layerNum) => {
+        const targetInput = document.getElementById(`${prefix}layer-${layerNum}-scale`);
+        if (!targetInput) return;
+
+        targetInput.value = nextScale.toFixed(2);
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    if (isEditForm) {
+        refreshEditModalUXState();
+    } else {
+        refreshAdminUXState();
+    }
+}
+
+function setupLayerBatchActions(isEditForm) {
+    const prefix = getLayerPrefix(isEditForm);
+    const selectAllBtn = document.getElementById(`${prefix}layer-select-all-btn`);
+    const clearBtn = document.getElementById(`${prefix}layer-clear-selection-btn`);
+    const applyBtn = document.getElementById(`${prefix}layer-apply-scale-btn`);
+    const scaleInput = document.getElementById(`${prefix}layer-batch-scale-value`);
+
+    if (selectAllBtn && !selectAllBtn.dataset.bound) {
+        selectAllBtn.addEventListener('click', () => setLayerSelectionState(isEditForm, true));
+        selectAllBtn.dataset.bound = '1';
+    }
+
+    if (clearBtn && !clearBtn.dataset.bound) {
+        clearBtn.addEventListener('click', () => setLayerSelectionState(isEditForm, false));
+        clearBtn.dataset.bound = '1';
+    }
+
+    if (applyBtn && !applyBtn.dataset.bound) {
+        applyBtn.addEventListener('click', () => applyBatchScaleToSelection(isEditForm));
+        applyBtn.dataset.bound = '1';
+    }
+
+    if (scaleInput && !scaleInput.dataset.bound) {
+        scaleInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                applyBatchScaleToSelection(isEditForm);
+            }
+        });
+        scaleInput.dataset.bound = '1';
+    }
+}
 let layerClipboard = null;
 
 const LAYER_GROUP_FIELDS = {
@@ -1018,6 +1105,8 @@ function setupAdminUX() {
         form.addEventListener('change', formActivityListener);
     }
 
+    setupLayerBatchActions(false);
+
     refreshAdminUXState();
 }
 
@@ -1092,6 +1181,8 @@ function setupEditModalUX() {
         form.addEventListener('input', formActivityListener);
         form.addEventListener('change', formActivityListener);
     }
+
+    setupLayerBatchActions(true);
 }
 
 function setActiveEditStepButton(panelId) {
@@ -5761,6 +5852,7 @@ function renderLayers(isEditForm = false) {
     }
 
     setupLayerReorder(isEditForm);
+    setupLayerBatchActions(isEditForm);
 
     snapshotLayerBaselines(isEditForm);
     updateAllLayerModificationStates(isEditForm);
@@ -5770,6 +5862,27 @@ function renderLayers(isEditForm = false) {
     } else {
         refreshEditModalUXState();
     }
+}
+
+function setupLayerSelectionUI(isEditForm) {
+    const prefix = getLayerPrefix(isEditForm);
+    document.querySelectorAll(`input[id^="${prefix}layer-"][id$="-select"]`).forEach((checkbox) => {
+        if (checkbox.dataset.bound) return;
+
+        checkbox.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        checkbox.addEventListener('change', () => {
+            if (isEditForm) {
+                refreshEditModalUXState();
+            } else {
+                refreshAdminUXState();
+            }
+        });
+
+        checkbox.dataset.bound = '1';
+    });
 }
 
 function setupLayerChangeTracking(layerNum, isEditForm) {
@@ -5861,6 +5974,8 @@ function setupLayerReorder(isEditForm) {
             containerEl.insertBefore(draggingCard, afterCard);
         }
     });
+
+    setupLayerSelectionUI(isEditForm);
 }
 
 function setupLayerTabs(layerNum, isEditForm) {

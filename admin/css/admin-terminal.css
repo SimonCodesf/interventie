@@ -558,6 +558,19 @@ input[type="file"]::file-selector-button:hover {
     cursor: grabbing;
 }
 
+.layer-select-toggle {
+    display: inline-flex;
+    align-items: center;
+}
+
+.layer-select-toggle input[type='checkbox'] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    accent-color: #fff;
+    cursor: pointer;
+}
+
 .layer-card.is-dragging {
     opacity: 0.55;
     border-color: rgba(255,255,255,0.85);
@@ -1466,6 +1479,32 @@ input[type="file"]::file-selector-button:hover {
     font-size: 0.6rem;
     font-family: 'Roboto Mono', monospace;
     padding: 4px 6px;
+}
+
+.layer-batch-input {
+    width: 78px;
+    background: rgba(255,255,255,0.03);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.22);
+    font-size: 0.58rem;
+    font-family: 'Roboto Mono', monospace;
+    padding: 4px 6px;
+}
+
+.layer-batch-btn {
+    border: 1px solid rgba(255,255,255,0.24);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.68);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.52rem;
+    padding: 4px 6px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+}
+
+.layer-batch-btn:hover {
+    border-color: rgba(255,255,255,0.6);
+    color: #fff;
 }
 
 .layer-card.is-filtered-out {
