@@ -1086,6 +1086,7 @@ function setupChunkEventListeners(scene, chunk) {
     scene.addEventListener('arReady', () => {
         console.log(' Chunk AR Ready');
         fixLayerAspectRatios();
+        applyTextLayersTextures(scene);
         
         // Herstart GIF animaties die al geladen zijn na scene rebuild
         // (GIFs zonder src worden pas geladen bij targetFound via loadLazyGifsForTarget)
@@ -1754,6 +1755,7 @@ function initializeARScene() {
     // Additional setup for first load
     scene.addEventListener('arReady', () => {
         console.log(' Hidden AR scanner ready');
+        applyTextLayersTextures(scene);
         
         // Process exclusion filter layers
         setTimeout(() => {
@@ -2344,6 +2346,159 @@ async function quickSwitchPoster(posterIndex) {
     }
 }
 
+const AR_TEXT_FONT_CHOICES = [
+    '"Bebas Neue", sans-serif',
+    '"Orbitron", sans-serif',
+    '"Bangers", cursive',
+    '"Rubik Mono One", sans-serif',
+    '"Permanent Marker", cursive',
+    '"Audiowide", sans-serif',
+    '"Cinzel", serif',
+    '"Press Start 2P", monospace',
+    '"futura-pt", "Bebas Neue", sans-serif',
+    '"proxima-nova", "Orbitron", sans-serif'
+];
+
+let arTextFontsLoaded = false;
+
+function ensureARTextFontsLoaded() {
+    if (arTextFontsLoaded) return;
+    arTextFontsLoaded = true;
+    if (!document.getElementById('google-ar-text-fonts')) {
+        const link = document.createElement('link');
+        link.id = 'google-ar-text-fonts';
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Cinzel:wght@400;700&family=Orbitron:wght@400;700;900&family=Permanent+Marker&family=Press+Start+2P&family=Rubik+Mono+One&display=swap';
+        document.head.appendChild(link);
+    }
+}
+
+function seededRandomAR(seed) {
+    let state = seed >>> 0;
+    return () => {
+        state = (1664525 * state + 1013904223) >>> 0;
+        return state / 4294967296;
+    };
+}
+
+function pickRandomTextStyle(seedInput) {
+    const seed = Number(seedInput) || Date.now();
+    const rand = seededRandomAR(seed);
+    const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+    return {
+        font: pick(AR_TEXT_FONT_CHOICES),
+        color: pick(['#ffffff', '#ffeb3b', '#00e5ff', '#ff4081', '#76ff03', '#ff8a00', '#ffd1dc']),
+        outlineColor: pick(['#000000', '#111111', '#3d0f0f', '#0a1a2f', '#2e005d']),
+        outlineWidth: Math.round((2 + rand() * 5) * 10) / 10,
+        fontSize: Math.round(56 + rand() * 70),
+        effect: pick(['none', 'glow', 'shadow', 'neon']),
+        effect3d: pick(['none', 'extrude', 'tilt', 'float']),
+        align: pick(['left', 'center', 'right'])
+    };
+}
+
+function renderTextTexture(content, style) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const lines = String(content || '').split('\n').slice(0, 3);
+    const fontSize = Math.max(28, Math.min(180, parseInt(style.fontSize, 10) || 96));
+    const padding = Math.round(fontSize * 0.35);
+
+    ctx.font = `700 ${fontSize}px ${style.font}`;
+    const maxLineWidth = Math.max(...lines.map(line => ctx.measureText(line).width), fontSize * 2);
+    const lineHeight = Math.round(fontSize * 1.05);
+    const width = Math.ceil(maxLineWidth + padding * 2);
+    const height = Math.ceil(lineHeight * lines.length + padding * 2);
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.clearRect(0, 0, width, height);
+
+    const alignMap = { left: 'left', center: 'center', right: 'right' };
+    const textAlign = alignMap[style.align] || 'center';
+    const xPos = textAlign === 'left' ? padding : textAlign === 'right' ? width - padding : width / 2;
+
+    ctx.font = `700 ${fontSize}px ${style.font}`;
+    ctx.textAlign = textAlign;
+    ctx.textBaseline = 'top';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = style.outlineColor;
+    ctx.lineWidth = Math.max(0, Number(style.outlineWidth) || 0);
+    ctx.fillStyle = style.color;
+
+    if (style.effect === 'glow') {
+        ctx.shadowColor = style.color;
+        ctx.shadowBlur = 14;
+    } else if (style.effect === 'shadow') {
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
+    } else if (style.effect === 'neon') {
+        ctx.shadowColor = style.color;
+        ctx.shadowBlur = 20;
+    }
+
+    lines.forEach((line, idx) => {
+        const y = padding + idx * lineHeight;
+        if (style.effect3d === 'extrude') {
+            ctx.save();
+            ctx.fillStyle = style.outlineColor;
+            ctx.fillText(line, xPos - 3, y + 3);
+            ctx.restore();
+            ctx.fillStyle = style.color;
+        }
+        if ((Number(style.outlineWidth) || 0) > 0) {
+            ctx.strokeText(line, xPos, y);
+        }
+        ctx.fillText(line, xPos, y);
+    });
+
+    return {
+        dataUrl: canvas.toDataURL('image/png'),
+        widthMeters: Math.max(0.8, Math.min(2.6, width / 700)),
+        heightMeters: Math.max(0.25, Math.min(1.2, height / 700))
+    };
+}
+
+function applyTextLayersTextures(rootEl) {
+    ensureARTextFontsLoaded();
+    const root = rootEl || document;
+    const textLayers = root.querySelectorAll('[data-ar-text-layer="1"]');
+    textLayers.forEach((plane) => {
+        const textContent = decodeURIComponent(plane.getAttribute('data-text-content') || '');
+        if (!textContent) return;
+
+        const style = {
+            font: decodeURIComponent(plane.getAttribute('data-text-font') || '"Bebas Neue", sans-serif'),
+            color: plane.getAttribute('data-text-color') || '#ffffff',
+            outlineColor: plane.getAttribute('data-text-outline-color') || '#000000',
+            outlineWidth: parseFloat(plane.getAttribute('data-text-outline-width') || '3') || 3,
+            fontSize: parseFloat(plane.getAttribute('data-text-font-size') || '96') || 96,
+            effect: plane.getAttribute('data-text-effect') || 'none',
+            effect3d: plane.getAttribute('data-text-3d') || 'none',
+            align: plane.getAttribute('data-text-align') || 'center'
+        };
+
+        const randomEnabled = plane.getAttribute('data-text-random') === '1';
+        if (randomEnabled) {
+            const seed = parseInt(plane.getAttribute('data-text-seed') || '0', 10) || Date.now();
+            Object.assign(style, pickRandomTextStyle(seed));
+        }
+
+        const textureData = renderTextTexture(textContent, style);
+        plane.setAttribute('src', textureData.dataUrl);
+        plane.setAttribute('width', textureData.widthMeters.toFixed(3));
+        plane.setAttribute('height', textureData.heightMeters.toFixed(3));
+
+        if (style.effect3d === 'tilt') {
+            const rot = plane.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+            const xRot = (parseFloat(rot.x) || 0) - 12;
+            plane.setAttribute('rotation', `${xRot} ${parseFloat(rot.y) || 0} ${parseFloat(rot.z) || 0}`);
+        }
+    });
+}
+
 // Build layers HTML for a poster
 function buildLayersHTML(poster) {
     let layersHTML = '';
@@ -2498,6 +2653,45 @@ function buildLayersHTML(poster) {
                     }
                 }
                 animationStr = animAttrs.length > 0 ? animAttrs.join(' ') : '';
+            }
+
+            // Tekstlaag (kan bestaan zonder media)
+            if (layerData && layerData.text_enabled && layerData.text_content) {
+                const textOffsetY = (parseFloat(layerData.text_offset_y) || 0.85);
+                const textPosY = posY + textOffsetY;
+                const textPosZ = posZ + 0.03;
+
+                const textEncoded = encodeURIComponent(layerData.text_content);
+                const fontEncoded = encodeURIComponent(layerData.text_font_family || '"Bebas Neue", sans-serif');
+                const textColor = layerData.text_color || '#ffffff';
+                const textOutlineColor = layerData.text_outline_color || '#000000';
+                const textOutlineWidth = parseFloat(layerData.text_outline_width) || 3;
+                const textFontSize = parseFloat(layerData.text_font_size) || 96;
+                const textAlign = layerData.text_align || 'center';
+                const textEffect = layerData.text_effect || 'none';
+                const text3D = layerData.text_3d_effect || 'none';
+                const textSeed = parseInt(layerData.text_style_seed, 10) || 0;
+                const randomAttr = layerData.text_random_style ? '1' : '0';
+
+                layersHTML += `
+                    <a-plane
+                        id="ar-text-layer-${i}"
+                        data-ar-text-layer="1"
+                        data-text-content="${textEncoded}"
+                        data-text-font="${fontEncoded}"
+                        data-text-color="${textColor}"
+                        data-text-outline-color="${textOutlineColor}"
+                        data-text-outline-width="${textOutlineWidth}"
+                        data-text-font-size="${textFontSize}"
+                        data-text-align="${textAlign}"
+                        data-text-effect="${textEffect}"
+                        data-text-3d="${text3D}"
+                        data-text-seed="${textSeed}"
+                        data-text-random="${randomAttr}"
+                        position="${posX} ${textPosY} ${textPosZ}"
+                        rotation="${rotX} ${rotY} ${rotZ}"
+                        material="transparent: true; alphaTest: 0.02; side: double;"
+                        ${animationStr}></a-plane>`;
             }
 
             if (layerData && layerData.filename) {
@@ -2682,7 +2876,7 @@ function buildLayersHTML(poster) {
     // GLB 3D modellen worden nu per laag toegevoegd (zie layer loop hierboven)
     // Audio wordt afgespeeld vanuit layers_data tijdens targetFound
     
-    if (!layersHTML.includes('ar-layer-1') && !layersHTML.includes('ar-glb-model')) {
+    if (!layersHTML.includes('ar-layer-') && !layersHTML.includes('ar-glb-model') && !layersHTML.includes('ar-text-layer-')) {
         layersHTML += `<a-box position="0 0 0.1" color="#FF0000" width="0.2" height="0.2" depth="0.2"></a-box>`;
     }
     
@@ -2755,6 +2949,7 @@ function setupSceneEventListeners(scene, currentPoster) {
         
         // Fix aspect ratios for all layers
         fixLayerAspectRatios();
+        applyTextLayersTextures(scene);
 
 
         

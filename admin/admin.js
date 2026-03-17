@@ -92,6 +92,67 @@ const LAYER_CONFIG = {
 let currentPosterData = null;
 // Geladen poster thumbnail voor AR preview achtergrond
 let previewPosterImage = null;
+const previewTextSeeds = {};
+
+// Beschikbare fonts voor tekstlagen (Google + Adobe-achtige fallbacks)
+const TEXT_FONT_CHOICES = [
+    '"Bebas Neue", sans-serif',
+    '"Orbitron", sans-serif',
+    '"Bangers", cursive',
+    '"Rubik Mono One", sans-serif',
+    '"Permanent Marker", cursive',
+    '"Audiowide", sans-serif',
+    '"Cinzel", serif',
+    '"Press Start 2P", monospace',
+    '"futura-pt", "Bebas Neue", sans-serif',
+    '"proxima-nova", "Orbitron", sans-serif'
+];
+
+let textFontsLoaded = false;
+
+function ensureTextFontsLoaded() {
+    if (textFontsLoaded) return;
+    textFontsLoaded = true;
+
+    if (!document.getElementById('google-text-fonts')) {
+        const link = document.createElement('link');
+        link.id = 'google-text-fonts';
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Cinzel:wght@400;700&family=Orbitron:wght@400;700;900&family=Permanent+Marker&family=Press+Start+2P&family=Rubik+Mono+One&display=swap';
+        document.head.appendChild(link);
+    }
+}
+
+function seededRandom(seed) {
+    let state = seed >>> 0;
+    return () => {
+        state = (1664525 * state + 1013904223) >>> 0;
+        return state / 4294967296;
+    };
+}
+
+function generateRandomTextStylePreset(seedInput) {
+    const seed = Number(seedInput) || Date.now();
+    const rand = seededRandom(seed);
+    const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+
+    const colors = ['#ffffff', '#ffeb3b', '#00e5ff', '#ff4081', '#76ff03', '#ff8a00', '#ffd1dc'];
+    const outlineColors = ['#000000', '#111111', '#3d0f0f', '#0a1a2f', '#2e005d'];
+    const effects = ['none', 'glow', 'shadow', 'neon'];
+    const effect3d = ['none', 'extrude', 'tilt', 'float'];
+    const aligns = ['left', 'center', 'right'];
+
+    return {
+        font: pick(TEXT_FONT_CHOICES),
+        color: pick(colors),
+        outlineColor: pick(outlineColors),
+        outlineWidth: Math.round((2 + rand() * 5) * 10) / 10,
+        fontSize: Math.round(56 + rand() * 70),
+        effect: pick(effects),
+        effect3d: pick(effect3d),
+        align: pick(aligns),
+    };
+}
 
 
 // ========== GIF handling: use GIF directly as video ==========
@@ -276,6 +337,91 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     </label>
                     ${isEditForm ? `<button type="button" class="delete-layer-btn" onclick="deleteLayer(${layerNum})">×</button>` : ''}
                 </div>
+
+                <!-- Tekstlaag instellingen -->
+                <div class="text-layer-panel">
+                    <div class="text-layer-head">
+                        <label class="option-toggle">
+                            <input type="checkbox" id="${prefix}layer-${layerNum}-text-enabled" name="layer_${layerNum}_text_enabled" value="1">
+                            <span>TEKSTLAAG</span>
+                        </label>
+                        <label class="option-toggle">
+                            <input type="checkbox" id="${prefix}layer-${layerNum}-text-random" name="layer_${layerNum}_text_random" value="1">
+                            <span>RANDOM STYLE</span>
+                        </label>
+                    </div>
+                    <textarea
+                        id="${prefix}layer-${layerNum}-text-content"
+                        name="layer_${layerNum}_text_content"
+                        class="text-layer-input"
+                        rows="2"
+                        placeholder="Typ je AR titel of tekst..."></textarea>
+                    <div class="text-layer-grid">
+                        <div class="mini-input wide">
+                            <span>FONT</span>
+                            <select id="${prefix}layer-${layerNum}-text-font" name="layer_${layerNum}_text_font_family" class="text-layer-select">
+                                <option value="\"Bebas Neue\", sans-serif">Bebas Neue</option>
+                                <option value="\"Orbitron\", sans-serif">Orbitron</option>
+                                <option value="\"Bangers\", cursive">Bangers</option>
+                                <option value="\"Rubik Mono One\", sans-serif">Rubik Mono</option>
+                                <option value="\"Permanent Marker\", cursive">Permanent Marker</option>
+                                <option value="\"Audiowide\", sans-serif">Audiowide</option>
+                                <option value="\"Cinzel\", serif">Cinzel</option>
+                                <option value="\"Press Start 2P\", monospace">Press Start 2P</option>
+                                <option value="\"futura-pt\", \"Bebas Neue\", sans-serif">Futura PT*</option>
+                                <option value="\"proxima-nova\", \"Orbitron\", sans-serif">Proxima Nova*</option>
+                            </select>
+                        </div>
+                        <div class="mini-input">
+                            <span>SIZE</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1">
+                        </div>
+                        <div class="mini-input">
+                            <span>ALIGN</span>
+                            <select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select">
+                                <option value="left">L</option>
+                                <option value="center" selected>C</option>
+                                <option value="right">R</option>
+                            </select>
+                        </div>
+                        <div class="mini-input">
+                            <span>Y+</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-offset-y" name="layer_${layerNum}_text_offset_y" value="0.85" step="0.01">
+                        </div>
+                    </div>
+                    <div class="text-layer-grid">
+                        <div class="mini-input">
+                            <span>KLEUR</span>
+                            <input type="color" id="${prefix}layer-${layerNum}-text-color" name="layer_${layerNum}_text_color" value="#ffffff">
+                        </div>
+                        <div class="mini-input">
+                            <span>RAND</span>
+                            <input type="color" id="${prefix}layer-${layerNum}-text-outline-color" name="layer_${layerNum}_text_outline_color" value="#000000">
+                        </div>
+                        <div class="mini-input">
+                            <span>RAND W</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-outline-width" name="layer_${layerNum}_text_outline_width" value="3" min="0" max="12" step="0.5">
+                        </div>
+                        <div class="mini-input">
+                            <span>EFFECT</span>
+                            <select id="${prefix}layer-${layerNum}-text-effect" name="layer_${layerNum}_text_effect" class="text-layer-select">
+                                <option value="none">NONE</option>
+                                <option value="glow">GLOW</option>
+                                <option value="shadow">SHADOW</option>
+                                <option value="neon">NEON</option>
+                            </select>
+                        </div>
+                        <div class="mini-input">
+                            <span>3D</span>
+                            <select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select">
+                                <option value="none">NONE</option>
+                                <option value="extrude">EXTRUDE</option>
+                                <option value="tilt">TILT</option>
+                                <option value="float">FLOAT</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Animation Panel (hidden by default) -->
                 <div id="${prefix}layer-${layerNum}-anim-container" class="anim-panel hidden">
@@ -366,7 +512,19 @@ function deleteLayer(layerNum) {
         `edit-layer-${layerNum}-anim-scale`,
         `edit-layer-${layerNum}-anim-opacity`,
         `edit-layer-${layerNum}-anim-scale-duration`,
-        `edit-layer-${layerNum}-anim-preset`
+        `edit-layer-${layerNum}-anim-preset`,
+        `edit-layer-${layerNum}-text-enabled`,
+        `edit-layer-${layerNum}-text-random`,
+        `edit-layer-${layerNum}-text-content`,
+        `edit-layer-${layerNum}-text-font`,
+        `edit-layer-${layerNum}-text-size`,
+        `edit-layer-${layerNum}-text-align`,
+        `edit-layer-${layerNum}-text-offset-y`,
+        `edit-layer-${layerNum}-text-color`,
+        `edit-layer-${layerNum}-text-outline-color`,
+        `edit-layer-${layerNum}-text-outline-width`,
+        `edit-layer-${layerNum}-text-effect`,
+        `edit-layer-${layerNum}-text-3d`
     ];
     
     // Set delete flag
@@ -388,6 +546,14 @@ function deleteLayer(layerNum) {
                 const defaultVal = LAYER_CONFIG.defaultLayers.find(l => l.num === layerNum)?.defaultZ?.toFixed(3) || '0.000';
                 el.value = id.includes('pos-x') || id.includes('pos-y') ? '0.000' : 
                            id.includes('-z') && !id.includes('rot') ? defaultVal :
+                           id.includes('text-size') ? '96' :
+                           id.includes('text-offset-y') ? '0.85' :
+                           id.includes('text-color') ? '#ffffff' :
+                           id.includes('text-outline-color') ? '#000000' :
+                           id.includes('text-outline-width') ? '3' :
+                           id.includes('text-align') ? 'center' :
+                           id.includes('text-font') ? '"Bebas Neue", sans-serif' :
+                           id.includes('text-effect') || id.includes('text-3d') ? 'none' :
                            id.includes('scale') ? '1.0' :
                            '';
             }
@@ -694,14 +860,17 @@ function setupARPreview() {
     // Dit werkt ook voor dynamisch aangemaakte elementen
     document.addEventListener('input', (e) => {
         // Check of het een layer input is (positie, rotatie, scale, animatie)
-        if (e.target.matches('input[id*="layer-"][id*="-pos-"], input[id*="layer-"][id*="-rot-"], input[id*="layer-"][id*="-scale"], input[id*="layer-"][id*="-z"], input[id*="layer-"][id*="-anim-"]')) {
+        if (e.target.matches('input[id*="layer-"][id*="-pos-"], input[id*="layer-"][id*="-rot-"], input[id*="layer-"][id*="-scale"], input[id*="layer-"][id*="-z"], input[id*="layer-"][id*="-anim-"], input[id*="layer-"][id*="-text-"]') ||
+            e.target.matches('textarea[id*="layer-"][id*="-text-content"]') ||
+            e.target.matches('select[id*="layer-"][id*="-text-"]')) {
             updatePreviewFromInputs();
         }
     });
     
     // File upload change events voor real-time preview
     document.addEventListener('change', (e) => {
-        if (e.target.matches('input[type="file"][id*="layer-"][id*="-image"]')) {
+        if (e.target.matches('input[type="file"][id*="layer-"][id*="-image"]') ||
+            e.target.matches('input[id*="layer-"][id*="-text-enabled"], input[id*="layer-"][id*="-text-random"]')) {
             updatePreviewFromInputs();
         }
     });
@@ -974,6 +1143,25 @@ function updatePreviewFromInputs() {
         const animScale = getVal(`${prefix}layer-${i}-anim-scale`, 1);
         const animOpacity = getVal(`${prefix}layer-${i}-anim-opacity`, 1);
         const animScaleDuration = getVal(`${prefix}layer-${i}-anim-scale-duration`, 0);
+
+        // Tekstlaag parameters
+        const textEnabledEl = document.getElementById(`${prefix}layer-${i}-text-enabled`);
+        const textRandomEl = document.getElementById(`${prefix}layer-${i}-text-random`);
+        const textContentEl = document.getElementById(`${prefix}layer-${i}-text-content`);
+        const textFontEl = document.getElementById(`${prefix}layer-${i}-text-font`);
+        const textSizeEl = document.getElementById(`${prefix}layer-${i}-text-size`);
+        const textAlignEl = document.getElementById(`${prefix}layer-${i}-text-align`);
+        const textOffsetYEl = document.getElementById(`${prefix}layer-${i}-text-offset-y`);
+        const textColorEl = document.getElementById(`${prefix}layer-${i}-text-color`);
+        const textOutlineColorEl = document.getElementById(`${prefix}layer-${i}-text-outline-color`);
+        const textOutlineWidthEl = document.getElementById(`${prefix}layer-${i}-text-outline-width`);
+        const textEffectEl = document.getElementById(`${prefix}layer-${i}-text-effect`);
+        const text3DEl = document.getElementById(`${prefix}layer-${i}-text-3d`);
+
+        const textEnabled = !!textEnabledEl?.checked;
+        const textRandom = !!textRandomEl?.checked;
+        const textContent = (textContentEl?.value || '').trim();
+        const textHasContent = textEnabled && textContent.length > 0;
         
         // Check of layer media heeft (file input of bestaand bestand uit poster data)
         const fileInput = document.getElementById(`${prefix}layer-${i}-image`);
@@ -1020,7 +1208,7 @@ function updatePreviewFromInputs() {
         }
         
         // ALLEEN layers met content tonen in preview
-        if (hasFile || existingFilename || hasGlbFile || existingGlbModel || isApiRandom) {
+        if (hasFile || existingFilename || hasGlbFile || existingGlbModel || isApiRandom || textHasContent) {
             const layerData = { 
                 posX, posY, posZ, scale, rotX, rotY, rotZ, 
                 // Animatie parameters
@@ -1035,7 +1223,22 @@ function updatePreviewFromInputs() {
                 isGlb: false,
                 glbFilename: null,
                 isApiRandom: false,
-                apiRandomQuery: ''
+                apiRandomQuery: '',
+                hasText: textHasContent,
+                textContent,
+                textRandom,
+                textFont: textFontEl?.value || '"Bebas Neue", sans-serif',
+                textSize: parseFloat(textSizeEl?.value) || 96,
+                textAlign: textAlignEl?.value || 'center',
+                textOffsetY: parseFloat(textOffsetYEl?.value) || 0.85,
+                textColor: textColorEl?.value || '#ffffff',
+                textOutlineColor: textOutlineColorEl?.value || '#000000',
+                textOutlineWidth: parseFloat(textOutlineWidthEl?.value) || 3,
+                textEffect: textEffectEl?.value || 'none',
+                text3d: text3DEl?.value || 'none',
+                textSeed: parseInt(currentPosterData?.layers?.[`layer_${i}`]?.text_style_seed, 10) ||
+                          previewTextSeeds[`${prefix}${i}`] ||
+                          (previewTextSeeds[`${prefix}${i}`] = Date.now() + i)
             };
             
             // Laad afbeelding voor preview
@@ -1118,6 +1321,7 @@ function updatePreviewFromInputs() {
 
 function renderARPreview() {
     if (!previewCanvas || !previewCtx) return;
+    ensureTextFontsLoaded();
     
     const ctx = previewCtx;
     const w = previewCanvas.width;
@@ -1307,7 +1511,7 @@ function renderARPreview() {
         if (activeView === 'front' && !is3DModel && overlayContainer) {
             let domW, domH;
             
-            if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename) || data.isApiRandom) {
+            if ((data.imageLoaded && data.imageEl) || (data.isVideo && data.filename) || data.isApiRandom || data.hasText) {
                 
                 // AR gebruikt dezelfde logica voor alle media:
                 // Base size = 1.4 * scale (= posterH in preview termen, want poster is ~1.4m hoog)
@@ -1335,6 +1539,11 @@ function renderARPreview() {
                     // API random GIF: vierkante placeholder (1:1 aspect ratio)
                     domH = baseHeight;
                     domW = baseHeight;
+                } else if (data.hasText) {
+                    // Tekstlaag: brede banner boven poster
+                    domH = Math.max(42, baseHeight * 0.24);
+                    domW = Math.min(w * 0.86, baseHeight * 1.8);
+                    y = y - (data.textOffsetY * pxPerMeter);
                 }
                 
                 // Create Overlay Element
@@ -1494,7 +1703,54 @@ function renderARPreview() {
                 }
                 
                 // Add Content
-                if (data.imageEl) {
+                if (data.hasText) {
+                    const style = data.textRandom
+                        ? generateRandomTextStylePreset(data.textSeed)
+                        : {
+                            font: data.textFont,
+                            color: data.textColor,
+                            outlineColor: data.textOutlineColor,
+                            outlineWidth: data.textOutlineWidth,
+                            fontSize: data.textSize,
+                            effect: data.textEffect,
+                            effect3d: data.text3d,
+                            align: data.textAlign,
+                        };
+
+                    el.style.background = 'rgba(0,0,0,0.15)';
+                    el.style.backdropFilter = 'blur(1px)';
+                    el.style.borderColor = style.color;
+                    el.style.padding = '6px 10px';
+
+                    const textNode = document.createElement('div');
+                    textNode.textContent = data.textContent;
+                    textNode.style.width = '100%';
+                    textNode.style.whiteSpace = 'pre-wrap';
+                    textNode.style.lineHeight = '1.05';
+                    textNode.style.textAlign = style.align;
+                    textNode.style.fontFamily = style.font;
+                    textNode.style.fontSize = `${Math.max(12, Math.min(40, style.fontSize / 4.2))}px`;
+                    textNode.style.fontWeight = '700';
+                    textNode.style.color = style.color;
+                    textNode.style.webkitTextStroke = `${Math.max(0, style.outlineWidth / 3)}px ${style.outlineColor}`;
+                    textNode.style.textShadow = style.effect === 'glow'
+                        ? `0 0 8px ${style.color}, 0 0 14px ${style.color}`
+                        : style.effect === 'shadow'
+                            ? '2px 2px 0 rgba(0,0,0,0.7)'
+                            : style.effect === 'neon'
+                                ? `0 0 5px ${style.color}, 0 0 11px ${style.color}, 0 0 18px ${style.color}`
+                                : 'none';
+
+                    if (style.effect3d === 'tilt') {
+                        textNode.style.transform = 'perspective(300px) rotateX(16deg)';
+                    } else if (style.effect3d === 'float') {
+                        textNode.style.transform = 'translateY(-4px)';
+                    } else if (style.effect3d === 'extrude') {
+                        textNode.style.textShadow = `${textNode.style.textShadow !== 'none' ? textNode.style.textShadow + ', ' : ''}-1px 1px 0 ${style.outlineColor}, -2px 2px 0 ${style.outlineColor}`;
+                    }
+
+                    el.appendChild(textNode);
+                } else if (data.imageEl) {
                     // Image or GIF
                     const img = document.createElement('img');
                     img.src = data.imageEl.src;
@@ -2697,6 +2953,20 @@ function setupUploadForm() {
             const animScaleInput = document.getElementById(`layer-${i}-anim-scale`);
             const animOpacityInput = document.getElementById(`layer-${i}-anim-opacity`);
             const animScaleDurationInput = document.getElementById(`layer-${i}-anim-scale-duration`);
+
+            // Tekstlaag inputs
+            const textEnabledInput = document.getElementById(`layer-${i}-text-enabled`);
+            const textRandomInput = document.getElementById(`layer-${i}-text-random`);
+            const textContentInput = document.getElementById(`layer-${i}-text-content`);
+            const textFontInput = document.getElementById(`layer-${i}-text-font`);
+            const textSizeInput = document.getElementById(`layer-${i}-text-size`);
+            const textAlignInput = document.getElementById(`layer-${i}-text-align`);
+            const textOffsetInput = document.getElementById(`layer-${i}-text-offset-y`);
+            const textColorInput = document.getElementById(`layer-${i}-text-color`);
+            const textOutlineColorInput = document.getElementById(`layer-${i}-text-outline-color`);
+            const textOutlineWidthInput = document.getElementById(`layer-${i}-text-outline-width`);
+            const textEffectInput = document.getElementById(`layer-${i}-text-effect`);
+            const text3DInput = document.getElementById(`layer-${i}-text-3d`);
             
             // Skip if layer inputs don't exist
             if (!imageInput || !zInput) {
@@ -2773,6 +3043,24 @@ function setupUploadForm() {
             formData.append(`layer_${i}_anim_scale`, animScaleInput ? animScaleInput.value || '1.0' : '1.0');
             formData.append(`layer_${i}_anim_opacity`, animOpacityInput ? animOpacityInput.value || '1.0' : '1.0');
             formData.append(`layer_${i}_anim_scale_duration`, animScaleDurationInput ? animScaleDurationInput.value || '0' : '0');
+
+            // Tekstlaag payload
+            const isTextEnabled = !!textEnabledInput?.checked;
+            const isTextRandom = !!textRandomInput?.checked;
+            const textSeed = Date.now() + i;
+            formData.append(`layer_${i}_text_enabled`, isTextEnabled ? '1' : '0');
+            formData.append(`layer_${i}_text_random`, isTextRandom ? '1' : '0');
+            formData.append(`layer_${i}_text_content`, textContentInput ? textContentInput.value || '' : '');
+            formData.append(`layer_${i}_text_font_family`, textFontInput ? textFontInput.value || '"Bebas Neue", sans-serif' : '"Bebas Neue", sans-serif');
+            formData.append(`layer_${i}_text_font_size`, textSizeInput ? textSizeInput.value || '96' : '96');
+            formData.append(`layer_${i}_text_align`, textAlignInput ? textAlignInput.value || 'center' : 'center');
+            formData.append(`layer_${i}_text_offset_y`, textOffsetInput ? textOffsetInput.value || '0.85' : '0.85');
+            formData.append(`layer_${i}_text_color`, textColorInput ? textColorInput.value || '#ffffff' : '#ffffff');
+            formData.append(`layer_${i}_text_outline_color`, textOutlineColorInput ? textOutlineColorInput.value || '#000000' : '#000000');
+            formData.append(`layer_${i}_text_outline_width`, textOutlineWidthInput ? textOutlineWidthInput.value || '3' : '3');
+            formData.append(`layer_${i}_text_effect`, textEffectInput ? textEffectInput.value || 'none' : 'none');
+            formData.append(`layer_${i}_text_3d_effect`, text3DInput ? text3DInput.value || 'none' : 'none');
+            formData.append(`layer_${i}_text_style_seed`, String(textSeed));
             
             // Per-laag AR extras: GLB model en audio
             const layerGlbInput = document.getElementById(`layer-${i}-glb`);
@@ -3653,6 +3941,33 @@ async function openEditModal(posterId) {
                 if (exclusionCheckbox) {
                     exclusionCheckbox.checked = layerData.exclusion_filter || false;
                 }
+
+                // Tekstlaag velden
+                const textEnabledEl = document.getElementById(`edit-layer-${layerNum}-text-enabled`);
+                const textRandomEl = document.getElementById(`edit-layer-${layerNum}-text-random`);
+                const textContentEl = document.getElementById(`edit-layer-${layerNum}-text-content`);
+                const textFontEl = document.getElementById(`edit-layer-${layerNum}-text-font`);
+                const textSizeEl = document.getElementById(`edit-layer-${layerNum}-text-size`);
+                const textAlignEl = document.getElementById(`edit-layer-${layerNum}-text-align`);
+                const textOffsetEl = document.getElementById(`edit-layer-${layerNum}-text-offset-y`);
+                const textColorEl = document.getElementById(`edit-layer-${layerNum}-text-color`);
+                const textOutlineColorEl = document.getElementById(`edit-layer-${layerNum}-text-outline-color`);
+                const textOutlineWidthEl = document.getElementById(`edit-layer-${layerNum}-text-outline-width`);
+                const textEffectEl = document.getElementById(`edit-layer-${layerNum}-text-effect`);
+                const text3dEl = document.getElementById(`edit-layer-${layerNum}-text-3d`);
+
+                if (textEnabledEl) textEnabledEl.checked = !!layerData.text_enabled;
+                if (textRandomEl) textRandomEl.checked = !!layerData.text_random_style;
+                if (textContentEl) textContentEl.value = layerData.text_content || '';
+                if (textFontEl) textFontEl.value = layerData.text_font_family || '"Bebas Neue", sans-serif';
+                if (textSizeEl) textSizeEl.value = layerData.text_font_size || 96;
+                if (textAlignEl) textAlignEl.value = layerData.text_align || 'center';
+                if (textOffsetEl) textOffsetEl.value = (layerData.text_offset_y !== undefined && layerData.text_offset_y !== null) ? layerData.text_offset_y : 0.85;
+                if (textColorEl) textColorEl.value = layerData.text_color || '#ffffff';
+                if (textOutlineColorEl) textOutlineColorEl.value = layerData.text_outline_color || '#000000';
+                if (textOutlineWidthEl) textOutlineWidthEl.value = layerData.text_outline_width || 3;
+                if (textEffectEl) textEffectEl.value = layerData.text_effect || 'none';
+                if (text3dEl) text3dEl.value = layerData.text_3d_effect || 'none';
                 
                 // Check if has animation data (any non-zero anim value)
                 const hasAnimation = layerData.anim_x || layerData.anim_y || layerData.anim_z || 
@@ -3722,6 +4037,10 @@ async function openEditModal(posterId) {
                     statusBadge.textContent = 'Gevuld';
                     statusBadge.style.background = '#e8f5e9';
                     statusBadge.style.color = '#2e7d32';
+                } else if (statusBadge && layerData.text_enabled && layerData.text_content) {
+                    statusBadge.textContent = 'TEKST';
+                    statusBadge.style.background = '#fff8e1';
+                    statusBadge.style.color = '#ef6c00';
                 } else if (statusBadge) {
                     statusBadge.textContent = 'Leeg';
                     statusBadge.style.background = '#ffebee';
@@ -3999,6 +4318,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const animScaleEl = document.getElementById(`edit-layer-${i}-anim-scale`);
                 const animOpacityEl = document.getElementById(`edit-layer-${i}-anim-opacity`);
                 const animScaleDurationEl = document.getElementById(`edit-layer-${i}-anim-scale-duration`);
+
+                // Tekstlaag inputs
+                const textEnabledEl = document.getElementById(`edit-layer-${i}-text-enabled`);
+                const textRandomEl = document.getElementById(`edit-layer-${i}-text-random`);
+                const textContentEl = document.getElementById(`edit-layer-${i}-text-content`);
+                const textFontEl = document.getElementById(`edit-layer-${i}-text-font`);
+                const textSizeEl = document.getElementById(`edit-layer-${i}-text-size`);
+                const textAlignEl = document.getElementById(`edit-layer-${i}-text-align`);
+                const textOffsetEl = document.getElementById(`edit-layer-${i}-text-offset-y`);
+                const textColorEl = document.getElementById(`edit-layer-${i}-text-color`);
+                const textOutlineColorEl = document.getElementById(`edit-layer-${i}-text-outline-color`);
+                const textOutlineWidthEl = document.getElementById(`edit-layer-${i}-text-outline-width`);
+                const textEffectEl = document.getElementById(`edit-layer-${i}-text-effect`);
+                const text3DEl = document.getElementById(`edit-layer-${i}-text-3d`);
                 
                 // Skip if elements don't exist
                 if (!layerImageEl || !layerZEl) {
@@ -4116,6 +4449,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_anim_scale`, animScaleEl ? animScaleEl.value || '1.0' : '1.0');
                 formData.append(`layer_${i}_anim_opacity`, animOpacityEl ? animOpacityEl.value || '1.0' : '1.0');
                 formData.append(`layer_${i}_anim_scale_duration`, animScaleDurationEl ? animScaleDurationEl.value || '0' : '0');
+
+                // Tekstlaag payload
+                const isTextEnabled = !!textEnabledEl?.checked;
+                const isTextRandom = !!textRandomEl?.checked;
+                const textSeed = parseInt(currentPosterData?.layers?.[`layer_${i}`]?.text_style_seed, 10) || (Date.now() + i);
+                formData.append(`layer_${i}_text_enabled`, isTextEnabled ? '1' : '0');
+                formData.append(`layer_${i}_text_random`, isTextRandom ? '1' : '0');
+                formData.append(`layer_${i}_text_content`, textContentEl ? textContentEl.value || '' : '');
+                formData.append(`layer_${i}_text_font_family`, textFontEl ? textFontEl.value || '"Bebas Neue", sans-serif' : '"Bebas Neue", sans-serif');
+                formData.append(`layer_${i}_text_font_size`, textSizeEl ? textSizeEl.value || '96' : '96');
+                formData.append(`layer_${i}_text_align`, textAlignEl ? textAlignEl.value || 'center' : 'center');
+                formData.append(`layer_${i}_text_offset_y`, textOffsetEl ? textOffsetEl.value || '0.85' : '0.85');
+                formData.append(`layer_${i}_text_color`, textColorEl ? textColorEl.value || '#ffffff' : '#ffffff');
+                formData.append(`layer_${i}_text_outline_color`, textOutlineColorEl ? textOutlineColorEl.value || '#000000' : '#000000');
+                formData.append(`layer_${i}_text_outline_width`, textOutlineWidthEl ? textOutlineWidthEl.value || '3' : '3');
+                formData.append(`layer_${i}_text_effect`, textEffectEl ? textEffectEl.value || 'none' : 'none');
+                formData.append(`layer_${i}_text_3d_effect`, text3DEl ? text3DEl.value || 'none' : 'none');
+                formData.append(`layer_${i}_text_style_seed`, String(textSeed));
                 
                 // Per-laag AR extras: GLB model en audio
                 const layerGlbEl = document.getElementById(`edit-layer-${i}-glb`);
