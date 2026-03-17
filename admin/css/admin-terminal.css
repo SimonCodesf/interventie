@@ -734,6 +734,7 @@ input[type="file"]::file-selector-button:hover {
 
 .layer-copy-btn,
 .layer-paste-btn,
+.layer-template-btn,
 .pane-copy-btn,
 .pane-paste-btn {
     border: 1px solid rgba(255,255,255,0.24);
@@ -747,10 +748,22 @@ input[type="file"]::file-selector-button:hover {
 
 .layer-copy-btn:hover,
 .layer-paste-btn:hover,
+.layer-template-btn:hover,
 .pane-copy-btn:hover,
 .pane-paste-btn:hover {
     border-color: rgba(255,255,255,0.6);
     color: #fff;
+}
+
+.layer-template-select {
+    min-width: 132px;
+    max-width: 220px;
+    background: #000;
+    border: 1px solid rgba(255,255,255,0.24);
+    color: rgba(255,255,255,0.82);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.52rem;
+    padding: 3px 5px;
 }
 
 .pane-tools {

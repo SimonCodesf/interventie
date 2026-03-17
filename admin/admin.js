@@ -312,6 +312,12 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <div class="layer-smart-row">
                     <span class="layer-change-indicator" id="${prefix}layer-${layerNum}-changed-count">0 GEWIJZIGD</span>
                     <div class="layer-smart-actions">
+                        <select id="${prefix}layer-${layerNum}-template-select" class="layer-template-select">
+                            <option value="">TEMPLATE</option>
+                        </select>
+                        <button type="button" class="layer-template-btn" onclick="applySelectedLayerTemplate(${layerNum}, '${prefix}')">TOEPAS</button>
+                        <button type="button" class="layer-template-btn" onclick="saveLayerAsCustomTemplate(${layerNum}, '${prefix}')">OPSLAAN</button>
+                        <button type="button" class="layer-template-btn" onclick="deleteSelectedCustomTemplate(${layerNum}, '${prefix}')">VERWIJDER</button>
                         <button type="button" class="layer-copy-btn" onclick="copyLayerGroup(${layerNum}, 'all', '${prefix}')">KOPIEER LAAG</button>
                         <button type="button" class="layer-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'all', '${prefix}')">PLAK LAAG</button>
                         <button type="button" class="layer-reset-all-btn" onclick="resetLayerToBaseline(${layerNum}, '${prefix}')">RESET LAAG</button>
@@ -1231,6 +1237,230 @@ function setupLayerBatchActions(isEditForm) {
     updateLayerHistoryButtons(isEditForm);
 }
 let layerClipboard = null;
+const CUSTOM_LAYER_TEMPLATES_KEY = 'adminCustomLayerTemplatesV1';
+const API_TEMPLATE_FIELDS = ['source', 'api-query', 'api-random'];
+const BUILTIN_LAYER_TEMPLATES = [
+    {
+        id: 'builtin:text-overlay',
+        name: 'BASIS TEKST OVERLAY',
+        isBuiltin: true,
+        values: {
+            'content-type': 'text',
+            'text-enabled': true,
+            'text-content': 'NIEUWE TITEL',
+            'text-font': '"Bebas Neue", sans-serif',
+            'text-size': '96',
+            'text-align': 'center',
+            'text-offset-y': '0.85',
+            'text-color': '#ffffff',
+            'text-outline-color': '#000000',
+            'text-outline-width': '3',
+            'text-effect': 'none',
+            'text-3d': 'none',
+            'pos-x': '0',
+            'pos-y': '0',
+            'scale': '1'
+        }
+    },
+    {
+        id: 'builtin:api-random-meme',
+        name: 'API RANDOM MEME',
+        isBuiltin: true,
+        values: {
+            'content-type': 'api',
+            'source': 'meme',
+            'api-query': 'funny',
+            'api-random': true,
+            'scale': '1'
+        }
+    },
+    {
+        id: 'builtin:slow-rotator',
+        name: 'SLOW ROTATOR',
+        isBuiltin: true,
+        values: {
+            'content-type': 'image',
+            'scale': '0.9',
+            'enable-anim': true,
+            'anim-rot-y': '360',
+            'anim-rot-duration': '18',
+            'anim-rot-origin': 'center',
+            'anim-x': '0',
+            'anim-y': '0',
+            'anim-z': '0',
+            'anim-scale': '1',
+            'anim-opacity': '1'
+        }
+    }
+];
+
+function getTemplatePrefixFromScope(prefix = '') {
+    return prefix === 'edit-' ? 'edit-' : '';
+}
+
+function loadCustomLayerTemplates() {
+    try {
+        const raw = localStorage.getItem(CUSTOM_LAYER_TEMPLATES_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.warn('[Templates] Laden mislukt:', error);
+        return [];
+    }
+}
+
+function saveCustomLayerTemplates(templates) {
+    try {
+        localStorage.setItem(CUSTOM_LAYER_TEMPLATES_KEY, JSON.stringify(templates));
+    } catch (error) {
+        console.warn('[Templates] Opslaan mislukt:', error);
+    }
+}
+
+function getAllLayerTemplates() {
+    const customTemplates = loadCustomLayerTemplates().map((item) => ({
+        ...item,
+        isBuiltin: false
+    }));
+    return [...BUILTIN_LAYER_TEMPLATES, ...customTemplates];
+}
+
+function findLayerTemplateById(templateId) {
+    if (!templateId) return null;
+    return getAllLayerTemplates().find((item) => item.id === templateId) || null;
+}
+
+function collectLayerTemplateValues(layerNum, prefix = '') {
+    const values = {};
+    const groups = getLayerGroupNames();
+
+    groups.forEach((groupName) => {
+        const elements = getLayerGroupElements(layerNum, prefix, groupName);
+        elements.forEach((el) => {
+            const fieldSuffix = getFieldSuffixFromControlId(el.id, layerNum, prefix);
+            if (!isCopyableField(fieldSuffix)) return;
+            values[fieldSuffix] = el.type === 'checkbox' ? !!el.checked : el.value;
+        });
+    });
+
+    API_TEMPLATE_FIELDS.forEach((fieldSuffix) => {
+        const el = document.getElementById(`${prefix}layer-${layerNum}-${fieldSuffix}`);
+        if (!el) return;
+        values[fieldSuffix] = el.type === 'checkbox' ? !!el.checked : el.value;
+    });
+
+    return values;
+}
+
+function applyTemplateValuesToLayer(layerNum, prefix, values) {
+    if (!values || typeof values !== 'object') return;
+
+    const prioritizedFields = ['content-type', 'source'];
+    const remainingFields = Object.keys(values).filter((field) => !prioritizedFields.includes(field));
+
+    [...prioritizedFields, ...remainingFields].forEach((fieldSuffix) => {
+        if (!(fieldSuffix in values)) return;
+        const el = document.getElementById(`${prefix}layer-${layerNum}-${fieldSuffix}`);
+        if (!el || el.type === 'file') return;
+
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            el.checked = !!values[fieldSuffix];
+        } else {
+            el.value = values[fieldSuffix];
+        }
+
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const isEditForm = prefix === 'edit-';
+    updateLayerModificationState(layerNum, isEditForm);
+}
+
+function refreshLayerTemplateSelector(layerNum, prefix = '') {
+    const selectEl = document.getElementById(`${prefix}layer-${layerNum}-template-select`);
+    if (!selectEl) return;
+
+    const previousValue = selectEl.value;
+    const templates = getAllLayerTemplates();
+    selectEl.innerHTML = '<option value="">TEMPLATE</option>';
+
+    templates.forEach((template) => {
+        const option = document.createElement('option');
+        option.value = template.id;
+        option.textContent = template.isBuiltin ? `[SYSTEEM] ${template.name}` : `[CUSTOM] ${template.name}`;
+        selectEl.appendChild(option);
+    });
+
+    if (previousValue && templates.some((template) => template.id === previousValue)) {
+        selectEl.value = previousValue;
+    }
+}
+
+function refreshAllLayerTemplateSelectors() {
+    for (let layerNum = 1; layerNum <= LAYER_CONFIG.maxLayers; layerNum++) {
+        refreshLayerTemplateSelector(layerNum, '');
+        refreshLayerTemplateSelector(layerNum, 'edit-');
+    }
+}
+
+function applySelectedLayerTemplate(layerNum, prefix = '') {
+    const selectEl = document.getElementById(`${prefix}layer-${layerNum}-template-select`);
+    const template = findLayerTemplateById(selectEl?.value || '');
+    if (!template) return;
+
+    applyTemplateValuesToLayer(layerNum, prefix, template.values);
+}
+
+function saveLayerAsCustomTemplate(layerNum, prefix = '') {
+    const templateName = window.prompt('Naam voor deze template:', `Template laag ${layerNum}`);
+    if (!templateName) return;
+
+    const cleanName = templateName.trim();
+    if (!cleanName) return;
+
+    const templates = loadCustomLayerTemplates();
+    const existingIndex = templates.findIndex((item) => item.name.toLowerCase() === cleanName.toLowerCase());
+    const payload = {
+        id: existingIndex >= 0 ? templates[existingIndex].id : `custom:${Date.now()}`,
+        name: cleanName,
+        values: collectLayerTemplateValues(layerNum, prefix),
+        createdAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+        templates[existingIndex] = payload;
+    } else {
+        templates.push(payload);
+    }
+
+    saveCustomLayerTemplates(templates);
+    refreshAllLayerTemplateSelectors();
+
+    const scopePrefix = getTemplatePrefixFromScope(prefix);
+    const selectEl = document.getElementById(`${scopePrefix}layer-${layerNum}-template-select`);
+    if (selectEl) {
+        selectEl.value = payload.id;
+    }
+}
+
+function deleteSelectedCustomTemplate(layerNum, prefix = '') {
+    const selectEl = document.getElementById(`${prefix}layer-${layerNum}-template-select`);
+    const selectedId = selectEl?.value || '';
+    if (!selectedId) return;
+
+    if (selectedId.startsWith('builtin:')) {
+        alert('SYSTEEM templates kunnen niet verwijderd worden.');
+        return;
+    }
+
+    const templates = loadCustomLayerTemplates();
+    const nextTemplates = templates.filter((item) => item.id !== selectedId);
+    if (nextTemplates.length === templates.length) return;
+
+    saveCustomLayerTemplates(nextTemplates);
+    refreshAllLayerTemplateSelectors();
+}
 
 const LAYER_GROUP_FIELDS = {
     content: [
@@ -6039,6 +6269,9 @@ window.resetLayerGroupToBaseline = resetLayerGroupToBaseline;
 window.resetLayerToBaseline = resetLayerToBaseline;
 window.copyLayerGroup = copyLayerGroup;
 window.pasteLayerGroup = pasteLayerGroup;
+window.applySelectedLayerTemplate = applySelectedLayerTemplate;
+window.saveLayerAsCustomTemplate = saveLayerAsCustomTemplate;
+window.deleteSelectedCustomTemplate = deleteSelectedCustomTemplate;
 
 // Setup AR Extras (GLB/Audio) toggle per layer
 function setupLayerExtrasToggle(layerNum, isEditForm) {
@@ -6072,6 +6305,7 @@ function renderLayers(isEditForm = false) {
         setupLayerAnimationToggle(i, isEditForm);
         setupTextRandomControls(i, isEditForm);
         setupLayerChangeTracking(i, isEditForm);
+        refreshLayerTemplateSelector(i, isEditForm ? 'edit-' : '');
     }
 
     setupLayerReorder(isEditForm);
