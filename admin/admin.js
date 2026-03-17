@@ -302,7 +302,6 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <div class="layer-tab-bar">
                     <button type="button" class="layer-tab-btn is-active" data-tab="content">INHOUD</button>
                     <button type="button" class="layer-tab-btn" data-tab="transform">TRANSFORM</button>
-                    <button type="button" class="layer-tab-btn" data-tab="text">TEKST</button>
                     <button type="button" class="layer-tab-btn" data-tab="anim">ANIMATIE</button>
                 </div>
 
@@ -324,8 +323,19 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'content', '${prefix}')">RESET TAB</button>
                         </div>
                     </div>
+                    <div class="content-type-row">
+                        <label>INHOUD TYPE</label>
+                        <select id="${prefix}layer-${layerNum}-content-type" name="layer_${layerNum}_content_type" class="content-type-select">
+                            <option value="image" selected>AFBEELDING</option>
+                            <option value="gifvideo">GIF / VIDEO</option>
+                            <option value="api">API</option>
+                            <option value="3d">3D MODEL</option>
+                            <option value="audio">AUDIO</option>
+                            <option value="text">TEKST</option>
+                        </select>
+                    </div>
                     <div class="layer-files">
-                        <div class="file-slot">
+                        <div class="file-slot" data-content-types="image,gifvideo,api">
                             <label>MEDIA</label>
                             <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm,.glb,.gltf">
                             <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
@@ -333,20 +343,113 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-current"></span>` : ''}
                             ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-media-btn" onclick="deleteLayerMedia(${layerNum}, 'image')" title="Verwijder afbeelding" style="display:none;">×</button>` : ''}
                         </div>
-                        <div class="file-slot file-slot-small">
+                        <div class="file-slot file-slot-small" data-content-types="3d">
                             <label>3D</label>
                             <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf">
                             <input type="hidden" id="${prefix}layer-${layerNum}-delete-glb" name="layer_${layerNum}_delete_glb" value="0">
                             ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-glb-current"></span>` : ''}
                             ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-glb-btn" onclick="deleteLayerMedia(${layerNum}, 'glb')" title="Verwijder 3D model" style="display:none;">×</button>` : ''}
                         </div>
-                        <div class="file-slot file-slot-small">
+                        <div class="file-slot file-slot-small" data-content-types="audio">
                             <label>AUDIO</label>
                             <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,.mp3,.wav">
                             <input type="hidden" id="${prefix}layer-${layerNum}-delete-audio" name="layer_${layerNum}_delete_audio" value="0">
                             ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-audio-current"></span>` : ''}
                             ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-audio-btn" onclick="deleteLayerMedia(${layerNum}, 'audio')" title="Verwijder audio" style="display:none;">×</button>` : ''}
                         </div>
+                    </div>
+
+                    <div class="text-layer-panel" data-content-types="text">
+                        <input type="checkbox" id="${prefix}layer-${layerNum}-text-enabled" name="layer_${layerNum}_text_enabled" value="1" style="display:none;">
+                        <div class="text-layer-head">
+                            <label class="option-toggle">
+                                <input type="checkbox" id="${prefix}layer-${layerNum}-text-random" name="layer_${layerNum}_text_random" value="1">
+                                <span>RANDOM ALLES</span>
+                            </label>
+                        </div>
+                        <textarea
+                            id="${prefix}layer-${layerNum}-text-content"
+                            name="layer_${layerNum}_text_content"
+                            class="text-layer-input"
+                            rows="2"
+                            placeholder="Typ je AR titel of tekst..."></textarea>
+                        <div class="text-layer-grid">
+                            <div class="mini-input wide">
+                                <span>FONT <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1">R</label></span>
+                                <select id="${prefix}layer-${layerNum}-text-font" name="layer_${layerNum}_text_font_family" class="text-layer-select">
+                                    ${getTextFontOptionsHTML()}
+                                </select>
+                            </div>
+                            <div class="mini-input">
+                                <span>SIZE <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1">R</label></span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1">
+                            </div>
+                            <div class="mini-input">
+                                <span>ALIGN <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1">R</label></span>
+                                <select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select">
+                                    <option value="left">L</option>
+                                    <option value="center" selected>C</option>
+                                    <option value="right">R</option>
+                                </select>
+                            </div>
+                            <div class="mini-input">
+                                <span>Y+</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-offset-y" name="layer_${layerNum}_text_offset_y" value="0.85" step="0.01">
+                            </div>
+                        </div>
+                        <div class="text-layer-grid">
+                            <div class="mini-input">
+                                <span>KLEUR <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1">R</label></span>
+                                <input type="color" id="${prefix}layer-${layerNum}-text-color" name="layer_${layerNum}_text_color" value="#ffffff">
+                            </div>
+                            <div class="mini-input">
+                                <span>RAND <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1">R</label></span>
+                                <input type="color" id="${prefix}layer-${layerNum}-text-outline-color" name="layer_${layerNum}_text_outline_color" value="#000000">
+                            </div>
+                            <div class="mini-input">
+                                <span>RAND W</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-outline-width" name="layer_${layerNum}_text_outline_width" value="3" min="0" max="12" step="0.5">
+                            </div>
+                            <div class="mini-input">
+                                <span>EFFECT <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1">R</label></span>
+                                <select id="${prefix}layer-${layerNum}-text-effect" name="layer_${layerNum}_text_effect" class="text-layer-select">
+                                    <option value="none">NONE</option>
+                                    <option value="glow">GLOW</option>
+                                    <option value="shadow">SHADOW</option>
+                                    <option value="neon">NEON</option>
+                                </select>
+                            </div>
+                            <div class="mini-input">
+                                <span>3D FX <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1">R</label></span>
+                                <select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select">
+                                    <option value="none">NONE</option>
+                                    <option value="extrude">EXTRUDE</option>
+                                    <option value="tilt">TILT</option>
+                                    <option value="float">FLOAT</option>
+                                </select>
+                            </div>
+                        </div>
+                        <details class="text-advanced-block">
+                            <summary>3D DETAILS</summary>
+                            <div class="text-layer-grid text-3d-params">
+                                <div class="mini-input">
+                                    <span>DEPTH</span>
+                                    <input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1">
+                                </div>
+                                <div class="mini-input">
+                                    <span>TILT X</span>
+                                    <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1">
+                                </div>
+                                <div class="mini-input">
+                                    <span>TILT Y</span>
+                                    <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1">
+                                </div>
+                                <div class="mini-input">
+                                    <span>FLOAT PX</span>
+                                    <input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1">
+                                </div>
+                            </div>
+                        </details>
                     </div>
 
                     <div class="layer-options">
@@ -415,124 +518,6 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     </div>
                 </div>
 
-                <div class="layer-pane" data-pane="text">
-                    <div class="pane-tools">
-                        <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-text">STANDAARD</span>
-                        <div class="pane-tool-actions">
-                            <button type="button" class="pane-copy-btn" onclick="copyLayerGroup(${layerNum}, 'text', '${prefix}')">KOPIEER TAB</button>
-                            <button type="button" class="pane-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'text', '${prefix}')">PLAK TAB</button>
-                            <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'text', '${prefix}')">RESET TAB</button>
-                        </div>
-                    </div>
-                    <div class="text-layer-panel">
-                    <div class="text-layer-head">
-                        <label class="option-toggle">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-text-enabled" name="layer_${layerNum}_text_enabled" value="1">
-                            <span>TEKSTLAAG</span>
-                        </label>
-                        <label class="option-toggle">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-text-random" name="layer_${layerNum}_text_random" value="1">
-                            <span>RANDOM ALLES</span>
-                        </label>
-                    </div>
-                    <details class="text-advanced-block">
-                        <summary>RANDOM SPECIFIEK</summary>
-                        <div class="text-random-specs">
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1"><span>R FONT</span></label>
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1"><span>R KLEUR</span></label>
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1"><span>R RAND</span></label>
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1"><span>R FX</span></label>
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span>R 3D</span></label>
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span>R SIZE</span></label>
-                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span>R ALIGN</span></label>
-                        </div>
-                    </details>
-                    <textarea
-                        id="${prefix}layer-${layerNum}-text-content"
-                        name="layer_${layerNum}_text_content"
-                        class="text-layer-input"
-                        rows="2"
-                        placeholder="Typ je AR titel of tekst..."></textarea>
-                    <div class="text-layer-grid">
-                        <div class="mini-input wide">
-                            <span>FONT</span>
-                            <select id="${prefix}layer-${layerNum}-text-font" name="layer_${layerNum}_text_font_family" class="text-layer-select">
-                                ${getTextFontOptionsHTML()}
-                            </select>
-                        </div>
-                        <div class="mini-input">
-                            <span>SIZE</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1">
-                        </div>
-                        <div class="mini-input">
-                            <span>ALIGN</span>
-                            <select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select">
-                                <option value="left">L</option>
-                                <option value="center" selected>C</option>
-                                <option value="right">R</option>
-                            </select>
-                        </div>
-                        <div class="mini-input">
-                            <span>Y+</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-offset-y" name="layer_${layerNum}_text_offset_y" value="0.85" step="0.01">
-                        </div>
-                    </div>
-                    <div class="text-layer-grid">
-                        <div class="mini-input">
-                            <span>KLEUR</span>
-                            <input type="color" id="${prefix}layer-${layerNum}-text-color" name="layer_${layerNum}_text_color" value="#ffffff">
-                        </div>
-                        <div class="mini-input">
-                            <span>RAND</span>
-                            <input type="color" id="${prefix}layer-${layerNum}-text-outline-color" name="layer_${layerNum}_text_outline_color" value="#000000">
-                        </div>
-                        <div class="mini-input">
-                            <span>RAND W</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-outline-width" name="layer_${layerNum}_text_outline_width" value="3" min="0" max="12" step="0.5">
-                        </div>
-                        <div class="mini-input">
-                            <span>EFFECT</span>
-                            <select id="${prefix}layer-${layerNum}-text-effect" name="layer_${layerNum}_text_effect" class="text-layer-select">
-                                <option value="none">NONE</option>
-                                <option value="glow">GLOW</option>
-                                <option value="shadow">SHADOW</option>
-                                <option value="neon">NEON</option>
-                            </select>
-                        </div>
-                        <div class="mini-input">
-                            <span>3D</span>
-                            <select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select">
-                                <option value="none">NONE</option>
-                                <option value="extrude">EXTRUDE</option>
-                                <option value="tilt">TILT</option>
-                                <option value="float">FLOAT</option>
-                            </select>
-                        </div>
-                    </div>
-                    <details class="text-advanced-block">
-                        <summary>3D DETAILS</summary>
-                        <div class="text-layer-grid text-3d-params">
-                            <div class="mini-input">
-                                <span>DEPTH</span>
-                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1">
-                            </div>
-                            <div class="mini-input">
-                                <span>TILT X</span>
-                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1">
-                            </div>
-                            <div class="mini-input">
-                                <span>TILT Y</span>
-                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1">
-                            </div>
-                            <div class="mini-input">
-                                <span>FLOAT PX</span>
-                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1">
-                            </div>
-                        </div>
-                    </details>
-                    </div>
-                </div>
-
                 <div class="layer-pane" data-pane="anim">
                     <div class="pane-tools">
                         <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-anim">STANDAARD</span>
@@ -551,7 +536,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     </div>
                 
                 <!-- Animation Panel (hidden by default) -->
-                <div id="${prefix}layer-${layerNum}-anim-container" class="anim-panel hidden">
+                <div id="${prefix}layer-${layerNum}-anim-container" class="anim-panel">
                     <div class="anim-row">
                         <select id="${prefix}layer-${layerNum}-anim-preset" onchange="applyAnimPreset(this, '${prefix}', ${layerNum})" class="anim-preset-select">
                             <option value="">PRESET</option>
@@ -723,7 +708,8 @@ function deleteLayer(layerNum) {
     // Reset animation container
     const animContainer = document.getElementById(`edit-layer-${layerNum}-anim-container`);
     if (animContainer) {
-        animContainer.style.display = 'none';
+        animContainer.style.display = 'block';
+        animContainer.classList.add('is-disabled');
     }
     
     // Reset extras container
@@ -934,14 +920,15 @@ let editModalUXBound = false;
 let layerClipboard = null;
 
 const LAYER_GROUP_FIELDS = {
-    content: ['image', 'glb', 'audio', 'transparent', 'bg-color', 'exclusion', 'delete', 'delete-media', 'delete-glb', 'delete-audio'],
-    transform: ['pos-x', 'pos-y', 'z', 'rot-x', 'rot-y', 'rot-z', 'scale'],
-    text: [
-        'text-enabled', 'text-random', 'text-random-font', 'text-random-color', 'text-random-outline', 'text-random-effect',
-        'text-random-3d', 'text-random-size', 'text-random-align', 'text-content', 'text-font', 'text-size', 'text-align',
-        'text-offset-y', 'text-color', 'text-outline-color', 'text-outline-width', 'text-effect', 'text-3d', 'text-3d-depth',
+    content: [
+        'content-type', 'image', 'glb', 'audio', 'transparent', 'bg-color', 'exclusion', 'delete', 'delete-media', 'delete-glb', 'delete-audio',
+        'text-enabled',
+        'text-random', 'text-random-font', 'text-random-color', 'text-random-outline', 'text-random-effect', 'text-random-3d',
+        'text-random-size', 'text-random-align', 'text-content', 'text-font', 'text-size', 'text-align', 'text-offset-y',
+        'text-color', 'text-outline-color', 'text-outline-width', 'text-effect', 'text-3d', 'text-3d-depth',
         'text-3d-tilt-x', 'text-3d-tilt-y', 'text-3d-float-px'
     ],
+    transform: ['pos-x', 'pos-y', 'z', 'rot-x', 'rot-y', 'rot-z', 'scale'],
     anim: [
         'enable-anim', 'anim-preset', 'anim-x', 'anim-y', 'anim-z', 'anim-pos-duration', 'anim-rot-x', 'anim-rot-y',
         'anim-rot-z', 'anim-rot-duration', 'anim-rot-origin', 'anim-scale', 'anim-opacity', 'anim-scale-duration'
@@ -1217,7 +1204,7 @@ function updateUXSteps() {
     });
 }
 
-// Setup animation toggle listeners (show/hide anim panel)
+// Setup animation toggle listeners (panel blijft zichtbaar, enkel status dimt)
 function setupLayerAnimationToggles() {
     for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
         // Upload form
@@ -1225,7 +1212,7 @@ function setupLayerAnimationToggles() {
         const animContainer = document.getElementById(`layer-${i}-anim-container`);
         if (animToggle && animContainer) {
             animToggle.addEventListener('change', function() {
-                animContainer.classList.toggle('hidden', !this.checked);
+                animContainer.classList.toggle('is-disabled', !this.checked);
             });
         }
         
@@ -1234,7 +1221,7 @@ function setupLayerAnimationToggles() {
         const editAnimContainer = document.getElementById(`edit-layer-${i}-anim-container`);
         if (editAnimToggle && editAnimContainer) {
             editAnimToggle.addEventListener('change', function() {
-                editAnimContainer.classList.toggle('hidden', !this.checked);
+                editAnimContainer.classList.toggle('is-disabled', !this.checked);
             });
         }
     }
@@ -1546,6 +1533,7 @@ function updatePreviewFromInputs() {
         const animScaleDuration = getVal(`${prefix}layer-${i}-anim-scale-duration`, 0);
 
         // Tekstlaag parameters
+        const contentTypeEl = document.getElementById(`${prefix}layer-${i}-content-type`);
         const textEnabledEl = document.getElementById(`${prefix}layer-${i}-text-enabled`);
         const textRandomEl = document.getElementById(`${prefix}layer-${i}-text-random`);
         const textContentEl = document.getElementById(`${prefix}layer-${i}-text-content`);
@@ -1570,7 +1558,7 @@ function updatePreviewFromInputs() {
         const textRandomSizeEl = document.getElementById(`${prefix}layer-${i}-text-random-size`);
         const textRandomAlignEl = document.getElementById(`${prefix}layer-${i}-text-random-align`);
 
-        const textEnabled = !!textEnabledEl?.checked;
+        const textEnabled = (contentTypeEl?.value === 'text') || !!textEnabledEl?.checked;
         const textRandom = !!textRandomEl?.checked;
         const textContent = (textContentEl?.value || '').trim();
         const textHasContent = textEnabled && textContent.length > 0;
@@ -2678,6 +2666,8 @@ function injectApiSourceUI(layerNum, prefix) {
             searchBtn.click();
         }
     });
+
+    syncLayerContentTypeUI(layerNum, prefix);
 }
 
 // API zoek functie - stuurt naar juiste API
@@ -3402,6 +3392,7 @@ function setupUploadForm() {
             // Tekstlaag inputs
             const textEnabledInput = document.getElementById(`layer-${i}-text-enabled`);
             const textRandomInput = document.getElementById(`layer-${i}-text-random`);
+            const contentTypeInput = document.getElementById(`layer-${i}-content-type`);
             const textContentInput = document.getElementById(`layer-${i}-text-content`);
             const textFontInput = document.getElementById(`layer-${i}-text-font`);
             const textSizeInput = document.getElementById(`layer-${i}-text-size`);
@@ -3432,23 +3423,26 @@ function setupUploadForm() {
             let layerImage = imageInput.files[0];
             const layerZ = zInput.value;
             const isExclusion = exclusionInput ? exclusionInput.checked : false;
+            const contentType = contentTypeInput?.value || 'image';
+
+            formData.append(`layer_${i}_content_type`, contentType);
             
             // Check of er een API-geselecteerde afbeelding is voor deze laag
             const apiKey = `layer-${i}`;
             const apiData = apiLayerData[apiKey];
             
-            if (apiData && apiData.api_mode === 'random') {
+            if (contentType === 'api' && apiData && apiData.api_mode === 'random') {
                 // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
                 // De AR frontend haalt zelf bij elke scan een random GIF op.
                 formData.append(`layer_${i}_api_mode`, 'random');
                 formData.append(`layer_${i}_api_source`, apiData.source);
                 formData.append(`layer_${i}_api_query`, apiData.query);
-            } else if (apiData && apiData.type === '3d' && apiData.uid) {
+            } else if (contentType === 'api' && apiData && apiData.type === '3d' && apiData.uid) {
                 // Specifiek 3D model: sla UID op als api_mode=3d_model
                 formData.append(`layer_${i}_api_mode`, '3d_model');
                 formData.append(`layer_${i}_api_source`, 'sketchfab');
                 formData.append(`layer_${i}_api_query`, apiData.uid);
-            } else if (apiData && apiData.url) {
+            } else if (contentType === 'api' && apiData && apiData.url) {
                 // Handmatige API selectie: download de content en upload als bestand
                 try {
                     const proxyUrl = apiData.source === 'klipy' 
@@ -3464,7 +3458,7 @@ function setupUploadForm() {
                 } catch (apiErr) {
                     console.warn(`[Layer ${i}] API afbeelding downloaden mislukt:`, apiErr);
                 }
-            } else if (layerImage) {
+            } else if ((contentType === 'image' || contentType === 'gifvideo') && layerImage) {
                 // Handmatige upload (bestaand gedrag)
                 if (layerImage.type === 'image/gif') {
                     // GIF direct doorsturen (A-Frame GIF shader speelt ze af)
@@ -3501,7 +3495,7 @@ function setupUploadForm() {
             formData.append(`layer_${i}_anim_scale_duration`, animScaleDurationInput ? animScaleDurationInput.value || '0' : '0');
 
             // Tekstlaag payload
-            const isTextEnabled = !!textEnabledInput?.checked;
+            const isTextEnabled = contentType === 'text';
             const isTextRandom = !!textRandomInput?.checked;
             const textSeed = Date.now() + i;
             formData.append(`layer_${i}_text_enabled`, isTextEnabled ? '1' : '0');
@@ -4423,6 +4417,7 @@ async function openEditModal(posterId) {
                 const textRandomSizeEl = document.getElementById(`edit-layer-${layerNum}-text-random-size`);
                 const textRandomAlignEl = document.getElementById(`edit-layer-${layerNum}-text-random-align`);
                 const textContentEl = document.getElementById(`edit-layer-${layerNum}-text-content`);
+                const contentTypeEl = document.getElementById(`edit-layer-${layerNum}-content-type`);
                 const textFontEl = document.getElementById(`edit-layer-${layerNum}-text-font`);
                 const textSizeEl = document.getElementById(`edit-layer-${layerNum}-text-size`);
                 const textAlignEl = document.getElementById(`edit-layer-${layerNum}-text-align`);
@@ -4460,6 +4455,21 @@ async function openEditModal(posterId) {
                 if (text3dTiltXEl) text3dTiltXEl.value = (layerData.text_3d_tilt_x !== undefined && layerData.text_3d_tilt_x !== null) ? layerData.text_3d_tilt_x : 16;
                 if (text3dTiltYEl) text3dTiltYEl.value = (layerData.text_3d_tilt_y !== undefined && layerData.text_3d_tilt_y !== null) ? layerData.text_3d_tilt_y : 0;
                 if (text3dFloatPxEl) text3dFloatPxEl.value = layerData.text_3d_float_px || 4;
+
+                if (contentTypeEl) {
+                    let resolvedContentType = 'image';
+                    if (layerData.api_mode) {
+                        resolvedContentType = 'api';
+                    } else if (layerData.text_enabled || (layerData.text_content || '').trim() !== '') {
+                        resolvedContentType = 'text';
+                    } else if (layerData.glb_model) {
+                        resolvedContentType = '3d';
+                    } else if (layerData.audio_file) {
+                        resolvedContentType = 'audio';
+                    }
+                    contentTypeEl.value = resolvedContentType;
+                    syncLayerContentTypeUI(layerNum, 'edit-');
+                }
                 
                 // Check if has animation data (any non-zero anim value)
                 const hasAnimation = layerData.anim_x || layerData.anim_y || layerData.anim_z || 
@@ -4477,7 +4487,8 @@ async function openEditModal(posterId) {
                     // Show/hide animation container
                     const animContainer = document.getElementById(`edit-layer-${layerNum}-anim-container`);
                     if (animContainer) {
-                        animContainer.style.display = hasAnimation ? 'block' : 'none';
+                        animContainer.style.display = 'block';
+                        animContainer.classList.toggle('is-disabled', !hasAnimation);
                     }
                 }
                 
@@ -4818,6 +4829,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const animScaleDurationEl = document.getElementById(`edit-layer-${i}-anim-scale-duration`);
 
                 // Tekstlaag inputs
+                const contentTypeEl = document.getElementById(`edit-layer-${i}-content-type`);
                 const textEnabledEl = document.getElementById(`edit-layer-${i}-text-enabled`);
                 const textRandomEl = document.getElementById(`edit-layer-${i}-text-random`);
                 const textContentEl = document.getElementById(`edit-layer-${i}-text-content`);
@@ -4849,6 +4861,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 let layerImage = layerImageEl.files[0];
                 const layerZ = layerZEl.value;
+                const contentType = contentTypeEl?.value || 'image';
+
+                formData.append(`layer_${i}_content_type`, contentType);
                 
                 // Check of er een API-geselecteerde afbeelding is voor deze laag (edit modus)
                 const editApiKey = `edit-layer-${i}`;
@@ -4864,7 +4879,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isApiRandom = (editApiData?.api_mode === 'random') ||
                                     (liveSource && liveSource !== 'manual' && liveIsRandom);
                 
-                if (isApiRandom) {
+                if (contentType === 'api' && isApiRandom) {
                     // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
                     // Gebruik live DOM-waarden → vangt handmatig getypte query's op zonder ZOEK te klikken
                     const saveSource = liveSource || editApiData?.source || 'klipy';
@@ -4872,12 +4887,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append(`layer_${i}_api_mode`, 'random');
                     formData.append(`layer_${i}_api_source`, saveSource);
                     formData.append(`layer_${i}_api_query`, saveQuery);
-                } else if (editApiData && editApiData.type === '3d' && editApiData.uid) {
+                } else if (contentType === 'api' && editApiData && editApiData.type === '3d' && editApiData.uid) {
                     // Specifiek 3D model: sla UID op als api_mode=3d_model
                     formData.append(`layer_${i}_api_mode`, '3d_model');
                     formData.append(`layer_${i}_api_source`, 'sketchfab');
                     formData.append(`layer_${i}_api_query`, editApiData.uid);
-                } else if (editApiData && editApiData.url) {
+                } else if (contentType === 'api' && editApiData && editApiData.url) {
                     // Download de API content en voeg toe als bestand
                     try {
                         const proxyUrl = editApiData.source === 'klipy' 
@@ -4893,7 +4908,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (apiErr) {
                         console.warn(`[Edit Layer ${i}] API afbeelding downloaden mislukt:`, apiErr);
                     }
-                } else if (layerImage) {
+                } else if ((contentType === 'image' || contentType === 'gifvideo') && layerImage) {
                     // Handmatige upload (bestaand gedrag)
                     if (layerImage.type === 'image/gif') {
                         layerImage = await convertGifFileToMp4(layerImage, `edit_layer_${i}`);
@@ -4960,7 +4975,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_anim_scale_duration`, animScaleDurationEl ? animScaleDurationEl.value || '0' : '0');
 
                 // Tekstlaag payload
-                const isTextEnabled = !!textEnabledEl?.checked;
+                const isTextEnabled = contentType === 'text';
                 const isTextRandom = !!textRandomEl?.checked;
                 const textSeed = parseInt(currentPosterData?.layers?.[`layer_${i}`]?.text_style_seed, 10) || (Date.now() + i);
                 formData.append(`layer_${i}_text_enabled`, isTextEnabled ? '1' : '0');
@@ -5289,14 +5304,14 @@ function setupLayerAnimationToggle(layerNum, isEditForm) {
     const enableCheckbox = document.getElementById(`${prefix}layer-${layerNum}-enable-anim`);
     
     if (!animContainer || !enableCheckbox) return;
-    
-    // Initial state based on checkbox
-    animContainer.style.display = enableCheckbox.checked ? 'block' : 'none';
-    
-    // Toggle on checkbox change
+
+    // De panel blijft zichtbaar; toggle beïnvloedt enkel activatiestatus
+    animContainer.style.display = 'block';
+    animContainer.classList.toggle('is-disabled', !enableCheckbox.checked);
+
     enableCheckbox.addEventListener('change', () => {
-        animContainer.style.display = enableCheckbox.checked ? 'block' : 'none';
-        
+        animContainer.classList.toggle('is-disabled', !enableCheckbox.checked);
+
         // Reset values when disabling
         if (!enableCheckbox.checked) {
             const inputs = animContainer.querySelectorAll('input[type="number"]');
@@ -5312,6 +5327,63 @@ function setupLayerAnimationToggle(layerNum, isEditForm) {
     
     // Setup AR Extras toggle for this layer
     setupLayerExtrasToggle(layerNum, isEditForm);
+}
+
+function syncLayerContentTypeUI(layerNum, prefix = '') {
+    const selectEl = document.getElementById(`${prefix}layer-${layerNum}-content-type`);
+    if (!selectEl) return;
+
+    const contentType = selectEl.value || 'image';
+    const card = selectEl.closest('.layer-card');
+    if (!card) return;
+
+    card.querySelectorAll('[data-content-types]').forEach((el) => {
+        const types = (el.dataset.contentTypes || '').split(',').map((value) => value.trim());
+        const visible = types.includes(contentType);
+        el.style.display = visible ? '' : 'none';
+    });
+
+    const sourceWrap = card.querySelector('.layer-source-selector');
+    const apiPanel = card.querySelector('.api-search-panel');
+    const sourceSelect = card.querySelector('.layer-source-select');
+    const textEnabled = document.getElementById(`${prefix}layer-${layerNum}-text-enabled`);
+
+    if (textEnabled) {
+        textEnabled.checked = contentType === 'text';
+    }
+
+    if (sourceWrap) {
+        const isApi = contentType === 'api';
+        sourceWrap.style.display = isApi ? '' : 'none';
+        if (apiPanel) {
+            apiPanel.classList.toggle('hidden', !isApi);
+        }
+
+        if (sourceSelect) {
+            if (isApi && sourceSelect.value === 'manual') {
+                sourceSelect.value = 'klipy';
+                sourceSelect.dispatchEvent(new Event('change'));
+            } else if (!isApi && sourceSelect.value !== 'manual') {
+                delete apiLayerData[`${prefix}layer-${layerNum}`];
+                sourceSelect.value = 'manual';
+                sourceSelect.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+}
+
+function setupLayerContentTypeUI(layerNum, isEditForm) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const selectEl = document.getElementById(`${prefix}layer-${layerNum}-content-type`);
+    if (!selectEl) return;
+
+    const onContentTypeChange = () => {
+        syncLayerContentTypeUI(layerNum, prefix);
+        updateLayerModificationState(layerNum, isEditForm);
+    };
+
+    selectEl.addEventListener('change', onContentTypeChange);
+    syncLayerContentTypeUI(layerNum, prefix);
 }
 
 function setupTextRandomControls(layerNum, isEditForm) {
@@ -5343,6 +5415,10 @@ function getLayerGroupElements(layerNum, prefix, group) {
     return fields
         .map((field) => document.getElementById(`${prefix}layer-${layerNum}-${field}`))
         .filter(Boolean);
+}
+
+function getLayerGroupNames() {
+    return Object.keys(LAYER_GROUP_FIELDS);
 }
 
 function normalizeControlValue(el) {
@@ -5394,7 +5470,7 @@ function snapshotLayerBaselines(isEditForm = false) {
     const prefix = isEditForm ? 'edit-' : '';
 
     for (let layerNum = 1; layerNum <= LAYER_CONFIG.maxLayers; layerNum++) {
-        ['content', 'transform', 'text', 'anim'].forEach((group) => {
+        getLayerGroupNames().forEach((group) => {
             const elements = getLayerGroupElements(layerNum, prefix, group);
             elements.forEach((el) => {
                 el.dataset.baselineValue = normalizeControlValue(el);
@@ -5408,7 +5484,10 @@ function updateLayerModificationState(layerNum, isEditForm = false) {
     const card = document.getElementById(`${prefix}layer-${layerNum}-image`)?.closest('.layer-card');
     if (!card) return;
 
-    const groupCounts = { content: 0, transform: 0, text: 0, anim: 0 };
+    const groupCounts = getLayerGroupNames().reduce((acc, group) => {
+        acc[group] = 0;
+        return acc;
+    }, {});
 
     Object.keys(groupCounts).forEach((group) => {
         const elements = getLayerGroupElements(layerNum, prefix, group);
@@ -5474,13 +5553,13 @@ function resetLayerGroupToBaseline(layerNum, group, prefix = '') {
 }
 
 function resetLayerToBaseline(layerNum, prefix = '') {
-    ['content', 'transform', 'text', 'anim'].forEach((group) => {
+    getLayerGroupNames().forEach((group) => {
         resetLayerGroupToBaseline(layerNum, group, prefix);
     });
 }
 
 function getCopyGroups(group) {
-    return group === 'all' ? ['content', 'transform', 'text', 'anim'] : [group];
+    return group === 'all' ? getLayerGroupNames() : [group];
 }
 
 function getFieldSuffixFromControlId(controlId, layerNum, prefix) {
@@ -5582,6 +5661,7 @@ function renderLayers(isEditForm = false) {
     for (let i = 1; i <= 8; i++) {
         containerEl.insertAdjacentHTML('beforeend', generateLayerHTML(i, isEditForm));
         setupLayerTabs(i, isEditForm);
+        setupLayerContentTypeUI(i, isEditForm);
         setupLayerAnimationToggle(i, isEditForm);
         setupTextRandomControls(i, isEditForm);
         setupLayerChangeTracking(i, isEditForm);

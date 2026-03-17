@@ -637,6 +637,57 @@ input[type="file"]::file-selector-button:hover {
     gap: 4px;
 }
 
+.content-type-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.02);
+    padding: 6px;
+}
+
+.content-type-row label {
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.8px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.content-type-select {
+    flex: 1;
+    background: #000;
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.6rem;
+    padding: 4px 6px;
+}
+
+.random-inline {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    font-size: 0.48rem;
+    color: rgba(255,255,255,0.6);
+}
+
+.random-inline input[type='checkbox'] {
+    width: 10px;
+    height: 10px;
+    margin: 0 2px 0 0;
+}
+
+.ar-context-row {
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.02);
+    padding: 6px;
+    margin-bottom: 8px;
+}
+
+.anim-panel.is-disabled {
+    opacity: 0.55;
+}
+
 .layer-copy-btn,
 .layer-paste-btn,
 .pane-copy-btn,
