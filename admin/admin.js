@@ -1434,7 +1434,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLogoutButton();
     setupFileSummaryListeners(); // Core files
     setupCreditsSection(); // Credits dynamic rows
-    setupUploadTypeSelector(); // Upload modus dropdown
     
     // Defer layer listeners slightly to ensure inputs exist
     setTimeout(() => {
@@ -3000,39 +2999,6 @@ function setupEditChangesSummary() {
     updateSummary();
 }
 
-// ========== Upload Type Selector ==========
-// Schakelt tussen "poster" (volledig) en "reclame" (snel) upload modus
-let currentUploadType = 'poster';
-
-function setupUploadTypeSelector() {
-    const dropdown = document.getElementById('upload-type');
-    const hint = document.getElementById('upload-type-hint');
-    const arMarkerInput = document.getElementById('ar-marker-file');
-    
-    if (!dropdown) return;
-    
-    dropdown.addEventListener('change', () => {
-        currentUploadType = dropdown.value;
-        
-        if (currentUploadType === 'reclame') {
-            document.body.classList.add('upload-mode-reclame');
-            document.body.classList.remove('upload-mode-poster');
-            hint.textContent = 'Snelle upload: foto van reclame, .mind wordt automatisch gegenereerd';
-            // AR marker niet meer verplicht
-            if (arMarkerInput) arMarkerInput.removeAttribute('required');
-        } else {
-            document.body.classList.remove('upload-mode-reclame');
-            document.body.classList.add('upload-mode-poster');
-            hint.textContent = 'Volledige poster met GPS, PDFs, AR layers en metadata';
-            // AR marker weer verplicht in poster modus (tenzij je die zelf genereert)
-            // Niet required zetten - in poster modus is het optioneel maar aanbevolen
-        }
-    });
-    
-    // Default state
-    document.body.classList.add('upload-mode-poster');
-}
-
 // ========== API Bron Selectors voor AR Layers ==========
 // Voegt per layer een bron-dropdown toe: Handmatig | Klipy GIF | Meme (Imgflip) | Random
 
@@ -3766,8 +3732,27 @@ function setupUploadForm() {
         
         // Get form data
         const formData = new FormData();
-        formData.append('title', document.getElementById('poster-title').value);
-        formData.append('description', document.getElementById('poster-description').value);
+        const titleValue = (document.getElementById('poster-title')?.value || '').trim();
+        const descriptionValue = (document.getElementById('poster-description')?.value || '').trim();
+        const jpegFile = document.getElementById('poster-jpeg')?.files?.[0];
+
+        if (!titleValue) {
+            errorMsg.textContent = 'Titel is verplicht';
+            return;
+        }
+
+        if (!descriptionValue) {
+            errorMsg.textContent = 'Beschrijving is verplicht';
+            return;
+        }
+
+        if (!jpegFile) {
+            errorMsg.textContent = 'JPEG afbeelding is verplicht';
+            return;
+        }
+
+        formData.append('title', titleValue);
+        formData.append('description', descriptionValue);
         
         // Parse and add location data
         const coordinatesInput = document.getElementById('poster-coordinates').value.trim();
@@ -3816,8 +3801,8 @@ function setupUploadForm() {
         // Add AR marker file: handmatig heeft prioriteit, anders browser-gecompileerd, anders niets
         const arMarkerFile = document.getElementById('ar-marker-file').files[0];
         
-        // Upload type meesturen
-        formData.append('upload_type', currentUploadType);
+        // Enkele uploadmodus: snelle flow met automatische marker generatie
+        formData.append('upload_type', 'reclame');
         
         if (arMarkerFile) {
             // Handmatig geüpload .mind bestand
@@ -3844,7 +3829,8 @@ function setupUploadForm() {
                 formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
                 console.log('[MIND] Browser-gecompileerd .mind meegezonden met upload');
             } else {
-                console.warn('[MIND] Geen .mind bestand beschikbaar - poster wordt opgeslagen zonder AR tracking');
+                errorMsg.textContent = 'AR marker is verplicht. Upload een .mind bestand of wacht op automatische compilatie uit de JPEG.';
+                return;
             }
         }
         
@@ -4035,15 +4021,8 @@ function setupUploadForm() {
             }
         }
         
-        const jpegFile = document.getElementById('poster-jpeg').files[0];
         const pdfMediumFile = document.getElementById('poster-pdf-medium').files[0];
         const pdfLargeFile = document.getElementById('poster-pdf-large').files[0];
-        
-        // Validate files (PDF is optioneel)
-        if (!jpegFile) {
-            errorMsg.textContent = 'JPEG afbeelding is verplicht';
-            return;
-        }
         
         // Check file sizes (max 300MB total for high-quality posters)
         const totalSize = jpegFile.size + (pdfMediumFile?.size || 0) + (pdfLargeFile?.size || 0);
@@ -4791,9 +4770,6 @@ async function openEditModal(posterId) {
         document.getElementById('edit-poster-id').value = poster.id;
         document.getElementById('edit-title').value = poster.title || '';
         document.getElementById('edit-description').value = poster.description || '';
-        
-        // Stel upload type in zodat edit modal weet of het reclame of poster is
-        currentUploadType = poster.upload_type === 'reclame' ? 'reclame' : 'poster';
         
         // Combine lat/lng into single coordinates field
         const lat = poster.latitude || '';
