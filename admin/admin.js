@@ -95,18 +95,48 @@ let previewPosterImage = null;
 const previewTextSeeds = {};
 
 // Beschikbare fonts voor tekstlagen (Google + Adobe-achtige fallbacks)
-const TEXT_FONT_CHOICES = [
-    '"Bebas Neue", sans-serif',
-    '"Orbitron", sans-serif',
-    '"Bangers", cursive',
-    '"Rubik Mono One", sans-serif',
-    '"Permanent Marker", cursive',
-    '"Audiowide", sans-serif',
-    '"Cinzel", serif',
-    '"Press Start 2P", monospace',
-    '"futura-pt", "Bebas Neue", sans-serif',
-    '"proxima-nova", "Orbitron", sans-serif'
+const TEXT_FONT_OPTIONS = [
+    { label: 'Bebas Neue', value: '"Bebas Neue", sans-serif' },
+    { label: 'Anton', value: '"Anton", sans-serif' },
+    { label: 'Oswald', value: '"Oswald", sans-serif' },
+    { label: 'Teko', value: '"Teko", sans-serif' },
+    { label: 'Rajdhani', value: '"Rajdhani", sans-serif' },
+    { label: 'Exo 2', value: '"Exo 2", sans-serif' },
+    { label: 'Orbitron', value: '"Orbitron", sans-serif' },
+    { label: 'Audiowide', value: '"Audiowide", sans-serif' },
+    { label: 'Michroma', value: '"Michroma", sans-serif' },
+    { label: 'Russo One', value: '"Russo One", sans-serif' },
+    { label: 'Bangers', value: '"Bangers", cursive' },
+    { label: 'Luckiest Guy', value: '"Luckiest Guy", cursive' },
+    { label: 'Permanent Marker', value: '"Permanent Marker", cursive' },
+    { label: 'Creepster', value: '"Creepster", cursive' },
+    { label: 'Monoton', value: '"Monoton", cursive' },
+    { label: 'Rubik Mono One', value: '"Rubik Mono One", sans-serif' },
+    { label: 'Press Start 2P', value: '"Press Start 2P", monospace' },
+    { label: 'Share Tech Mono', value: '"Share Tech Mono", monospace' },
+    { label: 'Space Mono', value: '"Space Mono", monospace' },
+    { label: 'JetBrains Mono', value: '"JetBrains Mono", monospace' },
+    { label: 'Cinzel', value: '"Cinzel", serif' },
+    { label: 'Playfair Display', value: '"Playfair Display", serif' },
+    { label: 'Cormorant Garamond', value: '"Cormorant Garamond", serif' },
+    { label: 'Abril Fatface', value: '"Abril Fatface", serif' },
+    { label: 'Black Ops One', value: '"Black Ops One", sans-serif' },
+    { label: 'Righteous', value: '"Righteous", sans-serif' },
+    { label: 'Syncopate', value: '"Syncopate", sans-serif' },
+    { label: 'Alfa Slab One', value: '"Alfa Slab One", serif' },
+    { label: 'Futura PT*', value: '"futura-pt", "Bebas Neue", sans-serif' },
+    { label: 'Proxima Nova*', value: '"proxima-nova", "Orbitron", sans-serif' }
 ];
+
+const TEXT_FONT_CHOICES = TEXT_FONT_OPTIONS.map((opt) => opt.value);
+
+function getTextFontOptionsHTML(selected = '"Bebas Neue", sans-serif') {
+    return TEXT_FONT_OPTIONS.map((opt) => {
+        const isSelected = opt.value === selected ? 'selected' : '';
+        const escapedValue = opt.value.replace(/"/g, '&quot;');
+        return `<option value="${escapedValue}" ${isSelected}>${opt.label}</option>`;
+    }).join('');
+}
 
 let textFontsLoaded = false;
 
@@ -118,7 +148,7 @@ function ensureTextFontsLoaded() {
         const link = document.createElement('link');
         link.id = 'google-text-fonts';
         link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Cinzel:wght@400;700&family=Orbitron:wght@400;700;900&family=Permanent+Marker&family=Press+Start+2P&family=Rubik+Mono+One&display=swap';
+        link.href = 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Creepster&family=Exo+2:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Michroma&family=Monoton&family=Orbitron:wght@400;700;900&family=Oswald:wght@400;700&family=Permanent+Marker&family=Playfair+Display:wght@400;700;900&family=Press+Start+2P&family=Rajdhani:wght@400;700&family=Righteous&family=Rubik+Mono+One&family=Russo+One&family=Share+Tech+Mono&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Teko:wght@400;700&display=swap';
         document.head.appendChild(link);
     }
 }
@@ -387,16 +417,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="mini-input wide">
                             <span>FONT</span>
                             <select id="${prefix}layer-${layerNum}-text-font" name="layer_${layerNum}_text_font_family" class="text-layer-select">
-                                <option value="\"Bebas Neue\", sans-serif">Bebas Neue</option>
-                                <option value="\"Orbitron\", sans-serif">Orbitron</option>
-                                <option value="\"Bangers\", cursive">Bangers</option>
-                                <option value="\"Rubik Mono One\", sans-serif">Rubik Mono</option>
-                                <option value="\"Permanent Marker\", cursive">Permanent Marker</option>
-                                <option value="\"Audiowide\", sans-serif">Audiowide</option>
-                                <option value="\"Cinzel\", serif">Cinzel</option>
-                                <option value="\"Press Start 2P\", monospace">Press Start 2P</option>
-                                <option value="\"futura-pt\", \"Bebas Neue\", sans-serif">Futura PT*</option>
-                                <option value="\"proxima-nova\", \"Orbitron\", sans-serif">Proxima Nova*</option>
+                                ${getTextFontOptionsHTML()}
                             </select>
                         </div>
                         <div class="mini-input">
@@ -446,6 +467,24 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                                 <option value="tilt">TILT</option>
                                 <option value="float">FLOAT</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="text-layer-grid text-3d-params">
+                        <div class="mini-input">
+                            <span>DEPTH</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1">
+                        </div>
+                        <div class="mini-input">
+                            <span>TILT X</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1">
+                        </div>
+                        <div class="mini-input">
+                            <span>TILT Y</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1">
+                        </div>
+                        <div class="mini-input">
+                            <span>FLOAT PX</span>
+                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1">
                         </div>
                     </div>
                 </div>
@@ -558,7 +597,11 @@ function deleteLayer(layerNum) {
         `edit-layer-${layerNum}-text-outline-color`,
         `edit-layer-${layerNum}-text-outline-width`,
         `edit-layer-${layerNum}-text-effect`,
-        `edit-layer-${layerNum}-text-3d`
+        `edit-layer-${layerNum}-text-3d`,
+        `edit-layer-${layerNum}-text-3d-depth`,
+        `edit-layer-${layerNum}-text-3d-tilt-x`,
+        `edit-layer-${layerNum}-text-3d-tilt-y`,
+        `edit-layer-${layerNum}-text-3d-float-px`
     ];
     
     // Set delete flag
@@ -585,6 +628,10 @@ function deleteLayer(layerNum) {
                            id.includes('text-color') ? '#ffffff' :
                            id.includes('text-outline-color') ? '#000000' :
                            id.includes('text-outline-width') ? '3' :
+                           id.includes('text-3d-depth') ? '3' :
+                           id.includes('text-3d-tilt-x') ? '16' :
+                           id.includes('text-3d-tilt-y') ? '0' :
+                           id.includes('text-3d-float-px') ? '4' :
                            id.includes('text-align') ? 'center' :
                            id.includes('text-font') ? '"Bebas Neue", sans-serif' :
                            id.includes('text-effect') || id.includes('text-3d') ? 'none' :
@@ -1191,6 +1238,10 @@ function updatePreviewFromInputs() {
         const textOutlineWidthEl = document.getElementById(`${prefix}layer-${i}-text-outline-width`);
         const textEffectEl = document.getElementById(`${prefix}layer-${i}-text-effect`);
         const text3DEl = document.getElementById(`${prefix}layer-${i}-text-3d`);
+        const text3DDepthEl = document.getElementById(`${prefix}layer-${i}-text-3d-depth`);
+        const text3DTiltXEl = document.getElementById(`${prefix}layer-${i}-text-3d-tilt-x`);
+        const text3DTiltYEl = document.getElementById(`${prefix}layer-${i}-text-3d-tilt-y`);
+        const text3DFloatPxEl = document.getElementById(`${prefix}layer-${i}-text-3d-float-px`);
         const textRandomFontEl = document.getElementById(`${prefix}layer-${i}-text-random-font`);
         const textRandomColorEl = document.getElementById(`${prefix}layer-${i}-text-random-color`);
         const textRandomOutlineEl = document.getElementById(`${prefix}layer-${i}-text-random-outline`);
@@ -1286,6 +1337,10 @@ function updatePreviewFromInputs() {
                 textOutlineWidth: parseFloat(textOutlineWidthEl?.value) || 3,
                 textEffect: textEffectEl?.value || 'none',
                 text3d: text3DEl?.value || 'none',
+                text3dDepth: parseFloat(text3DDepthEl?.value) || 3,
+                text3dTiltX: parseFloat(text3DTiltXEl?.value) || 16,
+                text3dTiltY: parseFloat(text3DTiltYEl?.value) || 0,
+                text3dFloatPx: parseFloat(text3DFloatPxEl?.value) || 4,
                 textSeed: parseInt(currentPosterData?.layers?.[`layer_${i}`]?.text_style_seed, 10) ||
                           previewTextSeeds[`${prefix}${i}`] ||
                           (previewTextSeeds[`${prefix}${i}`] = Date.now() + i)
@@ -1783,21 +1838,35 @@ function renderARPreview() {
                     textNode.style.fontSize = `${Math.max(12, Math.min(40, style.fontSize / 4.2))}px`;
                     textNode.style.fontWeight = '700';
                     textNode.style.color = style.color;
-                    textNode.style.webkitTextStroke = `${Math.max(0, style.outlineWidth / 3)}px ${style.outlineColor}`;
-                    textNode.style.textShadow = style.effect === 'glow'
+                    const strokePx = Math.max(0, style.outlineWidth / 3);
+                    textNode.style.webkitTextStroke = `${strokePx}px ${style.outlineColor}`;
+                    // Fallback rand voor browsers zonder text-stroke ondersteuning
+                    const outlineShadow = strokePx > 0
+                        ? `${strokePx}px 0 ${style.outlineColor}, -${strokePx}px 0 ${style.outlineColor}, 0 ${strokePx}px ${style.outlineColor}, 0 -${strokePx}px ${style.outlineColor}`
+                        : '';
+                    const effectShadow = style.effect === 'glow'
                         ? `0 0 8px ${style.color}, 0 0 14px ${style.color}`
                         : style.effect === 'shadow'
                             ? '2px 2px 0 rgba(0,0,0,0.7)'
                             : style.effect === 'neon'
                                 ? `0 0 5px ${style.color}, 0 0 11px ${style.color}, 0 0 18px ${style.color}`
-                                : 'none';
+                                : '';
+                    textNode.style.textShadow = [outlineShadow, effectShadow].filter(Boolean).join(', ') || 'none';
 
                     if (style.effect3d === 'tilt') {
-                        textNode.style.transform = 'perspective(300px) rotateX(16deg)';
+                        const tiltX = parseFloat(data.text3dTiltX) || 0;
+                        const tiltY = parseFloat(data.text3dTiltY) || 0;
+                        textNode.style.transform = `perspective(320px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
                     } else if (style.effect3d === 'float') {
-                        textNode.style.transform = 'translateY(-4px)';
+                        const floatPx = Math.max(0, parseFloat(data.text3dFloatPx) || 4);
+                        textNode.style.transform = `translateY(-${floatPx}px)`;
                     } else if (style.effect3d === 'extrude') {
-                        textNode.style.textShadow = `${textNode.style.textShadow !== 'none' ? textNode.style.textShadow + ', ' : ''}-1px 1px 0 ${style.outlineColor}, -2px 2px 0 ${style.outlineColor}`;
+                        const depth = Math.max(1, Math.round(parseFloat(data.text3dDepth) || 3));
+                        const depthShadows = Array.from({ length: depth }, (_, idx) => {
+                            const step = idx + 1;
+                            return `-${step}px ${step}px 0 ${style.outlineColor}`;
+                        }).join(', ');
+                        textNode.style.textShadow = `${textNode.style.textShadow !== 'none' ? textNode.style.textShadow + ', ' : ''}${depthShadows}`;
                     }
 
                     el.appendChild(textNode);
@@ -3018,6 +3087,10 @@ function setupUploadForm() {
             const textOutlineWidthInput = document.getElementById(`layer-${i}-text-outline-width`);
             const textEffectInput = document.getElementById(`layer-${i}-text-effect`);
             const text3DInput = document.getElementById(`layer-${i}-text-3d`);
+            const text3DDepthInput = document.getElementById(`layer-${i}-text-3d-depth`);
+            const text3DTiltXInput = document.getElementById(`layer-${i}-text-3d-tilt-x`);
+            const text3DTiltYInput = document.getElementById(`layer-${i}-text-3d-tilt-y`);
+            const text3DFloatPxInput = document.getElementById(`layer-${i}-text-3d-float-px`);
             const textRandomFontInput = document.getElementById(`layer-${i}-text-random-font`);
             const textRandomColorInput = document.getElementById(`layer-${i}-text-random-color`);
             const textRandomOutlineInput = document.getElementById(`layer-${i}-text-random-outline`);
@@ -3118,6 +3191,10 @@ function setupUploadForm() {
             formData.append(`layer_${i}_text_outline_width`, textOutlineWidthInput ? textOutlineWidthInput.value || '3' : '3');
             formData.append(`layer_${i}_text_effect`, textEffectInput ? textEffectInput.value || 'none' : 'none');
             formData.append(`layer_${i}_text_3d_effect`, text3DInput ? text3DInput.value || 'none' : 'none');
+            formData.append(`layer_${i}_text_3d_depth`, text3DDepthInput ? text3DDepthInput.value || '3' : '3');
+            formData.append(`layer_${i}_text_3d_tilt_x`, text3DTiltXInput ? text3DTiltXInput.value || '16' : '16');
+            formData.append(`layer_${i}_text_3d_tilt_y`, text3DTiltYInput ? text3DTiltYInput.value || '0' : '0');
+            formData.append(`layer_${i}_text_3d_float_px`, text3DFloatPxInput ? text3DFloatPxInput.value || '4' : '4');
             formData.append(`layer_${i}_text_random_font`, textRandomFontInput?.checked ? '1' : '0');
             formData.append(`layer_${i}_text_random_color`, textRandomColorInput?.checked ? '1' : '0');
             formData.append(`layer_${i}_text_random_outline`, textRandomOutlineInput?.checked ? '1' : '0');
@@ -4027,6 +4104,10 @@ async function openEditModal(posterId) {
                 const textOutlineWidthEl = document.getElementById(`edit-layer-${layerNum}-text-outline-width`);
                 const textEffectEl = document.getElementById(`edit-layer-${layerNum}-text-effect`);
                 const text3dEl = document.getElementById(`edit-layer-${layerNum}-text-3d`);
+                const text3dDepthEl = document.getElementById(`edit-layer-${layerNum}-text-3d-depth`);
+                const text3dTiltXEl = document.getElementById(`edit-layer-${layerNum}-text-3d-tilt-x`);
+                const text3dTiltYEl = document.getElementById(`edit-layer-${layerNum}-text-3d-tilt-y`);
+                const text3dFloatPxEl = document.getElementById(`edit-layer-${layerNum}-text-3d-float-px`);
 
                 if (textEnabledEl) textEnabledEl.checked = !!layerData.text_enabled;
                 if (textRandomEl) textRandomEl.checked = !!layerData.text_random_style;
@@ -4047,6 +4128,10 @@ async function openEditModal(posterId) {
                 if (textOutlineWidthEl) textOutlineWidthEl.value = layerData.text_outline_width || 3;
                 if (textEffectEl) textEffectEl.value = layerData.text_effect || 'none';
                 if (text3dEl) text3dEl.value = layerData.text_3d_effect || 'none';
+                if (text3dDepthEl) text3dDepthEl.value = layerData.text_3d_depth || 3;
+                if (text3dTiltXEl) text3dTiltXEl.value = (layerData.text_3d_tilt_x !== undefined && layerData.text_3d_tilt_x !== null) ? layerData.text_3d_tilt_x : 16;
+                if (text3dTiltYEl) text3dTiltYEl.value = (layerData.text_3d_tilt_y !== undefined && layerData.text_3d_tilt_y !== null) ? layerData.text_3d_tilt_y : 0;
+                if (text3dFloatPxEl) text3dFloatPxEl.value = layerData.text_3d_float_px || 4;
                 
                 // Check if has animation data (any non-zero anim value)
                 const hasAnimation = layerData.anim_x || layerData.anim_y || layerData.anim_z || 
@@ -4411,6 +4496,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const textOutlineWidthEl = document.getElementById(`edit-layer-${i}-text-outline-width`);
                 const textEffectEl = document.getElementById(`edit-layer-${i}-text-effect`);
                 const text3DEl = document.getElementById(`edit-layer-${i}-text-3d`);
+                const text3DDepthEl = document.getElementById(`edit-layer-${i}-text-3d-depth`);
+                const text3DTiltXEl = document.getElementById(`edit-layer-${i}-text-3d-tilt-x`);
+                const text3DTiltYEl = document.getElementById(`edit-layer-${i}-text-3d-tilt-y`);
+                const text3DFloatPxEl = document.getElementById(`edit-layer-${i}-text-3d-float-px`);
                 const textRandomFontEl = document.getElementById(`edit-layer-${i}-text-random-font`);
                 const textRandomColorEl = document.getElementById(`edit-layer-${i}-text-random-color`);
                 const textRandomOutlineEl = document.getElementById(`edit-layer-${i}-text-random-outline`);
@@ -4552,6 +4641,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_text_outline_width`, textOutlineWidthEl ? textOutlineWidthEl.value || '3' : '3');
                 formData.append(`layer_${i}_text_effect`, textEffectEl ? textEffectEl.value || 'none' : 'none');
                 formData.append(`layer_${i}_text_3d_effect`, text3DEl ? text3DEl.value || 'none' : 'none');
+                formData.append(`layer_${i}_text_3d_depth`, text3DDepthEl ? text3DDepthEl.value || '3' : '3');
+                formData.append(`layer_${i}_text_3d_tilt_x`, text3DTiltXEl ? text3DTiltXEl.value || '16' : '16');
+                formData.append(`layer_${i}_text_3d_tilt_y`, text3DTiltYEl ? text3DTiltYEl.value || '0' : '0');
+                formData.append(`layer_${i}_text_3d_float_px`, text3DFloatPxEl ? text3DFloatPxEl.value || '4' : '4');
                 formData.append(`layer_${i}_text_random_font`, textRandomFontEl?.checked ? '1' : '0');
                 formData.append(`layer_${i}_text_random_color`, textRandomColorEl?.checked ? '1' : '0');
                 formData.append(`layer_${i}_text_random_outline`, textRandomOutlineEl?.checked ? '1' : '0');

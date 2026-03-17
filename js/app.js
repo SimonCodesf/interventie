@@ -2349,13 +2349,33 @@ async function quickSwitchPoster(posterIndex) {
 
 const AR_TEXT_FONT_CHOICES = [
     '"Bebas Neue", sans-serif',
+    '"Anton", sans-serif',
+    '"Oswald", sans-serif',
+    '"Teko", sans-serif',
+    '"Rajdhani", sans-serif',
+    '"Exo 2", sans-serif',
     '"Orbitron", sans-serif',
-    '"Bangers", cursive',
-    '"Rubik Mono One", sans-serif',
-    '"Permanent Marker", cursive',
     '"Audiowide", sans-serif',
+    '"Michroma", sans-serif',
+    '"Russo One", sans-serif',
+    '"Bangers", cursive',
+    '"Luckiest Guy", cursive',
+    '"Permanent Marker", cursive',
+    '"Creepster", cursive',
+    '"Monoton", cursive',
+    '"Rubik Mono One", sans-serif',
     '"Cinzel", serif',
+    '"Playfair Display", serif',
+    '"Cormorant Garamond", serif',
+    '"Abril Fatface", serif',
     '"Press Start 2P", monospace',
+    '"Share Tech Mono", monospace',
+    '"Space Mono", monospace',
+    '"JetBrains Mono", monospace',
+    '"Black Ops One", sans-serif',
+    '"Righteous", sans-serif',
+    '"Syncopate", sans-serif',
+    '"Alfa Slab One", serif',
     '"futura-pt", "Bebas Neue", sans-serif',
     '"proxima-nova", "Orbitron", sans-serif'
 ];
@@ -2369,7 +2389,7 @@ function ensureARTextFontsLoaded() {
         const link = document.createElement('link');
         link.id = 'google-ar-text-fonts';
         link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Cinzel:wght@400;700&family=Orbitron:wght@400;700;900&family=Permanent+Marker&family=Press+Start+2P&family=Rubik+Mono+One&display=swap';
+        link.href = 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Creepster&family=Exo+2:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Michroma&family=Monoton&family=Orbitron:wght@400;700;900&family=Oswald:wght@400;700&family=Permanent+Marker&family=Playfair+Display:wght@400;700;900&family=Press+Start+2P&family=Rajdhani:wght@400;700&family=Righteous&family=Rubik+Mono+One&family=Russo+One&family=Share+Tech+Mono&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Teko:wght@400;700&display=swap';
         document.head.appendChild(link);
     }
 }
@@ -2452,7 +2472,8 @@ function renderTextTexture(content, style) {
     ctx.textBaseline = 'top';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = style.outlineColor;
-    ctx.lineWidth = Math.max(0, Number(style.outlineWidth) || 0);
+    const outlineWidth = Math.max(0, Number(style.outlineWidth) || 0);
+    ctx.lineWidth = outlineWidth;
     ctx.fillStyle = style.color;
 
     if (style.effect === 'glow') {
@@ -2473,11 +2494,18 @@ function renderTextTexture(content, style) {
         if (style.effect3d === 'extrude') {
             ctx.save();
             ctx.fillStyle = style.outlineColor;
-            ctx.fillText(line, xPos - 3, y + 3);
+            const depth = Math.max(1, Math.round(Number(style.effect3dDepth) || 3));
+            for (let d = depth; d >= 1; d--) {
+                ctx.fillText(line, xPos - d, y + d);
+            }
             ctx.restore();
             ctx.fillStyle = style.color;
         }
-        if ((Number(style.outlineWidth) || 0) > 0) {
+        if (outlineWidth > 0) {
+            // Extra outline-pass om de rand zichtbaarder te maken op lichte achtergronden
+            ctx.lineWidth = outlineWidth + 1.1;
+            ctx.strokeText(line, xPos, y);
+            ctx.lineWidth = outlineWidth;
             ctx.strokeText(line, xPos, y);
         }
         ctx.fillText(line, xPos, y);
@@ -2506,6 +2534,10 @@ function applyTextLayersTextures(rootEl) {
             fontSize: parseFloat(plane.getAttribute('data-text-font-size') || '96') || 96,
             effect: plane.getAttribute('data-text-effect') || 'none',
             effect3d: plane.getAttribute('data-text-3d') || 'none',
+            effect3dDepth: parseFloat(plane.getAttribute('data-text-3d-depth') || '3') || 3,
+            effect3dTiltX: parseFloat(plane.getAttribute('data-text-3d-tilt-x') || '16') || 16,
+            effect3dTiltY: parseFloat(plane.getAttribute('data-text-3d-tilt-y') || '0') || 0,
+            effect3dFloatPx: parseFloat(plane.getAttribute('data-text-3d-float-px') || '4') || 4,
             align: plane.getAttribute('data-text-align') || 'center'
         };
 
@@ -2537,8 +2569,13 @@ function applyTextLayersTextures(rootEl) {
 
         if (style.effect3d === 'tilt') {
             const rot = plane.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
-            const xRot = (parseFloat(rot.x) || 0) - 12;
-            plane.setAttribute('rotation', `${xRot} ${parseFloat(rot.y) || 0} ${parseFloat(rot.z) || 0}`);
+            const xRot = (parseFloat(rot.x) || 0) - style.effect3dTiltX;
+            const yRot = (parseFloat(rot.y) || 0) + style.effect3dTiltY;
+            plane.setAttribute('rotation', `${xRot} ${yRot} ${parseFloat(rot.z) || 0}`);
+        } else if (style.effect3d === 'float') {
+            const pos = plane.getAttribute('position') || { x: 0, y: 0, z: 0 };
+            const floatMeters = Math.max(0, style.effect3dFloatPx) * 0.001;
+            plane.setAttribute('position', `${parseFloat(pos.x) || 0} ${(parseFloat(pos.y) || 0) + floatMeters} ${parseFloat(pos.z) || 0}`);
         }
     });
 }
@@ -2714,6 +2751,10 @@ function buildLayersHTML(poster) {
                 const textAlign = layerData.text_align || 'center';
                 const textEffect = layerData.text_effect || 'none';
                 const text3D = layerData.text_3d_effect || 'none';
+                const text3DDepth = parseFloat(layerData.text_3d_depth) || 3;
+                const text3DTiltX = (layerData.text_3d_tilt_x !== undefined && layerData.text_3d_tilt_x !== null) ? parseFloat(layerData.text_3d_tilt_x) : 16;
+                const text3DTiltY = (layerData.text_3d_tilt_y !== undefined && layerData.text_3d_tilt_y !== null) ? parseFloat(layerData.text_3d_tilt_y) : 0;
+                const text3DFloatPx = parseFloat(layerData.text_3d_float_px) || 4;
                 const textSeed = parseInt(layerData.text_style_seed, 10) || 0;
                 const randomAttr = layerData.text_random_style ? '1' : '0';
                 const randomFont = layerData.text_random_font ? '1' : '0';
@@ -2737,6 +2778,10 @@ function buildLayersHTML(poster) {
                         data-text-align="${textAlign}"
                         data-text-effect="${textEffect}"
                         data-text-3d="${text3D}"
+                        data-text-3d-depth="${text3DDepth}"
+                        data-text-3d-tilt-x="${text3DTiltX}"
+                        data-text-3d-tilt-y="${text3DTiltY}"
+                        data-text-3d-float-px="${text3DFloatPx}"
                         data-text-seed="${textSeed}"
                         data-text-random="${randomAttr}"
                         data-text-random-font="${randomFont}"

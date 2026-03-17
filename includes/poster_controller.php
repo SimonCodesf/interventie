@@ -291,6 +291,10 @@ function handleUploadPoster($db) {
                 'text_outline_width' => (float)($_POST["layer_{$i}_text_outline_width"] ?? 3),
                 'text_effect' => $_POST["layer_{$i}_text_effect"] ?? 'none',
                 'text_3d_effect' => $_POST["layer_{$i}_text_3d_effect"] ?? 'none',
+                'text_3d_depth' => (float)($_POST["layer_{$i}_text_3d_depth"] ?? 3),
+                'text_3d_tilt_x' => (float)($_POST["layer_{$i}_text_3d_tilt_x"] ?? 16),
+                'text_3d_tilt_y' => (float)($_POST["layer_{$i}_text_3d_tilt_y"] ?? 0),
+                'text_3d_float_px' => (float)($_POST["layer_{$i}_text_3d_float_px"] ?? 4),
                 'text_style_seed' => (int)($_POST["layer_{$i}_text_style_seed"] ?? 0),
                 'filename' => null,
                 'is_video' => false
@@ -654,6 +658,10 @@ function handleUpdatePoster($db, $id) {
                     'text_outline_width' => 3,
                     'text_effect' => 'none',
                     'text_3d_effect' => 'none',
+                    'text_3d_depth' => 3,
+                    'text_3d_tilt_x' => 16,
+                    'text_3d_tilt_y' => 0,
+                    'text_3d_float_px' => 4,
                     'text_style_seed' => 0,
                     'filename' => null,
                     'is_video' => false
@@ -740,6 +748,10 @@ function handleUpdatePoster($db, $id) {
                 'text_outline_width' => isset($_POST["layer_{$i}_text_outline_width"]) ? (float)$_POST["layer_{$i}_text_outline_width"] : (float)($existingLayer['text_outline_width'] ?? 3),
                 'text_effect' => isset($_POST["layer_{$i}_text_effect"]) ? $_POST["layer_{$i}_text_effect"] : ($existingLayer['text_effect'] ?? 'none'),
                 'text_3d_effect' => isset($_POST["layer_{$i}_text_3d_effect"]) ? $_POST["layer_{$i}_text_3d_effect"] : ($existingLayer['text_3d_effect'] ?? 'none'),
+                'text_3d_depth' => isset($_POST["layer_{$i}_text_3d_depth"]) ? (float)$_POST["layer_{$i}_text_3d_depth"] : (float)($existingLayer['text_3d_depth'] ?? 3),
+                'text_3d_tilt_x' => isset($_POST["layer_{$i}_text_3d_tilt_x"]) ? (float)$_POST["layer_{$i}_text_3d_tilt_x"] : (float)($existingLayer['text_3d_tilt_x'] ?? 16),
+                'text_3d_tilt_y' => isset($_POST["layer_{$i}_text_3d_tilt_y"]) ? (float)$_POST["layer_{$i}_text_3d_tilt_y"] : (float)($existingLayer['text_3d_tilt_y'] ?? 0),
+                'text_3d_float_px' => isset($_POST["layer_{$i}_text_3d_float_px"]) ? (float)$_POST["layer_{$i}_text_3d_float_px"] : (float)($existingLayer['text_3d_float_px'] ?? 4),
                 'text_style_seed' => isset($_POST["layer_{$i}_text_style_seed"]) ? (int)$_POST["layer_{$i}_text_style_seed"] : (int)($existingLayer['text_style_seed'] ?? 0),
                 'filename' => $deleteMedia ? null : ($existingLayer['filename'] ?? null),
                 'is_video' => $deleteMedia ? false : ($existingLayer['is_video'] ?? false)
