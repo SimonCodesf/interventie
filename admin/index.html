@@ -67,16 +67,6 @@
                     <button type="button" class="ux-step-btn" data-target-panel="layers-panel">3 AR LAGEN</button>
                     <button type="button" class="ux-step-btn" data-target-panel="submit-panel">4 UPLOAD</button>
                 </div>
-                <div class="ux-focus" aria-label="Focus mode">
-                    <label for="ux-focus-mode">FOCUS</label>
-                    <select id="ux-focus-mode">
-                        <option value="all">Alles</option>
-                        <option value="meta">Alleen metadata</option>
-                        <option value="files">Alleen assets</option>
-                        <option value="layers">Alleen AR lagen</option>
-                        <option value="submit">Alleen uploadblok</option>
-                    </select>
-                </div>
                 <div class="ux-stats" id="ux-stats">
                     <div class="ux-stat-chip">POSTERS <span id="ux-stat-posters">0</span></div>
                     <div class="ux-stat-chip">LAGEN ACTIEF <span id="ux-stat-layers">0</span></div>
@@ -100,7 +90,7 @@
                 <div class="editor-column left-panel">
                     
                     <!-- Metadata Panel -->
-                    <div class="panel-box" id="metadata-panel" data-focus-key="meta">
+                    <div class="panel-box" id="metadata-panel">
                         <div class="panel-header"><span class="panel-title">meta_data.json</span></div>
                         <div class="panel-content form-grid">
                             <div class="form-group form-full">
@@ -150,7 +140,7 @@
                     </div>
 
                     <!-- Files Panel -->
-                    <div class="panel-box" id="files-panel" data-focus-key="files">
+                    <div class="panel-box" id="files-panel">
                         <div class="panel-header"><span class="panel-title">assets_upload.sh</span></div>
                         <div class="panel-content">
                             <div class="form-group">
@@ -196,7 +186,7 @@
                     </div>
 
                     <!-- Upload Action & Status Panel -->
-                    <div class="panel-box action-panel" id="submit-panel" data-focus-key="submit">
+                    <div class="panel-box action-panel" id="submit-panel">
                         <div class="panel-header"><span class="panel-title">UPLOAD OVERZICHT</span></div>
                         <div class="panel-content" style="padding: 1.5rem;">
                             
@@ -245,7 +235,7 @@
 
                 <!-- Right Column: Layers configuration -->
                 <div class="editor-column right-panel">
-                        <div class="panel-box full-height" id="layers-panel" data-focus-key="layers">
+                        <div class="panel-box full-height" id="layers-panel">
                         <div class="panel-header">
                             <span class="panel-title">ar_layers_config.sys</span>
                         </div>
@@ -284,16 +274,6 @@
                         <button type="button" class="ux-step-btn edit-ux-step-btn" data-edit-target-panel="edit-layers-panel">3 AR LAGEN</button>
                         <button type="button" class="ux-step-btn edit-ux-step-btn" data-edit-target-panel="edit-submit-panel">4 OPSLAAN</button>
                     </div>
-                    <div class="ux-focus" aria-label="Edit focus mode">
-                        <label for="edit-ux-focus-mode">FOCUS</label>
-                        <select id="edit-ux-focus-mode">
-                            <option value="all">Alles</option>
-                            <option value="meta">Alleen metadata</option>
-                            <option value="files">Alleen assets</option>
-                            <option value="layers">Alleen AR lagen</option>
-                            <option value="submit">Alleen wijzigingenblok</option>
-                        </select>
-                    </div>
                     <div class="ux-stats" id="edit-ux-stats">
                         <div class="ux-stat-chip">GEWIJZIGDE LAGEN <span id="edit-ux-stat-layers">0</span></div>
                         <div class="ux-stat-chip">BESTANDEN <span id="edit-ux-stat-files">0</span></div>
@@ -307,7 +287,7 @@
                     <div class="editor-column left-panel">
                         
                         <!-- Metadata Panel -->
-                        <div class="panel-box" id="edit-metadata-panel" data-edit-focus-key="meta">
+                        <div class="panel-box" id="edit-metadata-panel">
                             <div class="panel-header"><span class="panel-title">meta_data.json</span></div>
                             <div class="panel-content form-grid">
                                 <div class="form-group form-full">
@@ -353,7 +333,7 @@
                         </div>
 
                         <!-- Files Panel -->
-                        <div class="panel-box" id="edit-files-panel" data-edit-focus-key="files">
+                        <div class="panel-box" id="edit-files-panel">
                             <div class="panel-header"><span class="panel-title">assets_replace.sh</span></div>
                             <div class="panel-content">
                                 <p class="hint-text">Upload alleen bestanden die je wilt vervangen.</p>
@@ -397,7 +377,7 @@
                         </div>
 
                         <!-- Changes Summary Panel -->
-                        <div class="panel-box action-panel" id="edit-submit-panel" data-edit-focus-key="submit">
+                        <div class="panel-box action-panel" id="edit-submit-panel">
                             <div class="panel-header"><span class="panel-title">WIJZIGINGEN OVERZICHT</span></div>
                             <div class="panel-content" style="padding: 1rem;">
                                 
@@ -430,7 +410,7 @@
 
                     <!-- Right Column: AR Layers -->
                     <div class="editor-column right-panel">
-                        <div class="panel-box full-height" id="edit-layers-panel" data-edit-focus-key="layers">
+                        <div class="panel-box full-height" id="edit-layers-panel">
                             <div class="panel-header">
                                 <span class="panel-title">ar_layers_config.sys</span>
                                 <button type="button" class="preview-toggle-btn" onclick="toggleARPreviewWindow()">PREVIEW</button>

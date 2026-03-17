@@ -299,95 +299,99 @@ function generateLayerHTML(layerNum, isEditForm = false) {
             </summary>
             
             <div class="layer-body">
-                <!-- Unified File Upload -->
-                <div class="layer-files">
-                    <div class="file-slot">
-                        <label>MEDIA</label>
-                        <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm,.glb,.gltf">
-                        <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
-                        <input type="hidden" id="${prefix}layer-${layerNum}-delete-media" name="layer_${layerNum}_delete_media" value="0">
-                        ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-current"></span>` : ''}
-                        ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-media-btn" onclick="deleteLayerMedia(${layerNum}, 'image')" title="Verwijder afbeelding" style="display:none;">×</button>` : ''}
-                    </div>
-                    <div class="file-slot file-slot-small">
-                        <label>3D</label>
-                        <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf">
-                        <input type="hidden" id="${prefix}layer-${layerNum}-delete-glb" name="layer_${layerNum}_delete_glb" value="0">
-                        ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-glb-current"></span>` : ''}
-                        ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-glb-btn" onclick="deleteLayerMedia(${layerNum}, 'glb')" title="Verwijder 3D model" style="display:none;">×</button>` : ''}
-                    </div>
-                    <div class="file-slot file-slot-small">
-                        <label>AUDIO</label>
-                        <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,.mp3,.wav">
-                        <input type="hidden" id="${prefix}layer-${layerNum}-delete-audio" name="layer_${layerNum}_delete_audio" value="0">
-                        ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-audio-current"></span>` : ''}
-                        ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-audio-btn" onclick="deleteLayerMedia(${layerNum}, 'audio')" title="Verwijder audio" style="display:none;">×</button>` : ''}
-                    </div>
-                </div>
-                
-                <!-- Transform Controls - Compact Grid -->
-                <div class="layer-transform">
-                    <div class="transform-group">
-                        <span class="group-label">POS</span>
-                        <div class="mini-input">
-                            <span>X</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-pos-x" name="layer_${layerNum}_pos_x" value="0" step="0.01" data-layer="${layerNum}" data-param="posX">
-                        </div>
-                        <div class="mini-input">
-                            <span>Y</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-pos-y" name="layer_${layerNum}_pos_y" value="0" step="0.01" data-layer="${layerNum}" data-param="posY">
-                        </div>
-                        <div class="mini-input">
-                            <span>Z</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-z" name="layer_${layerNum}_z" value="${defaultZ.toFixed(2)}" step="0.01" data-layer="${layerNum}" data-param="posZ">
-                        </div>
-                    </div>
-                    <div class="transform-group">
-                        <span class="group-label">ROT</span>
-                        <div class="mini-input">
-                            <span>X</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-rot-x" name="layer_${layerNum}_rot_x" value="0" step="1" data-layer="${layerNum}" data-param="rotX">
-                        </div>
-                        <div class="mini-input">
-                            <span>Y</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-rot-y" name="layer_${layerNum}_rot_y" value="0" step="1" data-layer="${layerNum}" data-param="rotY">
-                        </div>
-                        <div class="mini-input">
-                            <span>Z</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-rot-z" name="layer_${layerNum}_rot_z" value="0" step="1" data-layer="${layerNum}" data-param="rotZ">
-                        </div>
-                    </div>
-                    <div class="transform-group">
-                        <span class="group-label">SIZE</span>
-                        <div class="mini-input wide">
-                            <span>SCALE</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" value="1.0" step="0.01" data-layer="${layerNum}" data-param="scale">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Options Row -->
-                <div class="layer-options">
-                    <label class="option-toggle">
-                        <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" checked onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
-                        <span>TRANSPARANT</span>
-                    </label>
-                    <div class="bg-color-picker" id="${prefix}layer-${layerNum}-bg-color-container" style="display: none;">
-                        <input type="color" id="${prefix}layer-${layerNum}-bg-color" name="layer_${layerNum}_bg_color" value="#000000" title="Achtergrondkleur">
-                    </div>
-                    <label class="option-toggle">
-                        <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
-                        <span>MASKER</span>
-                    </label>
-                    <label class="option-toggle">
-                        <input type="checkbox" id="${prefix}layer-${layerNum}-enable-anim" data-layer="${layerNum}">
-                        <span>ANIMATIE</span>
-                    </label>
-                    ${isEditForm ? `<button type="button" class="delete-layer-btn" onclick="deleteLayer(${layerNum})">×</button>` : ''}
+                <div class="layer-tab-bar">
+                    <button type="button" class="layer-tab-btn is-active" data-tab="content">INHOUD</button>
+                    <button type="button" class="layer-tab-btn" data-tab="transform">TRANSFORM</button>
+                    <button type="button" class="layer-tab-btn" data-tab="text">TEKST</button>
+                    <button type="button" class="layer-tab-btn" data-tab="anim">ANIMATIE</button>
                 </div>
 
-                <!-- Tekstlaag instellingen -->
-                <div class="text-layer-panel">
+                <div class="layer-pane is-active" data-pane="content">
+                    <div class="layer-files">
+                        <div class="file-slot">
+                            <label>MEDIA</label>
+                            <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm,.glb,.gltf">
+                            <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
+                            <input type="hidden" id="${prefix}layer-${layerNum}-delete-media" name="layer_${layerNum}_delete_media" value="0">
+                            ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-current"></span>` : ''}
+                            ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-media-btn" onclick="deleteLayerMedia(${layerNum}, 'image')" title="Verwijder afbeelding" style="display:none;">×</button>` : ''}
+                        </div>
+                        <div class="file-slot file-slot-small">
+                            <label>3D</label>
+                            <input type="file" id="${prefix}layer-${layerNum}-glb" name="layer_${layerNum}_glb" accept=".glb,.gltf">
+                            <input type="hidden" id="${prefix}layer-${layerNum}-delete-glb" name="layer_${layerNum}_delete_glb" value="0">
+                            ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-glb-current"></span>` : ''}
+                            ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-glb-btn" onclick="deleteLayerMedia(${layerNum}, 'glb')" title="Verwijder 3D model" style="display:none;">×</button>` : ''}
+                        </div>
+                        <div class="file-slot file-slot-small">
+                            <label>AUDIO</label>
+                            <input type="file" id="${prefix}layer-${layerNum}-audio" name="layer_${layerNum}_audio" accept="audio/mpeg,audio/wav,.mp3,.wav">
+                            <input type="hidden" id="${prefix}layer-${layerNum}-delete-audio" name="layer_${layerNum}_delete_audio" value="0">
+                            ${isEditForm ? `<span class="file-current" id="${prefix}layer-${layerNum}-audio-current"></span>` : ''}
+                            ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-audio-btn" onclick="deleteLayerMedia(${layerNum}, 'audio')" title="Verwijder audio" style="display:none;">×</button>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="layer-options">
+                        <label class="option-toggle">
+                            <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" checked onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
+                            <span>TRANSPARANT</span>
+                        </label>
+                        <div class="bg-color-picker" id="${prefix}layer-${layerNum}-bg-color-container" style="display: none;">
+                            <input type="color" id="${prefix}layer-${layerNum}-bg-color" name="layer_${layerNum}_bg_color" value="#000000" title="Achtergrondkleur">
+                        </div>
+                        <label class="option-toggle">
+                            <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
+                            <span>MASKER</span>
+                        </label>
+                        ${isEditForm ? `<button type="button" class="delete-layer-btn" onclick="deleteLayer(${layerNum})">×</button>` : ''}
+                    </div>
+                </div>
+
+                <div class="layer-pane" data-pane="transform">
+                    <div class="layer-transform">
+                        <div class="transform-group">
+                            <span class="group-label">POS</span>
+                            <div class="mini-input">
+                                <span>X</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-pos-x" name="layer_${layerNum}_pos_x" value="0" step="0.01" data-layer="${layerNum}" data-param="posX">
+                            </div>
+                            <div class="mini-input">
+                                <span>Y</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-pos-y" name="layer_${layerNum}_pos_y" value="0" step="0.01" data-layer="${layerNum}" data-param="posY">
+                            </div>
+                            <div class="mini-input">
+                                <span>Z</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-z" name="layer_${layerNum}_z" value="${defaultZ.toFixed(2)}" step="0.01" data-layer="${layerNum}" data-param="posZ">
+                            </div>
+                        </div>
+                        <div class="transform-group">
+                            <span class="group-label">ROT</span>
+                            <div class="mini-input">
+                                <span>X</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-rot-x" name="layer_${layerNum}_rot_x" value="0" step="1" data-layer="${layerNum}" data-param="rotX">
+                            </div>
+                            <div class="mini-input">
+                                <span>Y</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-rot-y" name="layer_${layerNum}_rot_y" value="0" step="1" data-layer="${layerNum}" data-param="rotY">
+                            </div>
+                            <div class="mini-input">
+                                <span>Z</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-rot-z" name="layer_${layerNum}_rot_z" value="0" step="1" data-layer="${layerNum}" data-param="rotZ">
+                            </div>
+                        </div>
+                        <div class="transform-group">
+                            <span class="group-label">SIZE</span>
+                            <div class="mini-input wide">
+                                <span>SCALE</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-scale" name="layer_${layerNum}_scale" value="1.0" step="0.01" data-layer="${layerNum}" data-param="scale">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layer-pane" data-pane="text">
+                    <div class="text-layer-panel">
                     <div class="text-layer-head">
                         <label class="option-toggle">
                             <input type="checkbox" id="${prefix}layer-${layerNum}-text-enabled" name="layer_${layerNum}_text_enabled" value="1">
@@ -487,7 +491,17 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1">
                         </div>
                     </div>
+                    </div>
                 </div>
+
+                <div class="layer-pane" data-pane="anim">
+                    <div class="layer-subsection">
+                        <div class="layer-subsection-title">ANIMATIE ACTIVATIE</div>
+                        <label class="option-toggle">
+                            <input type="checkbox" id="${prefix}layer-${layerNum}-enable-anim" data-layer="${layerNum}">
+                            <span>ANIMATIE INSCHAKELEN</span>
+                        </label>
+                    </div>
                 
                 <!-- Animation Panel (hidden by default) -->
                 <div id="${prefix}layer-${layerNum}-anim-container" class="anim-panel hidden">
@@ -910,34 +924,14 @@ function setupAdminUX() {
 
     adminUXBound = true;
     const form = document.getElementById('upload-form');
-    const focusSelect = document.getElementById('ux-focus-mode');
     const stepButtons = Array.from(document.querySelectorAll('.ux-step-btn'));
     const layerFilterInput = document.getElementById('layer-filter-input');
     const layerFilterActiveOnly = document.getElementById('layer-filter-active-only');
-
-    if (focusSelect && form) {
-        focusSelect.addEventListener('change', () => {
-            form.dataset.focus = focusSelect.value;
-            refreshAdminUXState();
-        });
-        form.dataset.focus = focusSelect.value;
-    }
 
     stepButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
             const panelId = btn.dataset.targetPanel;
             const panel = panelId ? document.getElementById(panelId) : null;
-            const focusMap = {
-                'metadata-panel': 'meta',
-                'files-panel': 'files',
-                'layers-panel': 'layers',
-                'submit-panel': 'submit'
-            };
-
-            if (focusSelect && panelId && focusMap[panelId]) {
-                focusSelect.value = focusMap[panelId];
-                if (form) form.dataset.focus = focusMap[panelId];
-            }
 
             if (panel) {
                 panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1004,34 +998,14 @@ function setupEditModalUX() {
 
     editModalUXBound = true;
     const form = document.getElementById('edit-form');
-    const focusSelect = document.getElementById('edit-ux-focus-mode');
     const stepButtons = Array.from(document.querySelectorAll('.edit-ux-step-btn'));
     const layerFilterInput = document.getElementById('edit-layer-filter-input');
     const layerFilterActiveOnly = document.getElementById('edit-layer-filter-active-only');
-
-    if (focusSelect && form) {
-        focusSelect.addEventListener('change', () => {
-            form.dataset.editFocus = focusSelect.value;
-            refreshEditModalUXState();
-        });
-        form.dataset.editFocus = focusSelect.value;
-    }
 
     stepButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
             const panelId = btn.dataset.editTargetPanel;
             const panel = panelId ? document.getElementById(panelId) : null;
-            const focusMap = {
-                'edit-metadata-panel': 'meta',
-                'edit-files-panel': 'files',
-                'edit-layers-panel': 'layers',
-                'edit-submit-panel': 'submit'
-            };
-
-            if (focusSelect && panelId && focusMap[panelId]) {
-                focusSelect.value = focusMap[panelId];
-                if (form) form.dataset.editFocus = focusMap[panelId];
-            }
 
             if (panel) {
                 panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4671,12 +4645,6 @@ function closeEditModal() {
         injectApiSourceUI(n, '');
     }
 
-    const editFocus = document.getElementById('edit-ux-focus-mode');
-    const editForm = document.getElementById('edit-form');
-    if (editFocus && editForm) {
-        editFocus.value = 'all';
-        editForm.dataset.editFocus = 'all';
-    }
 }
 
 // Setup edit form submission
@@ -5318,6 +5286,7 @@ function renderLayers(isEditForm = false) {
     // Always render 8 layers
     for (let i = 1; i <= 8; i++) {
         containerEl.insertAdjacentHTML('beforeend', generateLayerHTML(i, isEditForm));
+        setupLayerTabs(i, isEditForm);
         setupLayerAnimationToggle(i, isEditForm);
         setupTextRandomControls(i, isEditForm);
     }
@@ -5327,6 +5296,23 @@ function renderLayers(isEditForm = false) {
     } else {
         refreshEditModalUXState();
     }
+}
+
+function setupLayerTabs(layerNum, isEditForm) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const card = document.getElementById(`${prefix}layer-${layerNum}-image`)?.closest('.layer-card');
+    if (!card) return;
+
+    const buttons = card.querySelectorAll('.layer-tab-btn');
+    const panes = card.querySelectorAll('.layer-pane');
+
+    buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            buttons.forEach((b) => b.classList.toggle('is-active', b === btn));
+            panes.forEach((pane) => pane.classList.toggle('is-active', pane.dataset.pane === tab));
+        });
+    });
 }
 
 

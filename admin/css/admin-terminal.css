@@ -1169,7 +1169,7 @@ input[type="file"]::file-selector-button:hover {
 /* UX structuurlaag: overzicht + focus */
 .admin-ux-toolbar {
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) auto auto;
+    grid-template-columns: minmax(260px, 1fr) auto;
     gap: 10px;
     margin: 0 0 10px 0;
     padding: 8px 10px;
@@ -1211,28 +1211,6 @@ input[type="file"]::file-selector-button:hover {
     background: rgba(255,255,255,0.85);
 }
 
-.ux-focus {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.ux-focus label {
-    font-size: 0.55rem;
-    color: rgba(255,255,255,0.55);
-    font-family: 'Roboto Mono', monospace;
-    letter-spacing: 1px;
-}
-
-.ux-focus select {
-    background: #000;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
-    font-size: 0.6rem;
-    font-family: 'Roboto Mono', monospace;
-    padding: 4px 6px;
-}
-
 .ux-stats {
     display: flex;
     gap: 6px;
@@ -1251,24 +1229,6 @@ input[type="file"]::file-selector-button:hover {
 .ux-stat-chip span {
     color: #fff;
     margin-left: 4px;
-}
-
-#upload-form[data-focus='meta'] [data-focus-key]:not([data-focus-key='meta']),
-#upload-form[data-focus='files'] [data-focus-key]:not([data-focus-key='files']),
-#upload-form[data-focus='layers'] [data-focus-key]:not([data-focus-key='layers']),
-#upload-form[data-focus='submit'] [data-focus-key]:not([data-focus-key='submit']) {
-    opacity: 0.28;
-    filter: saturate(0.4);
-    transition: opacity 0.2s ease;
-}
-
-#upload-form[data-focus='meta'] #metadata-panel,
-#upload-form[data-focus='files'] #files-panel,
-#upload-form[data-focus='layers'] #layers-panel,
-#upload-form[data-focus='submit'] #submit-panel {
-    opacity: 1;
-    filter: none;
-    border-color: rgba(255,255,255,0.8);
 }
 
 .layers-ux-tools {
@@ -1303,22 +1263,61 @@ input[type="file"]::file-selector-button:hover {
     margin: 0 0 12px 0;
 }
 
-#edit-form[data-edit-focus='meta'] [data-edit-focus-key]:not([data-edit-focus-key='meta']),
-#edit-form[data-edit-focus='files'] [data-edit-focus-key]:not([data-edit-focus-key='files']),
-#edit-form[data-edit-focus='layers'] [data-edit-focus-key]:not([data-edit-focus-key='layers']),
-#edit-form[data-edit-focus='submit'] [data-edit-focus-key]:not([data-edit-focus-key='submit']) {
-    opacity: 0.28;
-    filter: saturate(0.4);
-    transition: opacity 0.2s ease;
+.layer-tab-bar {
+    display: flex;
+    gap: 4px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
 }
 
-#edit-form[data-edit-focus='meta'] #edit-metadata-panel,
-#edit-form[data-edit-focus='files'] #edit-files-panel,
-#edit-form[data-edit-focus='layers'] #edit-layers-panel,
-#edit-form[data-edit-focus='submit'] #edit-submit-panel {
-    opacity: 1;
-    filter: none;
-    border-color: rgba(255,255,255,0.8);
+.layer-tab-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: rgba(255,255,255,0.6);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.54rem;
+    letter-spacing: 0.7px;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+.layer-tab-btn:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.55);
+}
+
+.layer-tab-btn.is-active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.layer-pane {
+    display: none;
+    padding-top: 8px;
+}
+
+.layer-pane.is-active {
+    display: block;
+}
+
+.layer-pane .layer-options {
+    margin-top: 8px;
+}
+
+.layer-subsection {
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.02);
+    padding: 6px;
+    margin-top: 6px;
+}
+
+.layer-subsection-title {
+    font-size: 0.54rem;
+    color: rgba(255,255,255,0.52);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.7px;
+    margin-bottom: 6px;
 }
 
 @media (max-width: 1180px) {
