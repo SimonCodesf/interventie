@@ -866,9 +866,9 @@ input[type="file"]::file-selector-button:hover {
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.05);
     padding: 4px 6px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.16);
 }
 
 .transform-group.is-modified,
@@ -881,7 +881,7 @@ input[type="file"]::file-selector-button:hover {
 
 .group-label {
     font-size: 0.55rem;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.72);
     min-width: 24px;
     font-family: 'Roboto Mono', monospace;
     letter-spacing: 1px;
@@ -894,8 +894,8 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .mini-input span {
-    font-size: 0.5rem;
-    color: rgba(255,255,255,0.3);
+    font-size: 0.52rem;
+    color: rgba(255,255,255,0.6);
     min-width: 10px;
     font-family: 'Roboto Mono', monospace;
 }
@@ -904,8 +904,8 @@ input[type="file"]::file-selector-button:hover {
     width: 48px;
     padding: 3px 4px;
     font-size: 0.7rem;
-    background: #000;
-    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.85);
+    border: 1px solid rgba(255,255,255,0.35);
     color: #fff;
     font-family: 'Roboto Mono', monospace;
     text-align: center;
@@ -2773,6 +2773,23 @@ body.upload-mode-reclame .poster-only-field {
     background: #0a0a0a;
 }
 
+.api-result-item.api-result-media {
+    aspect-ratio: unset;
+    display: flex;
+    flex-direction: column;
+    min-height: 98px;
+}
+
+.api-result-thumb {
+    flex: 1;
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    padding: 2px;
+}
+
 .api-result-item:hover {
     border-color: rgba(255,255,255,0.5);
 }
@@ -2785,18 +2802,15 @@ body.upload-mode-reclame .poster-only-field {
 .api-result-item img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
 }
 
 .api-result-item .result-label {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: static;
     background: rgba(0,0,0,0.8);
     font-size: 0.45rem;
-    padding: 2px 3px;
+    padding: 3px 4px;
     color: rgba(255,255,255,0.7);
     font-family: var(--font-data);
     white-space: nowrap;

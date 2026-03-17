@@ -3220,10 +3220,12 @@ async function searchApiContent(layerNum, prefix, source, query) {
         resultsContainer.innerHTML = '';
         results.forEach(item => {
             const el = document.createElement('div');
-            el.className = 'api-result-item';
+            el.className = 'api-result-item api-result-media';
             el.innerHTML = `
-                <img src="${escapeHtml(item.preview_url || item.url)}" alt="${escapeHtml(item.title || '')}" loading="lazy">
-                <span class="result-label">${escapeHtml(item.title || item.id || '')}</span>
+                <div class="api-result-thumb">
+                    <img src="${escapeHtml(item.preview_url || item.url)}" alt="${escapeHtml(item.title || '')}" loading="lazy">
+                </div>
+                <span class="result-label" title="${escapeHtml(item.title || item.id || '')}">${escapeHtml(item.title || item.id || '')}</span>
             `;
             el.addEventListener('click', () => selectApiResult(layerNum, prefix, item, el));
             resultsContainer.appendChild(el);
