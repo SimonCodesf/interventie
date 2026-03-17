@@ -988,6 +988,22 @@ input[type="file"]::file-selector-button:hover {
     gap: 8px;
 }
 
+.text-section {
+    border: 1px dashed rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.015);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.text-section-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.66);
+    letter-spacing: 0.9px;
+}
+
 .text-random-specs {
     display: flex;
     flex-wrap: wrap;
@@ -1621,6 +1637,55 @@ input[type="file"]::file-selector-button:hover {
 
 .layer-pane.is-active {
     display: block;
+}
+
+@media (max-width: 768px) {
+    .layer-header {
+        gap: 6px;
+        padding: 6px 8px;
+        font-size: 0.7rem;
+    }
+
+    .layer-num {
+        width: 18px;
+        height: 18px;
+        font-size: 0.62rem;
+    }
+
+    .layer-body {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .layer-smart-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .layer-smart-actions,
+    .pane-tool-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .layer-tab-bar {
+        flex-wrap: wrap;
+    }
+
+    .layer-tab-btn {
+        font-size: 0.5rem;
+        padding: 3px 5px;
+    }
+
+    .text-layer-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .text-layer-grid .mini-input.wide {
+        grid-column: 1 / -1;
+    }
 }
 
 .layer-pane .layer-options {
