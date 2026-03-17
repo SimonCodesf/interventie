@@ -773,6 +773,19 @@ input[type="file"]::file-selector-button:hover {
     gap: 8px;
 }
 
+.text-random-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 1px dashed rgba(255,255,255,0.15);
+    padding: 5px 6px;
+}
+
+.text-random-specs .option-toggle {
+    font-size: 0.55rem;
+    gap: 3px;
+}
+
 .text-layer-input {
     width: 100%;
     background: #000;

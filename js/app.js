@@ -2397,6 +2397,24 @@ function pickRandomTextStyle(seedInput) {
     };
 }
 
+function applyRandomTextStyleBySpec(baseStyle, seedInput, randomSpec = {}) {
+    const randomStyle = pickRandomTextStyle(seedInput);
+    const finalStyle = { ...baseStyle };
+
+    if (randomSpec.font) finalStyle.font = randomStyle.font;
+    if (randomSpec.color) finalStyle.color = randomStyle.color;
+    if (randomSpec.outline) {
+        finalStyle.outlineColor = randomStyle.outlineColor;
+        finalStyle.outlineWidth = randomStyle.outlineWidth;
+    }
+    if (randomSpec.effect) finalStyle.effect = randomStyle.effect;
+    if (randomSpec.effect3d) finalStyle.effect3d = randomStyle.effect3d;
+    if (randomSpec.size) finalStyle.fontSize = randomStyle.fontSize;
+    if (randomSpec.align) finalStyle.align = randomStyle.align;
+
+    return finalStyle;
+}
+
 function renderTextTexture(content, style) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -2480,10 +2498,23 @@ function applyTextLayersTextures(rootEl) {
             align: plane.getAttribute('data-text-align') || 'center'
         };
 
+        const randomSpec = {
+            font: plane.getAttribute('data-text-random-font') === '1',
+            color: plane.getAttribute('data-text-random-color') === '1',
+            outline: plane.getAttribute('data-text-random-outline') === '1',
+            effect: plane.getAttribute('data-text-random-effect') === '1',
+            effect3d: plane.getAttribute('data-text-random-3d') === '1',
+            size: plane.getAttribute('data-text-random-size') === '1',
+            align: plane.getAttribute('data-text-random-align') === '1',
+        };
+
         const randomEnabled = plane.getAttribute('data-text-random') === '1';
         if (randomEnabled) {
             const seed = parseInt(plane.getAttribute('data-text-seed') || '0', 10) || Date.now();
             Object.assign(style, pickRandomTextStyle(seed));
+        } else if (Object.values(randomSpec).some(Boolean)) {
+            const seed = parseInt(plane.getAttribute('data-text-seed') || '0', 10) || Date.now();
+            Object.assign(style, applyRandomTextStyleBySpec(style, seed, randomSpec));
         }
 
         const textureData = renderTextTexture(textContent, style);
@@ -2672,6 +2703,13 @@ function buildLayersHTML(poster) {
                 const text3D = layerData.text_3d_effect || 'none';
                 const textSeed = parseInt(layerData.text_style_seed, 10) || 0;
                 const randomAttr = layerData.text_random_style ? '1' : '0';
+                const randomFont = layerData.text_random_font ? '1' : '0';
+                const randomColor = layerData.text_random_color ? '1' : '0';
+                const randomOutline = layerData.text_random_outline ? '1' : '0';
+                const randomEffect = layerData.text_random_effect ? '1' : '0';
+                const random3D = layerData.text_random_3d ? '1' : '0';
+                const randomSize = layerData.text_random_size ? '1' : '0';
+                const randomAlign = layerData.text_random_align ? '1' : '0';
 
                 layersHTML += `
                     <a-plane
@@ -2688,6 +2726,13 @@ function buildLayersHTML(poster) {
                         data-text-3d="${text3D}"
                         data-text-seed="${textSeed}"
                         data-text-random="${randomAttr}"
+                        data-text-random-font="${randomFont}"
+                        data-text-random-color="${randomColor}"
+                        data-text-random-outline="${randomOutline}"
+                        data-text-random-effect="${randomEffect}"
+                        data-text-random-3d="${random3D}"
+                        data-text-random-size="${randomSize}"
+                        data-text-random-align="${randomAlign}"
                         position="${posX} ${textPosY} ${textPosZ}"
                         rotation="${rotX} ${rotY} ${rotZ}"
                         material="transparent: true; alphaTest: 0.02; side: double;"

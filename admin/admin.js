@@ -154,6 +154,24 @@ function generateRandomTextStylePreset(seedInput) {
     };
 }
 
+function applyRandomStyleBySpec(baseStyle, seedInput, randomSpec = {}) {
+    const randomStyle = generateRandomTextStylePreset(seedInput);
+    const finalStyle = { ...baseStyle };
+
+    if (randomSpec.font) finalStyle.font = randomStyle.font;
+    if (randomSpec.color) finalStyle.color = randomStyle.color;
+    if (randomSpec.outline) {
+        finalStyle.outlineColor = randomStyle.outlineColor;
+        finalStyle.outlineWidth = randomStyle.outlineWidth;
+    }
+    if (randomSpec.effect) finalStyle.effect = randomStyle.effect;
+    if (randomSpec.effect3d) finalStyle.effect3d = randomStyle.effect3d;
+    if (randomSpec.size) finalStyle.fontSize = randomStyle.fontSize;
+    if (randomSpec.align) finalStyle.align = randomStyle.align;
+
+    return finalStyle;
+}
+
 
 // ========== GIF handling: use GIF directly as video ==========
 // GIFs can be used directly in <a-video> tags; no conversion needed!
@@ -347,8 +365,17 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         </label>
                         <label class="option-toggle">
                             <input type="checkbox" id="${prefix}layer-${layerNum}-text-random" name="layer_${layerNum}_text_random" value="1">
-                            <span>RANDOM STYLE</span>
+                            <span>RANDOM ALLES</span>
                         </label>
+                    </div>
+                    <div class="text-random-specs">
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1"><span>R FONT</span></label>
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1"><span>R KLEUR</span></label>
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1"><span>R RAND</span></label>
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1"><span>R FX</span></label>
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span>R 3D</span></label>
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span>R SIZE</span></label>
+                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span>R ALIGN</span></label>
                     </div>
                     <textarea
                         id="${prefix}layer-${layerNum}-text-content"
@@ -515,6 +542,13 @@ function deleteLayer(layerNum) {
         `edit-layer-${layerNum}-anim-preset`,
         `edit-layer-${layerNum}-text-enabled`,
         `edit-layer-${layerNum}-text-random`,
+        `edit-layer-${layerNum}-text-random-font`,
+        `edit-layer-${layerNum}-text-random-color`,
+        `edit-layer-${layerNum}-text-random-outline`,
+        `edit-layer-${layerNum}-text-random-effect`,
+        `edit-layer-${layerNum}-text-random-3d`,
+        `edit-layer-${layerNum}-text-random-size`,
+        `edit-layer-${layerNum}-text-random-align`,
         `edit-layer-${layerNum}-text-content`,
         `edit-layer-${layerNum}-text-font`,
         `edit-layer-${layerNum}-text-size`,
@@ -1157,6 +1191,13 @@ function updatePreviewFromInputs() {
         const textOutlineWidthEl = document.getElementById(`${prefix}layer-${i}-text-outline-width`);
         const textEffectEl = document.getElementById(`${prefix}layer-${i}-text-effect`);
         const text3DEl = document.getElementById(`${prefix}layer-${i}-text-3d`);
+        const textRandomFontEl = document.getElementById(`${prefix}layer-${i}-text-random-font`);
+        const textRandomColorEl = document.getElementById(`${prefix}layer-${i}-text-random-color`);
+        const textRandomOutlineEl = document.getElementById(`${prefix}layer-${i}-text-random-outline`);
+        const textRandomEffectEl = document.getElementById(`${prefix}layer-${i}-text-random-effect`);
+        const textRandom3DEl = document.getElementById(`${prefix}layer-${i}-text-random-3d`);
+        const textRandomSizeEl = document.getElementById(`${prefix}layer-${i}-text-random-size`);
+        const textRandomAlignEl = document.getElementById(`${prefix}layer-${i}-text-random-align`);
 
         const textEnabled = !!textEnabledEl?.checked;
         const textRandom = !!textRandomEl?.checked;
@@ -1227,6 +1268,15 @@ function updatePreviewFromInputs() {
                 hasText: textHasContent,
                 textContent,
                 textRandom,
+                textRandomSpec: {
+                    font: !!textRandomFontEl?.checked,
+                    color: !!textRandomColorEl?.checked,
+                    outline: !!textRandomOutlineEl?.checked,
+                    effect: !!textRandomEffectEl?.checked,
+                    effect3d: !!textRandom3DEl?.checked,
+                    size: !!textRandomSizeEl?.checked,
+                    align: !!textRandomAlignEl?.checked,
+                },
                 textFont: textFontEl?.value || '"Bebas Neue", sans-serif',
                 textSize: parseFloat(textSizeEl?.value) || 96,
                 textAlign: textAlignEl?.value || 'center',
@@ -1704,18 +1754,19 @@ function renderARPreview() {
                 
                 // Add Content
                 if (data.hasText) {
+                    const baseStyle = {
+                        font: data.textFont,
+                        color: data.textColor,
+                        outlineColor: data.textOutlineColor,
+                        outlineWidth: data.textOutlineWidth,
+                        fontSize: data.textSize,
+                        effect: data.textEffect,
+                        effect3d: data.text3d,
+                        align: data.textAlign,
+                    };
                     const style = data.textRandom
                         ? generateRandomTextStylePreset(data.textSeed)
-                        : {
-                            font: data.textFont,
-                            color: data.textColor,
-                            outlineColor: data.textOutlineColor,
-                            outlineWidth: data.textOutlineWidth,
-                            fontSize: data.textSize,
-                            effect: data.textEffect,
-                            effect3d: data.text3d,
-                            align: data.textAlign,
-                        };
+                        : applyRandomStyleBySpec(baseStyle, data.textSeed, data.textRandomSpec || {});
 
                     el.style.background = 'rgba(0,0,0,0.15)';
                     el.style.backdropFilter = 'blur(1px)';
@@ -2967,6 +3018,13 @@ function setupUploadForm() {
             const textOutlineWidthInput = document.getElementById(`layer-${i}-text-outline-width`);
             const textEffectInput = document.getElementById(`layer-${i}-text-effect`);
             const text3DInput = document.getElementById(`layer-${i}-text-3d`);
+            const textRandomFontInput = document.getElementById(`layer-${i}-text-random-font`);
+            const textRandomColorInput = document.getElementById(`layer-${i}-text-random-color`);
+            const textRandomOutlineInput = document.getElementById(`layer-${i}-text-random-outline`);
+            const textRandomEffectInput = document.getElementById(`layer-${i}-text-random-effect`);
+            const textRandom3DInput = document.getElementById(`layer-${i}-text-random-3d`);
+            const textRandomSizeInput = document.getElementById(`layer-${i}-text-random-size`);
+            const textRandomAlignInput = document.getElementById(`layer-${i}-text-random-align`);
             
             // Skip if layer inputs don't exist
             if (!imageInput || !zInput) {
@@ -3060,6 +3118,13 @@ function setupUploadForm() {
             formData.append(`layer_${i}_text_outline_width`, textOutlineWidthInput ? textOutlineWidthInput.value || '3' : '3');
             formData.append(`layer_${i}_text_effect`, textEffectInput ? textEffectInput.value || 'none' : 'none');
             formData.append(`layer_${i}_text_3d_effect`, text3DInput ? text3DInput.value || 'none' : 'none');
+            formData.append(`layer_${i}_text_random_font`, textRandomFontInput?.checked ? '1' : '0');
+            formData.append(`layer_${i}_text_random_color`, textRandomColorInput?.checked ? '1' : '0');
+            formData.append(`layer_${i}_text_random_outline`, textRandomOutlineInput?.checked ? '1' : '0');
+            formData.append(`layer_${i}_text_random_effect`, textRandomEffectInput?.checked ? '1' : '0');
+            formData.append(`layer_${i}_text_random_3d`, textRandom3DInput?.checked ? '1' : '0');
+            formData.append(`layer_${i}_text_random_size`, textRandomSizeInput?.checked ? '1' : '0');
+            formData.append(`layer_${i}_text_random_align`, textRandomAlignInput?.checked ? '1' : '0');
             formData.append(`layer_${i}_text_style_seed`, String(textSeed));
             
             // Per-laag AR extras: GLB model en audio
@@ -3945,6 +4010,13 @@ async function openEditModal(posterId) {
                 // Tekstlaag velden
                 const textEnabledEl = document.getElementById(`edit-layer-${layerNum}-text-enabled`);
                 const textRandomEl = document.getElementById(`edit-layer-${layerNum}-text-random`);
+                const textRandomFontEl = document.getElementById(`edit-layer-${layerNum}-text-random-font`);
+                const textRandomColorEl = document.getElementById(`edit-layer-${layerNum}-text-random-color`);
+                const textRandomOutlineEl = document.getElementById(`edit-layer-${layerNum}-text-random-outline`);
+                const textRandomEffectEl = document.getElementById(`edit-layer-${layerNum}-text-random-effect`);
+                const textRandom3DEl = document.getElementById(`edit-layer-${layerNum}-text-random-3d`);
+                const textRandomSizeEl = document.getElementById(`edit-layer-${layerNum}-text-random-size`);
+                const textRandomAlignEl = document.getElementById(`edit-layer-${layerNum}-text-random-align`);
                 const textContentEl = document.getElementById(`edit-layer-${layerNum}-text-content`);
                 const textFontEl = document.getElementById(`edit-layer-${layerNum}-text-font`);
                 const textSizeEl = document.getElementById(`edit-layer-${layerNum}-text-size`);
@@ -3958,6 +4030,13 @@ async function openEditModal(posterId) {
 
                 if (textEnabledEl) textEnabledEl.checked = !!layerData.text_enabled;
                 if (textRandomEl) textRandomEl.checked = !!layerData.text_random_style;
+                if (textRandomFontEl) textRandomFontEl.checked = !!layerData.text_random_font;
+                if (textRandomColorEl) textRandomColorEl.checked = !!layerData.text_random_color;
+                if (textRandomOutlineEl) textRandomOutlineEl.checked = !!layerData.text_random_outline;
+                if (textRandomEffectEl) textRandomEffectEl.checked = !!layerData.text_random_effect;
+                if (textRandom3DEl) textRandom3DEl.checked = !!layerData.text_random_3d;
+                if (textRandomSizeEl) textRandomSizeEl.checked = !!layerData.text_random_size;
+                if (textRandomAlignEl) textRandomAlignEl.checked = !!layerData.text_random_align;
                 if (textContentEl) textContentEl.value = layerData.text_content || '';
                 if (textFontEl) textFontEl.value = layerData.text_font_family || '"Bebas Neue", sans-serif';
                 if (textSizeEl) textSizeEl.value = layerData.text_font_size || 96;
@@ -4332,6 +4411,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const textOutlineWidthEl = document.getElementById(`edit-layer-${i}-text-outline-width`);
                 const textEffectEl = document.getElementById(`edit-layer-${i}-text-effect`);
                 const text3DEl = document.getElementById(`edit-layer-${i}-text-3d`);
+                const textRandomFontEl = document.getElementById(`edit-layer-${i}-text-random-font`);
+                const textRandomColorEl = document.getElementById(`edit-layer-${i}-text-random-color`);
+                const textRandomOutlineEl = document.getElementById(`edit-layer-${i}-text-random-outline`);
+                const textRandomEffectEl = document.getElementById(`edit-layer-${i}-text-random-effect`);
+                const textRandom3DEl = document.getElementById(`edit-layer-${i}-text-random-3d`);
+                const textRandomSizeEl = document.getElementById(`edit-layer-${i}-text-random-size`);
+                const textRandomAlignEl = document.getElementById(`edit-layer-${i}-text-random-align`);
                 
                 // Skip if elements don't exist
                 if (!layerImageEl || !layerZEl) {
@@ -4466,6 +4552,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append(`layer_${i}_text_outline_width`, textOutlineWidthEl ? textOutlineWidthEl.value || '3' : '3');
                 formData.append(`layer_${i}_text_effect`, textEffectEl ? textEffectEl.value || 'none' : 'none');
                 formData.append(`layer_${i}_text_3d_effect`, text3DEl ? text3DEl.value || 'none' : 'none');
+                formData.append(`layer_${i}_text_random_font`, textRandomFontEl?.checked ? '1' : '0');
+                formData.append(`layer_${i}_text_random_color`, textRandomColorEl?.checked ? '1' : '0');
+                formData.append(`layer_${i}_text_random_outline`, textRandomOutlineEl?.checked ? '1' : '0');
+                formData.append(`layer_${i}_text_random_effect`, textRandomEffectEl?.checked ? '1' : '0');
+                formData.append(`layer_${i}_text_random_3d`, textRandom3DEl?.checked ? '1' : '0');
+                formData.append(`layer_${i}_text_random_size`, textRandomSizeEl?.checked ? '1' : '0');
+                formData.append(`layer_${i}_text_random_align`, textRandomAlignEl?.checked ? '1' : '0');
                 formData.append(`layer_${i}_text_style_seed`, String(textSeed));
                 
                 // Per-laag AR extras: GLB model en audio
@@ -4794,6 +4887,30 @@ function setupLayerAnimationToggle(layerNum, isEditForm) {
     setupLayerExtrasToggle(layerNum, isEditForm);
 }
 
+function setupTextRandomControls(layerNum, isEditForm) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const master = document.getElementById(`${prefix}layer-${layerNum}-text-random`);
+    if (!master) return;
+
+    const specIds = [
+        `${prefix}layer-${layerNum}-text-random-font`,
+        `${prefix}layer-${layerNum}-text-random-color`,
+        `${prefix}layer-${layerNum}-text-random-outline`,
+        `${prefix}layer-${layerNum}-text-random-effect`,
+        `${prefix}layer-${layerNum}-text-random-3d`,
+        `${prefix}layer-${layerNum}-text-random-size`,
+        `${prefix}layer-${layerNum}-text-random-align`,
+    ];
+    const specEls = specIds.map(id => document.getElementById(id)).filter(Boolean);
+
+    master.addEventListener('change', () => {
+        specEls.forEach(el => {
+            el.checked = master.checked;
+        });
+        updatePreviewFromInputs();
+    });
+}
+
 // Setup AR Extras (GLB/Audio) toggle per layer
 function setupLayerExtrasToggle(layerNum, isEditForm) {
     const prefix = isEditForm ? 'edit-' : '';
@@ -4822,6 +4939,7 @@ function renderLayers(isEditForm = false) {
     for (let i = 1; i <= 8; i++) {
         containerEl.insertAdjacentHTML('beforeend', generateLayerHTML(i, isEditForm));
         setupLayerAnimationToggle(i, isEditForm);
+        setupTextRandomControls(i, isEditForm);
     }
 }
 
