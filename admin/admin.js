@@ -306,7 +306,16 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     <button type="button" class="layer-tab-btn" data-tab="anim">ANIMATIE</button>
                 </div>
 
+                <div class="layer-smart-row">
+                    <span class="layer-change-indicator" id="${prefix}layer-${layerNum}-changed-count">0 GEWIJZIGD</span>
+                    <button type="button" class="layer-reset-all-btn" onclick="resetLayerToBaseline(${layerNum}, '${prefix}')">RESET LAAG</button>
+                </div>
+
                 <div class="layer-pane is-active" data-pane="content">
+                    <div class="pane-tools">
+                        <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-content">STANDAARD</span>
+                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'content', '${prefix}')">RESET TAB</button>
+                    </div>
                     <div class="layer-files">
                         <div class="file-slot">
                             <label>MEDIA</label>
@@ -349,6 +358,10 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 </div>
 
                 <div class="layer-pane" data-pane="transform">
+                    <div class="pane-tools">
+                        <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-transform">STANDAARD</span>
+                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'transform', '${prefix}')">RESET TAB</button>
+                    </div>
                     <div class="layer-transform">
                         <div class="transform-group">
                             <span class="group-label">POS</span>
@@ -391,6 +404,10 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 </div>
 
                 <div class="layer-pane" data-pane="text">
+                    <div class="pane-tools">
+                        <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-text">STANDAARD</span>
+                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'text', '${prefix}')">RESET TAB</button>
+                    </div>
                     <div class="text-layer-panel">
                     <div class="text-layer-head">
                         <label class="option-toggle">
@@ -501,6 +518,10 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 </div>
 
                 <div class="layer-pane" data-pane="anim">
+                    <div class="pane-tools">
+                        <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-anim">STANDAARD</span>
+                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'anim', '${prefix}')">RESET TAB</button>
+                    </div>
                     <div class="layer-subsection">
                         <div class="layer-subsection-title">ANIMATIE ACTIVATIE</div>
                         <label class="option-toggle">
@@ -890,6 +911,21 @@ let arPreviewWindow = null;
 let arPreviewZIndex = 1000;
 let adminUXBound = false;
 let editModalUXBound = false;
+
+const LAYER_GROUP_FIELDS = {
+    content: ['image', 'glb', 'audio', 'transparent', 'bg-color', 'exclusion', 'delete', 'delete-media', 'delete-glb', 'delete-audio'],
+    transform: ['pos-x', 'pos-y', 'z', 'rot-x', 'rot-y', 'rot-z', 'scale'],
+    text: [
+        'text-enabled', 'text-random', 'text-random-font', 'text-random-color', 'text-random-outline', 'text-random-effect',
+        'text-random-3d', 'text-random-size', 'text-random-align', 'text-content', 'text-font', 'text-size', 'text-align',
+        'text-offset-y', 'text-color', 'text-outline-color', 'text-outline-width', 'text-effect', 'text-3d', 'text-3d-depth',
+        'text-3d-tilt-x', 'text-3d-tilt-y', 'text-3d-float-px'
+    ],
+    anim: [
+        'enable-anim', 'anim-preset', 'anim-x', 'anim-y', 'anim-z', 'anim-pos-duration', 'anim-rot-x', 'anim-rot-y',
+        'anim-rot-z', 'anim-rot-duration', 'anim-rot-origin', 'anim-scale', 'anim-opacity', 'anim-scale-duration'
+    ]
+};
 
 // Check if already logged in
 document.addEventListener('DOMContentLoaded', () => {
@@ -4615,6 +4651,10 @@ async function openEditModal(posterId) {
         
         // Setup changes summary tracking
         setupEditChangesSummary();
+
+        // In edit mode telt "gewijzigd" vanaf de geladen posterwaarden
+        snapshotLayerBaselines(true);
+        updateAllLayerModificationStates(true);
         
         // Show modal
         document.getElementById('edit-modal').style.display = 'block';
@@ -5265,6 +5305,144 @@ function setupTextRandomControls(layerNum, isEditForm) {
     });
 }
 
+function getLayerGroupElements(layerNum, prefix, group) {
+    const fields = LAYER_GROUP_FIELDS[group] || [];
+    return fields
+        .map((field) => document.getElementById(`${prefix}layer-${layerNum}-${field}`))
+        .filter(Boolean);
+}
+
+function normalizeControlValue(el) {
+    if (!el) return '';
+
+    if (el.type === 'checkbox') {
+        return el.checked ? '1' : '0';
+    }
+
+    if (el.type === 'file') {
+        if (!el.files || el.files.length === 0) return '';
+        return Array.from(el.files).map((file) => `${file.name}:${file.size}`).join('|');
+    }
+
+    if (el.type === 'number') {
+        const numericValue = el.value === '' ? '' : Number(el.value);
+        return Number.isFinite(numericValue) ? String(numericValue) : '';
+    }
+
+    if (el.type === 'color') {
+        return String(el.value || '').toLowerCase();
+    }
+
+    return String(el.value || '');
+}
+
+function setControlValueFromBaseline(el, baselineValue) {
+    if (!el) return;
+
+    if (el.type === 'checkbox') {
+        el.checked = baselineValue === '1';
+    } else if (el.type === 'file') {
+        el.value = '';
+    } else {
+        el.value = baselineValue;
+    }
+
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+}
+
+function getControlHighlightTarget(el) {
+    return el.closest('.mini-input') || el.closest('.option-toggle') || el.closest('.file-slot') || el;
+}
+
+function snapshotLayerBaselines(isEditForm = false) {
+    const prefix = isEditForm ? 'edit-' : '';
+
+    for (let layerNum = 1; layerNum <= LAYER_CONFIG.maxLayers; layerNum++) {
+        ['content', 'transform', 'text', 'anim'].forEach((group) => {
+            const elements = getLayerGroupElements(layerNum, prefix, group);
+            elements.forEach((el) => {
+                el.dataset.baselineValue = normalizeControlValue(el);
+            });
+        });
+    }
+}
+
+function updateLayerModificationState(layerNum, isEditForm = false) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const card = document.getElementById(`${prefix}layer-${layerNum}-image`)?.closest('.layer-card');
+    if (!card) return;
+
+    const groupCounts = { content: 0, transform: 0, text: 0, anim: 0 };
+
+    Object.keys(groupCounts).forEach((group) => {
+        const elements = getLayerGroupElements(layerNum, prefix, group);
+        elements.forEach((el) => {
+            const baseline = el.dataset.baselineValue ?? '';
+            const current = normalizeControlValue(el);
+            const changed = baseline !== current;
+            const target = getControlHighlightTarget(el);
+            target.classList.toggle('is-modified', changed);
+            if (changed) groupCounts[group] += 1;
+        });
+    });
+
+    let totalChanges = 0;
+    Object.entries(groupCounts).forEach(([group, count]) => {
+        totalChanges += count;
+
+        const stateEl = document.getElementById(`${prefix}layer-${layerNum}-mod-${group}`);
+        if (stateEl) {
+            stateEl.textContent = count > 0 ? `${count} GEWIJZIGD` : 'STANDAARD';
+            stateEl.classList.toggle('is-modified', count > 0);
+        }
+
+        const tabBtn = card.querySelector(`.layer-tab-btn[data-tab="${group}"]`);
+        if (tabBtn) {
+            tabBtn.classList.toggle('has-modified', count > 0);
+            if (count > 0) {
+                tabBtn.setAttribute('data-mod-count', String(count));
+            } else {
+                tabBtn.removeAttribute('data-mod-count');
+            }
+        }
+    });
+
+    const countEl = document.getElementById(`${prefix}layer-${layerNum}-changed-count`);
+    if (countEl) {
+        countEl.textContent = totalChanges > 0 ? `${totalChanges} GEWIJZIGD` : '0 GEWIJZIGD';
+        countEl.classList.toggle('is-modified', totalChanges > 0);
+    }
+
+    card.classList.toggle('has-modified', totalChanges > 0);
+}
+
+function updateAllLayerModificationStates(isEditForm = false) {
+    for (let layerNum = 1; layerNum <= LAYER_CONFIG.maxLayers; layerNum++) {
+        updateLayerModificationState(layerNum, isEditForm);
+    }
+}
+
+function resetLayerGroupToBaseline(layerNum, group, prefix = '') {
+    const elements = getLayerGroupElements(layerNum, prefix, group);
+    elements.forEach((el) => {
+        const baseline = el.dataset.baselineValue ?? '';
+        setControlValueFromBaseline(el, baseline);
+    });
+    updateLayerModificationState(layerNum, prefix === 'edit-');
+}
+
+function resetLayerToBaseline(layerNum, prefix = '') {
+    ['content', 'transform', 'text', 'anim'].forEach((group) => {
+        resetLayerGroupToBaseline(layerNum, group, prefix);
+    });
+}
+
+window.resetLayerGroupToBaseline = resetLayerGroupToBaseline;
+window.resetLayerToBaseline = resetLayerToBaseline;
+
 // Setup AR Extras (GLB/Audio) toggle per layer
 function setupLayerExtrasToggle(layerNum, isEditForm) {
     const prefix = isEditForm ? 'edit-' : '';
@@ -5295,13 +5473,30 @@ function renderLayers(isEditForm = false) {
         setupLayerTabs(i, isEditForm);
         setupLayerAnimationToggle(i, isEditForm);
         setupTextRandomControls(i, isEditForm);
+        setupLayerChangeTracking(i, isEditForm);
     }
+
+    snapshotLayerBaselines(isEditForm);
+    updateAllLayerModificationStates(isEditForm);
 
     if (!isEditForm) {
         refreshAdminUXState();
     } else {
         refreshEditModalUXState();
     }
+}
+
+function setupLayerChangeTracking(layerNum, isEditForm) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const card = document.getElementById(`${prefix}layer-${layerNum}-image`)?.closest('.layer-card');
+    if (!card) return;
+
+    const trackedElements = card.querySelectorAll('input, select, textarea');
+    trackedElements.forEach((el) => {
+        const handler = () => updateLayerModificationState(layerNum, isEditForm);
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+    });
 }
 
 function setupLayerTabs(layerNum, isEditForm) {

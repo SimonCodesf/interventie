@@ -593,6 +593,77 @@ input[type="file"]::file-selector-button:hover {
     gap: 8px;
 }
 
+.layer-smart-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 6px;
+    border: 1px dashed rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.02);
+}
+
+.layer-change-indicator {
+    font-size: 0.54rem;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.7px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.layer-change-indicator.is-modified {
+    color: #fff;
+}
+
+.layer-reset-all-btn {
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.7);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.52rem;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+.layer-reset-all-btn:hover {
+    border-color: #fff;
+    color: #000;
+    background: #fff;
+}
+
+.pane-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.pane-mod-state {
+    font-size: 0.52rem;
+    color: rgba(255,255,255,0.48);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.7px;
+}
+
+.pane-mod-state.is-modified {
+    color: #fff;
+}
+
+.pane-reset-btn {
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.62);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.5rem;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+.pane-reset-btn:hover {
+    border-color: rgba(255,255,255,0.6);
+    color: #fff;
+}
+
 /* File Uploads Row */
 .layer-files {
     display: flex;
@@ -662,6 +733,14 @@ input[type="file"]::file-selector-button:hover {
     background: rgba(255,255,255,0.03);
     padding: 4px 6px;
     border: 1px solid rgba(255,255,255,0.1);
+}
+
+.transform-group.is-modified,
+.mini-input.is-modified,
+.option-toggle.is-modified,
+.file-slot.is-modified {
+    border-color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.08);
 }
 
 .group-label {
@@ -1302,6 +1381,24 @@ input[type="file"]::file-selector-button:hover {
     letter-spacing: 0.7px;
     padding: 3px 6px;
     cursor: pointer;
+}
+
+.layer-tab-btn.has-modified {
+    border-color: rgba(255,255,255,0.65);
+}
+
+.layer-tab-btn.has-modified::after {
+    content: attr(data-mod-count);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 14px;
+    height: 14px;
+    margin-left: 4px;
+    padding: 0 4px;
+    border: 1px solid rgba(255,255,255,0.55);
+    font-size: 0.48rem;
+    line-height: 1;
 }
 
 .layer-tab-btn:hover {
