@@ -32,6 +32,10 @@ RewriteRule ^admin\.html$ /admin/ [R=301,L]
 
 # Enable CORS for all resources (AR/MindAR compatibility)
 <IfModule mod_headers.c>
+    # Overschrijf eventuele provider/default policy met een bekende geldige set
+    Header always unset Permissions-Policy
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), fullscreen=(self), autoplay=(self)"
+
     # Allow all origins (or specify your domain)
     Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods "GET, POST, DELETE, OPTIONS"

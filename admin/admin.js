@@ -831,6 +831,20 @@ function deleteLayerMedia(layerNum, mediaType) {
 const API_URL = window.location.origin + '/api.php'; // cPanel with PHP backend
 const BASE_URL = window.location.origin; // Voor statische bestanden
 
+function getAdminFetchOptions(extra = {}) {
+    const token = sessionStorage.getItem('adminToken');
+    const headers = {
+        ...(extra.headers || {}),
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+
+    return {
+        credentials: 'include',
+        ...extra,
+        headers
+    };
+}
+
 // Utility function voor file size formatting
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -3297,10 +3311,13 @@ window.clearApiSelection = clearApiSelection;
 
 // Klipy GIF API (via server proxy - meerdere resultaten)
 async function searchKlipyApi(query) {
-    const token = sessionStorage.getItem('adminToken');
-    const response = await fetch(`${API_URL}/api-search/gifs?q=${encodeURIComponent(query)}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-    });
+    const response = await fetch(
+        `${API_URL}/api-search/gifs?q=${encodeURIComponent(query)}`,
+        getAdminFetchOptions()
+    );
+    if (response.status === 401) {
+        throw new Error('Niet geautoriseerd. Log opnieuw in op het admin panel.');
+    }
     if (!response.ok) throw new Error('Klipy zoeken mislukt');
     const data = await response.json();
     
@@ -3321,10 +3338,11 @@ async function searchKlipyApi(query) {
 // Meme API — Reddit r/memes via server proxy
 async function searchMemeApi(query) {
     try {
-        const token = sessionStorage.getItem('adminToken');
-        const response = await fetch(`${API_URL}/api-search/memes?q=${encodeURIComponent(query)}&source=memes`, {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        const response = await fetch(
+            `${API_URL}/api-search/memes?q=${encodeURIComponent(query)}&source=memes`,
+            getAdminFetchOptions()
+        );
+        if (response.status === 401) throw new Error('Niet geautoriseerd. Log opnieuw in op het admin panel.');
         if (!response.ok) throw new Error('Meme API niet bereikbaar');
         const data = await response.json();
         if (!data.success || !data.memes?.length) return [];
@@ -3346,10 +3364,11 @@ async function searchMemeApi(query) {
 // Dank Memes — Reddit r/dankmemes via server proxy
 async function searchImgflipApi(query) {
     try {
-        const token = sessionStorage.getItem('adminToken');
-        const response = await fetch(`${API_URL}/api-search/memes?q=${encodeURIComponent(query)}&source=dankmemes`, {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        const response = await fetch(
+            `${API_URL}/api-search/memes?q=${encodeURIComponent(query)}&source=dankmemes`,
+            getAdminFetchOptions()
+        );
+        if (response.status === 401) throw new Error('Niet geautoriseerd. Log opnieuw in op het admin panel.');
         if (!response.ok) throw new Error('Meme API niet bereikbaar');
         const data = await response.json();
         if (!data.success || !data.memes?.length) return [];
@@ -3371,14 +3390,11 @@ async function searchImgflipApi(query) {
 // Sketchfab 3D model API — zoek via server proxy (admin only)
 async function searchSketchfab3DApi(query, maxTriangles = 10000) {
     try {
-        const token = sessionStorage.getItem('adminToken');
         const url = `${API_URL}/api-search/3d?q=${encodeURIComponent(query)}&max_triangles=${maxTriangles}`;
-        const response = await fetch(url, {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        const response = await fetch(url, getAdminFetchOptions());
         if (!response.ok) {
             const err = await response.json().catch(() => ({}));
-            throw new Error(err.message || 'Sketchfab zoeken mislukt');
+            throw new Error(err.message || (response.status === 401 ? 'Niet geautoriseerd. Log opnieuw in op het admin panel.' : 'Sketchfab zoeken mislukt'));
         }
         const data = await response.json();
         if (!data.success || !data.models?.length) return [];
