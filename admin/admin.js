@@ -308,13 +308,21 @@ function generateLayerHTML(layerNum, isEditForm = false) {
 
                 <div class="layer-smart-row">
                     <span class="layer-change-indicator" id="${prefix}layer-${layerNum}-changed-count">0 GEWIJZIGD</span>
-                    <button type="button" class="layer-reset-all-btn" onclick="resetLayerToBaseline(${layerNum}, '${prefix}')">RESET LAAG</button>
+                    <div class="layer-smart-actions">
+                        <button type="button" class="layer-copy-btn" onclick="copyLayerGroup(${layerNum}, 'all', '${prefix}')">KOPIEER LAAG</button>
+                        <button type="button" class="layer-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'all', '${prefix}')">PLAK LAAG</button>
+                        <button type="button" class="layer-reset-all-btn" onclick="resetLayerToBaseline(${layerNum}, '${prefix}')">RESET LAAG</button>
+                    </div>
                 </div>
 
                 <div class="layer-pane is-active" data-pane="content">
                     <div class="pane-tools">
                         <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-content">STANDAARD</span>
-                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'content', '${prefix}')">RESET TAB</button>
+                        <div class="pane-tool-actions">
+                            <button type="button" class="pane-copy-btn" onclick="copyLayerGroup(${layerNum}, 'content', '${prefix}')">KOPIEER TAB</button>
+                            <button type="button" class="pane-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'content', '${prefix}')">PLAK TAB</button>
+                            <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'content', '${prefix}')">RESET TAB</button>
+                        </div>
                     </div>
                     <div class="layer-files">
                         <div class="file-slot">
@@ -360,7 +368,11 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <div class="layer-pane" data-pane="transform">
                     <div class="pane-tools">
                         <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-transform">STANDAARD</span>
-                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'transform', '${prefix}')">RESET TAB</button>
+                        <div class="pane-tool-actions">
+                            <button type="button" class="pane-copy-btn" onclick="copyLayerGroup(${layerNum}, 'transform', '${prefix}')">KOPIEER TAB</button>
+                            <button type="button" class="pane-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'transform', '${prefix}')">PLAK TAB</button>
+                            <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'transform', '${prefix}')">RESET TAB</button>
+                        </div>
                     </div>
                     <div class="layer-transform">
                         <div class="transform-group">
@@ -406,7 +418,11 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <div class="layer-pane" data-pane="text">
                     <div class="pane-tools">
                         <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-text">STANDAARD</span>
-                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'text', '${prefix}')">RESET TAB</button>
+                        <div class="pane-tool-actions">
+                            <button type="button" class="pane-copy-btn" onclick="copyLayerGroup(${layerNum}, 'text', '${prefix}')">KOPIEER TAB</button>
+                            <button type="button" class="pane-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'text', '${prefix}')">PLAK TAB</button>
+                            <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'text', '${prefix}')">RESET TAB</button>
+                        </div>
                     </div>
                     <div class="text-layer-panel">
                     <div class="text-layer-head">
@@ -520,7 +536,11 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                 <div class="layer-pane" data-pane="anim">
                     <div class="pane-tools">
                         <span class="pane-mod-state" id="${prefix}layer-${layerNum}-mod-anim">STANDAARD</span>
-                        <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'anim', '${prefix}')">RESET TAB</button>
+                        <div class="pane-tool-actions">
+                            <button type="button" class="pane-copy-btn" onclick="copyLayerGroup(${layerNum}, 'anim', '${prefix}')">KOPIEER TAB</button>
+                            <button type="button" class="pane-paste-btn" onclick="pasteLayerGroup(${layerNum}, 'anim', '${prefix}')">PLAK TAB</button>
+                            <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'anim', '${prefix}')">RESET TAB</button>
+                        </div>
                     </div>
                     <div class="layer-subsection">
                         <div class="layer-subsection-title">ANIMATIE ACTIVATIE</div>
@@ -911,6 +931,7 @@ let arPreviewWindow = null;
 let arPreviewZIndex = 1000;
 let adminUXBound = false;
 let editModalUXBound = false;
+let layerClipboard = null;
 
 const LAYER_GROUP_FIELDS = {
     content: ['image', 'glb', 'audio', 'transparent', 'bg-color', 'exclusion', 'delete', 'delete-media', 'delete-glb', 'delete-audio'],
@@ -969,6 +990,7 @@ function setupAdminUX() {
     const stepButtons = Array.from(document.querySelectorAll('.ux-step-btn'));
     const layerFilterInput = document.getElementById('layer-filter-input');
     const layerFilterActiveOnly = document.getElementById('layer-filter-active-only');
+    const layerFilterModifiedOnly = document.getElementById('layer-filter-modified-only');
 
     stepButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -995,6 +1017,9 @@ function setupAdminUX() {
     if (layerFilterActiveOnly) {
         layerFilterActiveOnly.addEventListener('change', onLayerFilterChange);
     }
+    if (layerFilterModifiedOnly) {
+        layerFilterModifiedOnly.addEventListener('change', onLayerFilterChange);
+    }
 
     if (form) {
         const formActivityListener = () => refreshAdminUXState();
@@ -1014,15 +1039,18 @@ function setActiveStepButton(panelId) {
 function applyLayerFilters() {
     const query = (document.getElementById('layer-filter-input')?.value || '').trim().toLowerCase();
     const activeOnly = !!document.getElementById('layer-filter-active-only')?.checked;
+    const modifiedOnly = !!document.getElementById('layer-filter-modified-only')?.checked;
     const cards = Array.from(document.querySelectorAll('#layers-container .layer-card'));
 
     cards.forEach((card) => {
         const title = card.querySelector('.layer-title')?.textContent?.toLowerCase() || '';
         const status = card.querySelector('.layer-status')?.textContent?.toLowerCase() || '';
         const statusIsActive = status !== '' && status !== 'leeg';
+        const isModified = card.classList.contains('has-modified');
         const matchQuery = query === '' || title.includes(query) || status.includes(query);
         const matchActive = !activeOnly || statusIsActive;
-        card.classList.toggle('is-filtered-out', !(matchQuery && matchActive));
+        const matchModified = !modifiedOnly || isModified;
+        card.classList.toggle('is-filtered-out', !(matchQuery && matchActive && matchModified));
     });
 }
 
@@ -1043,6 +1071,7 @@ function setupEditModalUX() {
     const stepButtons = Array.from(document.querySelectorAll('.edit-ux-step-btn'));
     const layerFilterInput = document.getElementById('edit-layer-filter-input');
     const layerFilterActiveOnly = document.getElementById('edit-layer-filter-active-only');
+    const layerFilterModifiedOnly = document.getElementById('edit-layer-filter-modified-only');
 
     stepButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -1065,6 +1094,7 @@ function setupEditModalUX() {
 
     if (layerFilterInput) layerFilterInput.addEventListener('input', onLayerFilterChange);
     if (layerFilterActiveOnly) layerFilterActiveOnly.addEventListener('change', onLayerFilterChange);
+    if (layerFilterModifiedOnly) layerFilterModifiedOnly.addEventListener('change', onLayerFilterChange);
 
     if (form) {
         const formActivityListener = () => refreshEditModalUXState();
@@ -1082,15 +1112,18 @@ function setActiveEditStepButton(panelId) {
 function applyEditLayerFilters() {
     const query = (document.getElementById('edit-layer-filter-input')?.value || '').trim().toLowerCase();
     const activeOnly = !!document.getElementById('edit-layer-filter-active-only')?.checked;
+    const modifiedOnly = !!document.getElementById('edit-layer-filter-modified-only')?.checked;
     const cards = Array.from(document.querySelectorAll('#edit-layers-container .layer-card'));
 
     cards.forEach((card) => {
         const title = card.querySelector('.layer-title')?.textContent?.toLowerCase() || '';
         const status = card.querySelector('.layer-status')?.textContent?.toLowerCase() || '';
         const statusIsActive = status !== '' && status !== 'leeg';
+        const isModified = card.classList.contains('has-modified');
         const matchQuery = query === '' || title.includes(query) || status.includes(query);
         const matchActive = !activeOnly || statusIsActive;
-        card.classList.toggle('is-filtered-out', !(matchQuery && matchActive));
+        const matchModified = !modifiedOnly || isModified;
+        card.classList.toggle('is-filtered-out', !(matchQuery && matchActive && matchModified));
     });
 }
 
@@ -5417,6 +5450,12 @@ function updateLayerModificationState(layerNum, isEditForm = false) {
     }
 
     card.classList.toggle('has-modified', totalChanges > 0);
+
+    if (isEditForm) {
+        applyEditLayerFilters();
+    } else {
+        applyLayerFilters();
+    }
 }
 
 function updateAllLayerModificationStates(isEditForm = false) {
@@ -5440,8 +5479,80 @@ function resetLayerToBaseline(layerNum, prefix = '') {
     });
 }
 
+function getCopyGroups(group) {
+    return group === 'all' ? ['content', 'transform', 'text', 'anim'] : [group];
+}
+
+function getFieldSuffixFromControlId(controlId, layerNum, prefix) {
+    const stem = `${prefix}layer-${layerNum}-`;
+    return controlId && controlId.startsWith(stem) ? controlId.slice(stem.length) : null;
+}
+
+function isCopyableField(fieldSuffix) {
+    if (!fieldSuffix) return false;
+    if (fieldSuffix === 'image' || fieldSuffix === 'glb' || fieldSuffix === 'audio') return false;
+    if (fieldSuffix.startsWith('delete')) return false;
+    return true;
+}
+
+function copyLayerGroup(layerNum, group = 'all', prefix = '') {
+    const copiedValues = {};
+    const groups = getCopyGroups(group);
+
+    groups.forEach((groupName) => {
+        const elements = getLayerGroupElements(layerNum, prefix, groupName);
+        elements.forEach((el) => {
+            const fieldSuffix = getFieldSuffixFromControlId(el.id, layerNum, prefix);
+            if (!isCopyableField(fieldSuffix)) return;
+            copiedValues[fieldSuffix] = {
+                type: el.type,
+                value: el.type === 'checkbox' ? el.checked : el.value
+            };
+        });
+    });
+
+    layerClipboard = {
+        group,
+        values: copiedValues,
+        copiedAt: Date.now()
+    };
+}
+
+function pasteLayerGroup(layerNum, group = 'all', prefix = '') {
+    if (!layerClipboard || !layerClipboard.values) return;
+
+    const groups = getCopyGroups(group);
+    const allowedFields = new Set();
+    groups.forEach((groupName) => {
+        (LAYER_GROUP_FIELDS[groupName] || []).forEach((field) => {
+            if (isCopyableField(field)) allowedFields.add(field);
+        });
+    });
+
+    Object.entries(layerClipboard.values).forEach(([fieldSuffix, payload]) => {
+        if (!allowedFields.has(fieldSuffix)) return;
+        const el = document.getElementById(`${prefix}layer-${layerNum}-${fieldSuffix}`);
+        if (!el || el.type === 'file') return;
+
+        if (payload.type === 'checkbox') {
+            el.checked = !!payload.value;
+        } else {
+            el.value = payload.value;
+        }
+
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
+    updateLayerModificationState(layerNum, prefix === 'edit-');
+}
+
 window.resetLayerGroupToBaseline = resetLayerGroupToBaseline;
 window.resetLayerToBaseline = resetLayerToBaseline;
+window.copyLayerGroup = copyLayerGroup;
+window.pasteLayerGroup = pasteLayerGroup;
 
 // Setup AR Extras (GLB/Audio) toggle per layer
 function setupLayerExtrasToggle(layerNum, isEditForm) {
