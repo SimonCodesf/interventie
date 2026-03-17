@@ -1239,60 +1239,6 @@ function setupLayerBatchActions(isEditForm) {
 let layerClipboard = null;
 const CUSTOM_LAYER_TEMPLATES_KEY = 'adminCustomLayerTemplatesV1';
 const API_TEMPLATE_FIELDS = ['source', 'api-query', 'api-random'];
-const BUILTIN_LAYER_TEMPLATES = [
-    {
-        id: 'builtin:text-overlay',
-        name: 'BASIS TEKST OVERLAY',
-        isBuiltin: true,
-        values: {
-            'content-type': 'text',
-            'text-enabled': true,
-            'text-content': 'NIEUWE TITEL',
-            'text-font': '"Bebas Neue", sans-serif',
-            'text-size': '96',
-            'text-align': 'center',
-            'text-offset-y': '0.85',
-            'text-color': '#ffffff',
-            'text-outline-color': '#000000',
-            'text-outline-width': '3',
-            'text-effect': 'none',
-            'text-3d': 'none',
-            'pos-x': '0',
-            'pos-y': '0',
-            'scale': '1'
-        }
-    },
-    {
-        id: 'builtin:api-random-meme',
-        name: 'API RANDOM MEME',
-        isBuiltin: true,
-        values: {
-            'content-type': 'api',
-            'source': 'meme',
-            'api-query': 'funny',
-            'api-random': true,
-            'scale': '1'
-        }
-    },
-    {
-        id: 'builtin:slow-rotator',
-        name: 'SLOW ROTATOR',
-        isBuiltin: true,
-        values: {
-            'content-type': 'image',
-            'scale': '0.9',
-            'enable-anim': true,
-            'anim-rot-y': '360',
-            'anim-rot-duration': '18',
-            'anim-rot-origin': 'center',
-            'anim-x': '0',
-            'anim-y': '0',
-            'anim-z': '0',
-            'anim-scale': '1',
-            'anim-opacity': '1'
-        }
-    }
-];
 
 function getTemplatePrefixFromScope(prefix = '') {
     return prefix === 'edit-' ? 'edit-' : '';
@@ -1318,11 +1264,7 @@ function saveCustomLayerTemplates(templates) {
 }
 
 function getAllLayerTemplates() {
-    const customTemplates = loadCustomLayerTemplates().map((item) => ({
-        ...item,
-        isBuiltin: false
-    }));
-    return [...BUILTIN_LAYER_TEMPLATES, ...customTemplates];
+    return loadCustomLayerTemplates();
 }
 
 function findLayerTemplateById(templateId) {
@@ -1388,7 +1330,7 @@ function refreshLayerTemplateSelector(layerNum, prefix = '') {
     templates.forEach((template) => {
         const option = document.createElement('option');
         option.value = template.id;
-        option.textContent = template.isBuiltin ? `[SYSTEEM] ${template.name}` : `[CUSTOM] ${template.name}`;
+        option.textContent = `[CUSTOM] ${template.name}`;
         selectEl.appendChild(option);
     });
 
@@ -1448,11 +1390,6 @@ function deleteSelectedCustomTemplate(layerNum, prefix = '') {
     const selectEl = document.getElementById(`${prefix}layer-${layerNum}-template-select`);
     const selectedId = selectEl?.value || '';
     if (!selectedId) return;
-
-    if (selectedId.startsWith('builtin:')) {
-        alert('SYSTEEM templates kunnen niet verwijderd worden.');
-        return;
-    }
 
     const templates = loadCustomLayerTemplates();
     const nextTemplates = templates.filter((item) => item.id !== selectedId);
