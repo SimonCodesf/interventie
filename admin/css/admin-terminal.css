@@ -663,6 +663,14 @@ input[type="file"]::file-selector-button:hover {
     padding: 4px 6px;
 }
 
+.content-type-hint {
+    margin: 0;
+    font-size: 0.52rem;
+    color: rgba(255,255,255,0.52);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.4px;
+}
+
 .random-inline {
     display: inline-flex;
     align-items: center;

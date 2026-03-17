@@ -334,6 +334,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <option value="text">TEKST</option>
                         </select>
                     </div>
+                    <p class="content-type-hint" id="${prefix}layer-${layerNum}-content-hint">Upload een afbeelding als hoofdinhoud van deze laag.</p>
                     <div class="layer-files">
                         <div class="file-slot" data-content-types="image,gifvideo,api">
                             <label>MEDIA</label>
@@ -3363,6 +3364,10 @@ function setupUploadForm() {
             }
         }
         
+        if (!validateLayerContentTypes(false, errorMsg)) {
+            return;
+        }
+
         // AR Layers (8 layers with positioning and animation)
         for (let i = 1; i <= 8; i++) {
             const imageInput = document.getElementById(`layer-${i}-image`);
@@ -4800,6 +4805,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add credits (JSON array)
             const credits = collectCredits('edit-credits-container');
             formData.append('credits', JSON.stringify(credits));
+
+            if (!validateLayerContentTypes(true, errorMsg)) {
+                return;
+            }
             
             // AR Layers (8 layers with positioning and animation)
             for (let i = 1; i <= 8; i++) {
@@ -5347,6 +5356,20 @@ function syncLayerContentTypeUI(layerNum, prefix = '') {
     const apiPanel = card.querySelector('.api-search-panel');
     const sourceSelect = card.querySelector('.layer-source-select');
     const textEnabled = document.getElementById(`${prefix}layer-${layerNum}-text-enabled`);
+    const hintEl = document.getElementById(`${prefix}layer-${layerNum}-content-hint`);
+
+    const hintByType = {
+        image: 'Upload een afbeelding als hoofdinhoud van deze laag.',
+        gifvideo: 'Gebruik een GIF of video als bewegende laag.',
+        api: 'Kies een API-bron en vul een query in of selecteer een resultaat.',
+        '3d': 'Upload een GLB/GLTF model voor 3D weergave.',
+        audio: 'Upload een audiobestand om audio op deze laag af te spelen.',
+        text: 'Stel tekstinhoud en stijl in voor deze laag.'
+    };
+
+    if (hintEl) {
+        hintEl.textContent = hintByType[contentType] || hintByType.image;
+    }
 
     if (textEnabled) {
         textEnabled.checked = contentType === 'text';
@@ -5370,6 +5393,72 @@ function syncLayerContentTypeUI(layerNum, prefix = '') {
             }
         }
     }
+}
+
+function validateLayerContentTypes(isEditForm, errorEl) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const existingLayers = isEditForm && currentPosterData?.layers ? currentPosterData.layers : {};
+
+    for (let i = 1; i <= LAYER_CONFIG.maxLayers; i++) {
+        const typeEl = document.getElementById(`${prefix}layer-${i}-content-type`);
+        if (!typeEl) continue;
+
+        const contentType = typeEl.value || 'image';
+        const layerData = existingLayers[`layer_${i}`] || {};
+
+        const imageInput = document.getElementById(`${prefix}layer-${i}-image`);
+        const glbInput = document.getElementById(`${prefix}layer-${i}-glb`);
+        const audioInput = document.getElementById(`${prefix}layer-${i}-audio`);
+        const textContent = (document.getElementById(`${prefix}layer-${i}-text-content`)?.value || '').trim();
+
+        const deleteMedia = document.getElementById(`${prefix}layer-${i}-delete-media`)?.value === '1';
+        const deleteGlb = document.getElementById(`${prefix}layer-${i}-delete-glb`)?.value === '1';
+        const deleteAudio = document.getElementById(`${prefix}layer-${i}-delete-audio`)?.value === '1';
+
+        const hasImage = !!imageInput?.files?.[0] || (isEditForm && !!layerData.filename && !deleteMedia);
+        const hasGlb = !!glbInput?.files?.[0] || (isEditForm && !!layerData.glb_model && !deleteGlb);
+        const hasAudio = !!audioInput?.files?.[0] || (isEditForm && !!layerData.audio_file && !deleteAudio);
+
+        const liveSource = document.getElementById(`${prefix}layer-${i}-source`)?.value || 'manual';
+        const liveQuery = (document.getElementById(`${prefix}layer-${i}-api-query`)?.value || '').trim();
+        const liveRandom = !!document.getElementById(`${prefix}layer-${i}-api-random`)?.checked;
+        const apiState = apiLayerData[`${prefix}layer-${i}`];
+        const hasApiState = !!(apiState && (apiState.api_mode || apiState.url || apiState.uid));
+        const hasApiManualQuery = liveSource !== 'manual' && liveQuery.length > 0;
+        const hasApiRandomQuery = liveSource !== 'manual' && liveRandom && liveQuery.length > 0;
+        const hasApi = hasApiState || hasApiManualQuery || hasApiRandomQuery;
+
+        // Laat lege lagen met standaard type IMAGE ongemoeid
+        const isEffectivelyEmpty = !hasImage && !hasGlb && !hasAudio && !hasApi && textContent.length === 0;
+        if (contentType === 'image' && isEffectivelyEmpty) continue;
+
+        if ((contentType === 'image' || contentType === 'gifvideo') && !hasImage) {
+            if (errorEl) errorEl.textContent = `Laag ${i}: kies een mediabestand voor ${contentType === 'image' ? 'AFBEELDING' : 'GIF/VIDEO'}.`;
+            return false;
+        }
+
+        if (contentType === 'api' && !hasApi) {
+            if (errorEl) errorEl.textContent = `Laag ${i}: API type vereist bron + query of een geselecteerd API resultaat.`;
+            return false;
+        }
+
+        if (contentType === '3d' && !hasGlb) {
+            if (errorEl) errorEl.textContent = `Laag ${i}: 3D type vereist een GLB/GLTF bestand.`;
+            return false;
+        }
+
+        if (contentType === 'audio' && !hasAudio) {
+            if (errorEl) errorEl.textContent = `Laag ${i}: Audio type vereist een audiobestand.`;
+            return false;
+        }
+
+        if (contentType === 'text' && textContent.length === 0) {
+            if (errorEl) errorEl.textContent = `Laag ${i}: Tekst type vereist inhoud in het tekstveld.`;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function setupLayerContentTypeUI(layerNum, isEditForm) {
