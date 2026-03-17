@@ -1514,6 +1514,47 @@ function refreshAdminUXState() {
     updateUXStats();
     updateUXSteps();
     applyLayerFilters();
+    updateUploadButtonState();
+}
+
+function getUploadRequiredState() {
+    const titleFilled = (document.getElementById('poster-title')?.value || '').trim().length > 0;
+    const descriptionFilled = (document.getElementById('poster-description')?.value || '').trim().length > 0;
+    const jpegSelected = !!document.getElementById('poster-jpeg')?.files?.[0];
+    const markerSelected = !!document.getElementById('ar-marker-file')?.files?.[0] || !!compiledMindBuffer;
+
+    return {
+        titleFilled,
+        descriptionFilled,
+        jpegSelected,
+        markerSelected,
+        ready: titleFilled && descriptionFilled && jpegSelected && markerSelected
+    };
+}
+
+function updateUploadButtonState() {
+    const uploadBtn = document.getElementById('upload-btn');
+    if (!uploadBtn) return;
+
+    const state = getUploadRequiredState();
+    const shouldBlock = !state.ready;
+    const reasons = [];
+
+    if (!state.titleFilled) reasons.push('titel');
+    if (!state.descriptionFilled) reasons.push('beschrijving');
+    if (!state.jpegSelected) reasons.push('jpeg');
+    if (!state.markerSelected) reasons.push('ar-marker');
+
+    // Respecteer expliciete disabled state tijdens upload (loader actief)
+    if (uploadBtn.querySelector('.btn-loader')?.style.display === 'inline') {
+        uploadBtn.classList.remove('is-blocked');
+        uploadBtn.title = '';
+        return;
+    }
+
+    uploadBtn.disabled = shouldBlock;
+    uploadBtn.classList.toggle('is-blocked', shouldBlock);
+    uploadBtn.title = shouldBlock ? `Vereist: ${reasons.join(', ')}` : '';
 }
 
 function setupEditModalUX() {
@@ -2952,38 +2993,66 @@ function setupLayerSummaryListeners() {
     if (!layersContainer) return;
 
     const updateLayersSummary = () => {
-        const activeLayers = [];
+        const layerRows = [];
         
         // Check all 8 possible layers
         for (let i = 1; i <= 8; i++) {
             const input = document.getElementById(`layer-${i}-image`);
+            const glbInput = document.getElementById(`layer-${i}-glb`);
+            const audioInput = document.getElementById(`layer-${i}-audio`);
             const contentType = document.getElementById(`layer-${i}-content-type`)?.value || 'image';
             const hasFile = !!(input && input.files && input.files[0]);
             const apiData = apiLayerData[`layer-${i}`];
+            const apiSource = document.getElementById(`layer-${i}-source`)?.value || '';
+            const apiQuery = (document.getElementById(`layer-${i}-api-query`)?.value || '').trim();
+            const apiRandom = !!document.getElementById(`layer-${i}-api-random`)?.checked;
             const textContent = (document.getElementById(`layer-${i}-text-content`)?.value || '').trim();
             const hasApi = !!apiData;
             const hasText = contentType === 'text' && textContent.length > 0;
             const hasAnim = !!document.getElementById(`layer-${i}-enable-anim`)?.checked;
+            const hasGlb = !!(glbInput && glbInput.files && glbInput.files[0]);
+            const hasAudio = !!(audioInput && audioInput.files && audioInput.files[0]);
 
-            if (hasFile || hasApi || hasText || hasAnim) {
-                const fileSize = hasFile ? ` ${(input.files[0].size / 1024 / 1024).toFixed(2)} MB` : '';
-                const typeLabel = contentType.toUpperCase();
-                const flags = [hasApi ? 'API' : '', hasText ? 'TEKST' : '', hasAnim ? 'ANIM' : ''].filter(Boolean).join(' · ');
+            const hasApiQuery = apiSource.length > 0 && apiQuery.length > 0;
+            const hasApiRandomQuery = apiSource.length > 0 && apiRandom && apiQuery.length > 0;
+            const hasApiContent = hasApi || hasApiQuery || hasApiRandomQuery;
 
-                activeLayers.push({
-                    name: `Laag ${i} [${typeLabel}]`,
-                    value: flags ? `${flags}${fileSize ? ` · ${fileSize}` : ''}` : (hasFile ? fileSize.trim() : 'Actief')
-                });
+            const hasAnyActivity = hasFile || hasApi || hasText || hasAnim || hasGlb || hasAudio || contentType !== 'image';
+            if (!hasAnyActivity) continue;
+
+            let issue = '';
+            if ((contentType === 'image' || contentType === 'gifvideo') && !hasFile) {
+                issue = 'media ontbreekt';
+            } else if (contentType === 'api' && !hasApiContent) {
+                issue = 'api bron/query ontbreekt';
+            } else if (contentType === '3d' && !hasGlb) {
+                issue = '3d model ontbreekt';
+            } else if (contentType === 'audio' && !hasAudio) {
+                issue = 'audio ontbreekt';
+            } else if (contentType === 'text' && !hasText) {
+                issue = 'tekst ontbreekt';
+            } else if (hasAnim && !(hasFile || hasApiContent || hasText || hasGlb || hasAudio)) {
+                issue = 'animatie zonder inhoud';
             }
+
+            const fileSize = hasFile ? ` ${(input.files[0].size / 1024 / 1024).toFixed(2)} MB` : '';
+            const typeLabel = contentType.toUpperCase();
+            const flags = [hasApiContent ? 'API' : '', hasText ? 'TEKST' : '', hasAnim ? 'ANIM' : ''].filter(Boolean).join(' · ');
+
+            layerRows.push({
+                name: `Laag ${i} [${typeLabel}]`,
+                value: issue || (flags ? `${flags}${fileSize ? ` · ${fileSize}` : ''}` : (hasFile ? fileSize.trim() : 'Actief')),
+                invalid: issue.length > 0
+            });
         }
         
-        if (activeLayers.length === 0) {
+        if (layerRows.length === 0) {
             layersContainer.innerHTML = '<div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen actieve lagen</div>';
         } else {
-            layersContainer.innerHTML = activeLayers.map(l => `
-                <div class="summary-item completed">
+            layersContainer.innerHTML = layerRows.map(l => `
+                <div class="summary-item ${l.invalid ? 'required-missing' : 'completed'}">
                     ${l.name}
-                    <span>[OK] ${l.value}</span>
+                    <span>${l.invalid ? '[VERPLICHT] ' : '[OK] '}${l.value}</span>
                 </div>
             `).join('');
         }
