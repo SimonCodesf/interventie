@@ -294,9 +294,6 @@ function generateLayerHTML(layerNum, isEditForm = false) {
         <details class="layer-card" data-layer-num="${layerNum}" ${isOpen}>
             <summary class="layer-header">
                 <span class="layer-drag-handle" draggable="true" title="Sleep om laagvolgorde te wijzigen">::</span>
-                <label class="layer-select-toggle" title="Selecteer laag voor batch acties">
-                    <input type="checkbox" id="${prefix}layer-${layerNum}-select">
-                </label>
                 <span class="layer-num">${layerNum}</span>
                 <span class="layer-title">LAAG ${layerNum}</span>
                 <span class="layer-status" id="${prefix}layer-${layerNum}-status">LEEG</span>
@@ -466,17 +463,15 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     </div>
 
                     <div class="layer-options">
-                        <label class="option-toggle">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" checked onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
-                            <span>TRANSPARANT</span>
-                        </label>
-                        <div class="bg-color-picker" id="${prefix}layer-${layerNum}-bg-color-container" style="display: none;">
-                            <input type="color" id="${prefix}layer-${layerNum}-bg-color" name="layer_${layerNum}_bg_color" value="#000000" title="Achtergrondkleur">
+                        <div class="transparent-option" data-content-types="gifvideo,api">
+                            <label class="option-toggle">
+                                <input type="checkbox" id="${prefix}layer-${layerNum}-transparent" name="layer_${layerNum}_transparent" value="1" checked onchange="toggleBgColorPicker(this, '${prefix}', ${layerNum})">
+                                <span>TRANSPARANT</span>
+                            </label>
+                            <div class="bg-color-picker" id="${prefix}layer-${layerNum}-bg-color-container" style="display: none;">
+                                <input type="color" id="${prefix}layer-${layerNum}-bg-color" name="layer_${layerNum}_bg_color" value="#000000" title="Achtergrondkleur">
+                            </div>
                         </div>
-                        <label class="option-toggle">
-                            <input type="checkbox" id="${prefix}layer-${layerNum}-exclusion" name="layer_${layerNum}_exclusion" value="1">
-                            <span>MASKER</span>
-                        </label>
                         ${isEditForm ? `<button type="button" class="delete-layer-btn" onclick="deleteLayer(${layerNum})">×</button>` : ''}
                     </div>
                 </div>
@@ -623,7 +618,6 @@ function deleteLayer(layerNum) {
         `edit-layer-${layerNum}-z`,
         `edit-layer-${layerNum}-scale`,
         `edit-layer-${layerNum}-rot-z`,
-        `edit-layer-${layerNum}-exclusion`,
         `edit-layer-${layerNum}-enable-anim`,
         `edit-layer-${layerNum}-anim-x`,
         `edit-layer-${layerNum}-anim-y`,
@@ -1401,7 +1395,7 @@ function deleteSelectedCustomTemplate(layerNum, prefix = '') {
 
 const LAYER_GROUP_FIELDS = {
     content: [
-        'content-type', 'image', 'glb', 'audio', 'transparent', 'bg-color', 'exclusion', 'delete', 'delete-media', 'delete-glb', 'delete-audio',
+        'content-type', 'image', 'glb', 'audio', 'transparent', 'bg-color', 'delete', 'delete-media', 'delete-glb', 'delete-audio',
         'text-enabled',
         'text-random', 'text-random-font', 'text-random-color', 'text-random-outline', 'text-random-effect', 'text-random-3d',
         'text-random-size', 'text-random-align', 'text-content', 'text-font', 'text-size', 'text-align', 'text-offset-y',
@@ -3056,7 +3050,6 @@ function injectApiSourceUI(layerNum, prefix) {
     sourceDiv.innerHTML = `
         <label>API BRON:</label>
         <select class="layer-source-select" id="${prefix}layer-${layerNum}-source" data-layer="${layerNum}" data-prefix="${prefix}">
-            <option value="manual">BESTAND</option>
             <option value="klipy">KLIPY GIF</option>
             <option value="meme">MEMES (Reddit)</option>
             <option value="imgflip">DANK MEMES (Reddit)</option>
@@ -3088,24 +3081,15 @@ function injectApiSourceUI(layerNum, prefix) {
     const sourceSelect = sourceDiv.querySelector('.layer-source-select');
     sourceSelect.addEventListener('change', () => {
         const source = sourceSelect.value;
-        const fileInput = document.getElementById(`${prefix}layer-${layerNum}-image`);
-        const panel = document.getElementById(`${prefix}layer-${layerNum}-api-panel`);
         const queryInput = document.getElementById(`${prefix}layer-${layerNum}-api-query`);
-        
-        if (source === 'manual') {
-            panel.classList.add('hidden');
-            if (fileInput) fileInput.style.display = '';
-        } else {
-            panel.classList.remove('hidden');
-            if (fileInput) fileInput.style.display = 'none';
-            // Update placeholder per bron
-            if (queryInput) {
-                queryInput.placeholder = source === 'klipy'      ? 'bv. funny cat, dance, surprise...' :
-                                         source === 'meme'        ? 'bv. drake, distracted boyfriend, doge...' :
-                                         source === 'imgflip'     ? 'bv. stonks, gigachad, surprised pikachu...' :
-                                         source === 'sketchfab'   ? 'bv. cat, robot, tree, car (low-poly)...' :
-                                         'Zoekterm...';
-            }
+
+        // Update placeholder per bron
+        if (queryInput) {
+            queryInput.placeholder = source === 'klipy'      ? 'bv. funny cat, dance, surprise...' :
+                                     source === 'meme'        ? 'bv. drake, distracted boyfriend, doge...' :
+                                     source === 'imgflip'     ? 'bv. stonks, gigachad, surprised pikachu...' :
+                                     source === 'sketchfab'   ? 'bv. cat, robot, tree, car (low-poly)...' :
+                                     'Zoekterm...';
         }
     });
     
@@ -3883,7 +3867,6 @@ function setupUploadForm() {
         for (let i = 1; i <= 8; i++) {
             const imageInput = document.getElementById(`layer-${i}-image`);
             const zInput = document.getElementById(`layer-${i}-z`);
-            const exclusionInput = document.getElementById(`layer-${i}-exclusion`);
             
             // Base position and scale inputs
             const posXInput = document.getElementById(`layer-${i}-pos-x`);
@@ -3938,7 +3921,6 @@ function setupUploadForm() {
             
             let layerImage = imageInput.files[0];
             const layerZ = zInput.value;
-            const isExclusion = exclusionInput ? exclusionInput.checked : false;
             const contentType = contentTypeInput?.value || 'image';
 
             formData.append(`layer_${i}_content_type`, contentType);
@@ -3988,7 +3970,7 @@ function setupUploadForm() {
             
             // Always send configuration
             formData.append(`layer_${i}_z`, layerZ || '0');
-            formData.append(`layer_${i}_exclusion`, isExclusion ? '1' : '0');
+            formData.append(`layer_${i}_exclusion`, '0');
             
             // Base position and scale
             formData.append(`layer_${i}_pos_x`, posXInput ? posXInput.value || '0' : '0');
@@ -4965,12 +4947,6 @@ async function openEditModal(posterId) {
                     bgColorInput.value = layerData.bg_color || '#000000';
                 }
                 
-                // Set exclusion filter checkbox
-                const exclusionCheckbox = document.getElementById(`edit-layer-${layerNum}-exclusion`);
-                if (exclusionCheckbox) {
-                    exclusionCheckbox.checked = layerData.exclusion_filter || false;
-                }
-
                 // Tekstlaag velden
                 const textEnabledEl = document.getElementById(`edit-layer-${layerNum}-text-enabled`);
                 const textRandomEl = document.getElementById(`edit-layer-${layerNum}-text-random`);
@@ -5447,7 +5423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const liveQuery = (liveQueryEl?.value || '').trim();
                 const liveIsRandom = liveRandomEl?.checked || false;
                 const isApiRandom = (editApiData?.api_mode === 'random') ||
-                                    (liveSource && liveSource !== 'manual' && liveIsRandom);
+                                    (liveSource && liveIsRandom);
                 
                 if (contentType === 'api' && isApiRandom) {
                     // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
@@ -5488,10 +5464,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append(`layer_${i}_image`, layerImage);
                 }
                 
-                // Get exclusion filter checkbox
-                const exclusionEl = document.getElementById(`edit-layer-${i}-exclusion`);
-                const exclusion = exclusionEl ? (exclusionEl.checked ? '1' : '0') : '0';
-                
                 // Get transparent checkbox
                 const transparentEl = document.getElementById(`edit-layer-${i}-transparent`);
                 const transparent = transparentEl ? (transparentEl.checked ? '1' : '0') : '0';
@@ -5514,7 +5486,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Always send configuration (updates existing layer config)
                 formData.append(`layer_${i}_z`, layerZ || '0');
-                formData.append(`layer_${i}_exclusion`, exclusion);
+                formData.append(`layer_${i}_exclusion`, '0');
                 formData.append(`layer_${i}_transparent`, transparent);
                 formData.append(`layer_${i}_bg_color`, bgColor);
                 formData.append(`layer_${i}_delete`, deleteFlag);
@@ -5944,15 +5916,18 @@ function syncLayerContentTypeUI(layerNum, prefix = '') {
         }
 
         if (sourceSelect) {
-            if (isApi && sourceSelect.value === 'manual') {
+            if (isApi && !sourceSelect.value) {
                 sourceSelect.value = 'klipy';
                 sourceSelect.dispatchEvent(new Event('change'));
-            } else if (!isApi && sourceSelect.value !== 'manual') {
+            } else if (!isApi) {
                 delete apiLayerData[`${prefix}layer-${layerNum}`];
-                sourceSelect.value = 'manual';
-                sourceSelect.dispatchEvent(new Event('change'));
             }
         }
+    }
+
+    const fileInput = document.getElementById(`${prefix}layer-${layerNum}-image`);
+    if (fileInput) {
+        fileInput.style.display = contentType === 'api' ? 'none' : '';
     }
 }
 
@@ -5980,13 +5955,13 @@ function validateLayerContentTypes(isEditForm, errorEl) {
         const hasGlb = !!glbInput?.files?.[0] || (isEditForm && !!layerData.glb_model && !deleteGlb);
         const hasAudio = !!audioInput?.files?.[0] || (isEditForm && !!layerData.audio_file && !deleteAudio);
 
-        const liveSource = document.getElementById(`${prefix}layer-${i}-source`)?.value || 'manual';
+        const liveSource = document.getElementById(`${prefix}layer-${i}-source`)?.value || 'klipy';
         const liveQuery = (document.getElementById(`${prefix}layer-${i}-api-query`)?.value || '').trim();
         const liveRandom = !!document.getElementById(`${prefix}layer-${i}-api-random`)?.checked;
         const apiState = apiLayerData[`${prefix}layer-${i}`];
         const hasApiState = !!(apiState && (apiState.api_mode || apiState.url || apiState.uid));
-        const hasApiManualQuery = liveSource !== 'manual' && liveQuery.length > 0;
-        const hasApiRandomQuery = liveSource !== 'manual' && liveRandom && liveQuery.length > 0;
+        const hasApiManualQuery = liveSource.length > 0 && liveQuery.length > 0;
+        const hasApiRandomQuery = liveSource.length > 0 && liveRandom && liveQuery.length > 0;
         const hasApi = hasApiState || hasApiManualQuery || hasApiRandomQuery;
 
         // Laat lege lagen met standaard type IMAGE ongemoeid

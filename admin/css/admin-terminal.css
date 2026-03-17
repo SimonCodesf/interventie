@@ -2756,7 +2756,7 @@ body.upload-mode-reclame .poster-only-field {
 /* API Resultaten Grid */
 .api-results-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     max-height: 200px;
     overflow-y: auto;
