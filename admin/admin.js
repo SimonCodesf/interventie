@@ -382,7 +382,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="text-layer-head">
                             <label class="option-toggle">
                                 <input type="checkbox" id="${prefix}layer-${layerNum}-text-random" name="layer_${layerNum}_text_random" value="1">
-                                <span>RANDOM STIJL</span>
+                                <span>RANDOM</span>
                             </label>
                         </div>
                         <div class="anim-section-title">INHOUD</div>
@@ -2852,6 +2852,30 @@ function populateCredits(containerId, creditsData) {
 }
 
 function setupFileSummaryListeners() {
+    const setSummaryState = (summaryEl, state, text) => {
+        if (!summaryEl) return;
+        summaryEl.classList.remove('completed', 'pending', 'required-missing', 'ok');
+        summaryEl.classList.add(state);
+        if (typeof text === 'string') {
+            const span = summaryEl.querySelector('span');
+            if (span) span.textContent = text;
+        }
+    };
+
+    const updateRequiredMetadataSummary = () => {
+        const titleEl = document.getElementById('poster-title');
+        const descEl = document.getElementById('poster-description');
+
+        const titleSummary = document.getElementById('summary-title');
+        const descSummary = document.getElementById('summary-description');
+
+        const hasTitle = !!(titleEl && titleEl.value.trim().length > 0);
+        const hasDescription = !!(descEl && descEl.value.trim().length > 0);
+
+        setSummaryState(titleSummary, hasTitle ? 'completed' : 'required-missing', hasTitle ? '[OK]' : 'verplicht');
+        setSummaryState(descSummary, hasDescription ? 'completed' : 'required-missing', hasDescription ? '[OK]' : 'verplicht');
+    };
+
     const inputs = [
         { id: 'poster-jpeg', summaryId: 'summary-jpeg' },
         { id: 'ar-marker-file', summaryId: 'summary-mind' },
@@ -2864,20 +2888,28 @@ function setupFileSummaryListeners() {
         if (el) {
             el.addEventListener('change', function() {
                 const summaryEl = document.getElementById(input.summaryId);
+                const isRequired = input.id === 'poster-jpeg' || input.id === 'ar-marker-file';
                 if (this.files && this.files[0]) {
-                    summaryEl.classList.add('completed');
-                    summaryEl.classList.remove('pending');
                     // Format size
                     const size = (this.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
-                    summaryEl.querySelector('span').textContent = `[OK] ${size}`;
+                    setSummaryState(summaryEl, 'completed', `[OK] ${size}`);
                 } else {
-                    summaryEl.classList.remove('completed');
-                    summaryEl.classList.add('pending');
-                    // Reset tekst: originele tekst behouden
                     const isOptional = input.id.includes('glb') || input.id.includes('audio');
-                    summaryEl.querySelector('span').textContent = isOptional ? 'optioneel' : '...';
+                    if (isRequired && !isOptional) {
+                        setSummaryState(summaryEl, 'required-missing', 'verplicht');
+                    } else {
+                        setSummaryState(summaryEl, 'pending', '...');
+                    }
                 }
             });
+        }
+    });
+
+    ['poster-title', 'poster-description'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateRequiredMetadataSummary);
+            el.addEventListener('change', updateRequiredMetadataSummary);
         }
     });
 
@@ -2899,6 +2931,19 @@ function setupFileSummaryListeners() {
                 summaryEl.querySelector('span').textContent = '0';
             }
         });
+    }
+
+    updateRequiredMetadataSummary();
+
+    const jpegInput = document.getElementById('poster-jpeg');
+    const mindInput = document.getElementById('ar-marker-file');
+    if (jpegInput && (!jpegInput.files || !jpegInput.files[0])) {
+        const jpegSummary = document.getElementById('summary-jpeg');
+        setSummaryState(jpegSummary, 'required-missing', 'verplicht');
+    }
+    if (mindInput && (!mindInput.files || !mindInput.files[0])) {
+        const mindSummary = document.getElementById('summary-mind');
+        setSummaryState(mindSummary, 'required-missing', 'verplicht');
     }
 }
 
