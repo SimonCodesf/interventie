@@ -924,6 +924,213 @@ let arPreviewWindow = null;
 let arPreviewZIndex = 1000;
 let adminUXBound = false;
 let editModalUXBound = false;
+const layerHistoryState = {
+    upload: { stack: [], index: -1, isApplying: false, timer: null },
+    edit: { stack: [], index: -1, isApplying: false, timer: null }
+};
+let layerHistoryHotkeysBound = false;
+
+function getLayerHistoryScope(isEditForm) {
+    return isEditForm ? 'edit' : 'upload';
+}
+
+function getLayerHistoryConfig(isEditForm) {
+    const prefix = getLayerPrefix(isEditForm);
+    return {
+        prefix,
+        containerId: isEditForm ? 'edit-layers-container' : 'layers-container',
+        undoBtnId: `${prefix}layer-undo-btn`,
+        redoBtnId: `${prefix}layer-redo-btn`
+    };
+}
+
+function createLayerSnapshot(isEditForm) {
+    const { prefix, containerId } = getLayerHistoryConfig(isEditForm);
+    const containerEl = document.getElementById(containerId);
+    if (!containerEl) return null;
+
+    const values = {};
+    const order = Array.from(containerEl.querySelectorAll('.layer-card')).map((card) => Number(card.dataset.layerNum || 0));
+    const openLayers = Array.from(containerEl.querySelectorAll('.layer-card[open]')).map((card) => Number(card.dataset.layerNum || 0));
+
+    containerEl.querySelectorAll('input, select, textarea').forEach((el) => {
+        if (!el.id || !el.id.startsWith(`${prefix}layer-`)) return;
+        if (el.type === 'file') return;
+
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            values[el.id] = !!el.checked;
+            return;
+        }
+
+        values[el.id] = el.value;
+    });
+
+    return {
+        order,
+        openLayers,
+        values,
+        signature: JSON.stringify({ order, openLayers, values })
+    };
+}
+
+function updateLayerHistoryButtons(isEditForm) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+    const { undoBtnId, redoBtnId } = getLayerHistoryConfig(isEditForm);
+    const undoBtn = document.getElementById(undoBtnId);
+    const redoBtn = document.getElementById(redoBtnId);
+
+    if (undoBtn) undoBtn.disabled = state.index <= 0;
+    if (redoBtn) redoBtn.disabled = state.index < 0 || state.index >= state.stack.length - 1;
+}
+
+function pushLayerHistorySnapshot(isEditForm, force = false) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+    if (state.isApplying) return;
+
+    const snapshot = createLayerSnapshot(isEditForm);
+    if (!snapshot) return;
+
+    const current = state.stack[state.index];
+    if (!force && current && current.signature === snapshot.signature) {
+        updateLayerHistoryButtons(isEditForm);
+        return;
+    }
+
+    if (state.index < state.stack.length - 1) {
+        state.stack = state.stack.slice(0, state.index + 1);
+    }
+
+    state.stack.push(snapshot);
+    if (state.stack.length > 120) {
+        state.stack.shift();
+    }
+
+    state.index = state.stack.length - 1;
+    updateLayerHistoryButtons(isEditForm);
+}
+
+function scheduleLayerHistorySnapshot(isEditForm, force = false) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+
+    if (state.timer) {
+        clearTimeout(state.timer);
+    }
+
+    state.timer = setTimeout(() => {
+        state.timer = null;
+        pushLayerHistorySnapshot(isEditForm, force);
+    }, force ? 0 : 120);
+}
+
+function applyLayerSnapshot(isEditForm, snapshot) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+    const { containerId } = getLayerHistoryConfig(isEditForm);
+    const containerEl = document.getElementById(containerId);
+    if (!containerEl || !snapshot) return;
+
+    state.isApplying = true;
+
+    snapshot.order.forEach((layerNum) => {
+        const card = containerEl.querySelector(`.layer-card[data-layer-num="${layerNum}"]`);
+        if (card) containerEl.appendChild(card);
+    });
+
+    containerEl.querySelectorAll('.layer-card').forEach((card) => {
+        const layerNum = Number(card.dataset.layerNum || 0);
+        card.open = snapshot.openLayers.includes(layerNum);
+    });
+
+    Object.entries(snapshot.values).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            el.checked = !!value;
+        } else {
+            el.value = value;
+        }
+
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    state.isApplying = false;
+    updateAllLayerModificationStates(isEditForm);
+
+    if (isEditForm) {
+        refreshEditModalUXState();
+    } else {
+        refreshAdminUXState();
+    }
+
+    updateLayerHistoryButtons(isEditForm);
+}
+
+function undoLayerHistory(isEditForm) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+    if (state.index <= 0) return;
+
+    state.index -= 1;
+    applyLayerSnapshot(isEditForm, state.stack[state.index]);
+}
+
+function redoLayerHistory(isEditForm) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+    if (state.index >= state.stack.length - 1) return;
+
+    state.index += 1;
+    applyLayerSnapshot(isEditForm, state.stack[state.index]);
+}
+
+function resetLayerHistory(isEditForm) {
+    const scope = getLayerHistoryScope(isEditForm);
+    const state = layerHistoryState[scope];
+    state.stack = [];
+    state.index = -1;
+    state.isApplying = false;
+
+    if (state.timer) {
+        clearTimeout(state.timer);
+        state.timer = null;
+    }
+
+    pushLayerHistorySnapshot(isEditForm, true);
+}
+
+function setupLayerHistoryHotkeys() {
+    if (layerHistoryHotkeysBound) return;
+
+    layerHistoryHotkeysBound = true;
+    document.addEventListener('keydown', (event) => {
+        const isCmdOrCtrl = event.metaKey || event.ctrlKey;
+        if (!isCmdOrCtrl) return;
+
+        const key = event.key.toLowerCase();
+        const isUndo = key === 'z' && !event.shiftKey;
+        const isRedo = (key === 'z' && event.shiftKey) || key === 'y';
+        if (!isUndo && !isRedo) return;
+
+        const editModal = document.getElementById('edit-modal');
+        const editIsOpen = !!editModal && editModal.style.display === 'block';
+        const isEditForm = editIsOpen;
+        const activeEl = document.activeElement;
+        const inLayerEditor = !!activeEl?.closest('#layers-container, #edit-layers-container');
+        if (!inLayerEditor) return;
+
+        event.preventDefault();
+        if (isUndo) {
+            undoLayerHistory(isEditForm);
+        } else {
+            redoLayerHistory(isEditForm);
+        }
+    });
+}
 
 function getLayerPrefix(isEditForm) {
     return isEditForm ? 'edit-' : '';
@@ -982,6 +1189,8 @@ function setupLayerBatchActions(isEditForm) {
     const clearBtn = document.getElementById(`${prefix}layer-clear-selection-btn`);
     const applyBtn = document.getElementById(`${prefix}layer-apply-scale-btn`);
     const scaleInput = document.getElementById(`${prefix}layer-batch-scale-value`);
+    const undoBtn = document.getElementById(`${prefix}layer-undo-btn`);
+    const redoBtn = document.getElementById(`${prefix}layer-redo-btn`);
 
     if (selectAllBtn && !selectAllBtn.dataset.bound) {
         selectAllBtn.addEventListener('click', () => setLayerSelectionState(isEditForm, true));
@@ -998,6 +1207,16 @@ function setupLayerBatchActions(isEditForm) {
         applyBtn.dataset.bound = '1';
     }
 
+    if (undoBtn && !undoBtn.dataset.bound) {
+        undoBtn.addEventListener('click', () => undoLayerHistory(isEditForm));
+        undoBtn.dataset.bound = '1';
+    }
+
+    if (redoBtn && !redoBtn.dataset.bound) {
+        redoBtn.addEventListener('click', () => redoLayerHistory(isEditForm));
+        redoBtn.dataset.bound = '1';
+    }
+
     if (scaleInput && !scaleInput.dataset.bound) {
         scaleInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
@@ -1007,6 +1226,9 @@ function setupLayerBatchActions(isEditForm) {
         });
         scaleInput.dataset.bound = '1';
     }
+
+    setupLayerHistoryHotkeys();
+    updateLayerHistoryButtons(isEditForm);
 }
 let layerClipboard = null;
 
@@ -4799,6 +5021,7 @@ async function openEditModal(posterId) {
         // In edit mode telt "gewijzigd" vanaf de geladen posterwaarden
         snapshotLayerBaselines(true);
         updateAllLayerModificationStates(true);
+        resetLayerHistory(true);
         
         // Show modal
         document.getElementById('edit-modal').style.display = 'block';
@@ -5853,15 +6076,28 @@ function renderLayers(isEditForm = false) {
 
     setupLayerReorder(isEditForm);
     setupLayerBatchActions(isEditForm);
+    setupLayerHistoryTracking(isEditForm);
 
     snapshotLayerBaselines(isEditForm);
     updateAllLayerModificationStates(isEditForm);
+    resetLayerHistory(isEditForm);
 
     if (!isEditForm) {
         refreshAdminUXState();
     } else {
         refreshEditModalUXState();
     }
+}
+
+function setupLayerHistoryTracking(isEditForm) {
+    const { containerId } = getLayerHistoryConfig(isEditForm);
+    const containerEl = document.getElementById(containerId);
+    if (!containerEl || containerEl.dataset.historyBound) return;
+
+    const schedule = () => scheduleLayerHistorySnapshot(isEditForm, false);
+    containerEl.addEventListener('input', schedule);
+    containerEl.addEventListener('change', schedule);
+    containerEl.dataset.historyBound = '1';
 }
 
 function setupLayerSelectionUI(isEditForm) {
