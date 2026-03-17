@@ -291,8 +291,9 @@ function generateLayerHTML(layerNum, isEditForm = false) {
     const isOpen = layerNum === 1 ? 'open' : '';
     
     return `
-        <details class="layer-card" ${isOpen}>
+        <details class="layer-card" data-layer-num="${layerNum}" ${isOpen}>
             <summary class="layer-header">
+                <span class="layer-drag-handle" draggable="true" title="Sleep om laagvolgorde te wijzigen">::</span>
                 <span class="layer-num">${layerNum}</span>
                 <span class="layer-title">LAAG ${layerNum}</span>
                 <span class="layer-status" id="${prefix}layer-${layerNum}-status">LEEG</span>
@@ -5759,6 +5760,8 @@ function renderLayers(isEditForm = false) {
         setupLayerChangeTracking(i, isEditForm);
     }
 
+    setupLayerReorder(isEditForm);
+
     snapshotLayerBaselines(isEditForm);
     updateAllLayerModificationStates(isEditForm);
 
@@ -5779,6 +5782,84 @@ function setupLayerChangeTracking(layerNum, isEditForm) {
         const handler = () => updateLayerModificationState(layerNum, isEditForm);
         el.addEventListener('input', handler);
         el.addEventListener('change', handler);
+    });
+}
+
+function applyReorderedLayerZ(containerEl, isEditForm) {
+    const prefix = isEditForm ? 'edit-' : '';
+    const cards = Array.from(containerEl.querySelectorAll('.layer-card'));
+
+    cards.forEach((card, index) => {
+        const layerNum = Number(card.dataset.layerNum || 0);
+        if (!layerNum) return;
+
+        const zInput = document.getElementById(`${prefix}layer-${layerNum}-z`);
+        if (!zInput) return;
+
+        const defaultConfig = LAYER_CONFIG.defaultLayers[index];
+        const fallbackZ = index * 0.05;
+        const nextZ = defaultConfig ? defaultConfig.defaultZ : fallbackZ;
+
+        zInput.value = Number(nextZ).toFixed(3);
+        zInput.dispatchEvent(new Event('input', { bubbles: true }));
+        zInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+}
+
+function setupLayerReorder(isEditForm) {
+    const containerEl = document.getElementById(isEditForm ? 'edit-layers-container' : 'layers-container');
+    if (!containerEl) return;
+
+    let draggingCard = null;
+
+    const getCardAfterPointer = (y) => {
+        const cards = Array.from(containerEl.querySelectorAll('.layer-card')).filter((card) => card !== draggingCard);
+        let closest = null;
+        let closestOffset = Number.NEGATIVE_INFINITY;
+
+        cards.forEach((card) => {
+            const rect = card.getBoundingClientRect();
+            const offset = y - rect.top - rect.height / 2;
+            if (offset < 0 && offset > closestOffset) {
+                closestOffset = offset;
+                closest = card;
+            }
+        });
+
+        return closest;
+    };
+
+    containerEl.querySelectorAll('.layer-card').forEach((card) => {
+        const handle = card.querySelector('.layer-drag-handle');
+        if (!handle) return;
+
+        handle.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        handle.addEventListener('dragstart', (event) => {
+            draggingCard = card;
+            card.classList.add('is-dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        });
+
+        handle.addEventListener('dragend', () => {
+            card.classList.remove('is-dragging');
+            draggingCard = null;
+            applyReorderedLayerZ(containerEl, isEditForm);
+        });
+    });
+
+    containerEl.addEventListener('dragover', (event) => {
+        if (!draggingCard) return;
+        event.preventDefault();
+        const afterCard = getCardAfterPointer(event.clientY);
+        if (!afterCard) {
+            containerEl.appendChild(draggingCard);
+        } else {
+            containerEl.insertBefore(draggingCard, afterCard);
+        }
     });
 }
 

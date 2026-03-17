@@ -546,6 +546,23 @@ input[type="file"]::file-selector-button:hover {
     list-style: none;
 }
 
+.layer-drag-handle {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.55);
+    cursor: grab;
+    user-select: none;
+}
+
+.layer-drag-handle:active {
+    cursor: grabbing;
+}
+
+.layer-card.is-dragging {
+    opacity: 0.55;
+    border-color: rgba(255,255,255,0.85);
+}
+
 .layer-header::-webkit-details-marker { display: none; }
 
 .layer-header:hover {
