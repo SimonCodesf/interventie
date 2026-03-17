@@ -2879,33 +2879,65 @@ function setupFileSummaryListeners() {
             });
         }
     });
+
+    const galleryInput = document.getElementById('gallery-images');
+    if (galleryInput) {
+        galleryInput.addEventListener('change', function() {
+            const summaryEl = document.getElementById('summary-gallery');
+            if (!summaryEl) return;
+
+            const files = Array.from(this.files || []);
+            if (files.length > 0) {
+                const total = files.reduce((sum, file) => sum + file.size, 0);
+                summaryEl.classList.add('completed');
+                summaryEl.classList.remove('pending');
+                summaryEl.querySelector('span').textContent = `${files.length} (${formatFileSize(total)})`;
+            } else {
+                summaryEl.classList.remove('completed');
+                summaryEl.classList.add('pending');
+                summaryEl.querySelector('span').textContent = '0';
+            }
+        });
+    }
 }
 
 function setupLayerSummaryListeners() {
     const layersContainer = document.getElementById('summary-layers-container');
+    if (!layersContainer) return;
+
     const updateLayersSummary = () => {
         const activeLayers = [];
         
         // Check all 8 possible layers
         for (let i = 1; i <= 8; i++) {
             const input = document.getElementById(`layer-${i}-image`);
-            if (input && input.files && input.files[0]) {
-                const size = (input.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
+            const contentType = document.getElementById(`layer-${i}-content-type`)?.value || 'image';
+            const hasFile = !!(input && input.files && input.files[0]);
+            const apiData = apiLayerData[`layer-${i}`];
+            const textContent = (document.getElementById(`layer-${i}-text-content`)?.value || '').trim();
+            const hasApi = !!apiData;
+            const hasText = contentType === 'text' && textContent.length > 0;
+            const hasAnim = !!document.getElementById(`layer-${i}-enable-anim`)?.checked;
+
+            if (hasFile || hasApi || hasText || hasAnim) {
+                const fileSize = hasFile ? ` ${(input.files[0].size / 1024 / 1024).toFixed(2)} MB` : '';
+                const typeLabel = contentType.toUpperCase();
+                const flags = [hasApi ? 'API' : '', hasText ? 'TEKST' : '', hasAnim ? 'ANIM' : ''].filter(Boolean).join(' · ');
+
                 activeLayers.push({
-                    name: `Laag ${i}`,
-                    size: size,
-                    filename: input.files[0].name
+                    name: `Laag ${i} [${typeLabel}]`,
+                    value: flags ? `${flags}${fileSize ? ` · ${fileSize}` : ''}` : (hasFile ? fileSize.trim() : 'Actief')
                 });
             }
         }
         
         if (activeLayers.length === 0) {
-            layersContainer.innerHTML = '<div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen lagen geselecteerd</div>';
+            layersContainer.innerHTML = '<div class="summary-item pending" style="font-style: italic; opacity: 0.5;">Geen actieve lagen</div>';
         } else {
             layersContainer.innerHTML = activeLayers.map(l => `
                 <div class="summary-item completed">
                     ${l.name}
-                    <span>[OK] ${l.size}</span>
+                    <span>[OK] ${l.value}</span>
                 </div>
             `).join('');
         }
@@ -2913,13 +2945,14 @@ function setupLayerSummaryListeners() {
         refreshAdminUXState();
     };
 
-    // Attach listeners to layer inputs
-    for (let i = 1; i <= 8; i++) {
-        const input = document.getElementById(`layer-${i}-image`);
-        if (input) {
-            input.addEventListener('change', updateLayersSummary);
-        }
+    const layersRoot = document.getElementById('layers-container');
+    if (layersRoot) {
+        layersRoot.addEventListener('input', updateLayersSummary);
+        layersRoot.addEventListener('change', updateLayersSummary);
     }
+
+    window.refreshUploadLayerSummary = updateLayersSummary;
+    updateLayersSummary();
 }
 
 // Track changes in edit modal
@@ -3243,6 +3276,10 @@ function selectApiResult(layerNum, prefix, item, element) {
         statusEl.textContent = sourceLabel;
         statusEl.style.color = '#0f0';
     }
+
+    if (!prefix && typeof window.refreshUploadLayerSummary === 'function') {
+        window.refreshUploadLayerSummary();
+    }
 }
 
 function clearApiSelection(layerNum, prefix) {
@@ -3265,6 +3302,10 @@ function clearApiSelection(layerNum, prefix) {
     // Deselecteer in grid
     const grid = document.getElementById(`${prefix}layer-${layerNum}-api-results`);
     if (grid) grid.querySelectorAll('.api-result-item').forEach(el => el.classList.remove('selected'));
+
+    if (!prefix && typeof window.refreshUploadLayerSummary === 'function') {
+        window.refreshUploadLayerSummary();
+    }
 }
 window.clearApiSelection = clearApiSelection;
 
@@ -4188,12 +4229,14 @@ function setupFilePreview() {
     const pdfMediumInput = document.getElementById('poster-pdf-medium');
     const pdfLargeInput = document.getElementById('poster-pdf-large');
     const mindInput = document.getElementById('ar-marker-file');
+    const galleryInput = document.getElementById('gallery-images');
     
     // Ensure elements exist before attaching listeners
     if (!jpegInput) return;
 
     const previewContainer = document.getElementById('preview-container');
     const previewImage = document.getElementById('preview-image');
+    const galleryPreview = document.getElementById('gallery-preview');
     
     const jpegSizeInfo = document.getElementById('jpeg-size-info');
     const pdfMediumSizeInfo = document.getElementById('pdf-medium-size-info');
@@ -4208,8 +4251,35 @@ function setupFilePreview() {
         pdfMedium: null,
         pdfLarge: null,
         mind: null,
+        gallery: [],
         layers: {}
     };
+
+    function renderGalleryPreview(files) {
+        if (!galleryPreview) return;
+
+        if (!files || files.length === 0) {
+            galleryPreview.classList.remove('has-items');
+            galleryPreview.innerHTML = '';
+            return;
+        }
+
+        const items = Array.from(files).map((file, index) => {
+            const url = URL.createObjectURL(file);
+            return { file, index, url };
+        });
+
+        galleryPreview.innerHTML = items.map((item) => `
+            <div class="gallery-item">
+                <img src="${item.url}" alt="Gallery ${item.index + 1}">
+            </div>
+        `).join('');
+        galleryPreview.classList.add('has-items');
+
+        setTimeout(() => {
+            items.forEach((item) => URL.revokeObjectURL(item.url));
+        }, 2000);
+    }
     
     function updateFileSizeDisplay() {
         let hasFiles = false;
@@ -4306,6 +4376,13 @@ function setupFilePreview() {
             totalSize += layersTotalSize;
             hasFiles = true;
         }
+
+        if (currentFiles.gallery.length > 0) {
+            const gallerySize = currentFiles.gallery.reduce((sum, file) => sum + file.size, 0);
+            totalSize += gallerySize;
+            breakdown.push(`<div><strong>Galerij:</strong> ${currentFiles.gallery.length} bestanden <span style="color:#666">(${formatFileSize(gallerySize)})</span></div>`);
+            hasFiles = true;
+        }
         
         // Update total summary (indien elementen bestaan)
         if (hasFiles && sizeBreakdown && sizeTotal && totalSummary) {
@@ -4380,6 +4457,29 @@ function setupFilePreview() {
         mindInput.onchange = (e) => {
             currentFiles.mind = e.target.files[0];
             updateFileSizeDisplay();
+        };
+    }
+
+    if (galleryInput) {
+        galleryInput.onchange = (e) => {
+            const files = Array.from(e.target.files || []);
+            currentFiles.gallery = files;
+            renderGalleryPreview(files);
+            updateFileSizeDisplay();
+
+            const gallerySummary = document.getElementById('summary-gallery');
+            if (gallerySummary) {
+                if (files.length > 0) {
+                    const totalGallerySize = files.reduce((sum, file) => sum + file.size, 0);
+                    gallerySummary.classList.add('completed');
+                    gallerySummary.classList.remove('pending');
+                    gallerySummary.querySelector('span').textContent = `${files.length} (${formatFileSize(totalGallerySize)})`;
+                } else {
+                    gallerySummary.classList.remove('completed');
+                    gallerySummary.classList.add('pending');
+                    gallerySummary.querySelector('span').textContent = '0';
+                }
+            }
         };
     }
     
