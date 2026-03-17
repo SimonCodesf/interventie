@@ -399,15 +399,19 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="text-param-group">
                             <div class="text-param-row">
                                 <div class="mini-input wide text-font-field">
-                                    <span>LETTERTYPE <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1">R</label></span>
+                                    <span>LETTERTYPE</span>
                                     <select id="${prefix}layer-${layerNum}-text-font" name="layer_${layerNum}_text_font_family" class="text-layer-select">
                                         ${getTextFontOptionsHTML()}
                                     </select>
+                                    <label class="random-inline" title="Randomiseer lettertype">
+                                        <input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1">
+                                        <span class="random-chip">R</span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="text-param-row">
-                                <div class="mini-input"><span>GROOTTE <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1">R</label></span><input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1"></div>
-                                <div class="mini-input"><span>UITLIJNING <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1">R</label></span><select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select"><option value="left">LINKS</option><option value="center" selected>MIDDEN</option><option value="right">RECHTS</option></select></div>
+                                <div class="mini-input"><span>GROOTTE</span><input type="number" id="${prefix}layer-${layerNum}-text-size" name="layer_${layerNum}_text_font_size" value="96" min="24" max="220" step="1"><label class="random-inline" title="Randomiseer grootte"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span class="random-chip">R</span></label></div>
+                                <div class="mini-input"><span>UITLIJNING</span><select id="${prefix}layer-${layerNum}-text-align" name="layer_${layerNum}_text_align" class="text-layer-select"><option value="left">LINKS</option><option value="center" selected>MIDDEN</option><option value="right">RECHTS</option></select><label class="random-inline" title="Randomiseer uitlijning"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span class="random-chip">R</span></label></div>
                                 <div class="mini-input"><span>VERTICAAL</span><input type="number" id="${prefix}layer-${layerNum}-text-offset-y" name="layer_${layerNum}_text_offset_y" value="0.85" step="0.01"></div>
                             </div>
                         </div>
@@ -415,8 +419,8 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                         <div class="anim-section-title">STIJL</div>
                         <div class="text-param-group">
                             <div class="text-param-row">
-                                <div class="mini-input"><span>KLEUR <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1">R</label></span><input type="color" id="${prefix}layer-${layerNum}-text-color" name="layer_${layerNum}_text_color" value="#ffffff"></div>
-                                <div class="mini-input"><span>RAND <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1">R</label></span><input type="color" id="${prefix}layer-${layerNum}-text-outline-color" name="layer_${layerNum}_text_outline_color" value="#000000"></div>
+                                <div class="mini-input"><span>KLEUR</span><input type="color" id="${prefix}layer-${layerNum}-text-color" name="layer_${layerNum}_text_color" value="#ffffff"><label class="random-inline" title="Randomiseer kleur"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1"><span class="random-chip">R</span></label></div>
+                                <div class="mini-input"><span>RAND</span><input type="color" id="${prefix}layer-${layerNum}-text-outline-color" name="layer_${layerNum}_text_outline_color" value="#000000"><label class="random-inline" title="Randomiseer rand"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1"><span class="random-chip">R</span></label></div>
                                 <div class="mini-input"><span>RANDDIKTE</span><input type="number" id="${prefix}layer-${layerNum}-text-outline-width" name="layer_${layerNum}_text_outline_width" value="3" min="0" max="12" step="0.5"></div>
                             </div>
                         </div>
@@ -425,8 +429,8 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <summary>GEAVANCEERD: EFFECTEN EN 3D</summary>
                             <div class="text-param-group">
                                 <div class="text-param-row">
-                                    <div class="mini-input"><span>EFFECT <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1">R</label></span><select id="${prefix}layer-${layerNum}-text-effect" name="layer_${layerNum}_text_effect" class="text-layer-select"><option value="none">NONE</option><option value="glow">GLOW</option><option value="shadow">SHADOW</option><option value="neon">NEON</option></select></div>
-                                    <div class="mini-input"><span>3D STIJL <label class="random-inline"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1">R</label></span><select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select"><option value="none">NONE</option><option value="extrude">EXTRUDE</option><option value="tilt">TILT</option><option value="float">FLOAT</option></select></div>
+                                    <div class="mini-input"><span>EFFECT</span><select id="${prefix}layer-${layerNum}-text-effect" name="layer_${layerNum}_text_effect" class="text-layer-select"><option value="none">NONE</option><option value="glow">GLOW</option><option value="shadow">SHADOW</option><option value="neon">NEON</option></select><label class="random-inline" title="Randomiseer effect"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1"><span class="random-chip">R</span></label></div>
+                                    <div class="mini-input"><span>3D STIJL</span><select id="${prefix}layer-${layerNum}-text-3d" name="layer_${layerNum}_text_3d_effect" class="text-layer-select"><option value="none">NONE</option><option value="extrude">EXTRUDE</option><option value="tilt">TILT</option><option value="float">FLOAT</option></select><label class="random-inline" title="Randomiseer 3D stijl"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span class="random-chip">R</span></label></div>
                                 </div>
                                 <div class="text-param-row">
                                     <div class="mini-input"><span>DIEPTE</span><input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1"></div>
@@ -6035,12 +6039,33 @@ function setupTextRandomControls(layerNum, isEditForm) {
     ];
     const specEls = specIds.map(id => document.getElementById(id)).filter(Boolean);
 
+    const syncMasterState = () => {
+        if (specEls.length === 0) {
+            master.checked = false;
+            master.indeterminate = false;
+            return;
+        }
+        const checkedCount = specEls.filter((el) => el.checked).length;
+        master.checked = checkedCount === specEls.length;
+        master.indeterminate = checkedCount > 0 && checkedCount < specEls.length;
+    };
+
     master.addEventListener('change', () => {
         specEls.forEach(el => {
             el.checked = master.checked;
         });
+        master.indeterminate = false;
         updatePreviewFromInputs();
     });
+
+    specEls.forEach((el) => {
+        el.addEventListener('change', () => {
+            syncMasterState();
+            updatePreviewFromInputs();
+        });
+    });
+
+    syncMasterState();
 }
 
 function getLayerGroupElements(layerNum, prefix, group) {

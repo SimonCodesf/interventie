@@ -713,6 +713,7 @@ input[type="file"]::file-selector-button:hover {
     margin-left: 4px;
     font-size: 0.48rem;
     color: rgba(255,255,255,0.6);
+    flex-shrink: 0;
 }
 
 .random-inline:has(input:checked) {
@@ -720,9 +721,39 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .random-inline input[type='checkbox'] {
-    width: 10px;
-    height: 10px;
-    margin: 0 2px 0 0;
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    pointer-events: none;
+}
+
+.random-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(255,255,255,0.34);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.62);
+    font-size: 0.5rem;
+    line-height: 1;
+    font-family: 'Roboto Mono', monospace;
+    cursor: pointer;
+    user-select: none;
+}
+
+.random-inline:hover .random-chip {
+    border-color: rgba(255,255,255,0.62);
+    color: #fff;
+}
+
+.random-inline:has(input:checked) .random-chip {
+    border-color: #fff;
+    background: #fff;
+    color: #000;
 }
 
 .ar-context-row {
@@ -1017,28 +1048,6 @@ input[type="file"]::file-selector-button:hover {
     min-width: 210px;
 }
 
-.text-random-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-    margin: 0 6px 6px 6px;
-}
-
-.text-random-grid .option-toggle {
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.02);
-    padding: 4px 6px;
-    justify-content: space-between;
-    font-size: 0.5rem;
-}
-
-.text-random-grid .option-toggle span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: calc(100% - 16px);
-}
-
 .text-random-specs {
     display: flex;
     flex-wrap: wrap;
@@ -1130,12 +1139,6 @@ input[type="file"]::file-selector-button:hover {
 
 .text-advanced-block[open] {
     border-color: rgba(255,255,255,0.34);
-}
-
-.text-random-grid .option-toggle:has(input:checked) {
-    border-color: rgba(255,255,255,0.75);
-    background: rgba(255,255,255,0.09);
-    color: #fff;
 }
 
 /* Delete Media Button (per file slot) */
@@ -1801,9 +1804,6 @@ input[type="file"]::file-selector-button:hover {
         min-width: 46px;
     }
 
-    .text-random-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 }
 
 .layer-pane .layer-options {
