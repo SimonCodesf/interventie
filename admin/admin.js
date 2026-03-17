@@ -465,6 +465,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'transform', '${prefix}')">RESET TAB</button>
                         </div>
                     </div>
+                    <p class="panel-hint">X/Y/Z = positie in AR (meter). Rotatie in graden. Start meestal met Z ${defaultZ.toFixed(2)} en SCALE 1.00.</p>
                     <div class="layer-transform">
                         <div class="transform-group">
                             <span class="group-label">POS</span>
@@ -515,6 +516,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <button type="button" class="pane-reset-btn" onclick="resetLayerGroupToBaseline(${layerNum}, 'anim', '${prefix}')">RESET TAB</button>
                         </div>
                     </div>
+                    <p class="panel-hint">Tip: begin met kleine Δ waardes (0.01-0.08) en DUR 800-1800ms voor vloeiende beweging.</p>
                     <div class="layer-subsection">
                         <div class="layer-subsection-title">ANIMATIE ACTIVATIE</div>
                         <label class="option-toggle">

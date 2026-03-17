@@ -8,6 +8,10 @@
     --black: #000000;
     --white: #ffffff;
     --dim: rgba(255,255,255,0.5);
+    --text-high: rgba(255,255,255,0.9);
+    --text-mid: rgba(255,255,255,0.74);
+    --text-soft: rgba(255,255,255,0.62);
+    --text-muted: rgba(255,255,255,0.5);
     --font-ui: 'Bebas Neue', Impact, sans-serif;
     --font-data: 'Roboto Mono', monospace;
 }
@@ -678,7 +682,7 @@ input[type="file"]::file-selector-button:hover {
 
 .content-type-row label {
     font-size: 0.55rem;
-    color: rgba(255,255,255,0.6);
+    color: var(--text-soft);
     letter-spacing: 0.8px;
     font-family: 'Roboto Mono', monospace;
 }
@@ -696,7 +700,7 @@ input[type="file"]::file-selector-button:hover {
 .content-type-hint {
     margin: 0;
     font-size: 0.52rem;
-    color: rgba(255,255,255,0.52);
+    color: var(--text-soft);
     font-family: 'Roboto Mono', monospace;
     letter-spacing: 0.4px;
 }
@@ -916,7 +920,7 @@ input[type="file"]::file-selector-button:hover {
 
 .group-label {
     font-size: 0.55rem;
-    color: rgba(255,255,255,0.72);
+    color: var(--text-mid);
     min-width: 24px;
     font-family: 'Roboto Mono', monospace;
     letter-spacing: 1px;
@@ -930,9 +934,21 @@ input[type="file"]::file-selector-button:hover {
 
 .mini-input span {
     font-size: 0.52rem;
-    color: rgba(255,255,255,0.6);
+    color: var(--text-soft);
     min-width: 10px;
     font-family: 'Roboto Mono', monospace;
+}
+
+.panel-hint {
+    margin: 0 0 8px;
+    padding: 5px 7px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-mid);
+    font-size: 0.56rem;
+    font-family: var(--font-data);
+    letter-spacing: 0.3px;
+    line-height: 1.35;
 }
 
 .mini-input input {
@@ -970,7 +986,7 @@ input[type="file"]::file-selector-button:hover {
     gap: 4px;
     cursor: pointer;
     font-size: 0.6rem;
-    color: rgba(255,255,255,0.5);
+    color: var(--text-soft);
     font-family: 'Roboto Mono', monospace;
 }
 
@@ -2099,7 +2115,7 @@ input:checked + .toggle-slider:before {
 }
 
 .hint-text {
-    color: rgba(255,255,255,0.4);
+    color: var(--text-muted);
     font-size: 0.55rem;
     margin-bottom: 6px;
     font-family: var(--font-data);
