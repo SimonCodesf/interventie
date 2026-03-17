@@ -786,6 +786,29 @@ input[type="file"]::file-selector-button:hover {
     gap: 3px;
 }
 
+.text-advanced-block {
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.02);
+}
+
+.text-advanced-block > summary {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.54rem;
+    color: rgba(255,255,255,0.72);
+    padding: 5px 6px;
+    cursor: pointer;
+    letter-spacing: 0.6px;
+}
+
+.text-advanced-block > summary:hover {
+    color: #fff;
+}
+
+.text-advanced-block > .text-random-specs,
+.text-advanced-block > .text-layer-grid {
+    margin: 0 6px 6px 6px;
+}
+
 .text-layer-input {
     width: 100%;
     background: #000;
@@ -1534,6 +1557,8 @@ input:checked + .toggle-slider:before {
     flex: 1;
     background: #000;
     display: flex;
+    flex-direction: column;
+    gap: 8px;
     min-height: 0;
 }
 

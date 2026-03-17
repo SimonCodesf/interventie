@@ -402,15 +402,18 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <span>RANDOM ALLES</span>
                         </label>
                     </div>
-                    <div class="text-random-specs">
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1"><span>R FONT</span></label>
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1"><span>R KLEUR</span></label>
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1"><span>R RAND</span></label>
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1"><span>R FX</span></label>
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span>R 3D</span></label>
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span>R SIZE</span></label>
-                        <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span>R ALIGN</span></label>
-                    </div>
+                    <details class="text-advanced-block">
+                        <summary>RANDOM SPECIFIEK</summary>
+                        <div class="text-random-specs">
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-font" name="layer_${layerNum}_text_random_font" value="1"><span>R FONT</span></label>
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-color" name="layer_${layerNum}_text_random_color" value="1"><span>R KLEUR</span></label>
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-outline" name="layer_${layerNum}_text_random_outline" value="1"><span>R RAND</span></label>
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-effect" name="layer_${layerNum}_text_random_effect" value="1"><span>R FX</span></label>
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-3d" name="layer_${layerNum}_text_random_3d" value="1"><span>R 3D</span></label>
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-size" name="layer_${layerNum}_text_random_size" value="1"><span>R SIZE</span></label>
+                            <label class="option-toggle"><input type="checkbox" id="${prefix}layer-${layerNum}-text-random-align" name="layer_${layerNum}_text_random_align" value="1"><span>R ALIGN</span></label>
+                        </div>
+                    </details>
                     <textarea
                         id="${prefix}layer-${layerNum}-text-content"
                         name="layer_${layerNum}_text_content"
@@ -473,24 +476,27 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             </select>
                         </div>
                     </div>
-                    <div class="text-layer-grid text-3d-params">
-                        <div class="mini-input">
-                            <span>DEPTH</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1">
+                    <details class="text-advanced-block">
+                        <summary>3D DETAILS</summary>
+                        <div class="text-layer-grid text-3d-params">
+                            <div class="mini-input">
+                                <span>DEPTH</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-depth" name="layer_${layerNum}_text_3d_depth" value="3" min="0" max="20" step="1">
+                            </div>
+                            <div class="mini-input">
+                                <span>TILT X</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1">
+                            </div>
+                            <div class="mini-input">
+                                <span>TILT Y</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1">
+                            </div>
+                            <div class="mini-input">
+                                <span>FLOAT PX</span>
+                                <input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1">
+                            </div>
                         </div>
-                        <div class="mini-input">
-                            <span>TILT X</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-x" name="layer_${layerNum}_text_3d_tilt_x" value="16" min="-45" max="45" step="1">
-                        </div>
-                        <div class="mini-input">
-                            <span>TILT Y</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-tilt-y" name="layer_${layerNum}_text_3d_tilt_y" value="0" min="-45" max="45" step="1">
-                        </div>
-                        <div class="mini-input">
-                            <span>FLOAT PX</span>
-                            <input type="number" id="${prefix}layer-${layerNum}-text-3d-float-px" name="layer_${layerNum}_text_3d_float_px" value="4" min="0" max="80" step="1">
-                        </div>
-                    </div>
+                    </details>
                     </div>
                 </div>
 
@@ -5307,8 +5313,11 @@ function setupLayerTabs(layerNum, isEditForm) {
     const panes = card.querySelectorAll('.layer-pane');
 
     buttons.forEach((btn) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
             const tab = btn.dataset.tab;
+            if (!tab) return;
             buttons.forEach((b) => b.classList.toggle('is-active', b === btn));
             panes.forEach((pane) => pane.classList.toggle('is-active', pane.dataset.pane === tab));
         });
