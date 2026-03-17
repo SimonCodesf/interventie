@@ -566,9 +566,8 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <option value="float-up">FLOAT</option>
                         </select>
                     </div>
-                    
-                    <!-- Positie animatie (ΔX, ΔY, ΔZ) -->
-                    <div class="anim-group">
+                    <div class="anim-section-title">BASIS BEWEGING</div>
+                    <div class="anim-group anim-group-basic">
                         <div class="anim-row">
                             <div class="mini-input"><span>ΔX</span><input type="number" id="${prefix}layer-${layerNum}-anim-x" name="layer_${layerNum}_anim_x" value="0" step="0.01"></div>
                             <div class="mini-input"><span>ΔY</span><input type="number" id="${prefix}layer-${layerNum}-anim-y" name="layer_${layerNum}_anim_y" value="0" step="0.01"></div>
@@ -576,39 +575,40 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-pos-duration" name="layer_${layerNum}_anim_pos_duration" value="0" step="100" placeholder="ms"></div>
                         </div>
                     </div>
-                    
-                    <!-- Rotatie animatie (RX, RY, RZ) met origin selector -->
-                    <div class="anim-group">
-                        <div class="anim-row">
-                            <div class="mini-input"><span>RX</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-x" name="layer_${layerNum}_anim_rot_x" value="0" step="1"></div>
-                            <div class="mini-input"><span>RY</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-y" name="layer_${layerNum}_anim_rot_y" value="0" step="1"></div>
-                            <div class="mini-input"><span>RZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-z" name="layer_${layerNum}_anim_rot_z" value="0" step="1"></div>
-                            <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-duration" name="layer_${layerNum}_anim_rot_duration" value="0" step="100" placeholder="ms"></div>
+
+                    <details class="anim-advanced-block">
+                        <summary>GEAVANCEERD: ROTATIE & OPACITY</summary>
+                        <div class="anim-group">
+                            <div class="anim-row">
+                                <div class="mini-input"><span>RX</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-x" name="layer_${layerNum}_anim_rot_x" value="0" step="1"></div>
+                                <div class="mini-input"><span>RY</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-y" name="layer_${layerNum}_anim_rot_y" value="0" step="1"></div>
+                                <div class="mini-input"><span>RZ</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-z" name="layer_${layerNum}_anim_rot_z" value="0" step="1"></div>
+                                <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-rot-duration" name="layer_${layerNum}_anim_rot_duration" value="0" step="100" placeholder="ms"></div>
+                            </div>
+                            <div class="anim-row">
+                                <label class="origin-label">ORIGIN:</label>
+                                <select id="${prefix}layer-${layerNum}-anim-rot-origin" name="layer_${layerNum}_anim_rot_origin" class="origin-select">
+                                    <option value="center">CENTER</option>
+                                    <option value="top">BOVEN</option>
+                                    <option value="bottom">ONDER</option>
+                                    <option value="left">LINKS</option>
+                                    <option value="right">RECHTS</option>
+                                    <option value="top-left">LINKS-BOVEN</option>
+                                    <option value="top-right">RECHTS-BOVEN</option>
+                                    <option value="bottom-left">LINKS-ONDER</option>
+                                    <option value="bottom-right">RECHTS-ONDER</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="anim-row">
-                            <label class="origin-label">ORIGIN:</label>
-                            <select id="${prefix}layer-${layerNum}-anim-rot-origin" name="layer_${layerNum}_anim_rot_origin" class="origin-select">
-                                <option value="center">CENTER</option>
-                                <option value="top">BOVEN</option>
-                                <option value="bottom">ONDER</option>
-                                <option value="left">LINKS</option>
-                                <option value="right">RECHTS</option>
-                                <option value="top-left">LINKS-BOVEN</option>
-                                <option value="top-right">RECHTS-BOVEN</option>
-                                <option value="bottom-left">LINKS-ONDER</option>
-                                <option value="bottom-right">RECHTS-ONDER</option>
-                            </select>
+
+                        <div class="anim-group">
+                            <div class="anim-row">
+                                <div class="mini-input"><span>SCALE</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale" name="layer_${layerNum}_anim_scale" value="1" step="0.1"></div>
+                                <div class="mini-input"><span>OPACITY</span><input type="number" id="${prefix}layer-${layerNum}-anim-opacity" name="layer_${layerNum}_anim_opacity" value="1" step="0.1" min="0" max="1"></div>
+                                <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale-duration" name="layer_${layerNum}_anim_scale_duration" value="0" step="100" placeholder="ms"></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <!-- Scale/Opacity animatie -->
-                    <div class="anim-group">
-                        <div class="anim-row">
-                            <div class="mini-input"><span>SCALE</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale" name="layer_${layerNum}_anim_scale" value="1" step="0.1"></div>
-                            <div class="mini-input"><span>OPACITY</span><input type="number" id="${prefix}layer-${layerNum}-anim-opacity" name="layer_${layerNum}_anim_opacity" value="1" step="0.1" min="0" max="1"></div>
-                            <div class="mini-input dur"><span>DUR</span><input type="number" id="${prefix}layer-${layerNum}-anim-scale-duration" name="layer_${layerNum}_anim_scale_duration" value="0" step="100" placeholder="ms"></div>
-                        </div>
-                    </div>
+                    </details>
                 </div>
             </div>
         </details>
@@ -3271,11 +3271,13 @@ function selectApiResult(layerNum, prefix, item, element) {
     // Toon geselecteerde preview
     const selectedDiv = document.getElementById(`${prefix}layer-${layerNum}-api-selected`);
     selectedDiv.classList.remove('hidden');
+    const sourceLabel = (document.getElementById(`${prefix}layer-${layerNum}-source`).value || '').toUpperCase();
+    const sizeLabel = item.width && item.height ? `${item.width}x${item.height}` : 'Onbekende afmeting';
     selectedDiv.innerHTML = `
         <img src="${escapeHtml(item.preview_url || item.url)}" alt="">
         <div class="preview-info">
-            <strong>${escapeHtml(item.title || 'Geselecteerd')}</strong><br>
-            ${item.width ? item.width + '×' + item.height : ''}
+            <strong>${escapeHtml(item.title || 'Geselecteerd')}</strong>
+            <span class="preview-meta">${sourceLabel} | ${sizeLabel}</span>
         </div>
         <button type="button" class="preview-clear" onclick="clearApiSelection(${layerNum}, '${prefix}')">×</button>
     `;
@@ -3283,7 +3285,6 @@ function selectApiResult(layerNum, prefix, item, element) {
     // Update layer status
     const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
     if (statusEl) {
-        const sourceLabel = document.getElementById(`${prefix}layer-${layerNum}-source`).value.toUpperCase();
         statusEl.textContent = sourceLabel;
         statusEl.style.color = '#0f0';
     }

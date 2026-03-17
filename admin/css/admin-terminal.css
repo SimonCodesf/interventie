@@ -1121,6 +1121,36 @@ input[type="file"]::file-selector-button:hover {
     font-family: 'Roboto Mono', monospace;
 }
 
+.anim-section-title {
+    font-size: 0.52rem;
+    letter-spacing: 0.7px;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Roboto Mono', monospace;
+    margin: 2px 0 4px 0;
+}
+
+.anim-advanced-block {
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.02);
+}
+
+.anim-advanced-block > summary {
+    cursor: pointer;
+    padding: 6px;
+    font-size: 0.52rem;
+    color: rgba(255,255,255,0.72);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.6px;
+}
+
+.anim-advanced-block > summary:hover {
+    color: #fff;
+}
+
+.anim-advanced-block .anim-group {
+    margin: 0 6px 6px 6px;
+}
+
 /* Preview Toggle Button in Panel Header */
 .preview-toggle-btn {
     background: rgba(255,255,255,0.1);
@@ -2972,7 +3002,7 @@ body.upload-mode-reclame .poster-only-field {
 
 .api-selected-preview {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 0.5rem;
     padding: 0.4rem;
     border: 1px solid rgba(255,255,255,0.2);
@@ -2981,9 +3011,10 @@ body.upload-mode-reclame .poster-only-field {
 }
 
 .api-selected-preview img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
+    width: 96px;
+    height: 72px;
+    object-fit: contain;
+    background: rgba(0,0,0,0.6);
     border: 1px solid rgba(255,255,255,0.2);
 }
 
@@ -2992,6 +3023,16 @@ body.upload-mode-reclame .poster-only-field {
     font-size: 0.55rem;
     font-family: var(--font-data);
     color: rgba(255,255,255,0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.api-selected-preview .preview-meta {
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.56);
+    letter-spacing: 0.4px;
 }
 
 .api-selected-preview .preview-clear {
