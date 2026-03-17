@@ -868,10 +868,14 @@ let previewCanvas = null;
 let previewCtx = null;
 let arPreviewWindow = null;
 let arPreviewZIndex = 1000;
+let adminUXBound = false;
+let editModalUXBound = false;
 
 // Check if already logged in
 document.addEventListener('DOMContentLoaded', () => {
     renderLayers(false); // Render layers first so elements exist
+    setupAdminUX();
+    setupEditModalUX();
 
     const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
     if (isLoggedIn === 'true') {
@@ -894,8 +898,275 @@ document.addEventListener('DOMContentLoaded', () => {
         setupLayerAnimationToggles(); // Animation toggles
         setupARPreview(); // Visual preview
         setupLayerApiSources(); // API bron selectors per laag
+        refreshAdminUXState();
     }, 500);
 });
+
+function setupAdminUX() {
+    if (adminUXBound) {
+        refreshAdminUXState();
+        return;
+    }
+
+    adminUXBound = true;
+    const form = document.getElementById('upload-form');
+    const focusSelect = document.getElementById('ux-focus-mode');
+    const stepButtons = Array.from(document.querySelectorAll('.ux-step-btn'));
+    const layerFilterInput = document.getElementById('layer-filter-input');
+    const layerFilterActiveOnly = document.getElementById('layer-filter-active-only');
+
+    if (focusSelect && form) {
+        focusSelect.addEventListener('change', () => {
+            form.dataset.focus = focusSelect.value;
+            refreshAdminUXState();
+        });
+        form.dataset.focus = focusSelect.value;
+    }
+
+    stepButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const panelId = btn.dataset.targetPanel;
+            const panel = panelId ? document.getElementById(panelId) : null;
+            const focusMap = {
+                'metadata-panel': 'meta',
+                'files-panel': 'files',
+                'layers-panel': 'layers',
+                'submit-panel': 'submit'
+            };
+
+            if (focusSelect && panelId && focusMap[panelId]) {
+                focusSelect.value = focusMap[panelId];
+                if (form) form.dataset.focus = focusMap[panelId];
+            }
+
+            if (panel) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            setActiveStepButton(panelId);
+            refreshAdminUXState();
+        });
+    });
+
+    const onLayerFilterChange = () => {
+        applyLayerFilters();
+        refreshAdminUXState();
+    };
+
+    if (layerFilterInput) {
+        layerFilterInput.addEventListener('input', onLayerFilterChange);
+    }
+    if (layerFilterActiveOnly) {
+        layerFilterActiveOnly.addEventListener('change', onLayerFilterChange);
+    }
+
+    if (form) {
+        const formActivityListener = () => refreshAdminUXState();
+        form.addEventListener('input', formActivityListener);
+        form.addEventListener('change', formActivityListener);
+    }
+
+    refreshAdminUXState();
+}
+
+function setActiveStepButton(panelId) {
+    document.querySelectorAll('.ux-step-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.targetPanel === panelId);
+    });
+}
+
+function applyLayerFilters() {
+    const query = (document.getElementById('layer-filter-input')?.value || '').trim().toLowerCase();
+    const activeOnly = !!document.getElementById('layer-filter-active-only')?.checked;
+    const cards = Array.from(document.querySelectorAll('#layers-container .layer-card'));
+
+    cards.forEach((card) => {
+        const title = card.querySelector('.layer-title')?.textContent?.toLowerCase() || '';
+        const status = card.querySelector('.layer-status')?.textContent?.toLowerCase() || '';
+        const statusIsActive = status !== '' && status !== 'leeg';
+        const matchQuery = query === '' || title.includes(query) || status.includes(query);
+        const matchActive = !activeOnly || statusIsActive;
+        card.classList.toggle('is-filtered-out', !(matchQuery && matchActive));
+    });
+}
+
+function refreshAdminUXState() {
+    updateUXStats();
+    updateUXSteps();
+    applyLayerFilters();
+}
+
+function setupEditModalUX() {
+    if (editModalUXBound) {
+        refreshEditModalUXState();
+        return;
+    }
+
+    editModalUXBound = true;
+    const form = document.getElementById('edit-form');
+    const focusSelect = document.getElementById('edit-ux-focus-mode');
+    const stepButtons = Array.from(document.querySelectorAll('.edit-ux-step-btn'));
+    const layerFilterInput = document.getElementById('edit-layer-filter-input');
+    const layerFilterActiveOnly = document.getElementById('edit-layer-filter-active-only');
+
+    if (focusSelect && form) {
+        focusSelect.addEventListener('change', () => {
+            form.dataset.editFocus = focusSelect.value;
+            refreshEditModalUXState();
+        });
+        form.dataset.editFocus = focusSelect.value;
+    }
+
+    stepButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const panelId = btn.dataset.editTargetPanel;
+            const panel = panelId ? document.getElementById(panelId) : null;
+            const focusMap = {
+                'edit-metadata-panel': 'meta',
+                'edit-files-panel': 'files',
+                'edit-layers-panel': 'layers',
+                'edit-submit-panel': 'submit'
+            };
+
+            if (focusSelect && panelId && focusMap[panelId]) {
+                focusSelect.value = focusMap[panelId];
+                if (form) form.dataset.editFocus = focusMap[panelId];
+            }
+
+            if (panel) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            setActiveEditStepButton(panelId);
+            refreshEditModalUXState();
+        });
+    });
+
+    const onLayerFilterChange = () => {
+        applyEditLayerFilters();
+        refreshEditModalUXState();
+    };
+
+    if (layerFilterInput) layerFilterInput.addEventListener('input', onLayerFilterChange);
+    if (layerFilterActiveOnly) layerFilterActiveOnly.addEventListener('change', onLayerFilterChange);
+
+    if (form) {
+        const formActivityListener = () => refreshEditModalUXState();
+        form.addEventListener('input', formActivityListener);
+        form.addEventListener('change', formActivityListener);
+    }
+}
+
+function setActiveEditStepButton(panelId) {
+    document.querySelectorAll('.edit-ux-step-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.editTargetPanel === panelId);
+    });
+}
+
+function applyEditLayerFilters() {
+    const query = (document.getElementById('edit-layer-filter-input')?.value || '').trim().toLowerCase();
+    const activeOnly = !!document.getElementById('edit-layer-filter-active-only')?.checked;
+    const cards = Array.from(document.querySelectorAll('#edit-layers-container .layer-card'));
+
+    cards.forEach((card) => {
+        const title = card.querySelector('.layer-title')?.textContent?.toLowerCase() || '';
+        const status = card.querySelector('.layer-status')?.textContent?.toLowerCase() || '';
+        const statusIsActive = status !== '' && status !== 'leeg';
+        const matchQuery = query === '' || title.includes(query) || status.includes(query);
+        const matchActive = !activeOnly || statusIsActive;
+        card.classList.toggle('is-filtered-out', !(matchQuery && matchActive));
+    });
+}
+
+function refreshEditModalUXState() {
+    const modal = document.getElementById('edit-modal');
+    if (!modal || modal.style.display !== 'block') return;
+    updateEditModalUXStats();
+    updateEditModalUXSteps();
+    applyEditLayerFilters();
+}
+
+function updateEditModalUXStats() {
+    const activeLayers = Array.from(document.querySelectorAll('#edit-layers-container .layer-status')).filter((el) => {
+        const status = (el.textContent || '').trim().toUpperCase();
+        return status !== '' && status !== 'LEEG';
+    }).length;
+
+    const changedFiles = [
+        'edit-jpeg',
+        'edit-ar-marker-file',
+        'edit-pdf-medium',
+        'edit-pdf-large',
+        'edit-gallery-images'
+    ].reduce((count, id) => count + (document.getElementById(id)?.files?.length ? 1 : 0), 0);
+
+    const coreReady = [
+        (document.getElementById('edit-title')?.value || '').trim().length > 0,
+        !!document.getElementById('edit-poster-id')?.value,
+        activeLayers > 0 || changedFiles > 0
+    ];
+    const readiness = Math.round((coreReady.filter(Boolean).length / coreReady.length) * 100);
+
+    const layersEl = document.getElementById('edit-ux-stat-layers');
+    const filesEl = document.getElementById('edit-ux-stat-files');
+    const readinessEl = document.getElementById('edit-ux-stat-readiness');
+
+    if (layersEl) layersEl.textContent = String(activeLayers);
+    if (filesEl) filesEl.textContent = String(changedFiles);
+    if (readinessEl) readinessEl.textContent = `${readiness}%`;
+}
+
+function updateEditModalUXSteps() {
+    const stepState = {
+        'edit-metadata-panel': (document.getElementById('edit-title')?.value || '').trim().length > 0,
+        'edit-files-panel': !!document.getElementById('edit-jpeg')?.files?.[0] || !!document.getElementById('edit-pdf-medium')?.files?.[0] || !!document.getElementById('edit-pdf-large')?.files?.[0],
+        'edit-layers-panel': Array.from(document.querySelectorAll('#edit-layers-container .layer-status')).some((el) => (el.textContent || '').trim().toUpperCase() !== 'LEEG'),
+        'edit-submit-panel': false
+    };
+
+    stepState['edit-submit-panel'] = stepState['edit-metadata-panel'] && (stepState['edit-files-panel'] || stepState['edit-layers-panel']);
+
+    document.querySelectorAll('.edit-ux-step-btn').forEach((btn) => {
+        const key = btn.dataset.editTargetPanel;
+        btn.classList.toggle('is-done', !!stepState[key]);
+    });
+}
+
+function updateUXStats() {
+    const postersCount = document.querySelectorAll('#admin-poster-list .sidebar-poster-item').length;
+    const layerStatusEls = Array.from(document.querySelectorAll('#layers-container .layer-status'));
+    const activeLayers = layerStatusEls.filter((el) => (el.textContent || '').trim().toUpperCase() !== 'LEEG').length;
+
+    const titleFilled = (document.getElementById('poster-title')?.value || '').trim().length > 0;
+    const jpegSelected = !!document.getElementById('poster-jpeg')?.files?.[0];
+    const readinessParts = [titleFilled, jpegSelected, activeLayers > 0];
+    const readiness = Math.round((readinessParts.filter(Boolean).length / readinessParts.length) * 100);
+
+    const postersEl = document.getElementById('ux-stat-posters');
+    const layersEl = document.getElementById('ux-stat-layers');
+    const readinessEl = document.getElementById('ux-stat-readiness');
+
+    if (postersEl) postersEl.textContent = String(postersCount);
+    if (layersEl) layersEl.textContent = String(activeLayers);
+    if (readinessEl) readinessEl.textContent = `${readiness}%`;
+}
+
+function updateUXSteps() {
+    const stepState = {
+        'metadata-panel': (document.getElementById('poster-title')?.value || '').trim().length > 0,
+        'files-panel': !!document.getElementById('poster-jpeg')?.files?.[0],
+        'layers-panel': Array.from(document.querySelectorAll('#layers-container .layer-status')).some((el) => (el.textContent || '').trim().toUpperCase() !== 'LEEG'),
+        'submit-panel': false
+    };
+
+    stepState['submit-panel'] = stepState['metadata-panel'] && stepState['files-panel'];
+
+    document.querySelectorAll('.ux-step-btn').forEach((btn) => {
+        const key = btn.dataset.targetPanel;
+        const done = !!stepState[key];
+        btn.classList.toggle('is-done', done);
+    });
+}
 
 // Setup animation toggle listeners (show/hide anim panel)
 function setupLayerAnimationToggles() {
@@ -2118,6 +2389,8 @@ function setupLayerSummaryListeners() {
                 </div>
             `).join('');
         }
+
+        refreshAdminUXState();
     };
 
     // Attach listeners to layer inputs
@@ -2185,6 +2458,8 @@ function setupEditChangesSummary() {
                 </div>
             `).join('');
         }
+
+        refreshEditModalUXState();
     };
 
     // Attach listeners to all edit inputs
@@ -2946,6 +3221,7 @@ function showUploadSection() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('upload-section').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'inline-block';
+    refreshAdminUXState();
 }
 
 // Setup upload form
@@ -3693,10 +3969,13 @@ async function loadAdminPosters() {
             </div>
         `;
         }).join('');
+
+        refreshAdminUXState();
         
     } catch (error) {
         console.error('Error loading posters:', error);
         document.getElementById('admin-poster-list').innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 1rem;">Fout bij laden</p>';
+        refreshAdminUXState();
     }
 }
 
@@ -4360,6 +4639,7 @@ async function openEditModal(posterId) {
         // Show modal
         document.getElementById('edit-modal').style.display = 'block';
         document.body.style.overflow = 'hidden';
+        refreshEditModalUXState();
         
         // Setup delete button
         const deleteBtn = document.getElementById('delete-poster-btn');
@@ -4389,6 +4669,13 @@ function closeEditModal() {
     // Herinjecteer API source UI voor upload formulier (renderLayers wist de container)
     for (let n = 1; n <= 8; n++) {
         injectApiSourceUI(n, '');
+    }
+
+    const editFocus = document.getElementById('edit-ux-focus-mode');
+    const editForm = document.getElementById('edit-form');
+    if (editFocus && editForm) {
+        editFocus.value = 'all';
+        editForm.dataset.editFocus = 'all';
     }
 }
 
@@ -5033,6 +5320,12 @@ function renderLayers(isEditForm = false) {
         containerEl.insertAdjacentHTML('beforeend', generateLayerHTML(i, isEditForm));
         setupLayerAnimationToggle(i, isEditForm);
         setupTextRandomControls(i, isEditForm);
+    }
+
+    if (!isEditForm) {
+        refreshAdminUXState();
+    } else {
+        refreshEditModalUXState();
     }
 }
 

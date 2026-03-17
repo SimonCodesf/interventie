@@ -60,6 +60,30 @@
                 </div>
             </header>
 
+            <section class="admin-ux-toolbar" id="admin-ux-toolbar">
+                <div class="ux-steps" aria-label="Workflow stappen">
+                    <button type="button" class="ux-step-btn is-active" data-target-panel="metadata-panel">1 META</button>
+                    <button type="button" class="ux-step-btn" data-target-panel="files-panel">2 ASSETS</button>
+                    <button type="button" class="ux-step-btn" data-target-panel="layers-panel">3 AR LAGEN</button>
+                    <button type="button" class="ux-step-btn" data-target-panel="submit-panel">4 UPLOAD</button>
+                </div>
+                <div class="ux-focus" aria-label="Focus mode">
+                    <label for="ux-focus-mode">FOCUS</label>
+                    <select id="ux-focus-mode">
+                        <option value="all">Alles</option>
+                        <option value="meta">Alleen metadata</option>
+                        <option value="files">Alleen assets</option>
+                        <option value="layers">Alleen AR lagen</option>
+                        <option value="submit">Alleen uploadblok</option>
+                    </select>
+                </div>
+                <div class="ux-stats" id="ux-stats">
+                    <div class="ux-stat-chip">POSTERS <span id="ux-stat-posters">0</span></div>
+                    <div class="ux-stat-chip">LAGEN ACTIEF <span id="ux-stat-layers">0</span></div>
+                    <div class="ux-stat-chip">FORM STATUS <span id="ux-stat-readiness">0%</span></div>
+                </div>
+            </section>
+
             <!-- Upload Type Selector -->
             <div class="upload-type-selector">
                 <label for="upload-type" class="upload-type-label">UPLOAD_MODE:</label>
@@ -76,7 +100,7 @@
                 <div class="editor-column left-panel">
                     
                     <!-- Metadata Panel -->
-                    <div class="panel-box">
+                    <div class="panel-box" id="metadata-panel" data-focus-key="meta">
                         <div class="panel-header"><span class="panel-title">meta_data.json</span></div>
                         <div class="panel-content form-grid">
                             <div class="form-group form-full">
@@ -126,7 +150,7 @@
                     </div>
 
                     <!-- Files Panel -->
-                    <div class="panel-box">
+                    <div class="panel-box" id="files-panel" data-focus-key="files">
                         <div class="panel-header"><span class="panel-title">assets_upload.sh</span></div>
                         <div class="panel-content">
                             <div class="form-group">
@@ -172,7 +196,7 @@
                     </div>
 
                     <!-- Upload Action & Status Panel -->
-                    <div class="panel-box action-panel">
+                    <div class="panel-box action-panel" id="submit-panel" data-focus-key="submit">
                         <div class="panel-header"><span class="panel-title">UPLOAD OVERZICHT</span></div>
                         <div class="panel-content" style="padding: 1.5rem;">
                             
@@ -221,11 +245,18 @@
 
                 <!-- Right Column: Layers configuration -->
                 <div class="editor-column right-panel">
-                    <div class="panel-box full-height">
+                        <div class="panel-box full-height" id="layers-panel" data-focus-key="layers">
                         <div class="panel-header">
                             <span class="panel-title">ar_layers_config.sys</span>
                         </div>
                         <div class="panel-content scrollable">
+                                <div class="layers-ux-tools">
+                                    <input type="text" id="layer-filter-input" placeholder="Filter laagnummer of status...">
+                                    <label class="option-toggle">
+                                        <input type="checkbox" id="layer-filter-active-only">
+                                        <span>ALLEEN ACTIEF</span>
+                                    </label>
+                                </div>
                             <div id="layers-container">
                                 <!-- Layers injected here by admin.js -->
                             </div>
@@ -246,6 +277,29 @@
             </div>
             
             <div class="modal-body">
+                <section class="admin-ux-toolbar edit-ux-toolbar" id="edit-ux-toolbar">
+                    <div class="ux-steps" aria-label="Edit workflow stappen">
+                        <button type="button" class="ux-step-btn edit-ux-step-btn is-active" data-edit-target-panel="edit-metadata-panel">1 META</button>
+                        <button type="button" class="ux-step-btn edit-ux-step-btn" data-edit-target-panel="edit-files-panel">2 ASSETS</button>
+                        <button type="button" class="ux-step-btn edit-ux-step-btn" data-edit-target-panel="edit-layers-panel">3 AR LAGEN</button>
+                        <button type="button" class="ux-step-btn edit-ux-step-btn" data-edit-target-panel="edit-submit-panel">4 OPSLAAN</button>
+                    </div>
+                    <div class="ux-focus" aria-label="Edit focus mode">
+                        <label for="edit-ux-focus-mode">FOCUS</label>
+                        <select id="edit-ux-focus-mode">
+                            <option value="all">Alles</option>
+                            <option value="meta">Alleen metadata</option>
+                            <option value="files">Alleen assets</option>
+                            <option value="layers">Alleen AR lagen</option>
+                            <option value="submit">Alleen wijzigingenblok</option>
+                        </select>
+                    </div>
+                    <div class="ux-stats" id="edit-ux-stats">
+                        <div class="ux-stat-chip">GEWIJZIGDE LAGEN <span id="edit-ux-stat-layers">0</span></div>
+                        <div class="ux-stat-chip">BESTANDEN <span id="edit-ux-stat-files">0</span></div>
+                        <div class="ux-stat-chip">OPSLAAN STATUS <span id="edit-ux-stat-readiness">0%</span></div>
+                    </div>
+                </section>
                 <form id="edit-form" class="editor-grid">
                     <input type="hidden" id="edit-poster-id">
                     
@@ -253,7 +307,7 @@
                     <div class="editor-column left-panel">
                         
                         <!-- Metadata Panel -->
-                        <div class="panel-box">
+                        <div class="panel-box" id="edit-metadata-panel" data-edit-focus-key="meta">
                             <div class="panel-header"><span class="panel-title">meta_data.json</span></div>
                             <div class="panel-content form-grid">
                                 <div class="form-group form-full">
@@ -299,7 +353,7 @@
                         </div>
 
                         <!-- Files Panel -->
-                        <div class="panel-box">
+                        <div class="panel-box" id="edit-files-panel" data-edit-focus-key="files">
                             <div class="panel-header"><span class="panel-title">assets_replace.sh</span></div>
                             <div class="panel-content">
                                 <p class="hint-text">Upload alleen bestanden die je wilt vervangen.</p>
@@ -343,7 +397,7 @@
                         </div>
 
                         <!-- Changes Summary Panel -->
-                        <div class="panel-box action-panel">
+                        <div class="panel-box action-panel" id="edit-submit-panel" data-edit-focus-key="submit">
                             <div class="panel-header"><span class="panel-title">WIJZIGINGEN OVERZICHT</span></div>
                             <div class="panel-content" style="padding: 1rem;">
                                 
@@ -376,12 +430,19 @@
 
                     <!-- Right Column: AR Layers -->
                     <div class="editor-column right-panel">
-                        <div class="panel-box full-height">
+                        <div class="panel-box full-height" id="edit-layers-panel" data-edit-focus-key="layers">
                             <div class="panel-header">
                                 <span class="panel-title">ar_layers_config.sys</span>
                                 <button type="button" class="preview-toggle-btn" onclick="toggleARPreviewWindow()">PREVIEW</button>
                             </div>
                             <div class="panel-content scrollable">
+                                <div class="layers-ux-tools">
+                                    <input type="text" id="edit-layer-filter-input" placeholder="Filter laagnummer of status...">
+                                    <label class="option-toggle">
+                                        <input type="checkbox" id="edit-layer-filter-active-only">
+                                        <span>ALLEEN ACTIEF</span>
+                                    </label>
+                                </div>
                                 <div id="edit-layers-container">
                                     <!-- Layers injected here by admin.js -->
                                 </div>
