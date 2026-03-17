@@ -336,7 +336,7 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                     </div>
                     <p class="content-type-hint" id="${prefix}layer-${layerNum}-content-hint">Upload een afbeelding als hoofdinhoud van deze laag.</p>
                     <div class="layer-files">
-                        <div class="file-slot" data-content-types="image,gifvideo,api">
+                        <div class="file-slot" data-content-types="image,gifvideo">
                             <label>MEDIA</label>
                             <input type="file" id="${prefix}layer-${layerNum}-image" name="layer_${layerNum}_image" accept="image/png,image/jpeg,image/gif,video/mp4,video/webm,.glb,.gltf">
                             <input type="hidden" id="${prefix}layer-${layerNum}-delete" name="layer_${layerNum}_delete" value="0">
@@ -359,6 +359,8 @@ function generateLayerHTML(layerNum, isEditForm = false) {
                             ${isEditForm ? `<button type="button" class="btn-delete-media" id="${prefix}layer-${layerNum}-delete-audio-btn" onclick="deleteLayerMedia(${layerNum}, 'audio')" title="Verwijder audio" style="display:none;">×</button>` : ''}
                         </div>
                     </div>
+
+                    <div class="api-content-block" data-content-types="api" id="${prefix}layer-${layerNum}-api-content-slot"></div>
 
                     <div class="text-layer-panel" data-content-types="text">
                         <input type="checkbox" id="${prefix}layer-${layerNum}-text-enabled" name="layer_${layerNum}_text_enabled" value="1" style="display:none;">
@@ -2564,14 +2566,15 @@ function setupLayerApiSources() {
 }
 
 function injectApiSourceUI(layerNum, prefix) {
-    const fileSlot = document.querySelector(`#${prefix}layer-${layerNum}-image`)?.closest('.file-slot');
-    if (!fileSlot) return;
+    const apiSlot = document.getElementById(`${prefix}layer-${layerNum}-api-content-slot`);
+    if (!apiSlot) return;
+    apiSlot.innerHTML = '';
     
     // Maak source selector
     const sourceDiv = document.createElement('div');
     sourceDiv.className = 'layer-source-selector';
     sourceDiv.innerHTML = `
-        <label>BRON:</label>
+        <label>API BRON:</label>
         <select class="layer-source-select" id="${prefix}layer-${layerNum}-source" data-layer="${layerNum}" data-prefix="${prefix}">
             <option value="manual">BESTAND</option>
             <option value="klipy">KLIPY GIF</option>
@@ -2597,9 +2600,9 @@ function injectApiSourceUI(layerNum, prefix) {
         <div class="api-selected-preview hidden" id="${prefix}layer-${layerNum}-api-selected"></div>
     `;
     
-    // Voeg toe voor de file input
-    fileSlot.insertBefore(sourceDiv, fileSlot.firstChild);
-    fileSlot.insertBefore(searchPanel, sourceDiv.nextSibling);
+    // Voeg toe in dedicated API content blok
+    apiSlot.appendChild(sourceDiv);
+    apiSlot.appendChild(searchPanel);
     
     // Event: bron wijzigen
     const sourceSelect = sourceDiv.querySelector('.layer-source-select');

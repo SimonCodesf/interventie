@@ -671,6 +671,12 @@ input[type="file"]::file-selector-button:hover {
     letter-spacing: 0.4px;
 }
 
+.api-content-block {
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.02);
+    padding: 6px;
+}
+
 .random-inline {
     display: inline-flex;
     align-items: center;
