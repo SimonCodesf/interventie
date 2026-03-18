@@ -3919,7 +3919,6 @@ function setupLogoutButton() {
 function showUploadSection() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('upload-section').style.display = 'block';
-    document.getElementById('logout-btn').style.display = 'inline-block';
     refreshAdminUXState();
 }
 

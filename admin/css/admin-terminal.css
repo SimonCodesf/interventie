@@ -80,20 +80,8 @@ html {
 }
 
 .admin-logo-link {
-    display: inline-block;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.admin-logo-link:hover {
-    border-color: rgba(255,255,255,0.45);
-    background: rgba(255,255,255,0.04);
-}
-
-.admin-logo-link:focus-visible {
-    outline: 1px solid rgba(255,255,255,0.7);
-    outline-offset: 2px;
+    display: block;
+    text-align: center;
 }
 
 .system-status-indicator {
