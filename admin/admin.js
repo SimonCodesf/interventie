@@ -3709,10 +3709,113 @@ async function logout(sessionExpired = false) {
 
 // ========== Instellingen Modal ==========
 
+const ADMIN_LOCAL_SETTINGS_KEY = 'adminLocalSettingsV1';
+
+function getLocalAdminSettings() {
+    const defaults = {
+        confirmRebuild: true,
+        reducedMotion: false
+    };
+
+    try {
+        const raw = localStorage.getItem(ADMIN_LOCAL_SETTINGS_KEY);
+        if (!raw) return defaults;
+        const parsed = JSON.parse(raw);
+        return {
+            ...defaults,
+            ...parsed
+        };
+    } catch (error) {
+        return defaults;
+    }
+}
+
+function saveLocalAdminSettings(settings) {
+    localStorage.setItem(ADMIN_LOCAL_SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applyLocalAdminSettings(settings) {
+    document.body.classList.toggle('reduce-motion-admin', !!settings.reducedMotion);
+}
+
+function setSettingsStatus(text, color = '#9aa0a6') {
+    const statusEl = document.getElementById('sketchfab-key-status');
+    if (!statusEl) return;
+    statusEl.textContent = text;
+    statusEl.style.color = color;
+}
+
+function setRebuildStatus(text, color = '#9aa0a6') {
+    const rebuildStatusEl = document.getElementById('settings-rebuild-status');
+    if (!rebuildStatusEl) return;
+    rebuildStatusEl.textContent = text;
+    rebuildStatusEl.style.color = color;
+}
+
+async function runArRebuild(rebuildBtn) {
+    const settings = getLocalAdminSettings();
+
+    if (settings.confirmRebuild) {
+        const ok = confirm('AR rebuild starten? Dit kan enkele seconden duren.');
+        if (!ok) return;
+    }
+
+    rebuildBtn.disabled = true;
+    rebuildBtn.textContent = 'BEZIG...';
+    setRebuildStatus('Rebuild gestart...', '#f8c146');
+
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const response = await fetch(`${API_URL}/admin/rebuild-mind`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.output) {
+            console.group('AR Rebuild Server Output');
+            result.output.forEach(line => console.log(line));
+            console.groupEnd();
+        }
+
+        if (result.missingMind && result.missingMind.length > 0) {
+            const names = result.missingMind.map(p => `• ${p.title} (${p.id.substring(0, 8)}...)`).join('\n');
+            setRebuildStatus(`${result.missingMind.length} poster(s) missen nog een marker.`, '#ff8f66');
+            setTimeout(() => alert(
+                `AR Rebuild klaar: ${result.missingMind.length} poster(s) missen nog een AR marker:\n\n${names}\n\nOpen deze posters in Edit, upload de JPEG opnieuw, en sla op.`
+            ), 100);
+        } else if (result.success) {
+            setRebuildStatus('AR rebuild voltooid. Alle posters staan in de chunks.', '#7dff9a');
+            setTimeout(() => alert('AR rebuild succesvol!\nAlle posters staan in de chunks.'), 100);
+        } else {
+            setRebuildStatus(result.message || 'AR rebuild mislukt.', '#ff7d7d');
+            setTimeout(() => alert('Fout: ' + (result.message || 'Onbekende fout')), 100);
+        }
+    } catch (err) {
+        setRebuildStatus('Fout bij rebuild: ' + err.message, '#ff7d7d');
+        setTimeout(() => alert('Fout bij rebuild: ' + err.message), 100);
+    } finally {
+        rebuildBtn.disabled = false;
+        rebuildBtn.textContent = 'AR REBUILD UITVOEREN';
+    }
+}
+
 async function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
     if (!modal) return;
     modal.style.display = 'block';
+
+    const localSettings = getLocalAdminSettings();
+    const confirmRebuildInput = document.getElementById('setting-rebuild-confirm');
+    const reducedMotionInput = document.getElementById('setting-reduced-motion');
+    if (confirmRebuildInput) confirmRebuildInput.checked = !!localSettings.confirmRebuild;
+    if (reducedMotionInput) reducedMotionInput.checked = !!localSettings.reducedMotion;
+    applyLocalAdminSettings(localSettings);
+    setRebuildStatus('Klaar om te starten.', '#9aa0a6');
 
     // Controleer of Sketchfab key al is opgeslagen
     try {
@@ -3722,13 +3825,10 @@ async function openSettingsModal() {
         });
         if (resp.ok) {
             const data = await resp.json();
-            const statusEl = document.getElementById('sketchfab-key-status');
-            if (statusEl) {
-                statusEl.textContent = data.sketchfab_key_set
-                    ? 'Sleutel is opgeslagen op de server'
-                    : 'Geen sleutel opgeslagen';
-                statusEl.style.color = data.sketchfab_key_set ? '#0f0' : '#f80';
-            }
+            setSettingsStatus(
+                data.sketchfab_key_set ? 'Sleutel is opgeslagen op de server' : 'Geen sleutel opgeslagen',
+                data.sketchfab_key_set ? '#7dff9a' : '#f8c146'
+            );
         }
     } catch (e) { /* stil falen */ }
 }
@@ -3750,12 +3850,21 @@ window.toggleKeyVisibility = toggleKeyVisibility;
 
 async function saveSettings() {
     const keyInput = document.getElementById('sketchfab-api-key');
-    const statusEl = document.getElementById('sketchfab-key-status');
     const saveBtn = document.getElementById('save-settings-btn');
+    const confirmRebuildInput = document.getElementById('setting-rebuild-confirm');
+    const reducedMotionInput = document.getElementById('setting-reduced-motion');
     const key = keyInput ? keyInput.value.trim() : '';
 
+    const localSettings = {
+        confirmRebuild: !!confirmRebuildInput?.checked,
+        reducedMotion: !!reducedMotionInput?.checked
+    };
+
+    saveLocalAdminSettings(localSettings);
+    applyLocalAdminSettings(localSettings);
+
     if (!key) {
-        if (statusEl) { statusEl.textContent = 'Voer een sleutel in'; statusEl.style.color = '#f44'; }
+        setSettingsStatus('Lokale instellingen opgeslagen. Geen nieuwe API sleutel ingevoerd.', '#7dff9a');
         return;
     }
 
@@ -3773,14 +3882,14 @@ async function saveSettings() {
         });
         const data = await resp.json();
         if (resp.ok && data.success) {
-            if (statusEl) { statusEl.textContent = 'Sleutel opgeslagen!'; statusEl.style.color = '#0f0'; }
+            setSettingsStatus('Instellingen opgeslagen!', '#7dff9a');
             if (keyInput) keyInput.value = '';
             setTimeout(closeSettingsModal, 1200);
         } else {
-            if (statusEl) { statusEl.textContent = data.message || 'Opslaan mislukt'; statusEl.style.color = '#f44'; }
+            setSettingsStatus(data.message || 'Opslaan mislukt', '#ff7d7d');
         }
     } catch (e) {
-        if (statusEl) { statusEl.textContent = 'Fout: ' + e.message; statusEl.style.color = '#f44'; }
+        setSettingsStatus('Fout: ' + e.message, '#ff7d7d');
     } finally {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'OPSLAAN'; }
     }
@@ -3791,6 +3900,8 @@ function setupLogoutButton() {
     const logoutBtn = document.getElementById('logout-btn');
     logoutBtn.onclick = () => logout(false);
 
+    applyLocalAdminSettings(getLocalAdminSettings());
+
     // Setup Instellingen knop
     const settingsBtn = document.getElementById('settings-btn');
     if (settingsBtn) settingsBtn.onclick = openSettingsModal;
@@ -3799,64 +3910,9 @@ function setupLogoutButton() {
     const saveSettingsBtn = document.getElementById('save-settings-btn');
     if (saveSettingsBtn) saveSettingsBtn.onclick = saveSettings;
     
-    // Setup AR Rebuild button
-    const rebuildBtn = document.getElementById('rebuild-mind-btn');
-    if (rebuildBtn) {
-        rebuildBtn.onclick = async () => {
-            console.log('AR Rebuild button clicked'); // Debug log
-            
-            // Bypass confirm() - directe actie om blokkades te vermijden
-            // We tonen gewoon "Bezig..." en de gebruiker ziet wel wat er gebeurt
-            
-            rebuildBtn.disabled = true;
-            rebuildBtn.innerHTML = 'Bezig... <span class="spinner"></span>';
-            console.log('Starting fetch request...');
-            
-            try {
-                const token = sessionStorage.getItem('adminToken');
-                const response = await fetch(`${API_URL}/admin/rebuild-mind`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                console.log('Response received', response.status);
-                const result = await response.json();
-                
-                // Show console output if available
-                if (result.output) {
-                    console.group("AR Rebuild Server Output");
-                    console.log(`%c=== START LOGS ===`, 'color: #00ff00; font-weight: bold;');
-                    result.output.forEach(line => console.log(`%c${line}`, 'color: #aaa; font-family: monospace;'));
-                    console.log(`%c=== END LOGS ===`, 'color: #00ff00; font-weight: bold;');
-                    console.groupEnd();
-                }
-                
-                // Toon welke posters zonder .mind zijn
-                if (result.missingMind && result.missingMind.length > 0) {
-                    const names = result.missingMind.map(p => `• ${p.title} (${p.id.substring(0, 8)}...)`).join('\n');
-                    console.warn(`[Rebuild] ${result.missingMind.length} poster(s) zonder .mind bestand:\n${names}`);
-                    setTimeout(() => alert(
-                        `AR Rebuild klaar: ${result.missingMind.length} poster(s) missen nog een AR marker:\n\n${names}\n\nOpen deze posters in Edit, upload de JPEG opnieuw, en sla op.`
-                    ), 100);
-                } else if (result.success) {
-                    console.log('Rebuild compleet. Alle posters hebben een .mind bestand.');
-                    setTimeout(() => alert('AR rebuild succesvol!\nAlle posters staan in de chunks.'), 100);
-                } else {
-                    console.error('Rebuild failed:', result.message);
-                    setTimeout(() => alert('Fout: ' + (result.message || 'Onbekende fout')), 100);
-                }
-            } catch (err) {
-                console.error('Fetch error:', err);
-                setTimeout(() => alert('Fout bij rebuild: ' + err.message), 100);
-            } finally {
-                rebuildBtn.disabled = false;
-                rebuildBtn.textContent = 'AR Rebuild';
-            }
-        };
-    }
+    // Setup AR Rebuild button in instellingen modal
+    const rebuildBtn = document.getElementById('settings-rebuild-mind-btn');
+    if (rebuildBtn) rebuildBtn.onclick = () => runArRebuild(rebuildBtn);
 }
 
 // Toon upload sectie

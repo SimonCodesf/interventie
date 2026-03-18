@@ -79,6 +79,23 @@ html {
     opacity: 1;
 }
 
+.admin-logo-link {
+    display: inline-block;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.admin-logo-link:hover {
+    border-color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.04);
+}
+
+.admin-logo-link:focus-visible {
+    outline: 1px solid rgba(255,255,255,0.7);
+    outline-offset: 2px;
+}
+
 .system-status-indicator {
     font-family: 'Roboto Mono', monospace;
     font-size: 0.6rem;
@@ -2024,6 +2041,13 @@ input:checked + .toggle-slider:before {
     flex-direction: column;
 }
 
+.settings-modal-content {
+    max-width: 640px;
+    width: min(94vw, 640px);
+    height: auto;
+    max-height: 86vh;
+}
+
 .modal-content.modal-fullscreen {
     max-width: 90vw;
     width: 90vw;
@@ -2060,6 +2084,94 @@ input:checked + .toggle-slider:before {
     flex-direction: column;
     gap: 8px;
     min-height: 0;
+}
+
+.settings-modal-body {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-section {
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.03);
+    padding: 10px;
+}
+
+.settings-section-title {
+    font-family: var(--font-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.9px;
+    color: var(--text-high);
+    margin-bottom: 6px;
+}
+
+.settings-help {
+    margin: 0 0 8px;
+    color: var(--text-soft);
+    font-size: 0.56rem;
+    font-family: var(--font-data);
+    line-height: 1.4;
+}
+
+.settings-link {
+    color: #0ff;
+}
+
+.settings-inline-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.settings-input {
+    flex: 1;
+    font-family: var(--font-data);
+    font-size: 0.62rem;
+}
+
+.settings-mini-btn {
+    font-size: 0.55rem;
+    padding: 4px 8px;
+}
+
+.settings-status {
+    margin-top: 6px;
+    font-size: 0.54rem;
+    font-family: var(--font-data);
+    color: var(--text-muted);
+}
+
+.settings-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.58rem;
+    color: var(--text-soft);
+    font-family: var(--font-data);
+}
+
+.settings-toggle-row input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+    margin: 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.04);
+}
+
+.reduce-motion-admin * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
 }
 
 .modal-body .editor-grid {

@@ -30,16 +30,16 @@
         <!-- Sidebar -->
         <aside class="admin-sidebar">
             <div class="sidebar-header">
-                <img src="../img/Artboard 1logo.svg" alt="INTERVENTIE" class="admin-logo">
+                <a href="../index.html" class="admin-logo-link" title="Terug naar website">
+                    <img src="../img/Artboard 1logo.svg" alt="INTERVENTIE" class="admin-logo">
+                </a>
                 <div class="system-status-indicator">
                     <span class="status-dot"></span> ONLINE :: ADMIN_NODE
                 </div>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="../index.html" class="nav-item-link">Terug naar website</a>
                 <button id="logout-btn" class="nav-item-btn">Uitloggen</button>
-                <button id="rebuild-mind-btn" class="nav-item-btn">AR Rebuild</button>
                 <button id="settings-btn" class="nav-item-btn">Instellingen</button>
             </nav>
 
@@ -416,21 +416,43 @@
     <!-- Instellingen modal -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-backdrop" onclick="closeSettingsModal()"></div>
-        <div class="modal-content" style="max-width:480px">
+        <div class="modal-content settings-modal-content">
             <div class="modal-header">
                 <h2>INSTELLINGEN</h2>
                 <button type="button" class="modal-close" onclick="closeSettingsModal()">×</button>
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">SKETCHFAB API KEY</label>
-                    <p style="font-size:0.55rem;opacity:0.6;margin:0 0 6px">Aanmaken op <a href="https://sketchfab.com/settings/password" target="_blank" rel="noopener" style="color:#0ff">sketchfab.com → Account → Password & API → API Token</a></p>
-                    <div style="display:flex;gap:6px;align-items:center">
-                        <input type="password" id="sketchfab-api-key" class="form-control" placeholder="Plak hier je Sketchfab API token..." style="flex:1;font-family:monospace;font-size:0.6rem">
-                        <button type="button" id="sketchfab-key-toggle" class="terminal-btn" style="font-size:0.55rem;padding:4px 8px" onclick="toggleKeyVisibility()">TOON</button>
+            <div class="modal-body settings-modal-body">
+                <section class="settings-section">
+                    <div class="settings-section-title">AR BEHEER</div>
+                    <p class="settings-help">Herbouw de AR chunks wanneer je markers of posterbestanden hebt aangepast.</p>
+                    <div class="settings-inline-row">
+                        <button type="button" id="settings-rebuild-mind-btn" class="btn btn-primary">AR REBUILD UITVOEREN</button>
                     </div>
-                    <div id="sketchfab-key-status" style="font-size:0.5rem;margin-top:4px;opacity:0.7"></div>
-                </div>
+                    <div id="settings-rebuild-status" class="settings-status">Klaar om te starten.</div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-title">INTEGRATIES</div>
+                    <label class="form-label" for="sketchfab-api-key">SKETCHFAB API KEY</label>
+                    <p class="settings-help">Aanmaken op <a href="https://sketchfab.com/settings/password" target="_blank" rel="noopener" class="settings-link">sketchfab.com → Account → Password & API → API Token</a></p>
+                    <div class="settings-inline-row">
+                        <input type="password" id="sketchfab-api-key" class="form-control settings-input" placeholder="Plak hier je Sketchfab API token...">
+                        <button type="button" id="sketchfab-key-toggle" class="terminal-btn settings-mini-btn" onclick="toggleKeyVisibility()">TOON</button>
+                    </div>
+                    <div id="sketchfab-key-status" class="settings-status"></div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-title">INTERFACE</div>
+                    <label class="settings-toggle-row">
+                        <input type="checkbox" id="setting-rebuild-confirm">
+                        <span>Bevestiging vragen voor AR rebuild</span>
+                    </label>
+                    <label class="settings-toggle-row">
+                        <input type="checkbox" id="setting-reduced-motion">
+                        <span>Minder animaties in admin interface</span>
+                    </label>
+                </section>
             </div>
             <div class="modal-footer">
                 <button type="button" id="save-settings-btn" class="btn btn-primary">OPSLAAN</button>
