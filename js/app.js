@@ -2376,6 +2376,22 @@ const AR_TEXT_FONT_CHOICES = [
     '"Righteous", sans-serif',
     '"Syncopate", sans-serif',
     '"Alfa Slab One", serif',
+    '"Chakra Petch", sans-serif',
+    '"Staatliches", sans-serif',
+    '"Kanit", sans-serif',
+    '"Saira Stencil One", sans-serif',
+    '"Bungee Shade", cursive',
+    '"Rubik Glitch", cursive',
+    '"Faster One", cursive',
+    '"Wallpoet", cursive',
+    '"Frijole", cursive',
+    '"Nosifer", cursive',
+    '"Special Elite", cursive',
+    '"Rye", cursive',
+    '"Silkscreen", monospace',
+    '"VT323", monospace',
+    '"Geo", sans-serif',
+    '"Orbit", sans-serif',
     '"futura-pt", "Bebas Neue", sans-serif',
     '"proxima-nova", "Orbitron", sans-serif'
 ];
@@ -2389,7 +2405,7 @@ function ensureARTextFontsLoaded() {
         const link = document.createElement('link');
         link.id = 'google-ar-text-fonts';
         link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Creepster&family=Exo+2:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Michroma&family=Monoton&family=Orbitron:wght@400;700;900&family=Oswald:wght@400;700&family=Permanent+Marker&family=Playfair+Display:wght@400;700;900&family=Press+Start+2P&family=Rajdhani:wght@400;700&family=Righteous&family=Rubik+Mono+One&family=Russo+One&family=Share+Tech+Mono&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Teko:wght@400;700&display=swap';
+        link.href = 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Bungee+Shade&family=Chakra+Petch:wght@400;700&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Creepster&family=Exo+2:wght@400;700;900&family=Faster+One&family=Frijole&family=Geo&family=JetBrains+Mono:wght@400;700&family=Kanit:wght@400;700&family=Luckiest+Guy&family=Michroma&family=Monoton&family=Nosifer&family=Orbit&family=Orbitron:wght@400;700;900&family=Oswald:wght@400;700&family=Permanent+Marker&family=Playfair+Display:wght@400;700;900&family=Press+Start+2P&family=Rajdhani:wght@400;700&family=Righteous&family=Rubik+Glitch&family=Rubik+Mono+One&family=Russo+One&family=Rye&family=Saira+Stencil+One&family=Share+Tech+Mono&family=Silkscreen:wght@400;700&family=Space+Mono:wght@400;700&family=Special+Elite&family=Staatliches&family=Syncopate:wght@400;700&family=Teko:wght@400;700&family=VT323&family=Wallpoet&display=swap';
         document.head.appendChild(link);
     }
 }
@@ -2412,8 +2428,13 @@ function pickRandomTextStyle(seedInput) {
         outlineColor: pick(['#000000', '#111111', '#3d0f0f', '#0a1a2f', '#2e005d']),
         outlineWidth: Math.round((2 + rand() * 5) * 10) / 10,
         fontSize: Math.round(56 + rand() * 70),
-        effect: pick(['none', 'glow', 'shadow', 'neon']),
-        effect3d: pick(['none', 'extrude', 'tilt', 'float']),
+        effect: pick(['glow', 'shadow', 'neon', 'none']),
+        effectColor: pick(['#ffffff', '#00e5ff', '#ffeb3b', '#ff5ca8', '#7dff9a', '#ff8a00', '#a7b6ff']),
+        effect3d: pick(['extrude', 'tilt', 'float', 'none']),
+        effect3dDepth: Math.round(2 + rand() * 9),
+        effect3dTiltX: Math.round(-30 + rand() * 60),
+        effect3dTiltY: Math.round(-30 + rand() * 60),
+        effect3dFloatPx: Math.round(2 + rand() * 26),
         align: pick(['left', 'center', 'right'])
     };
 }
@@ -2439,7 +2460,23 @@ function applyRandomTextStyleBySpec(baseStyle, seedInput, randomSpec = {}) {
         finalStyle.outlineWidth = randomStyle.outlineWidth;
     }
     if (randomSpec.effect) finalStyle.effect = randomStyle.effect;
-    if (randomSpec.effect3d) finalStyle.effect3d = randomStyle.effect3d;
+    if (randomSpec.effectColor) finalStyle.effectColor = randomStyle.effectColor;
+    if (randomSpec.effect3d) {
+        finalStyle.effect3d = randomStyle.effect3d;
+        finalStyle.effect3dDepth = randomStyle.effect3dDepth;
+        finalStyle.effect3dTiltX = randomStyle.effect3dTiltX;
+        finalStyle.effect3dTiltY = randomStyle.effect3dTiltY;
+        finalStyle.effect3dFloatPx = randomStyle.effect3dFloatPx;
+    }
+
+    if (randomSpec.effect && finalStyle.effect === 'none') {
+        finalStyle.effect = 'glow';
+    }
+
+    if (randomSpec.effect3d && finalStyle.effect3d === 'none') {
+        finalStyle.effect3d = 'extrude';
+    }
+
     if (randomSpec.size) finalStyle.fontSize = randomStyle.fontSize;
     if (randomSpec.align) finalStyle.align = randomStyle.align;
 
@@ -2477,7 +2514,7 @@ function renderTextTexture(content, style) {
     ctx.fillStyle = style.color;
 
     if (style.effect === 'glow') {
-        ctx.shadowColor = style.color;
+        ctx.shadowColor = style.effectColor || style.color;
         ctx.shadowBlur = 14;
     } else if (style.effect === 'shadow') {
         ctx.shadowColor = 'rgba(0,0,0,0.7)';
@@ -2485,7 +2522,7 @@ function renderTextTexture(content, style) {
         ctx.shadowOffsetX = 3;
         ctx.shadowOffsetY = 3;
     } else if (style.effect === 'neon') {
-        ctx.shadowColor = style.color;
+        ctx.shadowColor = style.effectColor || style.color;
         ctx.shadowBlur = 20;
     }
 
@@ -2533,6 +2570,7 @@ function applyTextLayersTextures(rootEl) {
             outlineWidth: parseFloat(plane.getAttribute('data-text-outline-width') || '3') || 3,
             fontSize: parseFloat(plane.getAttribute('data-text-font-size') || '96') || 96,
             effect: plane.getAttribute('data-text-effect') || 'none',
+            effectColor: plane.getAttribute('data-text-effect-color') || '#00e5ff',
             effect3d: plane.getAttribute('data-text-3d') || 'none',
             effect3dDepth: parseFloat(plane.getAttribute('data-text-3d-depth') || '3') || 3,
             effect3dTiltX: parseFloat(plane.getAttribute('data-text-3d-tilt-x') || '16') || 16,
@@ -2546,6 +2584,7 @@ function applyTextLayersTextures(rootEl) {
             color: plane.getAttribute('data-text-random-color') === '1',
             outline: plane.getAttribute('data-text-random-outline') === '1',
             effect: plane.getAttribute('data-text-random-effect') === '1',
+            effectColor: plane.getAttribute('data-text-random-effect-color') === '1',
             effect3d: plane.getAttribute('data-text-random-3d') === '1',
             size: plane.getAttribute('data-text-random-size') === '1',
             align: plane.getAttribute('data-text-random-align') === '1',
@@ -2750,6 +2789,7 @@ function buildLayersHTML(poster) {
                 const textFontSize = parseFloat(layerData.text_font_size) || 96;
                 const textAlign = layerData.text_align || 'center';
                 const textEffect = layerData.text_effect || 'none';
+                const textEffectColor = layerData.text_effect_color || '#00e5ff';
                 const text3D = layerData.text_3d_effect || 'none';
                 const text3DDepth = parseFloat(layerData.text_3d_depth) || 3;
                 const text3DTiltX = (layerData.text_3d_tilt_x !== undefined && layerData.text_3d_tilt_x !== null) ? parseFloat(layerData.text_3d_tilt_x) : 16;
@@ -2761,6 +2801,7 @@ function buildLayersHTML(poster) {
                 const randomColor = layerData.text_random_color ? '1' : '0';
                 const randomOutline = layerData.text_random_outline ? '1' : '0';
                 const randomEffect = layerData.text_random_effect ? '1' : '0';
+                const randomEffectColor = layerData.text_random_effect_color ? '1' : '0';
                 const random3D = layerData.text_random_3d ? '1' : '0';
                 const randomSize = layerData.text_random_size ? '1' : '0';
                 const randomAlign = layerData.text_random_align ? '1' : '0';
@@ -2777,6 +2818,7 @@ function buildLayersHTML(poster) {
                         data-text-font-size="${textFontSize}"
                         data-text-align="${textAlign}"
                         data-text-effect="${textEffect}"
+                        data-text-effect-color="${textEffectColor}"
                         data-text-3d="${text3D}"
                         data-text-3d-depth="${text3DDepth}"
                         data-text-3d-tilt-x="${text3DTiltX}"
@@ -2788,6 +2830,7 @@ function buildLayersHTML(poster) {
                         data-text-random-color="${randomColor}"
                         data-text-random-outline="${randomOutline}"
                         data-text-random-effect="${randomEffect}"
+                        data-text-random-effect-color="${randomEffectColor}"
                         data-text-random-3d="${random3D}"
                         data-text-random-size="${randomSize}"
                         data-text-random-align="${randomAlign}"
