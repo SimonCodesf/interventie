@@ -685,6 +685,18 @@ function deleteLayer(layerNum) {
     if (deleteInput) {
         deleteInput.value = '1';
     }
+
+    const deleteMediaInput = document.getElementById(`edit-layer-${layerNum}-delete-media`);
+    const deleteGlbInput = document.getElementById(`edit-layer-${layerNum}-delete-glb`);
+    const deleteAudioInput = document.getElementById(`edit-layer-${layerNum}-delete-audio`);
+    if (deleteMediaInput) deleteMediaInput.value = '1';
+    if (deleteGlbInput) deleteGlbInput.value = '1';
+    if (deleteAudioInput) deleteAudioInput.value = '1';
+
+    const layerCard = document.getElementById(`edit-layer-${layerNum}-image`)?.closest('.layer-card');
+    if (layerCard) {
+        layerCard.dataset.layerDeleted = '1';
+    }
     
     inputIds.forEach(id => {
         const el = document.getElementById(id);
@@ -756,7 +768,7 @@ function deleteLayer(layerNum) {
     // Update status badge
     const statusBadge = document.getElementById(`edit-layer-${layerNum}-status`);
     if (statusBadge) {
-        statusBadge.textContent = 'Leeg';
+        statusBadge.textContent = 'VERWIJDERD';
     }
     
     // Update current file info
@@ -5461,6 +5473,18 @@ async function openEditModal(posterId) {
             
             const deleteInput = document.getElementById(`edit-layer-${layerNum}-delete`);
             if (deleteInput) deleteInput.value = '0';
+
+            const deleteMediaInput = document.getElementById(`edit-layer-${layerNum}-delete-media`);
+            const deleteGlbInput = document.getElementById(`edit-layer-${layerNum}-delete-glb`);
+            const deleteAudioInput = document.getElementById(`edit-layer-${layerNum}-delete-audio`);
+            if (deleteMediaInput) deleteMediaInput.value = '0';
+            if (deleteGlbInput) deleteGlbInput.value = '0';
+            if (deleteAudioInput) deleteAudioInput.value = '0';
+
+            const layerCard = fileInput?.closest('.layer-card');
+            if (layerCard) {
+                layerCard.dataset.layerDeleted = '0';
+            }
             
             // Clear GLB en audio inputs per laag
             const glbInput = document.getElementById(`edit-layer-${layerNum}-glb`);
@@ -5524,8 +5548,13 @@ function closeEditModal() {
 
 // Setup edit form submission
 document.addEventListener('DOMContentLoaded', () => {
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) uploadForm.noValidate = true;
+
     const editForm = document.getElementById('edit-form');
     if (editForm) {
+        editForm.noValidate = true;
+
         editForm.onsubmit = async (e) => {
             e.preventDefault();
             
@@ -5728,16 +5757,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const deleteMedia = deleteMediaEl ? deleteMediaEl.value : '0';
                 const deleteGlb = deleteGlbEl ? deleteGlbEl.value : '0';
                 const deleteAudio = deleteAudioEl ? deleteAudioEl.value : '0';
+
+                const layerCard = layerImageEl.closest('.layer-card');
+                const forceLayerDelete = deleteFlag === '1' || layerCard?.dataset?.layerDeleted === '1';
+                const effectiveDeleteFlag = forceLayerDelete ? '1' : deleteFlag;
+                const effectiveDeleteMedia = forceLayerDelete ? '1' : deleteMedia;
+                const effectiveDeleteGlb = forceLayerDelete ? '1' : deleteGlb;
+                const effectiveDeleteAudio = forceLayerDelete ? '1' : deleteAudio;
                 
                 // Always send configuration (updates existing layer config)
                 formData.append(`layer_${i}_z`, layerZ || '0');
                 formData.append(`layer_${i}_exclusion`, '0');
                 formData.append(`layer_${i}_transparent`, transparent);
                 formData.append(`layer_${i}_bg_color`, bgColor);
-                formData.append(`layer_${i}_delete`, deleteFlag);
-                formData.append(`layer_${i}_delete_media`, deleteMedia);
-                formData.append(`layer_${i}_delete_glb`, deleteGlb);
-                formData.append(`layer_${i}_delete_audio`, deleteAudio);
+                formData.append(`layer_${i}_delete`, effectiveDeleteFlag);
+                formData.append(`layer_${i}_delete_media`, effectiveDeleteMedia);
+                formData.append(`layer_${i}_delete_glb`, effectiveDeleteGlb);
+                formData.append(`layer_${i}_delete_audio`, effectiveDeleteAudio);
                 
                 // Base position and scale
                 formData.append(`layer_${i}_pos_x`, posXEl ? posXEl.value || '0' : '0');
