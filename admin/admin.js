@@ -697,6 +697,9 @@ function deleteLayer(layerNum) {
     if (layerCard) {
         layerCard.dataset.layerDeleted = '1';
     }
+
+    // Wis eventueel opgeslagen API-selectie/random metadata voor deze laag
+    delete apiLayerData[`edit-layer-${layerNum}`];
     
     inputIds.forEach(id => {
         const el = document.getElementById(id);
@@ -729,6 +732,29 @@ function deleteLayer(layerNum) {
             }
         }
     });
+
+    // Reset API velden expliciet zodat random query/source niet per ongeluk blijft bestaan
+    const contentTypeEl = document.getElementById(`edit-layer-${layerNum}-content-type`);
+    if (contentTypeEl) {
+        contentTypeEl.value = 'image';
+    }
+
+    const apiSourceEl = document.getElementById(`edit-layer-${layerNum}-source`);
+    const apiQueryEl = document.getElementById(`edit-layer-${layerNum}-api-query`);
+    const apiRandomEl = document.getElementById(`edit-layer-${layerNum}-api-random`);
+    const apiResultsEl = document.getElementById(`edit-layer-${layerNum}-api-results`);
+    const apiSelectedEl = document.getElementById(`edit-layer-${layerNum}-api-selected`);
+
+    if (apiSourceEl) apiSourceEl.value = 'klipy';
+    if (apiQueryEl) apiQueryEl.value = '';
+    if (apiRandomEl) apiRandomEl.checked = false;
+    if (apiResultsEl) apiResultsEl.innerHTML = '';
+    if (apiSelectedEl) {
+        apiSelectedEl.classList.add('hidden');
+        apiSelectedEl.innerHTML = '';
+    }
+
+    syncLayerContentTypeUI(layerNum, 'edit-');
     
     // Reset GLB en audio file inputs
     const glbInput = document.getElementById(`edit-layer-${layerNum}-glb`);
@@ -5683,6 +5709,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const layerZ = layerZEl.value;
                 const contentType = contentTypeEl?.value || 'image';
 
+                const currentDeleteEl = document.getElementById(`edit-layer-${i}-delete`);
+                const currentLayerCard = layerImageEl.closest('.layer-card');
+                const isLayerMarkedForDelete = (currentDeleteEl?.value === '1') || (currentLayerCard?.dataset?.layerDeleted === '1');
+
                 formData.append(`layer_${i}_content_type`, contentType);
                 
                 // Check of er een API-geselecteerde afbeelding is voor deze laag (edit modus)
@@ -5699,7 +5729,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isApiRandom = (editApiData?.api_mode === 'random') ||
                                     (liveSource && liveIsRandom);
                 
-                if (contentType === 'api' && isApiRandom) {
+                if (!isLayerMarkedForDelete && contentType === 'api' && isApiRandom) {
                     // RANDOM mode: geen bestand uploaden, enkel de zoekterm opslaan.
                     // Gebruik live DOM-waarden → vangt handmatig getypte query's op zonder ZOEK te klikken
                     const saveSource = liveSource || editApiData?.source || 'klipy';
@@ -5707,12 +5737,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append(`layer_${i}_api_mode`, 'random');
                     formData.append(`layer_${i}_api_source`, saveSource);
                     formData.append(`layer_${i}_api_query`, saveQuery);
-                } else if (contentType === 'api' && editApiData && editApiData.type === '3d' && editApiData.uid) {
+                } else if (!isLayerMarkedForDelete && contentType === 'api' && editApiData && editApiData.type === '3d' && editApiData.uid) {
                     // Specifiek 3D model: sla UID op als api_mode=3d_model
                     formData.append(`layer_${i}_api_mode`, '3d_model');
                     formData.append(`layer_${i}_api_source`, 'sketchfab');
                     formData.append(`layer_${i}_api_query`, editApiData.uid);
-                } else if (contentType === 'api' && editApiData && editApiData.url) {
+                } else if (!isLayerMarkedForDelete && contentType === 'api' && editApiData && editApiData.url) {
                     // Download de API content en voeg toe als bestand
                     try {
                         const proxyUrl = editApiData.source === 'klipy' 

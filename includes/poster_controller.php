@@ -875,7 +875,8 @@ function handleUpdatePoster($db, $id) {
         
         // Sla API random mode metadata op per layer (update modus)
         for ($i = 1; $i <= 8; $i++) {
-            if (!empty($_POST["layer_{$i}_api_mode"]) && $_POST["layer_{$i}_api_mode"] === 'random') {
+            $isDeletedLayer = isset($_POST["layer_{$i}_delete"]) && (int)$_POST["layer_{$i}_delete"] === 1;
+            if (!$isDeletedLayer && !empty($_POST["layer_{$i}_api_mode"]) && $_POST["layer_{$i}_api_mode"] === 'random') {
                 $layersData["layer_$i"]['api_mode'] = 'random';
                 $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"] ?? 'klipy';
                 $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_query"] ?? '';
