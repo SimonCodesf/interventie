@@ -155,7 +155,8 @@
         schema: {
             src: { type: 'string', default: '' },
             autoplay: { type: 'boolean', default: true },
-            transparent: { type: 'boolean', default: false } // Default: opaque met witte achtergrond
+            transparent: { type: 'boolean', default: false }, // Default: opaque met witte achtergrond
+            speed: { type: 'number', default: 1.0 } // 1.0 = normale snelheid, 2.0 = 2x sneller
         },
         
         init: function() {
@@ -333,8 +334,10 @@
             
             // Check of het tijd is voor het volgende frame
             const delay = this.gifData.delays[this.currentFrame] || 100;
+            const speedMultiplier = Math.max(0.25, Number(this.data.speed) || 1.0);
+            const effectiveDelay = Math.max(16, delay / speedMultiplier);
             
-            if (time - this.lastFrameTime >= delay) {
+            if (time - this.lastFrameTime >= effectiveDelay) {
                 this.lastFrameTime = time;
                 
                 // Volgende frame
