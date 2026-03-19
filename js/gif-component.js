@@ -158,7 +158,8 @@
             transparent: { type: 'boolean', default: false }, // Default: opaque met witte achtergrond
             speed: { type: 'number', default: 1.0 }, // 1.0 = normale snelheid, 2.0 = 2x sneller
             startupBoost: { type: 'boolean', default: false }, // Forceer snelle overgang vanaf frame 1
-            startupMaxDelay: { type: 'number', default: 120 } // Max ms voor eerste frame tijdens startup
+            startupMaxDelay: { type: 'number', default: 120 }, // Max ms per startup frame
+            startupBoostFrames: { type: 'number', default: 6 } // Aantal snelle frame-overgangen bij start
         },
         
         init: function() {
@@ -178,6 +179,7 @@
             this.loadedSrc = null;
             this._animLogDone = false; // Reset animatie log flag
             this._startupFramePassed = false;
+            this._startupTransitionsDone = 0;
             
             if (this.data.src) {
                 this.loadGif(this.data.src);
@@ -197,6 +199,7 @@
             this.loadedSrc = src;
             this._animLogDone = false;
             this._startupFramePassed = false;
+            this._startupTransitionsDone = 0;
             
             console.log('[gif-component] Laden:', src);
             
@@ -341,7 +344,9 @@
             const speedMultiplier = Math.max(0.25, Number(this.data.speed) || 1.0);
             const effectiveDelay = Math.max(16, delay / speedMultiplier);
             const startupMaxDelay = Math.max(16, Number(this.data.startupMaxDelay) || 120);
-            const isStartupFrame = this.data.startupBoost && !this._startupFramePassed && this.currentFrame === 0;
+            const startupBoostFrames = Math.max(0, Number(this.data.startupBoostFrames) || 0);
+            const startupActive = this.data.startupBoost && this._startupTransitionsDone < startupBoostFrames;
+            const isStartupFrame = startupActive || (!this._startupFramePassed && this.currentFrame === 0);
             const requiredDelay = isStartupFrame ? Math.min(effectiveDelay, startupMaxDelay) : effectiveDelay;
             
             if (time - this.lastFrameTime >= requiredDelay) {
@@ -349,9 +354,28 @@
                 
                 // Volgende frame
                 const prevFrame = this.currentFrame;
-                this.currentFrame = (this.currentFrame + 1) % this.gifData.frames.length;
+                let nextFrame = (this.currentFrame + 1) % this.gifData.frames.length;
+
+                // Als het volgende frame nog niet geladen is, zoek eerstvolgende beschikbare frame
+                if (!this.gifData.frames[nextFrame]) {
+                    let found = false;
+                    for (let step = 1; step < this.gifData.frames.length; step++) {
+                        const candidate = (this.currentFrame + step) % this.gifData.frames.length;
+                        if (this.gifData.frames[candidate]) {
+                            nextFrame = candidate;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) return;
+                }
+
+                this.currentFrame = nextFrame;
                 if (prevFrame === 0) {
                     this._startupFramePassed = true;
+                }
+                if (startupActive) {
+                    this._startupTransitionsDone++;
                 }
                 
                 // Debug log (eenmalig per GIF load)
