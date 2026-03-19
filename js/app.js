@@ -1217,7 +1217,7 @@ function loadLazyGifsForTarget(target) {
 // Cooldown cache voor API random layers: key = `${posterId}-${layerKey}` → {url, timestamp}
 const apiLayerCooldownCache = new Map();
 const API_LAYER_COOLDOWN_MS = 30000; // 30 seconden
-const API_RANDOM_GIF_SPEED = 1.4; // Speel API GIFs 40% sneller af
+const API_RANDOM_GIF_STARTUP_MAX_DELAY_MS = 120; // Eerste frame max 120ms tonen
 
 // Verwijder kapotte URL uit cache zodat volgende scan een verse GIF krijgt
 window.addEventListener('gif-error', (e) => {
@@ -2672,7 +2672,7 @@ function buildLayersHTML(poster) {
                     <a-plane 
                         id="ar-layer-${i}"
                         class="gif-layer api-random-layer"
-                        gif="autoplay: true; transparent: ${apiIsTransparent}; speed: ${API_RANDOM_GIF_SPEED}"
+                        gif="autoplay: true; transparent: ${apiIsTransparent}; speed: 1; startupBoost: true; startupMaxDelay: ${API_RANDOM_GIF_STARTUP_MAX_DELAY_MS}"
                         data-api-random="true"
                         data-api-source="${layerData.api_source || 'klipy'}"
                         data-api-query="${layerData.api_query.replace(/"/g, '&quot;')}"
