@@ -4088,7 +4088,7 @@ function setupUploadForm() {
         const formData = new FormData();
         const titleValue = (document.getElementById('poster-title')?.value || '').trim();
         const descriptionValue = (document.getElementById('poster-description')?.value || '').trim();
-        const projectValue = normalizeProjectNameClient(document.getElementById('poster-project')?.value || '');
+        const projectValue = readSelectedProject('');
         const jpegFile = document.getElementById('poster-jpeg')?.files?.[0];
 
         if (!titleValue) {
@@ -4882,18 +4882,95 @@ function normalizeProjectNameClient(value) {
     return cleaned || 'algemeen';
 }
 
+const PROJECT_NEW_VALUE = '__new_project__';
+
+function getProjectControls(prefix = '') {
+    if (prefix === 'edit-') {
+        return {
+            selectEl: document.getElementById('edit-project-select'),
+            newInputEl: document.getElementById('edit-project-new')
+        };
+    }
+
+    return {
+        selectEl: document.getElementById('poster-project-select'),
+        newInputEl: document.getElementById('poster-project-new')
+    };
+}
+
+function toggleProjectNewInput(prefix = '') {
+    const { selectEl, newInputEl } = getProjectControls(prefix);
+    if (!selectEl || !newInputEl) return;
+
+    const isNew = selectEl.value === PROJECT_NEW_VALUE;
+    newInputEl.style.display = isNew ? 'block' : 'none';
+    newInputEl.required = isNew;
+
+    if (!isNew) {
+        newInputEl.value = '';
+    }
+}
+
+function readSelectedProject(prefix = '') {
+    const { selectEl, newInputEl } = getProjectControls(prefix);
+    if (!selectEl) return 'algemeen';
+
+    if (selectEl.value === PROJECT_NEW_VALUE) {
+        return normalizeProjectNameClient(newInputEl ? newInputEl.value : '');
+    }
+
+    return normalizeProjectNameClient(selectEl.value);
+}
+
+function setProjectSelection(prefix = '', value = '') {
+    const normalized = normalizeProjectNameClient(value);
+    const { selectEl, newInputEl } = getProjectControls(prefix);
+    if (!selectEl || !newInputEl) return;
+
+    const optionValues = Array.from(selectEl.options || []).map((opt) => opt.value);
+    if (optionValues.includes(normalized)) {
+        selectEl.value = normalized;
+        newInputEl.value = '';
+    } else {
+        selectEl.value = PROJECT_NEW_VALUE;
+        newInputEl.value = normalized;
+    }
+
+    toggleProjectNewInput(prefix);
+}
+
 function updateProjectDatalists(projects) {
     const options = Array.from(new Set((projects || [])
         .map((p) => normalizeProjectNameClient(p))
         .filter((p) => p !== '')))
         .sort((a, b) => a.localeCompare(b, 'nl'));
 
-    const uploadList = document.getElementById('project-options');
-    const editList = document.getElementById('edit-project-options');
-    const optionHtml = options.map((project) => `<option value="${escapeHtml(project)}"></option>`).join('');
+    const uploadSelect = document.getElementById('poster-project-select');
+    const editSelect = document.getElementById('edit-project-select');
 
-    if (uploadList) uploadList.innerHTML = optionHtml;
-    if (editList) editList.innerHTML = optionHtml;
+    const optionHtml = [
+        ...options.map((project) => `<option value="${escapeHtml(project)}">${escapeHtml(project)}</option>`),
+        '<option value="__new_project__">+ Nieuw project...</option>'
+    ].join('');
+
+    const previousUpload = readSelectedProject('');
+    const previousEdit = readSelectedProject('edit-');
+
+    if (uploadSelect) uploadSelect.innerHTML = optionHtml;
+    if (editSelect) editSelect.innerHTML = optionHtml;
+
+    if (uploadSelect && !uploadSelect.dataset.boundProjectChange) {
+        uploadSelect.addEventListener('change', () => toggleProjectNewInput(''));
+        uploadSelect.dataset.boundProjectChange = '1';
+    }
+
+    if (editSelect && !editSelect.dataset.boundProjectChange) {
+        editSelect.addEventListener('change', () => toggleProjectNewInput('edit-'));
+        editSelect.dataset.boundProjectChange = '1';
+    }
+
+    setProjectSelection('', previousUpload || 'algemeen');
+    setProjectSelection('edit-', previousEdit || 'algemeen');
 }
 
 async function fetchMemebordenAdminItems() {
@@ -4942,10 +5019,7 @@ async function loadAdminPosters() {
             });
 
         updateProjectDatalists(allItems.map((item) => item.project));
-        const uploadProjectInput = document.getElementById('poster-project');
-        if (uploadProjectInput && !uploadProjectInput.value.trim()) {
-            uploadProjectInput.value = 'algemeen';
-        }
+        setProjectSelection('', readSelectedProject('') || 'algemeen');
         
         const postersList = document.getElementById('admin-poster-list');
         if (allItems.length === 0) {
@@ -5260,10 +5334,7 @@ async function openEditModal(posterId) {
         document.getElementById('edit-poster-id').value = poster.id;
         document.getElementById('edit-title').value = poster.title || '';
         document.getElementById('edit-description').value = poster.description || '';
-        const editProjectEl = document.getElementById('edit-project');
-        if (editProjectEl) {
-            editProjectEl.value = normalizeProjectNameClient(poster.project || poster.project_name || '');
-        }
+        setProjectSelection('edit-', normalizeProjectNameClient(poster.project || poster.project_name || ''));
         
         // Combine lat/lng into single coordinates field
         const lat = poster.latitude || '';
@@ -5736,10 +5807,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add text fields
             const titleEl = document.getElementById('edit-title');
             const descriptionEl = document.getElementById('edit-description');
-            const projectEl = document.getElementById('edit-project');
             if (titleEl) formData.append('title', titleEl.value);
             if (descriptionEl) formData.append('description', descriptionEl.value);
-            formData.append('project_name', normalizeProjectNameClient(projectEl ? projectEl.value : ''));
+            formData.append('project_name', readSelectedProject('edit-'));
             
             // Parse combined coordinates field
             const coordinatesEl = document.getElementById('edit-coordinates');
