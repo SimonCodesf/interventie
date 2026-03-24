@@ -109,6 +109,96 @@ function handleAdminBookExport($db) {
             ];
         };
 
+        $layerDefaults = [
+            'z' => 0,
+            'pos_x' => 0,
+            'pos_y' => 0,
+            'scale' => 1.0,
+            'rot_x' => 0,
+            'rot_y' => 0,
+            'rot_z' => 0,
+            'anim_x' => 0,
+            'anim_y' => 0,
+            'anim_z' => 0,
+            'anim_pos_duration' => 0,
+            'anim_rot_x' => 0,
+            'anim_rot_y' => 0,
+            'anim_rot_z' => 0,
+            'anim_rot_duration' => 0,
+            'anim_rot_origin' => 'center',
+            'anim_scale' => 1.0,
+            'anim_opacity' => 1.0,
+            'anim_scale_duration' => 0,
+            'transparent' => false,
+            'bg_color' => '#000000',
+            'exclusion_filter' => false,
+            'text_enabled' => false,
+            'text_random_style' => false,
+            'text_random_font' => false,
+            'text_random_color' => false,
+            'text_random_outline' => false,
+            'text_random_effect' => false,
+            'text_random_effect_color' => false,
+            'text_random_3d' => false,
+            'text_random_size' => false,
+            'text_random_align' => false,
+            'text_content' => '',
+            'text_font_family' => '"Bebas Neue", sans-serif',
+            'text_font_size' => 96,
+            'text_align' => 'center',
+            'text_offset_y' => 0.85,
+            'text_color' => '#ffffff',
+            'text_outline_color' => '#000000',
+            'text_outline_width' => 3,
+            'text_effect' => 'none',
+            'text_effect_color' => '#00e5ff',
+            'text_3d_effect' => 'none',
+            'text_3d_depth' => 3,
+            'text_3d_tilt_x' => 16,
+            'text_3d_tilt_y' => 0,
+            'text_3d_float_px' => 4,
+            'text_style_seed' => 0,
+            'filename' => null,
+            'is_video' => false,
+            'glb_model' => null,
+            'audio_file' => null,
+        ];
+
+        $isDifferentFromDefault = function($value, $default) {
+            if (is_numeric($value) && is_numeric($default)) {
+                return abs(((float)$value) - ((float)$default)) > 0.000001;
+            }
+
+            if (is_bool($value) || is_bool($default)) {
+                return (bool)$value !== (bool)$default;
+            }
+
+            return $value !== $default;
+        };
+
+        $filterLayerMetadata = function($layerData) use ($layerDefaults, $isDifferentFromDefault) {
+            if (!is_array($layerData)) return [];
+
+            $filtered = [];
+            foreach ($layerData as $key => $value) {
+                if (array_key_exists($key, $layerDefaults)) {
+                    if ($isDifferentFromDefault($value, $layerDefaults[$key])) {
+                        $filtered[$key] = $value;
+                    }
+                    continue;
+                }
+
+                // Voor keys zonder gedefinieerde default exporteren we alleen als ze betekenisvolle inhoud hebben.
+                if ($value === null) continue;
+                if (is_string($value) && trim($value) === '') continue;
+                if (is_array($value) && empty($value)) continue;
+
+                $filtered[$key] = $value;
+            }
+
+            return $filtered;
+        };
+
         $parseCredits = function($creditsRaw) {
             if (!is_string($creditsRaw) || trim($creditsRaw) === '') {
                 return [];
@@ -160,7 +250,7 @@ function handleAdminBookExport($db) {
                     'has_visual_media' => !empty($layerData['filename']),
                     'has_3d' => !empty($layerData['glb_model']),
                     'has_audio' => !empty($layerData['audio_file']),
-                    'metadata' => $layerData,
+                    'metadata' => $filterLayerMetadata($layerData),
                     'assets' => array_values(array_filter($layerMedia))
                 ];
             }
