@@ -1,9 +1,22 @@
 <?php
 // includes/poster_controller.php
 
+function normalizeProjectName($projectName, $uploadType = null) {
+    $value = is_string($projectName) ? trim($projectName) : '';
+    if ($value !== '') {
+        return substr($value, 0, 80);
+    }
+
+    if ($uploadType === 'reclame') {
+        return 'algemeen';
+    }
+
+    return 'algemeen';
+}
+
 function handleGetPosters($db) {
     try {
-        $stmt = $db->query("SELECT * FROM posters ORDER BY upload_date DESC");
+        $stmt = $db->query("SELECT * FROM posters ORDER BY datetime(created_at) DESC, datetime(upload_date) DESC");
         $posters = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Decode layers_data en gallery_images for all posters
@@ -22,6 +35,8 @@ function handleGetPosters($db) {
             } else {
                 $poster['gallery_images'] = [];
             }
+
+            $poster['project'] = normalizeProjectName($poster['project_name'] ?? null, $poster['upload_type'] ?? null);
         }
         
         jsonResponse($posters);
@@ -49,6 +64,8 @@ function handleGetPoster($db, $id) {
         } else {
             $poster['gallery_images'] = [];
         }
+
+        $poster['project'] = normalizeProjectName($poster['project_name'] ?? null, $poster['upload_type'] ?? null);
         
         jsonResponse($poster);
     } else {
@@ -281,6 +298,7 @@ function handleAdminBookExport($db) {
 
             $items[] = [
                 'id' => $poster['id'] ?? null,
+                'project' => normalizeProjectName($poster['project_name'] ?? null, $poster['upload_type'] ?? null),
                 'title' => $poster['title'] ?? '',
                 'description' => $poster['description'] ?? '',
                 'location' => [
@@ -309,16 +327,90 @@ function handleAdminBookExport($db) {
             ];
         }
 
+        // Voeg memeborden data per individueel bord toe aan export.
+        $memebordenFile = dirname(__DIR__) . '/verkeersborden/data/chunks.json';
+        if (file_exists($memebordenFile)) {
+            $chunksData = json_decode(file_get_contents($memebordenFile), true);
+            if (is_array($chunksData) && !empty($chunksData['chunks']) && is_array($chunksData['chunks'])) {
+                $generatedRaw = $chunksData['_meta']['generated'] ?? null;
+                $generatedAt = $generatedRaw ? (date('c', strtotime($generatedRaw)) ?: null) : null;
+
+                foreach ($chunksData['chunks'] as $chunk) {
+                    $chunkId = $chunk['id'] ?? 'onbekend';
+                    $chunkName = $chunk['name'] ?? 'Onbekende chunk';
+                    $chunkDescription = $chunk['description'] ?? '';
+                    $signs = is_array($chunk['signs'] ?? null) ? $chunk['signs'] : [];
+
+                    foreach ($signs as $sign) {
+                        $signId = $sign['id'] ?? '';
+                        $signName = $sign['name'] ?? '';
+                        $searchQuery = $sign['search_query'] ?? '';
+                        $imagePath = '/' . ltrim((string)($sign['image'] ?? ''), '/');
+
+                        $items[] = [
+                            'id' => 'memeborden-' . $chunkId . '-' . $signId,
+                            'project' => 'memeborden',
+                            'title' => $signName !== '' ? $signName : ('Memebord ' . $signId),
+                            'description' => $chunkDescription,
+                            'location' => [
+                                'latitude' => null,
+                                'longitude' => null,
+                                'location_description' => 'Belgie, overal'
+                            ],
+                            'external_link' => '',
+                            'credits' => [
+                                'raw' => '',
+                                'parsed' => []
+                            ],
+                            'upload_meta' => [
+                                'upload_type' => 'memeborden',
+                                'ar_camera_feed' => 0,
+                                'created_at' => $generatedAt,
+                                'upload_date' => $generatedAt,
+                                'downloads' => 0,
+                                'source' => 'verkeersborden/data/chunks.json'
+                            ],
+                            'assets' => [
+                                'jpeg' => $assetFromPath($imagePath, 'memebord_image'),
+                                'thumbnail' => $assetFromPath($imagePath, 'memebord_image'),
+                                'gallery_images' => []
+                            ],
+                            'ar_layers' => [],
+                            'memeborden' => [
+                                'chunk_id' => $chunkId,
+                                'chunk_name' => $chunkName,
+                                'chunk_description' => $chunkDescription,
+                                'sign_id' => $signId,
+                                'search_query' => $searchQuery
+                            ]
+                        ];
+                    }
+                }
+            }
+        }
+
+        $projectSummary = [];
+        foreach ($items as $item) {
+            $projectName = normalizeProjectName($item['project'] ?? null, null);
+            if (!isset($projectSummary[$projectName])) {
+                $projectSummary[$projectName] = 0;
+            }
+            $projectSummary[$projectName]++;
+        }
+
         jsonResponse([
             'success' => true,
             'generated_at' => date('c'),
             'source' => 'admin_export',
             'version' => 1,
-            'total_uploads' => count($items),
+            'total_uploads' => count($posters),
+            'total_items' => count($items),
+            'projects' => $projectSummary,
             'notes' => [
                 'PDF bestanden zijn bewust uitgesloten.',
                 '.mind markerbestanden zijn bewust uitgesloten.',
-                'AR layer metadata en layer-assets zijn inbegrepen.'
+                'AR layer metadata en layer-assets zijn inbegrepen.',
+                'Memeborden items zijn toegevoegd per individueel bord.'
             ],
             'items' => $items
         ]);
@@ -417,6 +509,7 @@ function handleUploadPoster($db) {
     $latitude = !empty($_POST['latitude']) ? (float)$_POST['latitude'] : null;
     $longitude = !empty($_POST['longitude']) ? (float)$_POST['longitude'] : null;
     $locationDescription = $_POST['location_description'] ?? '';
+    $projectName = normalizeProjectName($_POST['project_name'] ?? '', $uploadType);
     $artikelLink = $_POST['artikel_link'] ?? '';
     $credits = $_POST['credits'] ?? ''; // JSON string: [{item: "Foto", owner: "Naam"}, ...]
     
@@ -673,8 +766,8 @@ function handleUploadPoster($db) {
         // Database insert
         $arCameraFeed = isset($_POST['ar_camera_feed']) && $_POST['ar_camera_feed'] === '1' ? 1 : 0;
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed, upload_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, project_name, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed, upload_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)
         ");
         
         // Verwerk gallery afbeeldingen
@@ -702,7 +795,7 @@ function handleUploadPoster($db) {
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed, $uploadType
+            $projectName, $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed, $uploadType
         ]);
         
         logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id, type: $uploadType)");
@@ -728,6 +821,8 @@ function handleUploadPoster($db) {
         } else {
             $newPoster['gallery_images'] = [];
         }
+
+        $newPoster['project'] = normalizeProjectName($newPoster['project_name'] ?? null, $newPoster['upload_type'] ?? null);
         
         jsonResponse(['success' => true, 'poster' => $newPoster]);
         
@@ -793,6 +888,7 @@ function handleUpdatePoster($db, $id) {
         $latitude = isset($_POST['latitude']) && $_POST['latitude'] !== '' ? (float)$_POST['latitude'] : $poster['latitude'];
         $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$_POST['longitude'] : $poster['longitude'];
         $locationDescription = $_POST['location_description'] ?? $poster['location_description'];
+        $projectName = normalizeProjectName($_POST['project_name'] ?? ($poster['project_name'] ?? ''), $poster['upload_type'] ?? null);
         $artikelLink = $_POST['artikel_link'] ?? $poster['artikel_link'];
         
         // Credits: gebruik nieuw veld of behoud bestaande waarde
@@ -1222,14 +1318,14 @@ function handleUpdatePoster($db, $id) {
             UPDATE posters SET 
                 title = ?, description = ?, jpeg_filename = ?, pdf_medium_filename = ?, pdf_large_filename = ?,
                 thumbnail = ?, latitude = ?, longitude = ?, location_description = ?, 
-                artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?, ar_camera_feed = ?
+                project_name = ?, artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?, ar_camera_feed = ?
             WHERE id = ?
         ");
         
         $stmt->execute([
             $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             $thumbnailPath, $latitude, $longitude, $locationDescription,
-            $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $arCameraFeed, $id
+            $projectName, $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $arCameraFeed, $id
         ]);
         
         logAdminActivity('UPDATE_POSTER', "$title (ID: $id)");
@@ -1255,6 +1351,8 @@ function handleUpdatePoster($db, $id) {
         } else {
             $updatedPoster['gallery_images'] = [];
         }
+
+        $updatedPoster['project'] = normalizeProjectName($updatedPoster['project_name'] ?? null, $updatedPoster['upload_type'] ?? null);
         
         jsonResponse(['success' => true, 'poster' => $updatedPoster]);
         

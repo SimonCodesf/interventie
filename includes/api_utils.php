@@ -42,6 +42,7 @@ function initDatabaseWithMigrations() {
         'latitude' => 'REAL',
         'longitude' => 'REAL', 
         'location_description' => 'TEXT',
+        'project_name' => "TEXT DEFAULT 'algemeen'",
         'artikel_link' => 'TEXT',
         'photographer_credit' => 'TEXT',
         'credits' => 'TEXT',

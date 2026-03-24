@@ -136,24 +136,34 @@ function getChunkMeta(chunkId) {
  */
 function createMemebordenPosters() {
     if (!chunksData || !chunksData.chunks) return [];
+
+    const generatedRaw = chunksData?._meta?.generated || null;
+    const generatedDate = generatedRaw
+        ? (new Date(`${generatedRaw}T00:00:00Z`).toISOString())
+        : '2024-01-01T00:00:00.000Z';
     
     return chunksData.chunks.map(chunk => {
         const chunkSigns = getSignsForChunk(chunk.id);
         const galleryImages = chunkSigns.map(s => `/${s.image}`);
+        const chunkLabel = `MEMEBORDEN_${chunk.name || chunk.id}`;
         
         return {
             id: `memeborden-${chunk.id}`,
             title: `MEMEBORDEN: ${chunk.name}`,
             description: `${chunk.description} (${chunk.signs.length} borden)`,
             location_description: 'Belgie, overal',
-            created_at: new Date().toISOString(),
+            created_at: generatedDate,
+            upload_date: generatedDate,
             downloads: 0,
             thumbnail: galleryImages.length > 0 ? galleryImages[0] : 'img/placeholder.png',
             gallery_images: galleryImages,
             ar_marker: 'memeborden',    // Markeer als AR-enabled
+            project: 'memeborden',
             isMemeborden: true,          // Speciale vlag voor herkenning
             memebordenChunkId: chunk.id, // Chunk ID voor AR scene koppeling
             memebordenChunkName: chunk.name,
+            chunkKey: `memeborden-${chunk.id}`,
+            chunkLabel,
             // Geen layers - Memeborden heeft dynamische GIF overlay
             layers: null,
             // Geen download bestanden

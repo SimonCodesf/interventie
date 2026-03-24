@@ -500,6 +500,13 @@ input[type="file"]::file-selector-button:hover {
 /* Layer Accordion - Terminal Style */
 .layer-accordion {
     border: 0.5px solid rgba(255,255,255,0.5);
+.sidebar-poster-item.is-readonly {
+    cursor: default;
+    opacity: 0.85;
+}
+.sidebar-poster-item.is-readonly:hover {
+    transform: none;
+}
     margin-bottom: 1rem;
     background: rgba(0,0,0,0.5);
 }

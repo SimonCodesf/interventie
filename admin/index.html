@@ -79,6 +79,12 @@
                                 <textarea id="poster-description" rows="3" placeholder="..." required></textarea>
                             </div>
 
+                            <div class="form-group form-full">
+                                <label for="poster-project">PROJECT</label>
+                                <input type="text" id="poster-project" list="project-options" placeholder="bv. memeborden" required>
+                                <datalist id="project-options"></datalist>
+                            </div>
+
                             <div class="form-group poster-only-field">
                                 <label for="poster-coordinates">GPS_COORDS</label>
                                 <input type="text" id="poster-coordinates" placeholder="Lat, Lng">
@@ -261,6 +267,12 @@
                                 <div class="form-group form-full">
                                     <label for="edit-description">BESCHRIJVING</label>
                                     <textarea id="edit-description" rows="3"></textarea>
+                                </div>
+
+                                <div class="form-group form-full">
+                                    <label for="edit-project">PROJECT</label>
+                                    <input type="text" id="edit-project" list="edit-project-options" placeholder="bv. memeborden" required>
+                                    <datalist id="edit-project-options"></datalist>
                                 </div>
 
                                 <div class="form-group">

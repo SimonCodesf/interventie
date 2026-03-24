@@ -4088,6 +4088,7 @@ function setupUploadForm() {
         const formData = new FormData();
         const titleValue = (document.getElementById('poster-title')?.value || '').trim();
         const descriptionValue = (document.getElementById('poster-description')?.value || '').trim();
+        const projectValue = normalizeProjectNameClient(document.getElementById('poster-project')?.value || '');
         const jpegFile = document.getElementById('poster-jpeg')?.files?.[0];
 
         if (!titleValue) {
@@ -4100,6 +4101,11 @@ function setupUploadForm() {
             return;
         }
 
+        if (!projectValue) {
+            errorMsg.textContent = 'Project is verplicht';
+            return;
+        }
+
         if (!jpegFile) {
             errorMsg.textContent = 'JPEG afbeelding is verplicht';
             return;
@@ -4107,6 +4113,7 @@ function setupUploadForm() {
 
         formData.append('title', titleValue);
         formData.append('description', descriptionValue);
+        formData.append('project_name', projectValue);
         
         // Parse and add location data
         const coordinatesInput = document.getElementById('poster-coordinates').value.trim();
@@ -4155,8 +4162,8 @@ function setupUploadForm() {
         // Add AR marker file: handmatig heeft prioriteit, anders browser-gecompileerd, anders niets
         const arMarkerFile = document.getElementById('ar-marker-file').files[0];
         
-        // Enkele uploadmodus: snelle flow met automatische marker generatie
-        formData.append('upload_type', 'reclame');
+        // Enkele uploadmodus: standaard posterflow
+        formData.append('upload_type', 'poster');
         
         if (arMarkerFile) {
             // Handmatig geüpload .mind bestand
@@ -4870,6 +4877,51 @@ function setupFilePreview() {
     }
 }
 
+function normalizeProjectNameClient(value) {
+    const cleaned = (value || '').toString().trim();
+    return cleaned || 'algemeen';
+}
+
+function updateProjectDatalists(projects) {
+    const options = Array.from(new Set((projects || [])
+        .map((p) => normalizeProjectNameClient(p))
+        .filter((p) => p !== '')))
+        .sort((a, b) => a.localeCompare(b, 'nl'));
+
+    const uploadList = document.getElementById('project-options');
+    const editList = document.getElementById('edit-project-options');
+    const optionHtml = options.map((project) => `<option value="${escapeHtml(project)}"></option>`).join('');
+
+    if (uploadList) uploadList.innerHTML = optionHtml;
+    if (editList) editList.innerHTML = optionHtml;
+}
+
+async function fetchMemebordenAdminItems() {
+    try {
+        const response = await fetch('../verkeersborden/data/chunks.json?_=' + Date.now(), { cache: 'no-store' });
+        if (!response.ok) return [];
+
+        const data = await response.json();
+        const generatedRaw = data?._meta?.generated || null;
+        const generatedDate = generatedRaw ? new Date(generatedRaw + 'T00:00:00Z').toISOString() : null;
+        const chunks = Array.isArray(data?.chunks) ? data.chunks : [];
+
+        return chunks.map((chunk) => ({
+            id: `memeborden-${chunk.id}`,
+            title: `MEMEBORDEN: ${chunk.name || chunk.id}`,
+            upload_date: generatedDate,
+            uploadDate: generatedDate,
+            project: 'memeborden',
+            project_name: 'memeborden',
+            isMemebordenVirtual: true,
+            signsCount: Array.isArray(chunk.signs) ? chunk.signs.length : 0
+        }));
+    } catch (error) {
+        console.warn('[Admin] Memeborden items konden niet geladen worden:', error.message);
+        return [];
+    }
+}
+
 // Laad alle posters voor admin overzicht
 async function loadAdminPosters() {
     try {
@@ -4877,19 +4929,42 @@ async function loadAdminPosters() {
         if (!response.ok) throw new Error('Kan posters niet laden');
         
         const posters = await response.json();
+        const memebordenItems = await fetchMemebordenAdminItems();
+        const allItems = [...posters, ...memebordenItems]
+            .map((poster) => ({
+                ...poster,
+                project: normalizeProjectNameClient(poster.project || poster.project_name || '')
+            }))
+            .sort((a, b) => {
+                const dateA = new Date(a.created_at || a.upload_date || a.uploadDate || 0).getTime() || 0;
+                const dateB = new Date(b.created_at || b.upload_date || b.uploadDate || 0).getTime() || 0;
+                return dateB - dateA;
+            });
+
+        updateProjectDatalists(allItems.map((item) => item.project));
+        const uploadProjectInput = document.getElementById('poster-project');
+        if (uploadProjectInput && !uploadProjectInput.value.trim()) {
+            uploadProjectInput.value = 'algemeen';
+        }
         
         const postersList = document.getElementById('admin-poster-list');
-        if (posters.length === 0) {
+        if (allItems.length === 0) {
             postersList.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem; font-size: 0.9rem;">Nog geen posters.</p>';
             return;
         }
         
-        postersList.innerHTML = posters.map(poster => {
-            const typeLabel = poster.upload_type === 'reclame' ? '<span style="color:#f90;font-size:0.45rem;"> [RECLAME]</span>' : '';
+        postersList.innerHTML = allItems.map(poster => {
+            const projectLabel = `<span style="color:#6fc3ff;font-size:0.52rem;"> [${escapeHtml((poster.project || 'algemeen').toUpperCase())}]</span>`;
+            const virtualLabel = poster.isMemebordenVirtual
+                ? `<span style="color:#9aa0a6;font-size:0.48rem;"> [VIRTUEEL${poster.signsCount ? ` ${poster.signsCount} BORDEN` : ''}]</span>`
+                : '';
+            const clickHandler = poster.isMemebordenVirtual ? '' : `onclick="openEditModal('${poster.id}')"`;
+            const extraClass = poster.isMemebordenVirtual ? ' is-readonly' : '';
+
             return `
-            <div class="sidebar-poster-item" data-id="${poster.id}" onclick="openEditModal('${poster.id}')">
+            <div class="sidebar-poster-item${extraClass}" data-id="${poster.id}" ${clickHandler}>
                 <div class="poster-item-header">
-                    <h4 class="poster-item-title">${poster.title}${typeLabel}</h4>
+                    <h4 class="poster-item-title">${poster.title}${projectLabel}${virtualLabel}</h4>
                 </div>
                 <p class="poster-item-meta">${formatDate(poster.upload_date || poster.uploadDate)}</p>
             </div>
@@ -5185,6 +5260,10 @@ async function openEditModal(posterId) {
         document.getElementById('edit-poster-id').value = poster.id;
         document.getElementById('edit-title').value = poster.title || '';
         document.getElementById('edit-description').value = poster.description || '';
+        const editProjectEl = document.getElementById('edit-project');
+        if (editProjectEl) {
+            editProjectEl.value = normalizeProjectNameClient(poster.project || poster.project_name || '');
+        }
         
         // Combine lat/lng into single coordinates field
         const lat = poster.latitude || '';
@@ -5657,8 +5736,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add text fields
             const titleEl = document.getElementById('edit-title');
             const descriptionEl = document.getElementById('edit-description');
+            const projectEl = document.getElementById('edit-project');
             if (titleEl) formData.append('title', titleEl.value);
             if (descriptionEl) formData.append('description', descriptionEl.value);
+            formData.append('project_name', normalizeProjectNameClient(projectEl ? projectEl.value : ''));
             
             // Parse combined coordinates field
             const coordinatesEl = document.getElementById('edit-coordinates');

@@ -8,6 +8,17 @@ let windowZIndex = 100;
 let openWindows = new Map();
 let activeWindowId = null;
 
+function getPosterTimestamp(poster) {
+    const raw = poster?.created_at || poster?.upload_date || poster?.uploadDate || null;
+    if (!raw) return 0;
+    const ts = new Date(raw).getTime();
+    return Number.isFinite(ts) ? ts : 0;
+}
+
+function normalizeProjectName(poster) {
+    return (poster?.project || poster?.project_name || 'algemeen').toString().trim() || 'algemeen';
+}
+
 // Initialize file manager
 function initFileManager() {
 
@@ -74,6 +85,18 @@ function createFileManagerUI() {
                             <div class="box-content">
                                 <nav class="sidebar-nav" id="chunk-nav">
                                     <!-- Dynamisch gevuld met chunks -->
+                                </nav>
+                            </div>
+                            <div class="box-footer"></div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="sidebar-box" id="project-box">
+                            <div class="box-header"><span class="box-title">PROJECTEN</span></div>
+                            <div class="box-content">
+                                <nav class="sidebar-nav" id="project-nav">
+                                    <!-- Dynamisch gevuld met projecten -->
                                 </nav>
                             </div>
                             <div class="box-footer"></div>
@@ -249,6 +272,8 @@ async function loadFilesFromPosters() {
                         if (poster) {
                             poster.chunkIndex = chunkIndex;
                             poster.chunkName = `Chunk ${chunkIndex + 1}`;
+                            poster.chunkKey = `default-${chunkIndex}`;
+                            poster.chunkLabel = `CHUNK_${chunkIndex + 1}`;
                         }
                     });
                 });
@@ -268,9 +293,10 @@ async function loadFilesFromPosters() {
                     // Voeg elke chunk-poster toe als die nog niet bestaat
                     for (const mbPoster of memebordenPosters) {
                         if (!posters.find(p => p.id === mbPoster.id)) {
-                            posters.unshift(mbPoster);
+                            posters.push(mbPoster);
                         }
                     }
+                    posters.sort((a, b) => getPosterTimestamp(b) - getPosterTimestamp(a));
                     window.allPosters = posters;
                     console.log(`[FileManager] ${memebordenPosters.length} Memeborden chunk-posters geïnjecteerd`);
                 }
@@ -278,6 +304,9 @@ async function loadFilesFromPosters() {
                 console.warn('[FileManager] Memeborden kon niet geladen worden:', e);
             }
         }
+
+        // Zorg voor consistente datum-sortering in alle weergaven.
+        posters.sort((a, b) => getPosterTimestamp(b) - getPosterTimestamp(a));
         
         // Update stats
         // Gebruik manifest total als autoriteit voor AR count (accurater dan ar_marker veld)
@@ -295,6 +324,9 @@ async function loadFilesFromPosters() {
         
         // Build location nav
         buildLocationNav(posters);
+
+        // Build project nav
+        buildProjectNav(posters);
         
         // Build chunk nav
         buildChunkNav(posters);
@@ -363,21 +395,25 @@ function renderFiles(posters, filter = 'all') {
     const fileList = document.getElementById('file-list');
     if (!fileList) return;
     
-    let filtered = posters;
+    const sortedPosters = posters.slice().sort((a, b) => getPosterTimestamp(b) - getPosterTimestamp(a));
+    let filtered = sortedPosters;
     
     switch (filter) {
         case 'recent':
-            filtered = posters.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 10);
+            filtered = sortedPosters.slice(0, 10);
             break;
         case 'ar':
             // AR = heeft ar_marker OF zit in manifest (chunkIndex is gezet door manifest loader)
-            filtered = posters.filter(p => p.ar_marker || p.chunkIndex !== undefined);
+            filtered = sortedPosters.filter(p => p.ar_marker || p.chunkIndex !== undefined || p.chunkKey !== undefined);
             break;
         default:
             // Check voor chunk filter (chunk-0, chunk-1, etc)
-            if (filter.startsWith('chunk-')) {
-                const chunkIndex = parseInt(filter.replace('chunk-', ''));
-                filtered = posters.filter(p => p.chunkIndex === chunkIndex);
+            if (filter.startsWith('chunkkey-')) {
+                const chunkKey = decodeURIComponent(filter.replace('chunkkey-', ''));
+                filtered = sortedPosters.filter(p => p.chunkKey === chunkKey);
+            } else if (filter.startsWith('project-')) {
+                const projectName = decodeURIComponent(filter.replace('project-', ''));
+                filtered = sortedPosters.filter(p => normalizeProjectName(p) === projectName);
             }
             break;
     }
@@ -469,24 +505,72 @@ function setupSidebar() {
     setupChunkNavigation();
 }
 
+function buildProjectNav(posters) {
+    const projectNav = document.getElementById('project-nav');
+    if (!projectNav) return;
+
+    const projects = new Map();
+    posters.forEach((poster) => {
+        const project = normalizeProjectName(poster);
+        projects.set(project, (projects.get(project) || 0) + 1);
+    });
+
+    const entries = Array.from(projects.entries()).sort((a, b) => a[0].localeCompare(b[0], 'nl'));
+    if (entries.length === 0) {
+        projectNav.innerHTML = '<span class="nav-label" style="opacity: 0.5; font-size: 10px;">Geen projecten</span>';
+        return;
+    }
+
+    projectNav.innerHTML = entries.map(([projectName, count]) => {
+        const safeProject = projectName.toUpperCase().replace(/\s+/g, '_');
+        const key = encodeURIComponent(projectName);
+        return `
+        <a href="#" class="nav-item" data-filter="project-${key}">
+            <span class="nav-icon">▸</span>
+            <span class="nav-label">${safeProject}/</span>
+            <span class="nav-count">[${count}]</span>
+        </a>
+        `;
+    }).join('');
+
+    projectNav.querySelectorAll('.nav-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filter = item.dataset.filter;
+            const raw = decodeURIComponent(filter.replace('project-', ''));
+
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            document.getElementById('current-path').textContent = `~/PROJECTEN/${raw.toUpperCase().replace(/\s+/g, '_')}/`;
+
+            renderFiles(window.allPosters || [], filter);
+        });
+    });
+}
+
 // Build chunk navigation from posters
 function buildChunkNav(posters) {
     const chunkNav = document.getElementById('chunk-nav');
     if (!chunkNav) return;
     
-    // Verzamel unieke chunks
+    // Verzamel unieke chunks (standaard + memeborden)
     const chunks = new Map();
     posters.forEach(p => {
-        if (p.chunkIndex !== undefined) {
-            if (!chunks.has(p.chunkIndex)) {
-                chunks.set(p.chunkIndex, { index: p.chunkIndex, count: 0 });
+        const chunkKey = p.chunkKey !== undefined ? p.chunkKey : (p.chunkIndex !== undefined ? `default-${p.chunkIndex}` : null);
+        if (chunkKey !== null) {
+            if (!chunks.has(chunkKey)) {
+                const defaultLabel = p.chunkLabel || p.chunkName || (p.chunkIndex !== undefined ? `CHUNK_${p.chunkIndex + 1}` : chunkKey);
+                chunks.set(chunkKey, { key: chunkKey, label: defaultLabel, order: p.chunkIndex !== undefined ? p.chunkIndex : Number.MAX_SAFE_INTEGER, count: 0 });
             }
-            chunks.get(p.chunkIndex).count++;
+            chunks.get(chunkKey).count++;
         }
     });
     
-    // Sorteer op index
-    const sortedChunks = Array.from(chunks.values()).sort((a, b) => a.index - b.index);
+    // Sorteer op volgorde, daarna label
+    const sortedChunks = Array.from(chunks.values()).sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return a.label.localeCompare(b.label, 'nl');
+    });
     
     if (sortedChunks.length === 0) {
         chunkNav.innerHTML = '<span class="nav-label" style="opacity: 0.5; font-size: 10px;">Geen chunks gevonden</span>';
@@ -495,9 +579,9 @@ function buildChunkNav(posters) {
     
     // Genereer nav items
     chunkNav.innerHTML = sortedChunks.map(chunk => `
-        <a href="#" class="nav-item" data-filter="chunk-${chunk.index}">
+        <a href="#" class="nav-item" data-filter="chunkkey-${encodeURIComponent(chunk.key)}">
             <span class="nav-icon">▸</span>
-            <span class="nav-label">CHUNK_${chunk.index + 1}/</span>
+            <span class="nav-label">${chunk.label.toUpperCase().replace(/\s+/g, '_')}/</span>
             <span class="nav-count">[${chunk.count}]</span>
         </a>
     `).join('');
@@ -513,8 +597,10 @@ function buildChunkNav(posters) {
             item.classList.add('active');
             
             // Update path
-            const chunkNum = filter.replace('chunk-', '');
-            document.getElementById('current-path').textContent = `~/AR_CHUNKS/CHUNK_${parseInt(chunkNum) + 1}/`;
+            const chunkKey = decodeURIComponent(filter.replace('chunkkey-', ''));
+            const activeChunk = sortedChunks.find(c => c.key === chunkKey);
+            const chunkLabel = (activeChunk?.label || chunkKey).toUpperCase().replace(/\s+/g, '_');
+            document.getElementById('current-path').textContent = `~/AR_CHUNKS/${chunkLabel}/`;
             
             // Render filtered files
             renderFiles(window.allPosters || [], filter);
