@@ -56,6 +56,175 @@ function handleGetPoster($db, $id) {
     }
 }
 
+function handleAdminBookExport($db) {
+    if (!isAdmin()) {
+        jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    }
+
+    try {
+        $stmt = $db->query("SELECT * FROM posters ORDER BY datetime(created_at) ASC, datetime(upload_date) ASC");
+        $posters = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $baseUrl = $host ? ($scheme . '://' . $host) : '';
+        $rootDir = dirname(__DIR__);
+
+        $toRelativePath = function($value) {
+            if (!is_string($value) || trim($value) === '') return '';
+            $path = trim($value);
+            if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+                return $path;
+            }
+            return '/' . ltrim($path, '/');
+        };
+
+        $assetFromPath = function($relativePath, $label) use ($rootDir, $baseUrl, $toRelativePath) {
+            $normalized = $toRelativePath($relativePath);
+            if ($normalized === '') {
+                return null;
+            }
+
+            if (strpos($normalized, 'http://') === 0 || strpos($normalized, 'https://') === 0) {
+                return [
+                    'type' => $label,
+                    'relative_path' => $normalized,
+                    'url' => $normalized,
+                    'exists' => null,
+                    'size_bytes' => null,
+                    'mime' => null,
+                ];
+            }
+
+            $diskPath = $rootDir . $normalized;
+            $exists = file_exists($diskPath) && is_file($diskPath);
+
+            return [
+                'type' => $label,
+                'relative_path' => $normalized,
+                'url' => $baseUrl ? ($baseUrl . $normalized) : $normalized,
+                'exists' => $exists,
+                'size_bytes' => $exists ? filesize($diskPath) : null,
+                'mime' => $exists ? (mime_content_type($diskPath) ?: null) : null,
+            ];
+        };
+
+        $parseCredits = function($creditsRaw) {
+            if (!is_string($creditsRaw) || trim($creditsRaw) === '') {
+                return [];
+            }
+
+            $decoded = json_decode($creditsRaw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+
+            return [
+                [
+                    'item' => 'Credits',
+                    'owner' => trim($creditsRaw)
+                ]
+            ];
+        };
+
+        $items = [];
+        foreach ($posters as $poster) {
+            $galleryRaw = json_decode($poster['gallery_images'] ?? '[]', true);
+            $galleryImages = is_array($galleryRaw) ? $galleryRaw : [];
+
+            $layersRaw = json_decode($poster['layers_data'] ?? '{}', true);
+            $layers = is_array($layersRaw) ? $layersRaw : [];
+
+            $layerItems = [];
+            for ($i = 1; $i <= 8; $i++) {
+                $layerKey = "layer_{$i}";
+                $layerData = $layers[$layerKey] ?? [];
+                if (!is_array($layerData)) {
+                    $layerData = [];
+                }
+
+                $layerMedia = [];
+                if (!empty($layerData['filename'])) {
+                    $layerMedia[] = $assetFromPath('/uploads/ar-layers/' . ltrim($layerData['filename'], '/'), 'layer_media');
+                }
+                if (!empty($layerData['glb_model'])) {
+                    $layerMedia[] = $assetFromPath('/uploads/ar-layers/' . ltrim($layerData['glb_model'], '/'), 'layer_glb');
+                }
+                if (!empty($layerData['audio_file'])) {
+                    $layerMedia[] = $assetFromPath('/uploads/ar-layers/' . ltrim($layerData['audio_file'], '/'), 'layer_audio');
+                }
+
+                $layerItems[] = [
+                    'layer_number' => $i,
+                    'key' => $layerKey,
+                    'has_visual_media' => !empty($layerData['filename']),
+                    'has_3d' => !empty($layerData['glb_model']),
+                    'has_audio' => !empty($layerData['audio_file']),
+                    'metadata' => $layerData,
+                    'assets' => array_values(array_filter($layerMedia))
+                ];
+            }
+
+            $jpegAsset = $assetFromPath('/uploads/' . ltrim($poster['jpeg_filename'] ?? '', '/'), 'jpeg');
+            $thumbAsset = $assetFromPath($poster['thumbnail'] ?? '', 'thumbnail');
+
+            $galleryAssets = [];
+            foreach ($galleryImages as $galleryPath) {
+                $asset = $assetFromPath($galleryPath, 'gallery_image');
+                if ($asset) {
+                    $galleryAssets[] = $asset;
+                }
+            }
+
+            $items[] = [
+                'id' => $poster['id'] ?? null,
+                'title' => $poster['title'] ?? '',
+                'description' => $poster['description'] ?? '',
+                'location' => [
+                    'latitude' => isset($poster['latitude']) ? (float)$poster['latitude'] : null,
+                    'longitude' => isset($poster['longitude']) ? (float)$poster['longitude'] : null,
+                    'location_description' => $poster['location_description'] ?? ''
+                ],
+                'external_link' => $poster['artikel_link'] ?? '',
+                'credits' => [
+                    'raw' => $poster['credits'] ?? '',
+                    'parsed' => $parseCredits($poster['credits'] ?? '')
+                ],
+                'upload_meta' => [
+                    'upload_type' => $poster['upload_type'] ?? 'poster',
+                    'ar_camera_feed' => (int)($poster['ar_camera_feed'] ?? 0),
+                    'created_at' => $poster['created_at'] ?? null,
+                    'upload_date' => $poster['upload_date'] ?? null,
+                    'downloads' => (int)($poster['downloads'] ?? 0)
+                ],
+                'assets' => [
+                    'jpeg' => $jpegAsset,
+                    'thumbnail' => $thumbAsset,
+                    'gallery_images' => $galleryAssets
+                ],
+                'ar_layers' => $layerItems
+            ];
+        }
+
+        jsonResponse([
+            'success' => true,
+            'generated_at' => date('c'),
+            'source' => 'admin_export',
+            'version' => 1,
+            'total_uploads' => count($items),
+            'notes' => [
+                'PDF bestanden zijn bewust uitgesloten.',
+                '.mind markerbestanden zijn bewust uitgesloten.',
+                'AR layer metadata en layer-assets zijn inbegrepen.'
+            ],
+            'items' => $items
+        ]);
+    } catch (Exception $e) {
+        error_log('[BOOK_EXPORT] Fout bij export: ' . $e->getMessage());
+        jsonResponse(['message' => 'Export mislukt: ' . $e->getMessage()], 500);
+    }
+}
+
 // Helper to trigger MindAR chunk rebuild
 function triggerMindMerge($captureOutput = false) {
     global $db;

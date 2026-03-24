@@ -3842,6 +3842,57 @@ function setRebuildStatus(text, color = '#9aa0a6') {
     rebuildStatusEl.style.color = color;
 }
 
+function setBookExportStatus(text, color = '#9aa0a6') {
+    const exportStatusEl = document.getElementById('settings-book-export-status');
+    if (!exportStatusEl) return;
+    exportStatusEl.textContent = text;
+    exportStatusEl.style.color = color;
+}
+
+async function exportBookJson(exportBtn) {
+    if (!exportBtn) return;
+
+    exportBtn.disabled = true;
+    exportBtn.textContent = 'EXPORTEREN...';
+    setBookExportStatus('Export wordt opgebouwd...', '#f8c146');
+
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const response = await fetch(`${API_URL}/admin/export/book-json`, {
+            method: 'GET',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Export mislukt');
+        }
+
+        const now = new Date();
+        const datePart = now.toISOString().slice(0, 10);
+        const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+        const filename = `boek-export-${datePart}_${timePart}.json`;
+
+        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+
+        const total = typeof result.total_uploads === 'number' ? result.total_uploads : '?';
+        setBookExportStatus(`Export klaar: ${total} uploads in ${filename}`, '#7dff9a');
+    } catch (err) {
+        setBookExportStatus('Fout bij export: ' + err.message, '#ff7d7d');
+    } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = 'BOEK JSON EXPORTEREN';
+    }
+}
+
 async function runArRebuild(rebuildBtn) {
     const settings = getLocalAdminSettings();
 
@@ -3906,6 +3957,7 @@ async function openSettingsModal() {
     if (reducedMotionInput) reducedMotionInput.checked = !!localSettings.reducedMotion;
     applyLocalAdminSettings(localSettings);
     setRebuildStatus('Klaar om te starten.', '#9aa0a6');
+    setBookExportStatus('Klaar om te exporteren.', '#9aa0a6');
 
     // Controleer of Sketchfab key al is opgeslagen
     try {
@@ -4003,6 +4055,10 @@ function setupLogoutButton() {
     // Setup AR Rebuild button in instellingen modal
     const rebuildBtn = document.getElementById('settings-rebuild-mind-btn');
     if (rebuildBtn) rebuildBtn.onclick = () => runArRebuild(rebuildBtn);
+
+    // Setup boek JSON export button in instellingen modal
+    const exportBookBtn = document.getElementById('settings-export-book-json-btn');
+    if (exportBookBtn) exportBookBtn.onclick = () => exportBookJson(exportBookBtn);
 }
 
 // Toon upload sectie

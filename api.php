@@ -156,6 +156,8 @@ if ($method === 'GET' && $path === '/posters') {
         'sketchfab_key_set' => !empty($settings['sketchfab_api_key']),
     ];
     jsonResponse($result);
+} elseif ($method === 'GET' && $path === '/admin/export/book-json') {
+    handleAdminBookExport($db);
 } elseif ($method === 'POST' && $path === '/admin/settings') {
     // Sla admin-instellingen op
     if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
