@@ -233,23 +233,36 @@ function handleAdminBookExport($db) {
                     $layerData = [];
                 }
 
+                $hasVisualMedia = !empty($layerData['filename']);
+                $has3d = !empty($layerData['glb_model']);
+                $hasAudio = !empty($layerData['audio_file']);
+                $hasText = !empty($layerData['text_enabled']) && trim((string)($layerData['text_content'] ?? '')) !== '';
+                $hasApiRandom = ($layerData['api_mode'] ?? '') === 'random' && trim((string)($layerData['api_query'] ?? '')) !== '';
+                $hasApiStatic = trim((string)($layerData['api_url'] ?? '')) !== '';
+                $hasApiContent = $hasApiRandom || $hasApiStatic;
+
+                // Exporteer enkel lagen met inhoud, niet louter positionele/default instellingen.
+                if (!$hasVisualMedia && !$has3d && !$hasAudio && !$hasText && !$hasApiContent) {
+                    continue;
+                }
+
                 $layerMedia = [];
-                if (!empty($layerData['filename'])) {
+                if ($hasVisualMedia) {
                     $layerMedia[] = $assetFromPath('/uploads/ar-layers/' . ltrim($layerData['filename'], '/'), 'layer_media');
                 }
-                if (!empty($layerData['glb_model'])) {
+                if ($has3d) {
                     $layerMedia[] = $assetFromPath('/uploads/ar-layers/' . ltrim($layerData['glb_model'], '/'), 'layer_glb');
                 }
-                if (!empty($layerData['audio_file'])) {
+                if ($hasAudio) {
                     $layerMedia[] = $assetFromPath('/uploads/ar-layers/' . ltrim($layerData['audio_file'], '/'), 'layer_audio');
                 }
 
                 $layerItems[] = [
                     'layer_number' => $i,
                     'key' => $layerKey,
-                    'has_visual_media' => !empty($layerData['filename']),
-                    'has_3d' => !empty($layerData['glb_model']),
-                    'has_audio' => !empty($layerData['audio_file']),
+                    'has_visual_media' => $hasVisualMedia,
+                    'has_3d' => $has3d,
+                    'has_audio' => $hasAudio,
                     'metadata' => $filterLayerMetadata($layerData),
                     'assets' => array_values(array_filter($layerMedia))
                 ];
