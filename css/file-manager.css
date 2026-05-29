@@ -442,8 +442,10 @@
 }
 
 .window-image {
-    width: 45%;
     min-width: 200px;
+    height: 100%;
+    aspect-ratio: 297 / 420;
+    flex: 0 0 auto;
     background: var(--black);
     display: flex;
     align-items: stretch;
@@ -800,6 +802,7 @@
         width: 100%;
         min-width: auto;
         max-height: 200px;
+        height: auto;
         border-right: none;
         border-bottom: 0.5px solid var(--white);
     }
