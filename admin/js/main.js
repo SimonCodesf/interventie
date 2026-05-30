@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const uploadSection = document.getElementById('upload-section');
     const loginForm = document.getElementById('login-form');
     const uploadForm = document.getElementById('upload-form');
+    const analyticsBtn = document.getElementById('analytics-btn');
+    const analyticsPanel = document.getElementById('analytics-panel');
+    const analyticsContent = document.getElementById('analytics-content');
     
     // Init UI
     initLayerUI();
@@ -55,9 +58,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginSection.style.display = 'none';
         uploadSection.style.display = 'flex';
         refreshPosters();
-        // Wire analytics button (after UI visible)
-        const analyticsBtn = document.getElementById('analytics-btn');
-        if (analyticsBtn) analyticsBtn.onclick = async () => { await renderAnalytics(); };
+        showUploadView();
+    }
+
+    function showUploadView() {
+        if (uploadForm) uploadForm.style.display = 'grid';
+        if (analyticsPanel) analyticsPanel.style.display = 'none';
+    }
+
+    async function showAnalyticsView() {
+        if (uploadForm) uploadForm.style.display = 'none';
+        if (analyticsPanel) analyticsPanel.style.display = 'block';
+        if (analyticsContent) {
+            analyticsContent.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Analytics laden...</p>';
+        }
+        await renderAnalytics();
+    }
+
+    if (analyticsBtn) {
+        analyticsBtn.addEventListener('click', async () => {
+            const isOpen = analyticsPanel && analyticsPanel.style.display !== 'none';
+            if (isOpen) {
+                showUploadView();
+                return;
+            }
+            await showAnalyticsView();
+        });
     }
     
     // Posters verversen
@@ -99,7 +125,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             content.innerHTML = html;
             panel.style.display = 'block';
-            panel.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
             console.error('Analytics laden mislukt', err);
             const content = document.getElementById('analytics-content');
