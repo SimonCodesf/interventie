@@ -371,6 +371,9 @@ function setupSingleModelInteractivity(model) {
 let featuredPoster = null; // Momenteel geselecteerde gescande poster
 let isFeaturedPosterOpen = false; // Of de galerij is geopend voor featured poster
 let autoResetFeaturedPosterTimer = null; // Timer voor auto-reset als poster uit-gescanned
+let chunkQuickPickerOpen = false;
+let chunkLongPressTimer = null;
+let chunkLongPressTriggered = false;
 
 // Rotating scanner system - cycles through preloaded .mind data
 // HIDDEN SCANNER: AR runs behind a static camera feed, revealed when poster found
@@ -756,10 +759,201 @@ function injectSpinnerCSS() {
     document.head.appendChild(style);
 }
 
+function injectChunkPickerCSS() {
+    if (document.getElementById('chunk-picker-css')) return;
+    const style = document.createElement('style');
+    style.id = 'chunk-picker-css';
+    style.textContent = `
+        #chunk-quick-picker {
+            position: fixed;
+            left: 50%;
+            bottom: 175px;
+            transform: translateX(-50%) translateY(10px);
+            width: min(92vw, 320px);
+            max-height: 45vh;
+            background: rgba(0, 0, 0, 0.95);
+            border: 0.5px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+            z-index: 10001;
+            display: none;
+            pointer-events: auto;
+            color: #fff;
+            font-family: var(--font-data);
+        }
+
+        #chunk-quick-picker.open {
+            display: block;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .chunk-picker-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.55rem 0.75rem;
+            border-bottom: 0.5px solid rgba(255,255,255,0.25);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .chunk-picker-close {
+            background: transparent;
+            border: 0.5px solid rgba(255,255,255,0.4);
+            color: #fff;
+            font-family: var(--font-data);
+            font-size: 0.68rem;
+            line-height: 1;
+            padding: 0.15rem 0.4rem;
+            cursor: pointer;
+        }
+
+        .chunk-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.35rem;
+            padding: 0.6rem;
+            overflow-y: auto;
+            max-height: calc(45vh - 2rem);
+        }
+
+        .chunk-picker-btn {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            border: 0.5px solid rgba(255,255,255,0.35);
+            font-family: var(--font-data);
+            font-size: 0.68rem;
+            padding: 0.45rem 0.5rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .chunk-picker-btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .chunk-picker-subtle-toggle {
+            position: fixed;
+            left: calc(50% + 54px);
+            bottom: 124px;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: rgba(0,0,0,0.72);
+            color: #fff;
+            border: 0.5px solid rgba(255,255,255,0.45);
+            padding: 4px 8px;
+            font-family: var(--font-data);
+            font-size: 0.58rem;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            opacity: 0.72;
+        }
+
+        .chunk-picker-subtle-toggle:active {
+            opacity: 1;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function getChunkPickerLabel(chunk, index) {
+    if (!chunk) return `Chunk ${index + 1}`;
+    if (chunk.isMemeborden) return chunk.memebordenChunkId ? `MB ${chunk.memebordenChunkId}` : `Memeborden ${index + 1}`;
+    return chunk.chunkLabel || chunk.label || chunk.name || `Chunk ${index + 1}`;
+}
+
+function ensureChunkQuickPicker() {
+    if (document.getElementById('chunk-quick-picker')) return;
+    if (!window.arManifest || !Array.isArray(window.arManifest.chunks) || window.arManifest.chunks.length <= 1) return;
+
+    injectChunkPickerCSS();
+
+    const picker = document.createElement('div');
+    picker.id = 'chunk-quick-picker';
+    picker.innerHTML = `
+        <div class="chunk-picker-head">
+            <span>Snel kiezen</span>
+            <button type="button" class="chunk-picker-close">SLUIT</button>
+        </div>
+        <div class="chunk-picker-grid"></div>
+    `;
+
+    picker.querySelector('.chunk-picker-close').addEventListener('click', closeChunkQuickPicker);
+    picker.addEventListener('click', (e) => {
+        if (e.target === picker) closeChunkQuickPicker();
+    });
+
+    document.body.appendChild(picker);
+    renderChunkQuickPicker();
+}
+
+function renderChunkQuickPicker() {
+    const picker = document.getElementById('chunk-quick-picker');
+    if (!picker || !window.arManifest || !Array.isArray(window.arManifest.chunks)) return;
+
+    const grid = picker.querySelector('.chunk-picker-grid');
+    if (!grid) return;
+
+    grid.innerHTML = window.arManifest.chunks.map((chunk, index) => {
+        const label = getChunkPickerLabel(chunk, index);
+        const active = index === window.currentChunkIndex ? ' active' : '';
+        return `<button type="button" class="chunk-picker-btn${active}" data-chunk-index="${index}">${label}</button>`;
+    }).join('');
+
+    grid.querySelectorAll('.chunk-picker-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const chunkIndex = parseInt(btn.dataset.chunkIndex, 10);
+            await selectChunkFromPicker(chunkIndex);
+        });
+    });
+}
+
+function openChunkQuickPicker() {
+    ensureChunkQuickPicker();
+    const picker = document.getElementById('chunk-quick-picker');
+    if (!picker) return;
+    renderChunkQuickPicker();
+    picker.classList.add('open');
+    chunkQuickPickerOpen = true;
+}
+
+function closeChunkQuickPicker() {
+    const picker = document.getElementById('chunk-quick-picker');
+    if (picker) picker.classList.remove('open');
+    chunkQuickPickerOpen = false;
+}
+
+async function selectChunkFromPicker(chunkIndex) {
+    if (!window.arManifest || !Array.isArray(window.arManifest.chunks)) return;
+    if (chunkIndex < 0 || chunkIndex >= window.arManifest.chunks.length) return;
+
+    // Stop eventuele lopende scan/cycle zodat de nieuwe chunk meteen actief is
+    window.isChunkScanning = false;
+    if (typeof stopScanCycles === 'function') {
+        stopScanCycles('manual-chunk-select');
+    }
+    if (scannerInterval) {
+        clearTimeout(scannerInterval);
+        scannerInterval = null;
+    }
+
+    window.currentChunkIndex = chunkIndex;
+    window.chunkLocked = false;
+    closeChunkQuickPicker();
+
+    await preloadChunk(chunkIndex);
+    loadChunkScene(chunkIndex);
+    showChunkCycleButtonAgain();
+}
+
 // Toon chunk scan knop
 function showChunkCycleButton() {
     console.log('🔘 showChunkCycleButton aangeroepen');
     injectSpinnerCSS();
+    injectChunkPickerCSS();
     
     // Verwijder bestaande knop
     const existing = document.getElementById('chunk-cycle-btn');
@@ -767,9 +961,13 @@ function showChunkCycleButton() {
         console.log('⚠️ Verwijder bestaande knop');
         existing.remove();
     }
+
+    const existingToggle = document.getElementById('chunk-picker-toggle');
+    if (existingToggle) existingToggle.remove();
     
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
+    btn.type = 'button';
     btn.innerHTML = 'SCAN';
     btn.style.cssText = `
         position: fixed;
@@ -777,7 +975,7 @@ function showChunkCycleButton() {
         left: 50%;
         transform: translateX(-50%);
         z-index: 10000;
-        background: transparent;
+        background: rgba(0, 0, 0, 0.9);
         color: #fff;
         border: 0.5px solid #fff;
         border-radius: 0;
@@ -787,9 +985,32 @@ function showChunkCycleButton() {
         letter-spacing: 2px;
         cursor: pointer;
         min-width: 70px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
     `;
+
+    btn.addEventListener('pointerdown', () => {
+        chunkLongPressTriggered = false;
+        clearTimeout(chunkLongPressTimer);
+        chunkLongPressTimer = setTimeout(() => {
+            chunkLongPressTriggered = true;
+            openChunkQuickPicker();
+        }, 450);
+    });
+
+    const clearLongPress = () => {
+        clearTimeout(chunkLongPressTimer);
+        chunkLongPressTimer = null;
+    };
+
+    btn.addEventListener('pointerup', clearLongPress);
+    btn.addEventListener('pointercancel', clearLongPress);
+    btn.addEventListener('pointerleave', clearLongPress);
     
-    btn.onclick = () => {
+    btn.addEventListener('click', () => {
+        if (chunkLongPressTriggered) {
+            chunkLongPressTriggered = false;
+            return;
+        }
         console.log('🖱️ SCAN knop geklikt!');
         try {
             // Toon spinner naast SCAN tekst
@@ -799,7 +1020,18 @@ function showChunkCycleButton() {
             console.error('❌ Error bij aanroepen startChunkScan:', error);
             btn.innerHTML = 'SCAN';
         }
-    };
+    });
+
+    if (window.arManifest && Array.isArray(window.arManifest.chunks) && window.arManifest.chunks.length > 1) {
+        const toggle = document.createElement('button');
+        toggle.id = 'chunk-picker-toggle';
+        toggle.type = 'button';
+        toggle.textContent = 'CH';
+        toggle.title = 'Snel een chunk kiezen';
+        toggle.className = 'chunk-picker-subtle-toggle';
+        toggle.addEventListener('click', openChunkQuickPicker);
+        document.body.appendChild(toggle);
+    }
     
     document.body.appendChild(btn);
     console.log('✅ SCAN knop toegevoegd aan DOM');
@@ -816,6 +1048,9 @@ function hideChunkCycleButton() {
         btn.style.color = '#fff';
         btn.style.display = 'none';
     }
+    const toggle = document.getElementById('chunk-picker-toggle');
+    if (toggle) toggle.style.display = 'none';
+    closeChunkQuickPicker();
 }
 
 // Toon chunk knop
@@ -823,11 +1058,13 @@ function showChunkCycleButtonAgain() {
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn) {
         btn.innerHTML = 'SCAN'; // Reset naar SCAN zonder spinner
-        btn.style.background = 'transparent';
+        btn.style.background = 'rgba(0, 0, 0, 0.9)';
         btn.style.borderColor = '#fff';
         btn.style.color = '#fff';
         btn.style.display = 'block';
     }
+    const toggle = document.getElementById('chunk-picker-toggle');
+    if (toggle) toggle.style.display = 'block';
 }
 
 // Start chunk scan - cycle door chunks tot poster gevonden
@@ -1476,6 +1713,9 @@ function showScanButton(text = 'Scan een poster') {
     const scanBtn = document.getElementById('scan-button');
     if (scanBtn) {
         scanBtn.textContent = text;
+        scanBtn.style.background = 'rgba(0, 0, 0, 0.95)';
+        scanBtn.style.border = '0.5px solid rgba(255,255,255,0.9)';
+        scanBtn.style.color = '#fff';
     }
 }
 
@@ -2087,21 +2327,23 @@ function updateScanningIndicator(poster, index, total) {
         style.id = 'scan-indicator-styles';
         style.textContent = `
             #scan-button {
-                background: rgba(0, 0, 0, 0.6);
+                background: rgba(0, 0, 0, 0.95);
                 color: white;
-                border: none;
+                border: 0.5px solid rgba(255,255,255,0.9);
                 padding: 8px 16px;
                 border-radius: 20px;
                 font-size: 11px;
                 cursor: pointer;
+                box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
             }
             .scan-progress-container {
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                background: rgba(0, 0, 0, 0.6);
+                background: rgba(0, 0, 0, 0.9);
                 padding: 8px 16px;
                 border-radius: 20px;
+                border: 0.5px solid rgba(255,255,255,0.25);
             }
             .scan-progress-bar {
                 width: 60px;
