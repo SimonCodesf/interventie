@@ -4889,7 +4889,15 @@ function displayPosters(posters) {
     }
     
     grid.innerHTML = posters.map(poster => {
-        const imageUrl = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : 'img/placeholder.png';
+        const imageUrl = (function(p) {
+            const base = BASE_URL || window.location.origin;
+            const maybe = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;
+            const candidates = [maybe(p.gif_url), maybe(p.image_url), maybe(p.original_url), maybe(p.url), maybe(p.thumbnail), maybe(p.jpeg_url)].filter(Boolean);
+            for (const c of candidates) {
+                if (/\.gif(\?|$)/i.test(c)) return c.startsWith('http') ? c : `${base}${c}`;
+            }
+            return candidates.length ? (candidates[0].startsWith('http') ? candidates[0] : `${base}${candidates[0]}`) : 'img/placeholder.png';
+        })(poster);
         const uploadDate = poster.upload_date || poster.uploadDate || poster.created_at;
         return `
         <div class="poster-card" data-poster-id="${poster.id}">
@@ -4920,8 +4928,16 @@ async function showPosterModal(posterId) {
         const poster = await response.json();
         currentPoster = poster;
         
-        // Update modal content
-        const imageUrl = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : (poster.jpeg_url ? `${BASE_URL}${poster.jpeg_url}` : 'img/placeholder.png');
+        // Update modal content (prefer GIF when present)
+        const imageUrl = (function(p) {
+            const base = BASE_URL || window.location.origin;
+            const maybe = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;
+            const candidates = [maybe(p.gif_url), maybe(p.image_url), maybe(p.original_url), maybe(p.url), maybe(p.thumbnail), maybe(p.jpeg_url)].filter(Boolean);
+            for (const c of candidates) {
+                if (/\.gif(\?|$)/i.test(c)) return c.startsWith('http') ? c : `${base}${c}`;
+            }
+            return candidates.length ? (candidates[0].startsWith('http') ? candidates[0] : `${base}${candidates[0]}`) : 'img/placeholder.png';
+        })(poster);
         document.getElementById('modal-poster-img').src = imageUrl;
         document.getElementById('modal-poster-img').onerror = function() { this.src = 'img/placeholder.png'; };
         document.getElementById('modal-poster-title').textContent = poster.title;

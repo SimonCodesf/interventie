@@ -230,6 +230,28 @@ function updateHeaderTitle() {
     headerTitle.textContent = `┌─[ ${titleText} ]─┐`;
 }
 
+// Kies de beste afbeeldings-URL voor een poster, geef voorkeur aan GIFs wanneer aanwezig
+function resolvePosterImageUrl(poster, baseUrl) {
+    const maybe = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+    const candidates = [
+        maybe(poster.gif_url),
+        maybe(poster.image_url),
+        maybe(poster.original_url),
+        maybe(poster.url),
+        maybe(poster.file),
+        maybe(poster.thumbnail),
+        maybe(poster.jpeg_url)
+    ].filter(Boolean);
+
+    // Prefer absolute/relative starting with / or http(s)
+    for (const c of candidates) {
+        if (/\.gif(\?|$)/i.test(c)) return c.startsWith('http') ? c : `${baseUrl}${c}`;
+    }
+    // Fallback to first candidate
+    if (candidates.length > 0) return candidates[0].startsWith('http') ? candidates[0] : `${baseUrl}${candidates[0]}`;
+    return 'img/placeholder.png';
+}
+
 // Load posters as file entries
 async function loadFilesFromPosters() {
     const fileList = document.getElementById('file-list');
@@ -429,7 +451,7 @@ function renderFiles(posters, filter = 'all') {
         const date = dateRaw ? new Date(dateRaw).toLocaleDateString('nl-NL') : '──';
         const location = poster.location_description ? poster.location_description.split(',')[0].trim() : '──';
         const downloads = poster.downloads !== undefined ? poster.downloads : '──';
-        const thumbUrl = poster.thumbnail ? `${baseUrl}${poster.thumbnail}` : 'img/placeholder.png';
+        const thumbUrl = resolvePosterImageUrl(poster, baseUrl);
         
         return `
             <div class="file-row" data-poster-id="${poster.id}" tabindex="0">
@@ -643,8 +665,7 @@ function createWindow(poster) {
     
     const windowId = `window-${poster.id}`;
     const baseUrl = window.BASE_URL || window.location.origin;
-    const imageUrl = poster.thumbnail ? `${baseUrl}${poster.thumbnail}` : 
-                     (poster.jpeg_url ? `${baseUrl}${poster.jpeg_url}` : 'img/placeholder.png');
+    const imageUrl = resolvePosterImageUrl(poster, window.BASE_URL || window.location.origin);
     
     // Build gallery images array (poster image first, then gallery images)
     let galleryImages = [imageUrl];
@@ -656,7 +677,8 @@ function createWindow(poster) {
             extraImages = poster.gallery_images;
         }
         extraImages.forEach(img => {
-            if (img) galleryImages.push(baseUrl + img);
+            if (!img) return;
+            galleryImages.push(img.startsWith('http') ? img : (baseUrl + img));
         });
         // Bij Memeborden: alle borden als gallery, verwijder placeholder thumbnail
         if (poster.isMemeborden && extraImages.length > 0) {
