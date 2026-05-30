@@ -3981,6 +3981,63 @@ function closeSettingsModal() {
 }
 window.closeSettingsModal = closeSettingsModal;
 
+function openAnalyticsModal() {
+    const modal = document.getElementById('analytics-modal');
+    const content = document.getElementById('analytics-content');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+    if (content) {
+        content.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Analytics laden...</p>';
+    }
+    renderAnalyticsModal();
+}
+
+function closeAnalyticsModal() {
+    const modal = document.getElementById('analytics-modal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+}
+
+window.closeAnalyticsModal = closeAnalyticsModal;
+
+async function renderAnalyticsModal() {
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const response = await fetch(`${API_URL}/posters`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const posters = await response.json();
+        const content = document.getElementById('analytics-content');
+        if (!content) return;
+
+        const totalDownloads = posters.reduce((sum, poster) => sum + (parseInt(poster.downloads, 10) || 0), 0);
+        const avgDownloads = posters.length ? Math.round(totalDownloads / posters.length) : 0;
+        const top = posters.slice().sort((a, b) => (parseInt(b.downloads, 10) || 0) - (parseInt(a.downloads, 10) || 0)).slice(0, 10);
+
+        content.innerHTML = `
+            <div class="analytics-summary">
+                <div class="analytics-card"><strong>Totaal downloads</strong>${totalDownloads}</div>
+                <div class="analytics-card"><strong>Aantal posters</strong>${posters.length}</div>
+                <div class="analytics-card"><strong>Gem. downloads per poster</strong>${avgDownloads}</div>
+            </div>
+            <h4 style="margin-top: 1rem; color: rgba(255,255,255,0.9); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;">Top 10 posters</h4>
+            <ol class="analytics-toplist">
+                ${top.map((poster) => `<li><strong>${parseInt(poster.downloads, 10) || 0}</strong> — ${poster.title || poster.id}</li>`).join('')}
+            </ol>
+        `;
+    } catch (error) {
+        console.error('Analytics laden mislukt', error);
+        const content = document.getElementById('analytics-content');
+        if (content) {
+            content.innerHTML = `<p style="color: #ff7d7d;">Analytics laden mislukt: ${error.message}</p>`;
+        }
+    }
+}
+
 function toggleKeyVisibility() {
     const input = document.getElementById('sketchfab-api-key');
     const btn = document.getElementById('sketchfab-key-toggle');
@@ -4047,6 +4104,15 @@ function setupLogoutButton() {
     // Setup Instellingen knop
     const settingsBtn = document.getElementById('settings-btn');
     if (settingsBtn) settingsBtn.onclick = openSettingsModal;
+
+    const analyticsBtn = document.getElementById('analytics-btn');
+    if (analyticsBtn) analyticsBtn.onclick = openAnalyticsModal;
+
+    const analyticsCloseBtn = document.getElementById('analytics-close-btn');
+    if (analyticsCloseBtn) analyticsCloseBtn.onclick = closeAnalyticsModal;
+
+    const analyticsBackdrop = document.getElementById('analytics-backdrop');
+    if (analyticsBackdrop) analyticsBackdrop.onclick = closeAnalyticsModal;
 
     // Setup opslaan knop in modal
     const saveSettingsBtn = document.getElementById('save-settings-btn');
