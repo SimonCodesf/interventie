@@ -15,7 +15,7 @@ export function renderPosterList(posters, token, onRefresh) {
                 <button class="delete-btn">[DEL]</button>
             </div>
             <p class="poster-item-meta">
-                ID: ${poster.id} | DL: ${poster.downloads || 0}
+                ID: ${poster.id}
             </p>
         `;
         

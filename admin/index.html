@@ -41,6 +41,7 @@
             <nav class="sidebar-nav">
                 <button id="logout-btn" class="nav-item-btn">Uitloggen</button>
                 <button id="settings-btn" class="nav-item-btn">Instellingen</button>
+                <button id="analytics-btn" class="nav-item-btn">Analytics</button>
             </nav>
 
             <div class="poster-list-title">
@@ -59,6 +60,14 @@
                      <span id="upload-status-text">SYSTEM_READY</span>
                 </div>
             </header>
+
+            <!-- Analytics Panel (hidden until requested) -->
+            <div class="panel-box" id="analytics-panel" style="display: none; margin-bottom: 1rem;">
+                <div class="panel-header"><span class="panel-title">ANALYTICS</span></div>
+                <div class="panel-content" id="analytics-content">
+                    <p style="color: rgba(255,255,255,0.6);">Klik op <strong>Analytics</strong> in de sidebar om basisstatistieken te laden.</p>
+                </div>
+            </div>
 
             <form id="upload-form" class="editor-grid" novalidate>
                 
@@ -484,5 +493,6 @@
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
     <script src="admin.js?v=3.12.1"></script>
+    <script src="../js/remove-download-metrics.js?v=1"></script>
 </body>
 </html>
