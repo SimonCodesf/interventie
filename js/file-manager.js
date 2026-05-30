@@ -121,7 +121,6 @@ function createFileManagerUI() {
                             <div class="box-content">
                                 <div class="sidebar-info">
                                     <p>│ <span id="total-files">0</span> BESTANDEN</p>
-                                    <p>│ <span id="total-downloads">0</span> DOWNLOADS</p>
                                     <p>│ <span id="total-ar">0</span> AR MARKERS</p>
                                 </div>
                             </div>
@@ -144,7 +143,6 @@ function createFileManagerUI() {
                         <span class="col-thumb"></span>
                         <span class="col-name">NAAM</span>
                         <span class="col-location">LOCATIE</span>
-                        <span class="col-downloads">DOWNLOADS</span>
                         <span class="col-date">DATUM</span>
                     </div>
                     
@@ -315,7 +313,7 @@ async function loadFilesFromPosters() {
             : posters.filter(p => p.ar_marker).length;
         document.getElementById('total-files').textContent = posters.length;
         document.getElementById('total-ar').textContent = manifestArCount;
-        document.getElementById('total-downloads').textContent = posters.reduce((sum, p) => sum + Number(p.downloads || 0), 0);
+        // Download counts are intentionally removed from public UI
         
         // Update nav counts
         document.querySelector('[data-filter="all"] .nav-count').textContent = `[${posters.length}]`;
@@ -438,8 +436,7 @@ function renderFiles(posters, filter = 'all') {
                 <span class="col-select">├</span>
                 <span class="col-thumb"><img src="${thumbUrl}" alt="" onerror="this.style.opacity='0.3'"></span>
                 <span class="col-name">${escapeHtml(poster.title || 'Untitled')}</span>
-                <span class="col-location">${escapeHtml(location)}</span>
-                <span class="col-downloads">${downloads}</span>
+                    <span class="col-location">${escapeHtml(location)}</span>
                 <span class="col-date">${date}</span>
             </div>
         `;
@@ -722,7 +719,6 @@ function createWindow(poster) {
                     ${poster.location_description ? `<div class="term-row"><span class="term-key">LOC</span><span class="term-val">${escapeHtml(poster.location_description)}</span></div>` : ''}
                     ${formatCredits(poster)}
                     <!-- v202501271845 -->
-                    <div class="term-row"><span class="term-key">DL_COUNT</span><span class="term-val">${poster.downloads || 0}</span></div>
                     <div class="term-row"><span class="term-key">STATUS</span><span class="term-val term-ok">ONLINE</span></div>
                 </div>
                 ${poster.artikel_link ? `

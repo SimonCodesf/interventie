@@ -51,6 +51,7 @@ body {
     min-height: 100vh;
     height: auto !important;
     overflow: auto !important;
+    font-size: 15px; /* Slightly smaller base font for desktop (≈1pt smaller) */
 }
 
 

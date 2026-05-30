@@ -3931,7 +3931,6 @@ function loadGalleryOverlay() {
             <div class="card-info featured-info">
                 <h3>${featuredPoster.title} ${arBadge}</h3>
                 <div class="card-meta">
-                    <span>>> DOWNLOADS: ${featuredPoster.downloads || 0}</span>
                     <span>>> ID: ${featuredPoster.id.substring(0, 6)}</span>
                 </div>
             </div>
@@ -3961,7 +3960,6 @@ function loadGalleryOverlay() {
                 <div class="card-info">
                     <h3>${poster.title} ${arBadge}</h3>
                     <div class="card-meta">
-                        <span>>> DOWNLOADS: ${poster.downloads || 0}</span>
                         <span>>> ID: ${poster.id.substring(0, 6)}</span>
                     </div>
                 </div>
@@ -4325,7 +4323,7 @@ async function showPosterWindow(posterId) {
             <!-- DATA: 2 KOLOMMEN GRID -->
             <div style="font-family: Roboto Mono; font-size: 0.6rem; color: #888; line-height: 1.4; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 6px;">
                 ${poster.location_description ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LOCATIE</span><br><span style="color: #888; font-size: 0.58rem;">${poster.location_description}</span></div>` : ''}
-                ${poster.downloads !== undefined && poster.downloads !== null ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DL</span><br><span style="color: #888; font-size: 0.58rem;">${poster.downloads}</span></div>` : ''}
+                <!-- DL count removed from popup -->
                 ${formatCredits(poster)}
                 ${poster.artikel_link ? `<div><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">LINK</span><br><a href="${poster.artikel_link}" style="color: #fff; text-decoration: underline; font-size: 0.58rem;" target="_blank">artikel</a></div>` : ''}
                 ${poster.description ? `<div style="grid-column: 1 / -1;"><span style="color: #fff; font-weight: bold; font-size: 0.58rem; letter-spacing: 0.05em;">DESC</span><br><span style="color: #888; font-size: 0.58rem;">${poster.description}</span></div>` : ''}
@@ -4672,10 +4670,9 @@ function displayPosters(posters) {
         return `
         <div class="poster-card" data-poster-id="${poster.id}">
             <img class="poster-image" src="${imageUrl}" alt="${poster.title}" onerror="this.src='img/placeholder.png'">
-            <div class="poster-info">
+                <div class="poster-info">
                 <h3 class="poster-title">${poster.title}</h3>
                 <p class="poster-date">${uploadDate ? new Date(uploadDate).toLocaleDateString('nl-NL') : ''}</p>
-                <p class="poster-downloads">Downloads: ${poster.downloads || 0}</p>
             </div>
         </div>
     `;
@@ -4745,8 +4742,7 @@ async function showPosterModal(posterId) {
             }
         }
         
-        // Download count
-        document.getElementById('modal-download-count').textContent = poster.downloads || 0;
+        // Download count intentionally not shown in public modal
         
         // Show modal
         document.getElementById('download-modal').style.display = 'block';
