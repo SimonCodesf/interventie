@@ -962,9 +962,6 @@ function showChunkCycleButton() {
         existing.remove();
     }
 
-    const existingToggle = document.getElementById('chunk-picker-toggle');
-    if (existingToggle) existingToggle.remove();
-    
     const btn = document.createElement('button');
     btn.id = 'chunk-cycle-btn';
     btn.type = 'button';
@@ -1022,17 +1019,6 @@ function showChunkCycleButton() {
         }
     });
 
-    if (window.arManifest && Array.isArray(window.arManifest.chunks) && window.arManifest.chunks.length > 1) {
-        const toggle = document.createElement('button');
-        toggle.id = 'chunk-picker-toggle';
-        toggle.type = 'button';
-        toggle.textContent = 'CH';
-        toggle.title = 'Snel een chunk kiezen';
-        toggle.className = 'chunk-picker-subtle-toggle';
-        toggle.addEventListener('click', openChunkQuickPicker);
-        document.body.appendChild(toggle);
-    }
-    
     document.body.appendChild(btn);
     console.log('✅ SCAN knop toegevoegd aan DOM');
 }
@@ -1048,8 +1034,6 @@ function hideChunkCycleButton() {
         btn.style.color = '#fff';
         btn.style.display = 'none';
     }
-    const toggle = document.getElementById('chunk-picker-toggle');
-    if (toggle) toggle.style.display = 'none';
     closeChunkQuickPicker();
 }
 
@@ -1063,8 +1047,6 @@ function showChunkCycleButtonAgain() {
         btn.style.color = '#fff';
         btn.style.display = 'block';
     }
-    const toggle = document.getElementById('chunk-picker-toggle');
-    if (toggle) toggle.style.display = 'block';
 }
 
 // Start chunk scan - cycle door chunks tot poster gevonden

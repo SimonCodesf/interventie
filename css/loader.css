@@ -20,6 +20,8 @@
     flex-direction: row;
     align-items: center;
     overflow: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 #hacker-loader.visible {
@@ -34,6 +36,8 @@
     white-space: nowrap;
     flex: 1;
     padding: 0;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 #loader-content::-webkit-scrollbar {
@@ -46,6 +50,10 @@
     color: #888; /* Dimmed history */
     flex-shrink: 0;
     display: block;
+    font-size: inherit;
+    line-height: inherit;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 .log-line:last-child {
@@ -108,4 +116,11 @@
     .log-line {
         font-size: 7px;
     }
+}
+
+/* Force fixed text scaling even when media/GIF state changes on mobile browsers */
+#hacker-loader,
+#hacker-loader * {
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
