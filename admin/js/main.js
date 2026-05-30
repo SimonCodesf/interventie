@@ -10,8 +10,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('login-form');
     const uploadForm = document.getElementById('upload-form');
     const analyticsBtn = document.getElementById('analytics-btn');
-    const analyticsPanel = document.getElementById('analytics-panel');
+    const analyticsModal = document.getElementById('analytics-modal');
     const analyticsContent = document.getElementById('analytics-content');
+    const analyticsBackdrop = document.getElementById('analytics-backdrop');
+    const analyticsCloseBtn = document.getElementById('analytics-close-btn');
     
     // Init UI
     initLayerUI();
@@ -58,33 +60,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginSection.style.display = 'none';
         uploadSection.style.display = 'flex';
         refreshPosters();
-        showUploadView();
-    }
-
-    function showUploadView() {
         if (uploadForm) uploadForm.style.display = 'grid';
-        if (analyticsPanel) analyticsPanel.style.display = 'none';
+        closeAnalyticsModal();
     }
 
-    async function showAnalyticsView() {
-        if (uploadForm) uploadForm.style.display = 'none';
-        if (analyticsPanel) analyticsPanel.style.display = 'block';
+    function openAnalyticsModal() {
+        if (!analyticsModal) return;
+        analyticsModal.classList.remove('hidden');
+        analyticsModal.style.display = 'block';
         if (analyticsContent) {
             analyticsContent.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Analytics laden...</p>';
         }
-        await renderAnalytics();
+        renderAnalytics();
+    }
+
+    function closeAnalyticsModal() {
+        if (!analyticsModal) return;
+        analyticsModal.classList.add('hidden');
+        analyticsModal.style.display = 'none';
     }
 
     if (analyticsBtn) {
         analyticsBtn.addEventListener('click', async () => {
-            const isOpen = analyticsPanel && analyticsPanel.style.display !== 'none';
-            if (isOpen) {
-                showUploadView();
-                return;
-            }
-            await showAnalyticsView();
+            openAnalyticsModal();
         });
     }
+
+    if (analyticsBackdrop) {
+        analyticsBackdrop.addEventListener('click', closeAnalyticsModal);
+    }
+
+    if (analyticsCloseBtn) {
+        analyticsCloseBtn.addEventListener('click', closeAnalyticsModal);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAnalyticsModal();
+    });
     
     // Posters verversen
     async function refreshPosters() {
@@ -102,18 +114,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function renderAnalytics() {
         try {
             const posters = await fetchPosters();
-            const panel = document.getElementById('analytics-panel');
             const content = document.getElementById('analytics-content');
-            if (!panel || !content) return;
+            if (!content) return;
             // Compute totals
             const totalDownloads = posters.reduce((s,p) => s + (parseInt(p.downloads)||0), 0);
             const avgDownloads = posters.length ? Math.round(totalDownloads / posters.length) : 0;
             const top = posters.slice().sort((a,b)=> (parseInt(b.downloads)||0) - (parseInt(a.downloads)||0)).slice(0,10);
 
             let html = '';
-            html += `<div class="analytics-summary"><div><strong>Totaal downloads:</strong> ${totalDownloads}</div>`;
-            html += `<div><strong>Aantal posters:</strong> ${posters.length}</div>`;
-            html += `<div><strong>Gem. downloads per poster:</strong> ${avgDownloads}</div></div>`;
+            html += `<div class="analytics-summary">`;
+            html += `<div class="analytics-card"><strong>Totaal downloads</strong>${totalDownloads}</div>`;
+            html += `<div class="analytics-card"><strong>Aantal posters</strong>${posters.length}</div>`;
+            html += `<div class="analytics-card"><strong>Gem. downloads per poster</strong>${avgDownloads}</div>`;
+            html += `</div>`;
 
             html += '<h4 style="margin-top:1rem;">Top 10 posters (downloads)</h4>';
             html += '<ol class="analytics-toplist">';
@@ -124,7 +137,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += '</ol>';
 
             content.innerHTML = html;
-            panel.style.display = 'block';
         } catch (err) {
             console.error('Analytics laden mislukt', err);
             const content = document.getElementById('analytics-content');

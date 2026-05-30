@@ -2043,6 +2043,13 @@ input:checked + .toggle-slider:before {
     max-height: 86vh;
 }
 
+.analytics-modal-content {
+    max-width: 900px;
+    width: min(94vw, 900px);
+    height: auto;
+    max-height: 86vh;
+}
+
 .modal-content.modal-fullscreen {
     max-width: 90vw;
     width: 90vw;
@@ -2086,6 +2093,54 @@ input:checked + .toggle-slider:before {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.analytics-modal-body {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.analytics-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.analytics-summary > div,
+.analytics-card {
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.03);
+    padding: 10px;
+}
+
+.analytics-summary strong,
+.analytics-card strong {
+    display: block;
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.analytics-toplist {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.3rem;
+}
+
+.analytics-toplist li {
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: var(--text-soft);
+}
+
+@media (max-width: 768px) {
+    .analytics-summary {
+        grid-template-columns: 1fr;
+    }
 }
 
 .settings-section {

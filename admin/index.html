@@ -61,14 +61,6 @@
                 </div>
             </header>
 
-            <!-- Analytics Panel (hidden until requested) -->
-            <div class="panel-box" id="analytics-panel" style="display: none; margin-bottom: 1rem;">
-                <div class="panel-header"><span class="panel-title">ANALYTICS</span></div>
-                <div class="panel-content" id="analytics-content">
-                    <p style="color: rgba(255,255,255,0.6);">Klik op <strong>Analytics</strong> in de sidebar om basisstatistieken te laden.</p>
-                </div>
-            </div>
-
             <form id="upload-form" class="editor-grid" novalidate>
                 
                 <!-- Left Column: Config & Assets -->
@@ -487,6 +479,20 @@
             <div class="modal-footer">
                 <button type="button" id="save-settings-btn" class="btn btn-primary">OPSLAAN</button>
                 <button type="button" class="terminal-btn" onclick="closeSettingsModal()">ANNULEREN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analytics-modal" class="modal hidden">
+        <div class="modal-backdrop" id="analytics-backdrop"></div>
+        <div class="modal-content analytics-modal-content">
+            <div class="modal-header">
+                <h2>ANALYTICS</h2>
+                <button type="button" class="modal-close" id="analytics-close-btn">×</button>
+            </div>
+            <div class="modal-body analytics-modal-body" id="analytics-content">
+                <p style="color: rgba(255,255,255,0.6);">Klik op <strong>Analytics</strong> om de statistieken te laden.</p>
             </div>
         </div>
     </div>
