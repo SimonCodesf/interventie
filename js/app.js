@@ -1421,10 +1421,25 @@ function loadLazyGifsForTarget(target) {
             const gifSrc = plane.getAttribute('data-gif-src');
             if (!gifSrc) return;
             
-            const gifComp = plane.components && plane.components.gif;
-            if (gifComp && !gifComp.isLoaded) {
-                gifComp.loadGif(gifSrc);
-            }
+            const tryActivate = (attempt = 0) => {
+                const gifComp = plane.components && plane.components.gif;
+                if (!gifComp) {
+                    if (attempt < 20) setTimeout(() => tryActivate(attempt + 1), 100);
+                    return;
+                }
+
+                gifComp.data.autoplay = true;
+                gifComp.loadedSrc = null;
+
+                if (!gifComp.isLoaded) {
+                    gifComp.loadGif(gifSrc);
+                    return;
+                }
+
+                gifComp.play();
+            };
+
+            tryActivate();
         });
     }
     
@@ -1544,6 +1559,7 @@ function activateApiLayerGif(plane, gifUrl) {
     const tryLoad = () => {
         const gifComp = plane.components && plane.components.gif;
         if (gifComp) {
+            gifComp.data.autoplay = true;
             gifComp.loadedSrc = null;
             gifComp.data.src = gifUrl;
             gifComp.loadGif(gifUrl);
@@ -1562,7 +1578,7 @@ function unloadLazyGifsForTarget(target) {
     gifPlanes.forEach(plane => {
         const gifComp = plane.components && plane.components.gif;
         if (gifComp) {
-            gifComp.isPlaying = false;
+            gifComp.pause();
         }
     });
 }
