@@ -757,6 +757,14 @@ function handleUploadPoster($db) {
                 $layersData["layer_$i"]['api_mode'] = 'random';
                 $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"] ?? 'klipy';
                 $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_query"] ?? '';
+            } elseif (!empty($_POST["layer_{$i}_api_mode"]) && $_POST["layer_{$i}_api_mode"] === 'gif_url') {
+                // GIF URL mode: bewaar de bron-URL live zodat AR dezelfde gif-component kan gebruiken
+                $layersData["layer_$i"]['api_mode'] = 'gif_url';
+                $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"] ?? 'klipy';
+                $layersData["layer_$i"]['api_url'] = $_POST["layer_{$i}_api_url"] ?? '';
+                $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_url"] ?? '';
+                $layersData["layer_$i"]['filename'] = null;
+                $layersData["layer_$i"]['is_video'] = true;
             } elseif (!empty($_POST["layer_{$i}_api_source"])) {
                 $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"];
                 $layersData["layer_$i"]['api_url'] = $_POST["layer_{$i}_api_url"] ?? '';
@@ -1250,6 +1258,13 @@ function handleUpdatePoster($db, $id) {
                 $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_query"] ?? '';
                 // Verwijder eventuele bestaande filename zodat AR de API gebruikt
                 $layersData["layer_$i"]['filename'] = null;
+            } elseif (!$isDeletedLayer && !empty($_POST["layer_{$i}_api_mode"]) && $_POST["layer_{$i}_api_mode"] === 'gif_url') {
+                $layersData["layer_$i"]['api_mode'] = 'gif_url';
+                $layersData["layer_$i"]['api_source'] = $_POST["layer_{$i}_api_source"] ?? 'klipy';
+                $layersData["layer_$i"]['api_url'] = $_POST["layer_{$i}_api_url"] ?? '';
+                $layersData["layer_$i"]['api_query'] = $_POST["layer_{$i}_api_url"] ?? '';
+                $layersData["layer_$i"]['filename'] = null;
+                $layersData["layer_$i"]['is_video'] = true;
             }
         }
         

@@ -2880,6 +2880,34 @@ function buildLayersHTML(poster) {
     if (poster.layers) {
         for (let i = 1; i <= 8; i++) {
             const layerData = poster.layers[`layer_${i}`];
+
+            // Live API GIF mode: gebruik dezelfde gif-component instellingen als verkeersborden
+            if (layerData && layerData.api_mode === 'gif_url' && layerData.api_url) {
+                const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.1) + (i * 0.01);
+                const posX = parseFloat(layerData.pos_x) || 0;
+                const posY = parseFloat(layerData.pos_y) || 0;
+                const baseScale = parseFloat(layerData.scale) || 1.0;
+                const gifSize = 1.4 * baseScale;
+                const apiSource = layerData.api_source || 'klipy';
+                const gifUrl = `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(layerData.api_url)}`;
+
+                layersHTML += `
+                    <a-plane
+                        id="ar-layer-${i}"
+                        class="gif-layer api-gif-layer"
+                        gif="autoplay: true; transparent: false; speed: 1; startupBoost: true; startupMaxDelay: ${API_RANDOM_GIF_STARTUP_MAX_DELAY_MS}; startupBoostFrames: ${API_RANDOM_GIF_STARTUP_BOOST_FRAMES}"
+                        data-gif-src="${gifUrl}"
+                        data-api-source="${apiSource}"
+                        data-api-url="${layerData.api_url.replace(/"/g, '&quot;')}"
+                        data-layer-key="layer_${i}"
+                        data-custom-scale="${baseScale}"
+                        position="${posX} ${posY} ${baseZ}"
+                        height="${gifSize.toFixed(3)}"
+                        width="${gifSize.toFixed(3)}"
+                        material="transparent: false; side: double;"
+                        visible="false"></a-plane>`;
+                continue;
+            }
             
             // API random mode: maak placeholder aan, content wordt geladen bij targetFound
             if (layerData && layerData.api_mode === 'random' && layerData.api_query) {

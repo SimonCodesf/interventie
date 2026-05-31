@@ -3445,6 +3445,8 @@ function selectApiResult(layerNum, prefix, item, element) {
     
     // Sla data op
     const key = `${prefix}layer-${layerNum}`;
+    const looksLikeGif = isGifUrl(item.url) || isGifUrl(item.preview_url);
+
     apiLayerData[key] = {
         type: 'api',
         source: document.getElementById(`${prefix}layer-${layerNum}-source`).value,
@@ -3453,7 +3455,8 @@ function selectApiResult(layerNum, prefix, item, element) {
         title: item.title || '',
         id: item.id || '',
         width: item.width || 0,
-        height: item.height || 0
+        height: item.height || 0,
+        gif: looksLikeGif
     };
     
     // Toon geselecteerde preview
@@ -3465,7 +3468,7 @@ function selectApiResult(layerNum, prefix, item, element) {
         <img src="${escapeHtml(item.preview_url || item.url)}" alt="">
         <div class="preview-info">
             <strong>${escapeHtml(item.title || 'Geselecteerd')}</strong>
-            <span class="preview-meta">${sourceLabel} | ${sizeLabel}</span>
+            <span class="preview-meta">${sourceLabel} | ${looksLikeGif ? 'GIF • autoplay' : sizeLabel}</span>
         </div>
         <button type="button" class="preview-clear" onclick="clearApiSelection(${layerNum}, '${prefix}')">×</button>
     `;
@@ -3473,13 +3476,17 @@ function selectApiResult(layerNum, prefix, item, element) {
     // Update layer status
     const statusEl = document.getElementById(`${prefix}layer-${layerNum}-status`);
     if (statusEl) {
-        statusEl.textContent = sourceLabel;
+        statusEl.textContent = looksLikeGif ? `${sourceLabel} GIF` : sourceLabel;
         statusEl.style.color = '#0f0';
     }
 
     if (!prefix && typeof window.refreshUploadLayerSummary === 'function') {
         window.refreshUploadLayerSummary();
     }
+}
+
+function isGifUrl(url) {
+    return typeof url === 'string' && /\.gif(\?|$)/i.test(url.trim());
 }
 
 function clearApiSelection(layerNum, prefix) {
@@ -4345,20 +4352,27 @@ function setupUploadForm() {
                 formData.append(`layer_${i}_api_source`, 'sketchfab');
                 formData.append(`layer_${i}_api_query`, apiData.uid);
             } else if (contentType === 'api' && apiData && apiData.url) {
-                // Handmatige API selectie: download de content en upload als bestand
-                try {
-                    const proxyUrl = apiData.source === 'klipy' 
-                        ? `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(apiData.url)}`
-                        : apiData.url;
-                    const imgResponse = await fetch(proxyUrl);
-                    const blob = await imgResponse.blob();
-                    const ext = blob.type.includes('gif') ? 'gif' : blob.type.includes('png') ? 'png' : 'jpg';
-                    const apiFile = new File([blob], `api_${apiData.source}_${i}.${ext}`, { type: blob.type });
-                    formData.append(`layer_${i}_image`, apiFile);
+                // Handmatige API selectie: GIFs blijven live bronnen, andere assets worden als bestand opgeslagen
+                const isGifAsset = !!apiData.gif || isGifUrl(apiData.url) || isGifUrl(apiData.preview_url);
+                if (isGifAsset) {
+                    formData.append(`layer_${i}_api_mode`, 'gif_url');
                     formData.append(`layer_${i}_api_source`, apiData.source);
                     formData.append(`layer_${i}_api_url`, apiData.url);
-                } catch (apiErr) {
-                    console.warn(`[Layer ${i}] API afbeelding downloaden mislukt:`, apiErr);
+                } else {
+                    try {
+                        const proxyUrl = apiData.source === 'klipy' 
+                            ? `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(apiData.url)}`
+                            : apiData.url;
+                        const imgResponse = await fetch(proxyUrl);
+                        const blob = await imgResponse.blob();
+                        const ext = blob.type.includes('gif') ? 'gif' : blob.type.includes('png') ? 'png' : 'jpg';
+                        const apiFile = new File([blob], `api_${apiData.source}_${i}.${ext}`, { type: blob.type });
+                        formData.append(`layer_${i}_image`, apiFile);
+                        formData.append(`layer_${i}_api_source`, apiData.source);
+                        formData.append(`layer_${i}_api_url`, apiData.url);
+                    } catch (apiErr) {
+                        console.warn(`[Layer ${i}] API afbeelding downloaden mislukt:`, apiErr);
+                    }
                 }
             } else if ((contentType === 'image' || contentType === 'gifvideo') && layerImage) {
                 // Handmatige upload (bestaand gedrag)
@@ -5606,6 +5620,10 @@ async function openEditModal(posterId) {
                     currentFileInfo.textContent = `API: ${layerData.api_source || 'klipy'} — "${layerData.api_query || ''}"`;
                     currentFileInfo.style.color = '#2196f3';
                     if (deleteMediaBtn) deleteMediaBtn.style.display = 'none';
+                } else if (currentFileInfo && layerData.api_mode === 'gif_url') {
+                    currentFileInfo.textContent = `GIF: ${layerData.api_source || 'klipy'} — "${layerData.api_query || layerData.api_url || ''}"`;
+                    currentFileInfo.style.color = '#fdd835';
+                    if (deleteMediaBtn) deleteMediaBtn.style.display = 'none';
                 } else if (currentFileInfo && layerData.api_mode === '3d_model') {
                     currentFileInfo.textContent = `3D MODEL: Sketchfab UID ${layerData.api_query || ''}`;
                     currentFileInfo.style.color = '#00bcd4';
@@ -5626,6 +5644,10 @@ async function openEditModal(posterId) {
                     statusBadge.textContent = layerData.api_source === 'sketchfab' ? '3D RANDOM' : 'RANDOM';
                     statusBadge.style.background = '#e3f2fd';
                     statusBadge.style.color = '#1565c0';
+                } else if (statusBadge && layerData.api_mode === 'gif_url') {
+                    statusBadge.textContent = 'GIF';
+                    statusBadge.style.background = '#fff9c4';
+                    statusBadge.style.color = '#7a5900';
                 } else if (statusBadge && layerData.api_mode === '3d_model') {
                     statusBadge.textContent = '3D';
                     statusBadge.style.background = '#e0f7fa';
@@ -5670,6 +5692,33 @@ async function openEditModal(posterId) {
                     if (resultsContainer) {
                         const isSketchfab = layerData.api_source === 'sketchfab';
                         resultsContainer.innerHTML = `<div class="api-loading">${isSketchfab ? '3D RANDOM' : 'RANDOM'}: "${escapeHtml(layerData.api_query || '')}"<br><small style="opacity:0.6">Elke scan: willekeurig resultaat (30s cooldown)</small></div>`;
+                    }
+                }
+
+                if (layerData.api_mode === 'gif_url') {
+                    const sourceSelect = document.getElementById(`edit-layer-${layerNum}-source`);
+                    if (sourceSelect) {
+                        sourceSelect.value = layerData.api_source || 'klipy';
+                        sourceSelect.dispatchEvent(new Event('change'));
+                    }
+                    const queryInput = document.getElementById(`edit-layer-${layerNum}-api-query`);
+                    if (queryInput) queryInput.value = layerData.api_query || layerData.api_url || '';
+
+                    const randomCb = document.getElementById(`edit-layer-${layerNum}-api-random`);
+                    if (randomCb) randomCb.checked = false;
+
+                    apiLayerData[`edit-layer-${layerNum}`] = {
+                        type: 'api',
+                        api_mode: 'gif_url',
+                        source: layerData.api_source || 'klipy',
+                        url: layerData.api_url || '',
+                        preview_url: layerData.api_url || '',
+                        gif: true
+                    };
+
+                    const resultsContainer = document.getElementById(`edit-layer-${layerNum}-api-results`);
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = `<div class="api-loading">GIF BRON: ${escapeHtml(layerData.api_source || 'api')}<br><small style="opacity:0.6">Speelt automatisch af met de GIF-component</small></div>`;
                     }
                 }
                 
@@ -6015,6 +6064,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append(`layer_${i}_api_mode`, '3d_model');
                     formData.append(`layer_${i}_api_source`, 'sketchfab');
                     formData.append(`layer_${i}_api_query`, editApiData.uid);
+                } else if (!isLayerMarkedForDelete && contentType === 'api' && editApiData && editApiData.api_mode === 'gif_url') {
+                    formData.append(`layer_${i}_api_mode`, 'gif_url');
+                    formData.append(`layer_${i}_api_source`, editApiData.source || 'klipy');
+                    formData.append(`layer_${i}_api_url`, editApiData.url || '');
                 } else if (!isLayerMarkedForDelete && contentType === 'api' && editApiData && editApiData.url) {
                     // Download de API content en voeg toe als bestand
                     try {
