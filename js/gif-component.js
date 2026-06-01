@@ -15,6 +15,8 @@
     
     // Cache voor geparsede GIFs
     const gifCache = new Map();
+    // Promise cache: voorkomt dubbele concurrente fetch+parse voor dezelfde URL
+    const gifPromiseCache = new Map();
     
     /**
      * Parse een GIF bestand naar individuele frames
@@ -137,18 +139,32 @@
             return gifCache.get(src);
         }
         
-        const response = await fetch(src);
-        if (!response.ok) {
-            throw new Error('Failed to fetch GIF: ' + response.status);
+        // Check of er al een in-flight request is (voorkomt dubbele concurrente fetch+parse)
+        if (gifPromiseCache.has(src)) {
+            return gifPromiseCache.get(src);
         }
         
-        const arrayBuffer = await response.arrayBuffer();
-        const gifData = await parseGIF(arrayBuffer);
+        const promise = (async () => {
+            try {
+                const response = await fetch(src);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch GIF: ' + response.status);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const gifData = await parseGIF(arrayBuffer);
+                
+                // Cache het resultaat
+                gifCache.set(src, gifData);
+                
+                return gifData;
+            } finally {
+                gifPromiseCache.delete(src);
+            }
+        })();
         
-        // Cache het resultaat
-        gifCache.set(src, gifData);
-        
-        return gifData;
+        gifPromiseCache.set(src, promise);
+        return promise;
     }
     
     AFRAME.registerComponent('gif', {
@@ -180,6 +196,15 @@
             this._animLogDone = false; // Reset animatie log flag
             this._startupFramePassed = false;
             this._startupTransitionsDone = 0;
+            
+            // Pre-fetch: als er een data-gif-src is maar nog geen src attribuut,
+            // start meteen met achtergrondladen zodat de GIF al klaar is bij targetFound
+            if (!this.data.src) {
+                const deferredSrc = this.el.getAttribute('data-gif-src');
+                if (deferredSrc) {
+                    loadGIF(deferredSrc).catch(() => {});
+                }
+            }
             
             if (this.data.src) {
                 this.loadGif(this.data.src);

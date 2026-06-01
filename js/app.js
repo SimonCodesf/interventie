@@ -1290,6 +1290,49 @@ function loadChunkScene(chunkIndex) {
     // Setup listeners
     const scene = document.getElementById('ar-scene');
     setupChunkEventListeners(scene, chunk);
+    
+    // Start pre-warming assets in de achtergrond (API random GIFs, proxy downloads)
+    setTimeout(() => preloadChunkAssets(scene), 0);
+}
+
+/**
+ * Pre-warms API random layer assets zodra een chunk scene geladen is.
+ * - Zoekt Klipy API op de achtergrond zodat server cache warm is
+ * - Pre-fetcht de GIF binary via proxy zodat browser cache warm is
+ * 
+ * Zo is bij targetFound de API call + GIF download al grotendeels klaar.
+ */
+function preloadChunkAssets(scene) {
+    if (!scene) return;
+    const apiUrl = window.API_URL || (window.location.origin + '/api.php');
+    
+    const randomPlanes = scene.querySelectorAll('[data-api-random="true"]');
+    if (randomPlanes.length === 0) return;
+    
+    console.log(`[PRELOAD] ${randomPlanes.length} API random layer(s) pre-warmen...`);
+    
+    randomPlanes.forEach(plane => {
+        const query = plane.getAttribute('data-api-query');
+        const source = plane.getAttribute('data-api-source') || 'klipy';
+        if (!query || source === 'sketchfab') return;
+        
+        // Fire-and-forget: warm server cache + pre-fetch GIF binary
+        (async () => {
+            try {
+                // Stap 1: Klipy search (warmt server file cache)
+                const resp = await fetch(`${apiUrl}/verkeersborden/gif?q=${encodeURIComponent(query)}&t=${Date.now()}`);
+                const data = await resp.json();
+                
+                // Stap 2: Pre-fetch de GIF zelf via proxy (warmt browser HTTP cache)
+                if (data.success && data.gif && data.gif.url) {
+                    const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
+                    fetch(proxyUrl).catch(() => {});
+                }
+            } catch (e) {
+                // Silently fail - real load bij targetFound probeert opnieuw
+            }
+        })();
+    });
 }
 
 // Setup listeners for Chunk System
@@ -1992,6 +2035,9 @@ function initializeARScene() {
     // Setup event listeners using helper function
     setupSceneEventListeners(scene, currentPoster);
     
+    // Pre-warm API random layers in de achtergrond (legacy mode)
+    setTimeout(() => preloadChunkAssets(scene), 0);
+    
     // Additional setup for first load
     scene.addEventListener('arReady', () => {
         console.log(' Hidden AR scanner ready');
@@ -2571,6 +2617,9 @@ async function quickSwitchPoster(posterIndex) {
         // Setup event listeners
         const newScene = document.getElementById('ar-scene');
         setupSceneEventListeners(newScene, newPoster);
+        
+        // Pre-warm API random layers in de achtergrond
+        setTimeout(() => preloadChunkAssets(newScene), 0);
         
         // Apply video filter
         setTimeout(() => {
