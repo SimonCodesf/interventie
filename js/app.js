@@ -1280,10 +1280,18 @@ function loadChunkScene(chunkIndex) {
 
             <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
             <a-light type="directional" color="#FFF" intensity="0.8" position="-0.5 1 1"></a-light>
-            
-            ${entitiesHTML}
+    
+    ${entitiesHTML}
         </a-scene>
     `;
+    
+    // Pre-fetch static GIF URLs immediate (nog voor scene in DOM zit)
+    // Dit start de HTTP download meteen, parallel aan DOM insert + A-Frame init
+    const staticGifRegex = /data-gif-src="([^"]+)"/g;
+    let m;
+    while ((m = staticGifRegex.exec(entitiesHTML)) !== null) {
+        fetch(m[1]).catch(() => {});
+    }
     
     document.body.insertAdjacentHTML('beforeend', sceneHTML);
     
@@ -1296,37 +1304,63 @@ function loadChunkScene(chunkIndex) {
 }
 
 /**
- * Pre-warms API random layer assets zodra een chunk scene geladen is.
- * - Zoekt Klipy API op de achtergrond zodat server cache warm is
- * - Pre-fetcht de GIF binary via proxy zodat browser cache warm is
+ * Pre-warms ALL assets zodra een chunk scene geladen is:
+ * - Static GIFs (data-gif-src): pre-fetch via browser cache én gif-component background load
+ * - API random layers: pre-fetch Klipy + vul cooldown cache zodat targetFound instant is
+ * - API GIF URL layers: pre-fetch proxy URL
  * 
- * Zo is bij targetFound de API call + GIF download al grotendeels klaar.
+ * Zo is bij targetFound elke GIF-load vrijwel instant.
  */
 function preloadChunkAssets(scene) {
     if (!scene) return;
     const apiUrl = window.API_URL || (window.location.origin + '/api.php');
     
+    // --- Fase 1: Pre-fetch ALLE static GIFs (data-gif-src) direct naar browser cache ---
+    const gifPlanes = scene.querySelectorAll('[data-gif-src]');
+    gifPlanes.forEach(plane => {
+        const src = plane.getAttribute('data-gif-src');
+        if (!src) return;
+        // Fire-and-forget: populeert browser HTTP cache + gif-component's gifCache
+        // Zelfde URL's worden later opgevraagd door loadLazyGifsForTarget
+        fetch(src).catch(() => {});
+    });
+    
+    // --- Fase 2: Pre-fetch API random layers + vul cooldown cache ---
     const randomPlanes = scene.querySelectorAll('[data-api-random="true"]');
     if (randomPlanes.length === 0) return;
     
-    console.log(`[PRELOAD] ${randomPlanes.length} API random layer(s) pre-warmen...`);
+    console.log(`[PRELOAD] ${randomPlanes.length} API random layer(s) + ${gifPlanes.length} static GIF(s) pre-warmen...`);
     
     randomPlanes.forEach(plane => {
         const query = plane.getAttribute('data-api-query');
         const source = plane.getAttribute('data-api-source') || 'klipy';
+        const layerKey = plane.getAttribute('data-layer-key');
         if (!query || source === 'sketchfab') return;
         
-        // Fire-and-forget: warm server cache + pre-fetch GIF binary
+        // Vind parent target entity voor posterId
+        const targetEl = plane.closest('[data-poster-id]');
+        const posterId = targetEl ? targetEl.getAttribute('data-poster-id') : null;
+        if (!posterId) return;
+        
+        const cacheKey = `${posterId}-${layerKey}`;
+        
         (async () => {
             try {
                 // Stap 1: Klipy search (warmt server file cache)
                 const resp = await fetch(`${apiUrl}/verkeersborden/gif?q=${encodeURIComponent(query)}&t=${Date.now()}`);
                 const data = await resp.json();
                 
-                // Stap 2: Pre-fetch de GIF zelf via proxy (warmt browser HTTP cache)
                 if (data.success && data.gif && data.gif.url) {
                     const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
+                    
+                    // Stap 2: Vul cooldown cache zodat loadApiRandomLayersForTarget
+                    // de URL direct hergebruikt (zelfde patroon als memeborden)
+                    apiLayerCooldownCache.set(cacheKey, { url: proxyUrl, timestamp: Date.now() });
+                    
+                    // Stap 3: Pre-fetch de GIF binary via proxy (warmt browser HTTP cache)
                     fetch(proxyUrl).catch(() => {});
+                    
+                    console.log(`[PRELOAD] Cache gevuld voor ${cacheKey}`);
                 }
             } catch (e) {
                 // Silently fail - real load bij targetFound probeert opnieuw
@@ -2026,6 +2060,14 @@ function initializeARScene() {
     `;
     
     // Add scene to body
+    
+    // Pre-fetch static GIF URLs immediate (nog voor scene in DOM zit)
+    const staticGifRegex2 = /data-gif-src="([^"]+)"/g;
+    let m2;
+    while ((m2 = staticGifRegex2.exec(layersHTML)) !== null) {
+        fetch(m2[1]).catch(() => {});
+    }
+    
     document.body.insertAdjacentHTML('beforeend', sceneHTML);
     console.log(' Hidden AR scene added for poster:', currentPoster.title);
     
@@ -2592,6 +2634,14 @@ async function quickSwitchPoster(posterIndex) {
             // Fallback: build HTML on-the-fly
             const mindSrc = mindBlobUrls.get(newPoster.id) || newPoster.mindPath;
             const layersHTML = buildLayersHTML(newPoster);
+            
+            // Pre-fetch static GIF URLs immediate (nog voor scene in DOM zit)
+            const fRegex = /data-gif-src="([^"]+)"/g;
+            let fm;
+            while ((fm = fRegex.exec(layersHTML)) !== null) {
+                fetch(fm[1]).catch(() => {});
+            }
+            
             const fallbackHTML = `
                 <a-scene
                     id="ar-scene"
@@ -2611,6 +2661,14 @@ async function quickSwitchPoster(posterIndex) {
             document.body.insertAdjacentHTML('beforeend', fallbackHTML);
         } else {
             // Use prebuilt HTML for instant loading!
+            
+            // Pre-fetch static GIF URLs from prebuilt HTML (nog voor DOM insert)
+            const pfRegex = /data-gif-src="([^"]+)"/g;
+            let pfm;
+            while ((pfm = pfRegex.exec(sceneHTML)) !== null) {
+                fetch(pfm[1]).catch(() => {});
+            }
+            
             document.body.insertAdjacentHTML('beforeend', sceneHTML);
         }
         
