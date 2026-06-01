@@ -299,7 +299,24 @@ if ($method === 'GET' && $path === '/posters') {
         http_response_code(403);
         exit('Niet toegestaan');
     }
-    // Haal GIF op via cURL en stream naar browser
+    // Server-side cache voor GIF binary (voorkomt herhaalde cURL naar Klipy CDN)
+    $gifCacheDir = __DIR__ . '/data/gif_cache';
+    if (!is_dir($gifCacheDir)) {
+        @mkdir($gifCacheDir, 0755, true);
+    }
+    $gifCacheKey = md5($gifUrl);
+    $gifCacheFile = $gifCacheDir . '/' . $gifCacheKey . '.gif';
+    $gifCacheTTL = 3600; // 1 uur
+    if (file_exists($gifCacheFile) && (time() - filemtime($gifCacheFile) < $gifCacheTTL)) {
+        // Cache hit — serveer direct van schijf
+        header('Content-Type: image/gif');
+        header('Cache-Control: public, max-age=3600');
+        header('Access-Control-Allow-Origin: *');
+        header('X-GIF-Cache: HIT');
+        readfile($gifCacheFile);
+        exit;
+    }
+    // Cache miss — haal op via cURL
     $ch = curl_init($gifUrl);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -315,9 +332,12 @@ if ($method === 'GET' && $path === '/posters') {
         http_response_code(502);
         exit('GIF ophalen mislukt');
     }
+    // Opslaan in cache voor volgende requests
+    @file_put_contents($gifCacheFile, $data);
     header('Content-Type: ' . ($contentType ?: 'image/gif'));
     header('Cache-Control: public, max-age=3600');
     header('Access-Control-Allow-Origin: *');
+    header('X-GIF-Cache: MISS');
     echo $data;
     exit;
 } elseif ($method === 'GET' && preg_match('#^/verkeersborden/sign/([A-Za-z0-9]+)$#', $path, $matches)) {

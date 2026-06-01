@@ -1344,7 +1344,8 @@ function preloadChunkAssets(scene) {
         
         const cacheKey = `${posterId}-${layerKey}`;
         
-        (async () => {
+        // Sla promise op zodat loadApiRandomLayersForTarget erop kan wachten
+        const preloadPromise = (async () => {
             try {
                 // Stap 1: Klipy search (warmt server file cache)
                 const resp = await fetch(`${apiUrl}/verkeersborden/gif?q=${encodeURIComponent(query)}&t=${Date.now()}`);
@@ -1364,8 +1365,11 @@ function preloadChunkAssets(scene) {
                 }
             } catch (e) {
                 // Silently fail - real load bij targetFound probeert opnieuw
+            } finally {
+                apiLayerPreloadPromises.delete(cacheKey);
             }
         })();
+        apiLayerPreloadPromises.set(cacheKey, preloadPromise);
     });
 }
 
@@ -1527,7 +1531,8 @@ function loadLazyGifsForTarget(target) {
 
 // Cooldown cache voor API random layers: key = `${posterId}-${layerKey}` → {url, timestamp}
 const apiLayerCooldownCache = new Map();
-const API_LAYER_COOLDOWN_MS = 30000; // 30 seconden
+const apiLayerPreloadPromises = new Map(); // cacheKey → Promise (voorkomt dubbele concurrente Klipy calls)
+const API_LAYER_COOLDOWN_MS = 300000; // 5 minuten (was 30s — te kort voor langzame scans)
 const API_RANDOM_GIF_STARTUP_MAX_DELAY_MS = 32; // Zo goed als instant start
 const API_RANDOM_GIF_STARTUP_BOOST_FRAMES = 10; // Versnel de eerste 10 overgangen
 
@@ -1577,6 +1582,24 @@ async function loadApiRandomLayersForTarget(target, posterId) {
         
         // Cooldown verlopen of eerste scan: haal nieuwe content op
         try {
+            // Check of er een pre-fetch bezig is voor deze layer — wacht erop i.p.v. nieuwe call
+            const preloadPromise = apiLayerPreloadPromises.get(cacheKey);
+            if (preloadPromise) {
+                console.log(`[API-LAYER] Pre-fetch bezig voor ${cacheKey}, wachten...`);
+                await preloadPromise;
+                // Na pre-fetch is cooldown cache gevuld; gebruik die
+                const afterPreload = apiLayerCooldownCache.get(cacheKey);
+                if (afterPreload) {
+                    plane.setAttribute('visible', 'true');
+                    if (source === 'sketchfab') {
+                        activateApi3DModel(plane, afterPreload.url);
+                    } else {
+                        activateApiLayerGif(plane, afterPreload.url);
+                    }
+                    continue;
+                }
+            }
+            
             const apiUrl = window.API_URL || (window.location.origin + '/api.php');
             
             if (source === 'sketchfab') {
