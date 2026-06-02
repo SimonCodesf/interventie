@@ -1654,6 +1654,8 @@ function activateApi3DModel(entity, modelUrl) {
 
 /**
  * Activeer een GIF op een API random layer plane via gif-component.
+ * Start een manual RAF animatieloop (identiek patroon als memeborden)
+ * omdat A-Frame's tick() niet betrouwbaar triggert voor dynamisch geladen GIFs.
  */
 function activateApiLayerGif(plane, gifUrl) {
     const tryLoad = () => {
@@ -1663,11 +1665,86 @@ function activateApiLayerGif(plane, gifUrl) {
             gifComp.loadedSrc = null;
             gifComp.data.src = gifUrl;
             gifComp.loadGif(gifUrl);
+            startPosterGifAnimation(gifComp, plane);
         } else {
             setTimeout(tryLoad, 200);
         }
     };
     tryLoad();
+}
+
+/**
+ * Manuele requestAnimationFrame animatieloop voor poster API layer GIFs.
+ * Zelfde patroon als memeborden: pollt tot GIF geladen is, start dan meteen.
+ */
+function startPosterGifAnimation(gifComp, plane) {
+    let frameHandle = null;
+    let frameLogged = false;
+
+    function animate() {
+        if (!plane.isConnected || !gifComp.canvas || (gifComp.loadedSrc && !gifComp.isLoaded && !gifComp.gifData)) {
+            // Component niet meer in DOM of nog aan het laden — blijf pollen
+            if (!plane.isConnected) return;
+            frameHandle = requestAnimationFrame(animate);
+            return;
+        }
+
+        if (!gifComp.isLoaded || !gifComp.gifData || gifComp.gifData.frames.length <= 1) {
+            frameHandle = requestAnimationFrame(animate);
+            return;
+        }
+
+        // Texture koppelen aan mesh (zelfde als memeborden)
+        if (gifComp.texture) {
+            const mesh = gifComp.el.getObject3D('mesh');
+            if (mesh && mesh.material && mesh.material.map !== gifComp.texture) {
+                mesh.material.map = gifComp.texture;
+                mesh.material.transparent = gifComp.data.transparent;
+                mesh.material.needsUpdate = true;
+            }
+        }
+
+        // Frame advance op basis van GIF delay (gebruik startupBoost als actief)
+        const now = performance.now();
+        let delay = gifComp.gifData.delays[gifComp.currentFrame] || 100;
+        const speedMultiplier = Math.max(0.25, Number(gifComp.data.speed) || 1.0);
+        const effectiveDelay = Math.max(16, delay / speedMultiplier);
+        const startupActive = gifComp.data.startupBoost && (gifComp._startupTransitionsDone || 0) < (gifComp.data.startupBoostFrames || 0);
+        const isStartupFrame = startupActive || !gifComp._startupFramePassed;
+        delay = isStartupFrame ? Math.min(effectiveDelay, gifComp.data.startupMaxDelay || 32) : effectiveDelay;
+
+        if (now - gifComp.lastFrameTime >= delay) {
+            // Onderdruk A-Frame's tick() zodat beide loops niet dubbel frames overslaan
+            gifComp.isPlaying = false;
+
+            gifComp.lastFrameTime = now;
+            const prevFrame = gifComp.currentFrame;
+            let nextFrame = (gifComp.currentFrame + 1) % gifComp.gifData.frames.length;
+
+            if (!gifComp.gifData.frames[nextFrame]) {
+                for (let s = 1; s < gifComp.gifData.frames.length; s++) {
+                    const c = (gifComp.currentFrame + s) % gifComp.gifData.frames.length;
+                    if (gifComp.gifData.frames[c]) { nextFrame = c; break; }
+                }
+            }
+
+            gifComp.currentFrame = nextFrame;
+            if (prevFrame === 0) gifComp._startupFramePassed = true;
+            if (startupActive) gifComp._startupTransitionsDone = (gifComp._startupTransitionsDone || 0) + 1;
+
+            if (!frameLogged && prevFrame === 0 && gifComp.currentFrame === 1) {
+                frameLogged = true;
+                console.log('[API-LAYER] GIF animatie gestart!');
+            }
+
+            gifComp.drawFrame(gifComp.currentFrame);
+            if (gifComp.texture) gifComp.texture.needsUpdate = true;
+        }
+
+        frameHandle = requestAnimationFrame(animate);
+    }
+
+    frameHandle = requestAnimationFrame(animate);
 }
 
 /**
