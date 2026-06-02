@@ -412,7 +412,6 @@ function setupVideoFilterObserver() {
         if (!video.dataset.filterApplied) {
             video.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
             video.dataset.filterApplied = 'true';
-            console.log(' Applied grayscale filter to video:', video.id || 'unnamed');
         }
     };
     
@@ -434,7 +433,6 @@ function setupVideoFilterObserver() {
     });
     
     observer.observe(document.body, { childList: true, subtree: true });
-    console.log(' Video filter observer active');
 }
 
 // Force cleanup of WebGL contexts to prevent overflow
@@ -951,10 +949,6 @@ async function selectChunkFromPicker(chunkIndex) {
 
 // Toon chunk scan knop
 function showChunkCycleButton() {
-    console.log('🔘 showChunkCycleButton aangeroepen');
-    injectSpinnerCSS();
-    injectChunkPickerCSS();
-    
     // Verwijder bestaande knop
     const existing = document.getElementById('chunk-cycle-btn');
     if (existing) {
@@ -1008,7 +1002,6 @@ function showChunkCycleButton() {
             chunkLongPressTriggered = false;
             return;
         }
-        console.log('🖱️ SCAN knop geklikt!');
         try {
             // Toon spinner naast SCAN tekst
             btn.innerHTML = 'SCAN<span class="scan-spinner"></span>';
@@ -1020,7 +1013,6 @@ function showChunkCycleButton() {
     });
 
     document.body.appendChild(btn);
-    console.log('✅ SCAN knop toegevoegd aan DOM');
 }
 
 // Verberg chunk knop
@@ -1447,7 +1439,6 @@ function setupChunkEventListeners(scene, chunk) {
             // Set featured poster voor galerij weergave (KRITIEK!)
             if (poster) {
                 setFeaturedPoster(poster);
-                console.log('⭐ Featured poster set in rotating scanner:', poster.title);
             }
             
             // LAZY LOAD GIFs: Laad nu pas de GIFs voor deze specifieke target
@@ -1479,10 +1470,7 @@ function setupChunkEventListeners(scene, chunk) {
             // Reset featured poster ALLEEN als galerij NIET geopend is
             // Anders blijft featured poster zichtbaar totdat galerij sluit
             if (!isFeaturedPosterOpen) {
-                console.log('📋 Galerij gesloten: featured poster reset');
                 featuredPoster = null;
-            } else {
-                console.log('📋 Galerij geopend: featured poster blijft getoond totdat galerij sluit');
             }
         });
     });
@@ -1514,6 +1502,7 @@ function loadLazyGifsForTarget(target) {
 
                 if (!gifComp.isLoaded) {
                     gifComp.loadGif(gifSrc);
+                    startPosterGifAnimation(gifComp, plane);
                     return;
                 }
 
@@ -1797,13 +1786,14 @@ function checkAndShowLoader(poster) {
         } else {
             console.log(' Waiting for GIFs to load...');
             
-            // Failsafe: Hide loader after 3 seconden (GIFs zijn klein, zou snel moeten zijn)
+            // Failsafe: Hide loader after 8 seconden
+
             setTimeout(() => {
                 if (currentTrackedPoster && currentTrackedPoster.id === poster.id) {
                     console.warn('⚠️ GIF load timeout - hiding loader anyway');
                     hideGifLoader();
                 }
-            }, 3000);
+            }, 8000);
         }
     }
 }
@@ -3461,10 +3451,7 @@ function buildLayersHTML(poster) {
                 // - scale=10.0 → 1m
                 const glbScale = baseScale * 0.1;
                 
-                console.log(`[GLB] Laag ${i}: ${layerData.glb_model}`);
-                console.log(`[GLB] Position: (${glbPosX.toFixed(3)}, ${glbPosY.toFixed(3)}, ${glbPosZ.toFixed(3)})`);
-                console.log(`[GLB] Scale: ${baseScale} * 0.1 = ${glbScale.toFixed(3)}m`);
-                console.log(`[GLB] Rotation: (${glbRotX}, ${glbRotY}, ${glbRotZ})`);
+                console.log(`[GLB] Laag ${i}: ${layerData.glb_model} (pos:${glbPosX.toFixed(1)},${glbPosY.toFixed(1)},${glbPosZ.toFixed(1)} scl:${baseScale} rot:${glbRotX},${glbRotY},${glbRotZ})`);
                 
                 layersHTML += `
                     <a-entity
@@ -3485,7 +3472,6 @@ function buildLayersHTML(poster) {
                     const glbEntity = document.getElementById(`ar-glb-model-${i}`);
                     if (glbEntity) {
                         glbEntity.addEventListener('model-loaded', () => {
-                            console.log(`[GLB] Model ${i} succesvol geladen:`, glbPath);
                         });
                         glbEntity.addEventListener('model-error', (e) => {
                             console.error(`[GLB] Model ${i} laden mislukt:`, glbPath, e.detail);
@@ -3542,8 +3528,6 @@ function fixLayerAspectRatios() {
                 // Apply new dimensions
                 layer.setAttribute('width', newWidth.toFixed(3));
                 layer.setAttribute('height', newHeight.toFixed(3));
-                
-                console.log(`📐 Fixed ${layer.id}: ${newWidth.toFixed(2)}x${newHeight.toFixed(2)} (Ratio: ${imageRatio.toFixed(2)})`);
             } catch (e) {
                 console.warn(`⚠️ Error fixing ${layer.id}:`, e);
             }
@@ -4177,10 +4161,8 @@ function addMindARTargets(scene) {
         
         // Reset featured poster ALLEEN als galerij niet geopend is
         if (!isFeaturedPosterOpen) {
-            console.log('📋 Galerij gesloten: featured poster reset');
             featuredPoster = null;
         } else {
-            console.log('📋 Galerij geopend: featured poster blijft getoond');
         }
 
         currentTrackedPoster = null;
@@ -4347,9 +4329,7 @@ function setupSwipeBarControls() {
                     // TENZIJ poster nog steeds gescand is (currentTrackedPoster is ingesteld)
                     if (!currentTrackedPoster) {
                         featuredPoster = null;
-                        console.log('📋 Galerij gesloten & poster niet gescand: featured poster reset');
                     } else {
-                        console.log('📋 Galerij gesloten maar poster NOG gescand: featured poster bijgehouden voor volgende open');
                     }
                 }, 400);
             }
