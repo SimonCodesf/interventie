@@ -1,5 +1,5 @@
 /**
- * iPhone Mirror — toont live iPhone-scherm in een popup.
+ * IPhone — toont live iPhone-scherm in een popup.
  * 
  * WERKING:
  *   1. Sluit iPhone via USB-C aan op de Mac
@@ -181,24 +181,30 @@
         ctx.fillText('Klik de trigger opnieuw', canvas.width / 2, canvas.height / 2 + 15);
     }
 
-    function togglePopup() {
-        if (isPopupOpen) {
-            closePopup();
+function togglePopup() {
+    if (isPopupOpen) {
+        // Indien geminimaliseerd: herstel in plaats van sluiten
+        if (popupElement && popupElement.classList.contains('minimized')) {
+            popupElement.classList.remove('minimized');
             return;
         }
-
-        if (!mediaStream || !mediaStream.active) {
-            startCapture().then(success => {
-                if (success) openPopup();
-            });
-            return;
-        }
-
-        openPopup();
+        closePopup();
+        return;
     }
+
+    if (!mediaStream || !mediaStream.active) {
+        startCapture().then(success => {
+            if (success) openPopup();
+        });
+        return;
+    }
+
+    openPopup();
+}
 
     function openPopup() {
         if (popupElement && popupElement.isConnected) {
+            popupElement.classList.remove('minimized');
             popupElement.style.display = 'flex';
             bringMirrorToFront(popupElement);
             isPopupOpen = true;
@@ -211,6 +217,7 @@
 
     function closePopup() {
         if (popupElement) {
+            popupElement.classList.remove('minimized');
             popupElement.style.display = 'none';
         }
         isPopupOpen = false;
@@ -257,8 +264,9 @@
 
         popupElement.innerHTML = `
             <div class="window-header" data-window-id="iphone-mirror">
-                <span class="window-title">┌─[ iPhone Mirror ]─┐</span>
+                <span class="window-title">┌─[ IPhone ]─┐</span>
                 <div class="window-controls">
+                    <button class="win-btn win-minimize" title="Minimaliseren">_</button>
                     <button class="win-btn win-close" title="Sluiten">×</button>
                 </div>
             </div>
@@ -310,10 +318,21 @@
 
     function setupMirrorClose(el) {
         const closeBtn = el.querySelector('.win-close');
-        if (!closeBtn) return;
-        closeBtn.addEventListener('click', () => {
-            closePopup();
-        });
+        const minBtn = el.querySelector('.win-minimize');
+
+        if (minBtn) {
+            minBtn.addEventListener('click', () => {
+                el.classList.add('minimized');
+                isPopupOpen = true; // stream blijft lopen
+            });
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                el.classList.remove('minimized');
+                closePopup();
+            });
+        }
     }
 
     function setupMirrorDrag(el) {
