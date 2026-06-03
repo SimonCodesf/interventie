@@ -4015,30 +4015,52 @@ window.closeAnalyticsModal = closeAnalyticsModal;
 async function renderAnalyticsModal() {
     try {
         const token = sessionStorage.getItem('adminToken');
-        const response = await fetch(`${API_URL}/posters`, {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const [postersResp, memesResp] = await Promise.all([
+            fetch(`${API_URL}/posters`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} }),
+            fetch(`${API_URL}/verkeersborden/signs`)
+        ]);
+        if (!postersResp.ok) throw new Error(`HTTP ${postersResp.status}`);
 
-        const posters = await response.json();
-        const content = document.getElementById('analytics-content');
-        if (!content) return;
+        var posters = await postersResp.json();
+        var memeborden = [];
+        if (memesResp.ok) {
+            var memesData = await memesResp.json();
+            if (memesData.signs) {
+                memesData.signs.forEach(function (sign) {
+                    memeborden.push({
+                        id: 'mb-' + (sign.id || ''),
+                        title: sign.name || sign.id || '?',
+                        downloads: 0,
+                        upload_meta: { scans: 0, views: 0 },
+                        scans: 0, views: 0
+                    });
+                });
+            }
+        }
 
-        const totalDownloads = posters.reduce((sum, poster) => sum + (parseInt(poster.downloads, 10) || 0), 0);
-        const totalScans = posters.reduce((sum, poster) => sum + (parseInt(poster.upload_meta?.scans || poster.scans, 10) || 0), 0);
-        const totalViews = posters.reduce((sum, poster) => sum + (parseInt(poster.upload_meta?.views || poster.views, 10) || 0), 0);
-        const avgDownloads = posters.length ? Math.round(totalDownloads / posters.length) : 0;
+        // Merge
+        var all = posters.concat(memeborden);
+        const totalMemes = memeborden.length;
 
-        var sorted = posters.slice();
+        const totalDownloads = all.reduce((s, p) => s + (parseInt(p.downloads, 10) || 0), 0);
+        const totalScans = all.reduce((s, p) => s + (parseInt(p.upload_meta?.scans || p.scans, 10) || 0), 0);
+        const totalViews = all.reduce((s, p) => s + (parseInt(p.upload_meta?.views || p.views, 10) || 0), 0);
+        const avgDownloads = all.length ? Math.round(totalDownloads / all.filter(p => !p.id?.startsWith('mb-')).length) : 0;
+
+        var sorted = all.slice();
         var sortCol = 'downloads';
         var sortDir = -1;
 
+        const content = document.getElementById('analytics-content');
+        if (!content) return;
+
         function renderTable() {
-            var rows = sorted.map(function (poster) {
-                var d = parseInt(poster.downloads || 0, 10);
-                var s = parseInt(poster.upload_meta?.scans || poster.scans || 0, 10);
-                var v = parseInt(poster.upload_meta?.views || poster.views || 0, 10);
-                return '<tr><td>' + (poster.title || poster.id || '?') + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
+            var rows = sorted.map(function (p) {
+                var d = parseInt(p.downloads || 0, 10);
+                var s = parseInt(p.upload_meta?.scans || p.scans || 0, 10);
+                var v = parseInt(p.upload_meta?.views || p.views || 0, 10);
+                var label = (p.title || p.id || '?') + (p.id?.startsWith('mb-') ? ' \u2605' : '');
+                return '<tr><td>' + label + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
             }).join('');
             return '<table class="analytics-table"><thead><tr>' +
                 '<th data-col="title" class="sortable">TITEL</th>' +
@@ -4054,11 +4076,10 @@ async function renderAnalyticsModal() {
                 '<div class="analytics-card"><strong>Scans (AR)</strong>' + totalScans + '</div>' +
                 '<div class="analytics-card"><strong>Views</strong>' + totalViews + '</div>' +
                 '<div class="analytics-card"><strong>Posters</strong>' + posters.length + '</div>' +
-                '<div class="analytics-card"><strong>Per poster</strong>' + avgDownloads + '</div>' +
+                '<div class="analytics-card"><strong>Memeborden</strong>' + totalMemes + '</div>' +
             '</div>' +
             '<div class="analytics-table-wrap">' + renderTable() + '</div>';
 
-        // Click-to-sort handler
         content.querySelectorAll('.sortable').forEach(function (th) {
             th.addEventListener('click', handleSort);
         });
