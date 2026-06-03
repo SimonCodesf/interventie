@@ -153,7 +153,7 @@ function createFileManagerUI() {
                     
                     <!-- Status Bar -->
                     <div class="status-bar">
-                        <span id="selected-count">0 geselecteerd</span>
+                        <span id="open-windows-count">0 open</span>
                         <span class="status-divider">│</span>
                         <span id="visible-count">0 bestanden</span>
                     </div>
@@ -226,7 +226,7 @@ function updateHeaderTitle() {
     const headerTitle = document.getElementById('header-title');
     if (!headerTitle) return;
     
-    const titleText = 'INTERVENTIE_POSTER_ARCHIEF';
+    const titleText = 'INTERVENTIE ARCHIEF';
     headerTitle.textContent = `┌─[ ${titleText} ]─┐`;
 }
 
@@ -475,7 +475,6 @@ function renderFiles(posters, filter = 'all') {
             // Also select this row
             fileList.querySelectorAll('.file-row').forEach(r => r.classList.remove('selected'));
             row.classList.add('selected');
-            updateSelectionCount();
         });
         
         row.addEventListener('keydown', (e) => {
@@ -632,10 +631,9 @@ function setupChunkNavigation() {
     // Niet meer nodig - buildChunkNav wordt direct aangeroepen na laden
 }
 
-// Update selection count
-function updateSelectionCount() {
-    const selected = document.querySelectorAll('.file-row.selected').length;
-    document.getElementById('selected-count').textContent = `${selected} geselecteerd`;
+// Update open windows count
+function updateOpenWindowsCount() {
+    document.getElementById('open-windows-count').textContent = `${openWindows.size} open`;
 }
 
 // Open a file in a new window
@@ -785,6 +783,7 @@ function createWindow(poster) {
         minimized: false,
         maximized: false
     });
+    updateOpenWindowsCount();
     
     // Setup window interactions
     setupWindowDrag(windowEl);
@@ -929,6 +928,7 @@ function setupWindowControls(windowEl, posterId) {
         setTimeout(() => {
             windowEl.remove();
             openWindows.delete(posterId.toString());
+            updateOpenWindowsCount();
         }, 150);
     });
     

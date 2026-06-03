@@ -1,5 +1,5 @@
 /**
- * IPhone — toont live iPhone-scherm in een popup.
+ * iPhone — toont live iPhone-scherm in een popup.
  * 
  * WERKING:
  *   1. Sluit iPhone via USB-C aan op de Mac
@@ -264,7 +264,7 @@ function togglePopup() {
 
         popupElement.innerHTML = `
             <div class="window-header" data-window-id="iphone-mirror">
-                <span class="window-title">┌─[ IPhone ]─┐</span>
+                <span class="window-title">┌─[ iPhone ]─┐</span>
                 <div class="window-controls">
                     <button class="win-btn win-minimize" title="Minimaliseren">_</button>
                     <button class="win-btn win-close" title="Sluiten">×</button>
@@ -322,8 +322,12 @@ function togglePopup() {
 
         if (minBtn) {
             minBtn.addEventListener('click', () => {
-                el.classList.add('minimized');
-                isPopupOpen = true; // stream blijft lopen
+                if (el.classList.contains('minimized')) {
+                    el.classList.remove('minimized');
+                } else {
+                    el.classList.add('minimized');
+                    isPopupOpen = true; // stream blijft lopen
+                }
             });
         }
 
