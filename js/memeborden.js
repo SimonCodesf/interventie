@@ -24,6 +24,9 @@ const MEMEBORDEN_CONFIG = {
     dataFile: 'verkeersborden/data/chunks.json',
     imagesDir: 'verkeersborden/images/',
     
+    // Cache-bust (wordt dynamisch gezet na laden chunks.json)
+    cacheVer: '',
+
     // API endpoint
     gifEndpoint: '/api.php/verkeersborden/gif',
     
@@ -81,6 +84,7 @@ async function loadSignsData() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         chunksData = await response.json();
+        MEMEBORDEN_CONFIG.cacheVer = chunksData._meta?.generated || Date.now();
         
         // Bouw platte array van alle borden met chunk info en targetIndex
         allSignsFlat = [];
@@ -144,7 +148,7 @@ function createMemebordenPosters() {
     
     return chunksData.chunks.map(chunk => {
         const chunkSigns = getSignsForChunk(chunk.id);
-        const galleryImages = chunkSigns.map(s => `/${s.image}`);
+        const galleryImages = chunkSigns.map(s => `/${s.image}?v=${MEMEBORDEN_CONFIG.cacheVer}`);
         const chunkLabel = `MB ${chunk.id}`;
         
         return {
