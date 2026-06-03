@@ -8,9 +8,9 @@
   "chunks": [
     {
       "id": "chunkA",
-      "name": "Gevaarsborden",
+      "name": "Gevaar",
       "serie": "A",
-      "description": "A-serie: Gevaarsborden (driehoekig, rode rand)",
+      "description": "A: Gevaarsborden (driehoekig, rode rand)",
       "mindFile": "verkeersborden/chunks/chunkA.mind",
       "signs": [
         {
@@ -178,9 +178,9 @@
     },
     {
       "id": "chunkBC",
-      "name": "Voorrangs- en Verbodsborden",
+      "name": "Voorrang / Verbod",
       "serie": "B+C",
-      "description": "B-serie: Voorrangsborden + C-serie: Verbodsborden",
+      "description": "B: Voorrangsborden + C: Verbodsborden",
       "mindFile": "verkeersborden/chunks/chunkBC.mind",
       "signs": [
         {
@@ -327,9 +327,9 @@
     },
     {
       "id": "chunkDEFZ",
-      "name": "Gebods-, Parkeer-, Aanwijzings- en Zonale borden",
+      "name": "Gebod / Aanwijzing",
       "serie": "D+E+F+Z",
-      "description": "D-serie: Gebodsborden + E-serie: Parkeerborden + F-serie: Aanwijzingsborden + Z-serie: Zonale borden",
+      "description": "D: Gebod + E: Parkeer + F: Aanwijzing + Z: Zonaal",
       "mindFile": "verkeersborden/chunks/chunkDEFZ.mind",
       "signs": [
         {
