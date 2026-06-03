@@ -977,6 +977,10 @@ function showChunkCycleButton() {
         cursor: pointer;
         min-width: 70px;
         box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: manipulation;
     `;
 
     btn.addEventListener('pointerdown', () => {
@@ -995,7 +999,9 @@ function showChunkCycleButton() {
 
     btn.addEventListener('pointerup', clearLongPress);
     btn.addEventListener('pointercancel', clearLongPress);
-    btn.addEventListener('pointerleave', clearLongPress);
+
+    // Voorkom blauwe selectiebalk op mobiel
+    btn.addEventListener('selectstart', (e) => { e.preventDefault(); });
     
     btn.addEventListener('click', () => {
         if (chunkLongPressTriggered) {
@@ -1913,10 +1919,9 @@ async function initializeStaticCameraFeed() {
         staticVideo.muted = true;
         staticVideo.style.cssText = `
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             z-index: 9997;
             filter: grayscale(100%) contrast(2.5) brightness(1);
@@ -3818,8 +3823,7 @@ function applyLensDistortionCompensation(zoomLevel) {
         // Apply CSS-based barrel distortion correction to video feed
         const videoElements = document.querySelectorAll('#camera-feed, video');
         videoElements.forEach(video => {
-            // Slight pincushion effect to counter barrel distortion
-            // This is a subtle correction - too much looks unnatural
+            if (video.id === 'static-camera-feed') return;
             video.style.transform = 'perspective(1000px) translateZ(-10px)';
             video.style.transformOrigin = 'center center';
         });
