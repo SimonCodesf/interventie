@@ -2,7 +2,7 @@
   "_meta": {
     "generated": "2026-03-04",
     "description": "Memeborden chunk-verdeling: 54 Belgische verkeersborden over 3 AR chunks",
-    "total_signs": 54,
+    "total_signs": 59,
     "chunks": 3
   },
   "chunks": [
@@ -308,6 +308,20 @@
           "search_query": "Toll booth",
           "image": "verkeersborden/images/C47.png",
           "wiki_filename": "Belgian_road_sign_C47.svg"
+        },
+        {
+          "id": "C1",
+          "name": "Verboden richting voor iedere bestuurder",
+          "search_query": "wrong way",
+          "image": "verkeersborden/images/C1.png",
+          "wiki_filename": "Belgian_road_sign_C1.svg"
+        },
+        {
+          "id": "M2",
+          "name": "Onderbord uitgezonderd fietsers",
+          "search_query": "cyclists exception sign",
+          "image": "verkeersborden/images/M2.png",
+          "wiki_filename": "Belgian_road_sign_M2.svg"
         }
       ]
     },
@@ -408,6 +422,20 @@
           "search_query": "Bicycle street",
           "image": "verkeersborden/images/F111.png",
           "wiki_filename": "Belgian_road_sign_F111.svg"
+        },
+        {
+          "id": "F15",
+          "name": "Verkeersbord dat de keuze van een richting voorschrijft",
+          "search_query": "lane choice arrow",
+          "image": "verkeersborden/images/F15.png",
+          "wiki_filename": "Belgian_road_sign_F15.svg"
+        },
+        {
+          "id": "F113",
+          "name": "Einde van een fietsstraat",
+          "search_query": "end bicycle street",
+          "image": "verkeersborden/images/F113.png",
+          "wiki_filename": "Belgian_road_sign_F113.svg"
         },
         {
           "id": "ZC5",
