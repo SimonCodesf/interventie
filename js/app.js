@@ -2043,9 +2043,10 @@ function hideARScene() {
             staticFeed.style.opacity = '1';
         });
     }
-    // Verberg AR scene video's (static feed toont camera)
+    // AR video zichtbaar houden voor MindAR tracking (static feed dekt alles af)
     document.querySelectorAll('#ar-scene video').forEach(v => {
-        v.style.opacity = '0';
+        v.style.opacity = '1';
+        v.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
     });
 
     arSceneHidden = true;
