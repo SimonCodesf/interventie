@@ -1006,15 +1006,14 @@ function showChunkCycleButton() {
 
     btn.addEventListener('pointerup', (e) => {
         clearLongPress();
-        // Short press? Start scan on pointerup (rely on clientX for this, not 'click')
         if (!chunkLongPressTriggered) {
-            e.preventDefault();
+            chunkLongPressTriggered = true; // block click double-fire
             try {
                 btn.innerHTML = 'SCAN<span class="scan-spinner"></span>';
                 startChunkScan();
             } catch (error) {
-                console.error('Error bij aanroepen startChunkScan:', error);
                 btn.innerHTML = 'SCAN';
+                chunkLongPressTriggered = false;
             }
         }
     });
@@ -1022,22 +1021,9 @@ function showChunkCycleButton() {
     btn.addEventListener('pointercancel', clearLongPress);
 
     btn.addEventListener('click', (e) => {
-        // Als click arriveert na een pointerup waarbij we al scan hebben gestart:
-        // onderdruk de click om dubbele calls te voorkomen
-        if (chunkLongPressTriggered) {
-            chunkLongPressTriggered = false;
-            e.preventDefault();
-            return;
-        }
-        // Fallback: mocht pointerup niet vuren op oude browsers
         e.preventDefault();
-        try {
-            btn.innerHTML = 'SCAN<span class="scan-spinner"></span>';
-            startChunkScan();
-        } catch (error) {
-            console.error('Error bij aanroepen startChunkScan:', error);
-            btn.innerHTML = 'SCAN';
-        }
+        // Alles via pointerup afgehandeld — click alleen voor preventDefault
+        chunkLongPressTriggered = false;
     });
 
     // Voorkom blauwe selectiebalk op mobiel
