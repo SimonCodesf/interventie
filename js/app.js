@@ -2028,7 +2028,10 @@ function revealARScene(poster) {
             v.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
         });
     } else {
-        // Standaard modus: AR scene video blijft opacity:0 (black background via CSS)
+        // Standaard modus: verberg AR scene video (zwarte achtergrond)
+        document.querySelectorAll('#ar-scene video').forEach(v => {
+            v.style.opacity = '0';
+        });
     }
     
     // Ensure the AR scene canvas is visible for 3D content
@@ -2054,6 +2057,10 @@ function hideARScene() {
             staticFeed.style.opacity = '1';
         });
     }
+    // Verberg AR scene video's (static feed toont camera)
+    document.querySelectorAll('#ar-scene video').forEach(v => {
+        v.style.opacity = '0';
+    });
 
     arSceneHidden = true;
     console.log(' AR scene hidden behind static feed');
