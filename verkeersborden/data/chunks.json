@@ -319,7 +319,7 @@
         {
           "id": "M2",
           "name": "Onderbord uitgezonderd fietsers",
-          "search_query": "cyclists exception sign",
+          "search_query": "cyclists exception",
           "image": "verkeersborden/images/M2.png",
           "wiki_filename": "Belgian_road_sign_M2.svg"
         }
@@ -426,14 +426,14 @@
         {
           "id": "F15",
           "name": "Verkeersbord dat de keuze van een richting voorschrijft",
-          "search_query": "lane choice arrow",
+          "search_query": "lane choice",
           "image": "verkeersborden/images/F15.png",
           "wiki_filename": "Belgian_road_sign_F15.svg"
         },
         {
           "id": "F113",
           "name": "Einde van een fietsstraat",
-          "search_query": "end bicycle street",
+          "search_query": "end bicycle",
           "image": "verkeersborden/images/F113.png",
           "wiki_filename": "Belgian_road_sign_F113.svg"
         },
