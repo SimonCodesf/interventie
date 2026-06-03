@@ -225,9 +225,7 @@ function updateBoxBorder(box, charWidth) {
 function updateHeaderTitle() {
     const headerTitle = document.getElementById('header-title');
     if (!headerTitle) return;
-    
-    const titleText = 'INTERVENTIE ARCHIEF';
-    headerTitle.textContent = `┌─[ ${titleText} ]─┐`;
+    headerTitle.textContent = 'INTERVENTIE ARCHIEF';
 }
 
 // Kies de beste afbeeldings-URL voor een poster, geef voorkeur aan GIFs wanneer aanwezig
