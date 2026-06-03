@@ -407,6 +407,13 @@ function setupMemebordenEventListeners(scene) {
             window.isChunkScanning = false;
             if (typeof stopScanCycles === 'function') stopScanCycles('found');
             if (typeof hideChunkCycleButton === 'function') hideChunkCycleButton();
+
+            // Track scan (eerste per sessie)
+            if (!window._memeScannedIds) window._memeScannedIds = new Set();
+            if (!window._memeScannedIds.has(signId)) {
+                window._memeScannedIds.add(signId);
+                fetch('/api.php/verkeersborden/scan/' + encodeURIComponent(signId), { method: 'POST' }).catch(() => {});
+            }
             
             // Reveal AR scene met camera feed zichtbaar (geen zwarte achtergrond)
             if (typeof revealARScene === 'function') {

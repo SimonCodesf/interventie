@@ -1621,3 +1621,92 @@ function handleDeleteSlide($filename) {
     logAdminActivity('SLIDE_DELETE', $filename);
     jsonResponse(['success' => true]);
 }
+
+// ==================== MEMEBORDEN ANALYTICS ====================
+
+function handleMemebordenList() {
+    // Alleen de borden die in gebruik zijn (uit chunks.json)
+    $chunksFile = dirname(__DIR__) . '/verkeersborden/data/chunks.json';
+    $signs = [];
+    if (file_exists($chunksFile)) {
+        $data = json_decode(file_get_contents($chunksFile), true);
+        if (isset($data['chunks'])) {
+            foreach ($data['chunks'] as $chunk) {
+                if (isset($chunk['signs'])) {
+                    foreach ($chunk['signs'] as $sign) {
+                        $signs[] = [
+                            'id' => $sign['id'] ?? '',
+                            'name' => $sign['name'] ?? '',
+                            'project' => 'MEMEBORDEN',
+                        ];
+                    }
+                }
+            }
+        }
+    }
+    jsonResponse($signs);
+}
+
+function handleMemebordenScan($signId) {
+    $metricsFile = dirname(__DIR__) . '/verkeersborden/data/metrics.json';
+    $metrics = [];
+    if (file_exists($metricsFile)) {
+        $metrics = json_decode(file_get_contents($metricsFile), true) ?: [];
+    }
+    if (!isset($metrics[$signId])) $metrics[$signId] = ['scans' => 0, 'views' => 0];
+    $metrics[$signId]['scans'] = ($metrics[$signId]['scans'] ?? 0) + 1;
+    file_put_contents($metricsFile, json_encode($metrics, JSON_PRETTY_PRINT));
+    jsonResponse(['success' => true, 'scans' => $metrics[$signId]['scans']]);
+}
+
+function handleMemebordenView($signId) {
+    $metricsFile = dirname(__DIR__) . '/verkeersborden/data/metrics.json';
+    $metrics = [];
+    if (file_exists($metricsFile)) {
+        $metrics = json_decode(file_get_contents($metricsFile), true) ?: [];
+    }
+    if (!isset($metrics[$signId])) $metrics[$signId] = ['scans' => 0, 'views' => 0];
+    $metrics[$signId]['views'] = ($metrics[$signId]['views'] ?? 0) + 1;
+    file_put_contents($metricsFile, json_encode($metrics, JSON_PRETTY_PRINT));
+    jsonResponse(['success' => true, 'views' => $metrics[$signId]['views']]);
+}
+
+function handleMemebordenMetrics() {
+    // Returns combined: sign list + metrics
+    $signs = [];
+    $chunksFile = dirname(__DIR__) . '/verkeersborden/data/chunks.json';
+    if (file_exists($chunksFile)) {
+        $data = json_decode(file_get_contents($chunksFile), true);
+        if (isset($data['chunks'])) {
+            foreach ($data['chunks'] as $chunk) {
+                if (isset($chunk['signs'])) {
+                    foreach ($chunk['signs'] as $sign) {
+                        $signs[] = $sign;
+                    }
+                }
+            }
+        }
+    }
+
+    $metricsFile = dirname(__DIR__) . '/verkeersborden/data/metrics.json';
+    $metrics = [];
+    if (file_exists($metricsFile)) {
+        $metrics = json_decode(file_get_contents($metricsFile), true) ?: [];
+    }
+
+    $result = [];
+    foreach ($signs as $sign) {
+        $id = $sign['id'] ?? '';
+        $m = $metrics[$id] ?? ['scans' => 0, 'views' => 0];
+        $result[] = [
+            'id' => 'mb-' . $id,
+            'title' => $sign['name'] ?? $id,
+            'project' => 'MEMEBORDEN',
+            'downloads' => 0,
+            'upload_meta' => ['scans' => (int)($m['scans'] ?? 0), 'views' => (int)($m['views'] ?? 0)],
+            'scans' => (int)($m['scans'] ?? 0),
+            'views' => (int)($m['views'] ?? 0),
+        ];
+    }
+    jsonResponse($result);
+}

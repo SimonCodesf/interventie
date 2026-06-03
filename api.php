@@ -563,6 +563,12 @@ if ($method === 'GET' && $path === '/posters') {
     handleUploadSlide();
 } elseif ($method === 'DELETE' && preg_match('#^/admin/slides/(.+)$#', $path, $matches)) {
     handleDeleteSlide($matches[1]);
+} elseif ($method === 'GET' && $path === '/admin/memeborden-metrics') {
+    handleMemebordenMetrics();
+} elseif ($method === 'POST' && preg_match('#^/verkeersborden/scan/([^/]+)$#', $path, $matches)) {
+    handleMemebordenScan($matches[1]);
+} elseif ($method === 'POST' && preg_match('#^/verkeersborden/view/([^/]+)$#', $path, $matches)) {
+    handleMemebordenView($matches[1]);
 } else {
     jsonResponse(['message' => 'Endpoint niet gevonden'], 404);
 }

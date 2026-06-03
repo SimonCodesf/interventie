@@ -4017,28 +4017,15 @@ async function renderAnalyticsModal() {
         const token = sessionStorage.getItem('adminToken');
         const [postersResp, memesResp] = await Promise.all([
             fetch(`${API_URL}/posters`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} }),
-            fetch(`${API_URL}/verkeersborden/signs`)
+            fetch(`${API_URL}/admin/memeborden-metrics`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} })
         ]);
         if (!postersResp.ok) throw new Error(`HTTP ${postersResp.status}`);
 
         var posters = await postersResp.json();
-        var memeborden = [];
-        if (memesResp.ok) {
-            var memesData = await memesResp.json();
-            if (memesData.signs) {
-                memesData.signs.forEach(function (sign) {
-                    memeborden.push({
-                        id: 'mb-' + (sign.id || ''),
-                        title: sign.name || sign.id || '?',
-                        downloads: 0,
-                        upload_meta: { scans: 0, views: 0 },
-                        scans: 0, views: 0
-                    });
-                });
-            }
-        }
+        // Add project field to posters
+        posters.forEach(function (p) { p.project = p.project || 'INTERVENTIE'; });
 
-        // Merge
+        var memeborden = memesResp.ok ? await memesResp.json() : [];
         var all = posters.concat(memeborden);
         const totalMemes = memeborden.length;
 
@@ -4059,10 +4046,12 @@ async function renderAnalyticsModal() {
                 var d = parseInt(p.downloads || 0, 10);
                 var s = parseInt(p.upload_meta?.scans || p.scans || 0, 10);
                 var v = parseInt(p.upload_meta?.views || p.views || 0, 10);
-                var label = (p.title || p.id || '?') + (p.id?.startsWith('mb-') ? ' \u2605' : '');
-                return '<tr><td>' + label + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
+                var proj = p.project || 'INTERVENTIE';
+                if (proj === 'MEMEBORDEN') proj = 'MB';
+                return '<tr><td>' + proj + '</td><td>' + (p.title || p.id || '?') + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
             }).join('');
             return '<table class="analytics-table"><thead><tr>' +
+                '<th data-col="project" class="sortable">PROJ</th>' +
                 '<th data-col="title" class="sortable">TITEL</th>' +
                 '<th data-col="downloads" class="sortable' + (sortCol === 'downloads' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">DOWNLOADS</th>' +
                 '<th data-col="scans" class="sortable' + (sortCol === 'scans' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">SCANS</th>' +
@@ -4089,6 +4078,7 @@ async function renderAnalyticsModal() {
             if (sortCol === col) { sortDir *= -1; } else { sortCol = col; sortDir = -1; }
             sorted.sort(function (a, b) {
                 if (col === 'title') { return sortDir * (a.title || '').localeCompare(b.title || ''); }
+                if (col === 'project') { return sortDir * ((a.project || '').localeCompare(b.project || '')); }
                 var av = parseInt((a.upload_meta?.[col] ?? a[col]) || 0, 10);
                 var bv = parseInt((b.upload_meta?.[col] ?? b[col]) || 0, 10);
                 return sortDir * (av - bv);
