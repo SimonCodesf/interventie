@@ -222,18 +222,24 @@
             popupElement = null;
         }
 
+        const vh = window.innerHeight;
+        const popupHeight = Math.round(vh * 0.9);
+        const headerHeight = 40;
+        const contentHeight = popupHeight - headerHeight;
+        const popupWidth = Math.round(contentHeight * CROP.sw / CROP.sh);
+
         canvasElement = document.createElement('canvas');
         canvasElement.className = 'iphone-mirror-canvas';
-        canvasElement.width = CROP.sw;
-        canvasElement.height = CROP.sh;
-        canvasElement.style.cssText = `width:${CROP.sw}px;height:${CROP.sh}px;display:block;object-fit:fill;`;
+        canvasElement.width = popupWidth;
+        canvasElement.height = contentHeight;
+        canvasElement.style.cssText = 'width:100%;height:100%;display:block;';
         canvasCtx = canvasElement.getContext('2d');
 
         canvasCtx.fillStyle = '#000';
         canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        const posX = 100 + Math.random() * 200;
-        const posY = 50 + Math.random() * 100;
+        const posX = Math.round((window.innerWidth - popupWidth) / 2);
+        const posY = Math.round((vh - popupHeight) / 2);
 
         popupElement = document.createElement('div');
         popupElement.id = 'iphone-mirror-popup';
@@ -242,8 +248,9 @@
             position: absolute;
             left: ${posX}px;
             top: ${posY}px;
-            width: ${CROP.sw}px;
-            min-width: ${CROP.sw}px;
+            width: ${popupWidth}px;
+            height: ${popupHeight}px;
+            min-width: auto;
             min-height: auto;
             z-index: 99999;
         `;
@@ -255,8 +262,8 @@
                     <button class="win-btn win-close" title="Sluiten">×</button>
                 </div>
             </div>
-            <div class="window-content" style="flex:0 0 auto;overflow:hidden;background:#000;">
-                <div class="mirror-content" style="width:${CROP.sw}px;height:${CROP.sh}px;background:#000;overflow:hidden;">
+            <div class="window-content" style="flex:1;overflow:hidden;background:#000;">
+                <div class="mirror-content" style="width:100%;height:100%;background:#000;overflow:hidden;">
                 </div>
             </div>
         `;
