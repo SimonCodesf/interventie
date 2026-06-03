@@ -1572,24 +1572,43 @@ function handleListSlides() {
 
 function handleUploadSlide() {
     if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
-    if (empty($_FILES['slide'])) jsonResponse(['message' => 'Geen bestand'], 400);
     
-    $file = $_FILES['slide'];
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp'])) {
-        jsonResponse(['message' => 'Alleen PNG/JPG/WebP toegestaan'], 400);
-    }
-    
-    // Bepaal volgnummer
     $dir = dirname(__DIR__) . '/slides';
     if (!is_dir($dir)) mkdir($dir, 0755, true);
     $existing = array_filter(scandir($dir), function($f) { return $f !== '.' && $f !== '..'; });
-    $num = count($existing) + 1;
-    $filename = 'slide-' . str_pad($num, 2, '0', STR_PAD_LEFT) . '.' . $ext;
+    $count = count($existing);
+    $uploaded = [];
     
-    move_uploaded_file($file['tmp_name'], $dir . '/' . $filename);
-    logAdminActivity('SLIDE_UPLOAD', $filename);
-    jsonResponse(['success' => true, 'filename' => $filename, 'count' => count($existing) + 1]);
+    // Ondersteun single én multi upload
+    $files = [];
+    if (!empty($_FILES['slide']['name'])) {
+        if (is_array($_FILES['slide']['name'])) {
+            for ($i = 0; $i < count($_FILES['slide']['name']); $i++) {
+                $files[] = [
+                    'name' => $_FILES['slide']['name'][$i],
+                    'tmp_name' => $_FILES['slide']['tmp_name'][$i],
+                    'error' => $_FILES['slide']['error'][$i],
+                ];
+            }
+        } else {
+            $files[] = $_FILES['slide'];
+        }
+    }
+    
+    if (empty($files)) jsonResponse(['message' => 'Geen bestand'], 400);
+    
+    foreach ($files as $file) {
+        if ($file['error'] !== UPLOAD_ERR_OK) continue;
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp'])) continue;
+        $count++;
+        $filename = 'slide-' . str_pad($count, 2, '0', STR_PAD_LEFT) . '.' . $ext;
+        move_uploaded_file($file['tmp_name'], $dir . '/' . $filename);
+        $uploaded[] = $filename;
+        logAdminActivity('SLIDE_UPLOAD', $filename);
+    }
+    
+    jsonResponse(['success' => true, 'uploaded' => $uploaded, 'count' => $count]);
 }
 
 function handleDeleteSlide($filename) {

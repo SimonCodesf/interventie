@@ -26,7 +26,7 @@
         prefix: 'slide-',
         pad: 2,          // slide-01, slide-02, ...
         ext: '.png',
-        count: 1,        // pas aan na export
+        count: 0,        // dynamisch via API
     };
 
     // ============================
@@ -95,6 +95,7 @@
 
     function open() {
         if (popup && popup.isConnected) {
+            popup.classList.remove('minimized');
             popup.style.display = 'flex';
             isOpen = true;
             return;
@@ -110,7 +111,15 @@
     }
 
     function toggle() {
-        isOpen ? close() : open();
+        if (isOpen) {
+            if (popup && popup.classList.contains('minimized')) {
+                popup.classList.remove('minimized');
+                return;
+            }
+            close();
+        } else {
+            open();
+        }
     }
 
     function buildPopup() {
@@ -147,6 +156,7 @@
                 '<div class="window-controls">' +
                     '<button class="win-btn" data-slide="prev" title="Vorige (\u2190)">\u25c0</button>' +
                     '<button class="win-btn" data-slide="next" title="Volgende (\u2192)">\u25b6</button>' +
+                    '<button class="win-btn win-minimize" title="Minimaliseren">_</button>' +
                     '<button class="win-btn win-close" title="Sluiten">\u00d7</button>' +
                 '</div>' +
             '</div>' +
@@ -155,6 +165,13 @@
         popup.querySelector('.window-content').appendChild(imgEl);
 
         popup.querySelector('.win-close').addEventListener('click', close);
+        popup.querySelector('.win-minimize').addEventListener('click', () => {
+            if (popup.classList.contains('minimized')) {
+                popup.classList.remove('minimized');
+            } else {
+                popup.classList.add('minimized');
+            }
+        });
         popup.querySelector('[data-slide="prev"]').addEventListener('click', prevSlide);
         popup.querySelector('[data-slide="next"]').addEventListener('click', nextSlide);
 
@@ -168,6 +185,7 @@
         container.appendChild(popup);
 
         setupDrag(popup);
+        setupResize(popup);
         setupFocus(popup);
         setupTouch(popup);
     }
@@ -211,6 +229,42 @@
 
         document.addEventListener('mouseup', function () {
             if (dragging) { dragging = false; el.classList.remove('dragging'); }
+        });
+    }
+
+    function setupResize(el) {
+        var handles = ['se', 'sw', 'ne', 'nw'];
+        handles.forEach(function (dir) {
+            var handle = document.createElement('div');
+            handle.className = 'resize-handle resize-' + dir;
+            el.appendChild(handle);
+
+            var resizing = false, sx, sy, sw, sh, sl, st;
+
+            handle.addEventListener('mousedown', function (e) {
+                resizing = true;
+                bringToFront(el);
+                sx = e.clientX; sy = e.clientY;
+                sw = el.offsetWidth; sh = el.offsetHeight;
+                sl = parseInt(el.style.left) || el.offsetLeft;
+                st = parseInt(el.style.top) || el.offsetTop;
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', function (e) {
+                if (!resizing) return;
+                var dx = e.clientX - sx, dy = e.clientY - sy;
+                var nw = sw, nh = sh, nl = sl, nt = st;
+                if (dir.indexOf('e') >= 0) nw = Math.max(250, sw + dx);
+                if (dir.indexOf('w') >= 0) { nw = Math.max(250, sw - dx); nl = sl + (sw - nw); }
+                if (dir.indexOf('s') >= 0) nh = Math.max(200, sh + dy);
+                if (dir.indexOf('n') >= 0) { nh = Math.max(200, sh - dy); nt = st + (sh - nh); }
+                el.style.width = nw + 'px'; el.style.height = nh + 'px';
+                el.style.left = nl + 'px'; el.style.top = nt + 'px';
+            });
+
+            document.addEventListener('mouseup', function () { resizing = false; });
         });
     }
 

@@ -4028,21 +4028,56 @@ async function renderAnalyticsModal() {
         const totalScans = posters.reduce((sum, poster) => sum + (parseInt(poster.upload_meta?.scans || poster.scans, 10) || 0), 0);
         const totalViews = posters.reduce((sum, poster) => sum + (parseInt(poster.upload_meta?.views || poster.views, 10) || 0), 0);
         const avgDownloads = posters.length ? Math.round(totalDownloads / posters.length) : 0;
-        const top = posters.slice().sort((a, b) => (parseInt(b.downloads, 10) || 0) - (parseInt(a.downloads, 10) || 0)).slice(0, 10);
 
-        content.innerHTML = `
-            <div class="analytics-summary">
-                <div class="analytics-card"><strong>Downloads</strong>${totalDownloads}</div>
-                <div class="analytics-card"><strong>Scans (AR)</strong>${totalScans}</div>
-                <div class="analytics-card"><strong>Views</strong>${totalViews}</div>
-                <div class="analytics-card"><strong>Posters</strong>${posters.length}</div>
-                <div class="analytics-card"><strong>Per poster</strong>${avgDownloads}</div>
-            </div>
-            <h4 style="margin-top: 1rem; color: rgba(255,255,255,0.9); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;">Top 10 posters</h4>
-            <ol class="analytics-toplist">
-                ${top.map((poster) => `<li><strong>${parseInt(poster.downloads, 10) || 0}</strong> — ${poster.title || poster.id}</li>`).join('')}
-            </ol>
-        `;
+        var sorted = posters.slice();
+        var sortCol = 'downloads';
+        var sortDir = -1;
+
+        function renderTable() {
+            var rows = sorted.map(function (poster) {
+                var d = parseInt(poster.downloads || 0, 10);
+                var s = parseInt(poster.upload_meta?.scans || poster.scans || 0, 10);
+                var v = parseInt(poster.upload_meta?.views || poster.views || 0, 10);
+                return '<tr><td>' + (poster.title || poster.id || '?') + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
+            }).join('');
+            return '<table class="analytics-table"><thead><tr>' +
+                '<th data-col="title" class="sortable">TITEL</th>' +
+                '<th data-col="downloads" class="sortable' + (sortCol === 'downloads' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">DOWNLOADS</th>' +
+                '<th data-col="scans" class="sortable' + (sortCol === 'scans' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">SCANS</th>' +
+                '<th data-col="views" class="sortable' + (sortCol === 'views' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">VIEWS</th>' +
+                '</tr></thead><tbody>' + rows + '</tbody></table>';
+        }
+
+        content.innerHTML =
+            '<div class="analytics-summary">' +
+                '<div class="analytics-card"><strong>Downloads</strong>' + totalDownloads + '</div>' +
+                '<div class="analytics-card"><strong>Scans (AR)</strong>' + totalScans + '</div>' +
+                '<div class="analytics-card"><strong>Views</strong>' + totalViews + '</div>' +
+                '<div class="analytics-card"><strong>Posters</strong>' + posters.length + '</div>' +
+                '<div class="analytics-card"><strong>Per poster</strong>' + avgDownloads + '</div>' +
+            '</div>' +
+            '<div class="analytics-table-wrap">' + renderTable() + '</div>';
+
+        // Click-to-sort handler
+        content.querySelectorAll('.sortable').forEach(function (th) {
+            th.addEventListener('click', handleSort);
+        });
+
+        function handleSort(e) {
+            var col = e.currentTarget.dataset.col;
+            if (sortCol === col) { sortDir *= -1; } else { sortCol = col; sortDir = -1; }
+            sorted.sort(function (a, b) {
+                if (col === 'title') { return sortDir * (a.title || '').localeCompare(b.title || ''); }
+                var av = parseInt((a.upload_meta?.[col] ?? a[col]) || 0, 10);
+                var bv = parseInt((b.upload_meta?.[col] ?? b[col]) || 0, 10);
+                return sortDir * (av - bv);
+            });
+            var tableWrap = content.querySelector('.analytics-table-wrap');
+            if (tableWrap) tableWrap.innerHTML = renderTable();
+            content.querySelectorAll('.sortable').forEach(function (th) {
+                th.addEventListener('click', handleSort);
+            });
+        }
     } catch (error) {
         console.error('Analytics laden mislukt', error);
         const content = document.getElementById('analytics-content');
@@ -4135,11 +4170,11 @@ async function loadSlideshowGrid() {
 
 async function uploadSlideFile(input) {
     const status = document.getElementById('slideshow-status');
-    const file = input.files[0];
-    if (!file) return;
-    if (status) status.textContent = 'Uploaden...';
+    const files = input.files;
+    if (!files.length) return;
+    if (status) status.textContent = files.length > 1 ? `${files.length} slides uploaden...` : 'Uploaden...';
     const fd = new FormData();
-    fd.append('slide', file);
+    for (const file of files) fd.append('slide[]', file);
     try {
         const token = sessionStorage.getItem('adminToken');
         const r = await fetch(API_URL + '/admin/slides/upload', {
@@ -4149,7 +4184,7 @@ async function uploadSlideFile(input) {
         });
         const data = await r.json();
         if (r.ok && data.success) {
-            if (status) status.textContent = data.filename + ' geüpload';
+            if (status) status.textContent = (data.uploaded || []).length + ' slide(s) geüpload';
             loadSlideshowGrid();
         } else {
             if (status) status.textContent = data.message || 'Upload mislukt';
