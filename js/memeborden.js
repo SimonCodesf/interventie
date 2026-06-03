@@ -145,12 +145,12 @@ function createMemebordenPosters() {
     return chunksData.chunks.map(chunk => {
         const chunkSigns = getSignsForChunk(chunk.id);
         const galleryImages = chunkSigns.map(s => `/${s.image}`);
-        const chunkLabel = `MEMEBORDEN_${chunk.name || chunk.id}`;
+        const chunkLabel = `MB ${chunk.id}`;
         
         return {
             id: `memeborden-${chunk.id}`,
-            title: `MEMEBORDEN: ${chunk.name}`,
-            description: `${chunk.description} (${chunk.signs.length} borden)`,
+            title: `MB ${chunk.id}`,
+            description: `${chunk.name} (${chunk.signs.length} borden)`,
             location_description: 'Belgie, overal',
             created_at: generatedDate,
             upload_date: generatedDate,
