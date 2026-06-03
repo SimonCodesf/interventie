@@ -777,6 +777,9 @@ function injectChunkPickerCSS() {
             pointer-events: auto;
             color: #fff;
             font-family: var(--font-data);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         #chunk-quick-picker.open {
@@ -825,6 +828,10 @@ function injectChunkPickerCSS() {
             padding: 0.45rem 0.5rem;
             text-align: left;
             cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
         }
 
         .chunk-picker-btn.active {
@@ -997,26 +1004,44 @@ function showChunkCycleButton() {
         chunkLongPressTimer = null;
     };
 
-    btn.addEventListener('pointerup', clearLongPress);
+    btn.addEventListener('pointerup', (e) => {
+        clearLongPress();
+        // Short press? Start scan on pointerup (rely on clientX for this, not 'click')
+        if (!chunkLongPressTriggered) {
+            e.preventDefault();
+            try {
+                btn.innerHTML = 'SCAN<span class="scan-spinner"></span>';
+                startChunkScan();
+            } catch (error) {
+                console.error('Error bij aanroepen startChunkScan:', error);
+                btn.innerHTML = 'SCAN';
+            }
+        }
+    });
+
     btn.addEventListener('pointercancel', clearLongPress);
 
-    // Voorkom blauwe selectiebalk op mobiel
-    btn.addEventListener('selectstart', (e) => { e.preventDefault(); });
-    
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+        // Als click arriveert na een pointerup waarbij we al scan hebben gestart:
+        // onderdruk de click om dubbele calls te voorkomen
         if (chunkLongPressTriggered) {
             chunkLongPressTriggered = false;
+            e.preventDefault();
             return;
         }
+        // Fallback: mocht pointerup niet vuren op oude browsers
+        e.preventDefault();
         try {
-            // Toon spinner naast SCAN tekst
             btn.innerHTML = 'SCAN<span class="scan-spinner"></span>';
             startChunkScan();
         } catch (error) {
-            console.error('❌ Error bij aanroepen startChunkScan:', error);
+            console.error('Error bij aanroepen startChunkScan:', error);
             btn.innerHTML = 'SCAN';
         }
     });
+
+    // Voorkom blauwe selectiebalk op mobiel
+    btn.addEventListener('selectstart', (e) => { e.preventDefault(); });
 
     document.body.appendChild(btn);
 }
@@ -1997,14 +2022,13 @@ function revealARScene(poster) {
     }
     
     if (poster && parseInt(poster.ar_camera_feed)) {
-        // Camera feed modus: AR scene video's NIET verbergen (camera zichtbaar als achtergrond)
-        console.log(' Camera feed modus actief voor:', poster.title);
-    } else {
-        // Standaard modus: verberg ALLE video\'s voor zwarte achtergrond
-        // The black background layer (ar-layer-0) will show instead
-        document.querySelectorAll('video').forEach(v => {
-            v.style.opacity = '0';
+        // Camera feed modus: AR scene video ZICHTBAAR als achtergrond
+        document.querySelectorAll('#ar-scene video').forEach(v => {
+            v.style.opacity = '1';
+            v.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
         });
+    } else {
+        // Standaard modus: AR scene video blijft opacity:0 (black background via CSS)
     }
     
     // Ensure the AR scene canvas is visible for 3D content
@@ -2026,18 +2050,11 @@ function hideARScene() {
     const staticFeed = document.getElementById('static-camera-feed');
     if (staticFeed) {
         staticFeed.style.display = 'block';
-        // Small delay to ensure display:block is applied before opacity transition
         requestAnimationFrame(() => {
             staticFeed.style.opacity = '1';
         });
     }
-    
-    // Show AR scene videos again (for MindAR to work)
-    document.querySelectorAll('#ar-scene video').forEach(v => {
-        v.style.opacity = '1';
-        v.style.filter = 'grayscale(100%) contrast(2.5) brightness(1)';
-    });
-    
+
     arSceneHidden = true;
     console.log(' AR scene hidden behind static feed');
 }

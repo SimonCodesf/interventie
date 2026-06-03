@@ -1347,11 +1347,20 @@ video {
 }
 
 /* High contrast black/white camera feed */
+/* AR scene video's: altijd onzichtbaar — static feed toont camera */
 #ar-scene video,
-#static-camera-feed,
 a-scene video {
     filter: grayscale(100%) contrast(2.5) brightness(1) !important;
-    height: 100% !important; /* Fill the container exactly */
+    height: 100% !important;
+    width: 100% !important;
+    object-fit: cover !important;
+    opacity: 0 !important;
+}
+
+/* Static feed: volledig zichtbaar */
+#static-camera-feed {
+    filter: grayscale(100%) contrast(2.5) brightness(1) !important;
+    height: 100% !important;
     width: 100% !important;
     object-fit: cover !important;
 }
