@@ -230,9 +230,9 @@
 
         canvasElement = document.createElement('canvas');
         canvasElement.className = 'iphone-mirror-canvas';
-        canvasElement.width = popupWidth;
-        canvasElement.height = contentHeight;
-        canvasElement.style.cssText = 'width:100%;height:100%;display:block;';
+        canvasElement.width = CROP.sw;
+        canvasElement.height = CROP.sh;
+        canvasElement.style.cssText = 'width:100%;height:100%;display:block;object-fit:contain;';
         canvasCtx = canvasElement.getContext('2d');
 
         canvasCtx.fillStyle = '#000';
@@ -281,6 +281,7 @@
         container.appendChild(popupElement);
 
         setupMirrorDrag(popupElement);
+        setupMirrorResize(popupElement);
         setupMirrorClose(popupElement);
         setupMirrorFocus(popupElement);
 
@@ -346,6 +347,67 @@
                 dragging = false;
                 el.classList.remove('dragging');
             }
+        });
+    }
+
+    function setupMirrorResize(el) {
+        const handles = ['se', 'sw', 'ne', 'nw'];
+        const ar = CROP.sw / CROP.sh;
+
+        handles.forEach(dir => {
+            const handle = document.createElement('div');
+            handle.className = `resize-handle resize-${dir}`;
+            el.appendChild(handle);
+
+            let resizing = false, startX, startY, startW, startH, startL, startT;
+
+            handle.addEventListener('mousedown', (e) => {
+                resizing = true;
+                bringMirrorToFront(el);
+                startX = e.clientX;
+                startY = e.clientY;
+                startW = el.offsetWidth;
+                startH = el.offsetHeight;
+                startL = parseInt(el.style.left) || el.offsetLeft;
+                startT = parseInt(el.style.top) || el.offsetTop;
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!resizing) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                let newW, newH, newL = startL, newT = startT;
+
+                if (dir === 'se') {
+                    newW = Math.max(200, startW + dx);
+                    newH = newW / ar;
+                } else if (dir === 'sw') {
+                    newW = Math.max(200, startW - dx);
+                    newH = newW / ar;
+                    newL = startL + (startW - newW);
+                } else if (dir === 'ne') {
+                    newW = Math.max(200, startW + dx);
+                    newH = newW / ar;
+                    newT = startT + (startH - newH);
+                } else if (dir === 'nw') {
+                    newW = Math.max(200, startW - dx);
+                    newH = newW / ar;
+                    newL = startL + (startW - newW);
+                    newT = startT + (startH - newH);
+                }
+
+                el.style.width = newW + 'px';
+                el.style.height = newH + 'px';
+                el.style.left = newL + 'px';
+                el.style.top = newT + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                resizing = false;
+            });
         });
     }
 
