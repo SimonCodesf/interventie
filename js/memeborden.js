@@ -34,7 +34,7 @@ const MEMEBORDEN_CONFIG = {
     filterMinCF: 0.0001,
     filterBeta: 0.001,
     gifDisplaySize: 1.2,        // Grootte van GIF overlay in AR
-    gifCooldownMs: 30000,       // 30 seconden cooldown voordat nieuwe GIF gezocht wordt
+    gifCooldownMs: 20000,       // 20 seconden cooldown
 };
 
 // ==================== DATA ====================
@@ -53,7 +53,7 @@ let memeAnimFrame = null;
 let activeGifComp = null;
 
 // GIF cooldown cache: signId -> { url, timestamp }
-// Eerste scan = random GIF. Binnen 30s opnieuw = zelfde GIF. Na 30s = nieuwe random GIF.
+// Eerste scan = random GIF. Binnen 20s opnieuw = zelfde GIF. Na 20s = nieuwe random GIF.
 const gifCooldownCache = new Map();
 
 // Als een GIF mislukt te laden, verwijder die URL uit de cache zodat de volgende detectie
@@ -466,8 +466,8 @@ function setupMemebordenEventListeners(scene) {
 
 /**
  * Haal een random GIF op van Klipy en toon als A-Frame plane op het AR bord.
- * 30-seconden cooldown: eerste scan = random GIF, herscan binnen 30s = zelfde GIF,
- * herscan na 30s = nieuwe random GIF.
+ * 20-seconden cooldown: eerste scan = random GIF, herscan binnen 20s = zelfde GIF,
+ * herscan na 20s = nieuwe random GIF.
  */
 async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
     if (!searchQuery) {
@@ -484,7 +484,7 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         return;
     }
     
-    // Check cooldown cache: hergebruik GIF als binnen 30 seconden
+    // Check cooldown cache: hergebruik GIF als binnen 20 seconden
     const cached = gifCooldownCache.get(signId);
     const now = Date.now();
     
