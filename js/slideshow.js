@@ -57,7 +57,8 @@
     }
 
     function showSlide(i) {
-        if (!imgEl) return;
+        if (!imgEl || CONFIG.count === 0) return;
+        if (i < 0 || i >= CONFIG.count) return;
         clearTimeout(transitionTimer);
         currentIndex = i;
 
@@ -94,6 +95,7 @@
     // ============================
 
     function open() {
+        if (CONFIG.count === 0) return;
         if (popup && popup.isConnected) {
             popup.classList.remove('minimized');
             popup.style.display = 'flex';
@@ -328,7 +330,21 @@
         // Haal dynamisch slide count op (zodat admin uploads kloppen)
         fetch('/api.php/slides').then(r => r.json()).then(data => {
             if (data.count > 0) CONFIG.count = data.count;
-        }).catch(() => {});
+        }).catch(() => {
+            // Fallback: probeer slide-01 te laden om count te detecteren
+            var img = new Image();
+            img.onload = function () {
+                CONFIG.count = 1;
+                // Check sequential tot 404
+                (function tryNext(n) {
+                    var next = new Image();
+                    next.onload = function () { CONFIG.count = n + 1; tryNext(n + 1); };
+                    next.onerror = function () {};
+                    next.src = getSlidePath(n);
+                })(1);
+            };
+            img.src = getSlidePath(0);
+        });
 
         window.Slideshow = {
             toggle: toggle,
