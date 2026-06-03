@@ -553,6 +553,16 @@ if ($method === 'GET' && $path === '/posters') {
     readfile($cacheFile);
     exit;
 
+} elseif ($method === 'POST' && preg_match('#^/posters/([^/]+)/scan$#', $path, $matches)) {
+    handleRecordScan($db, $matches[1]);
+} elseif ($method === 'POST' && preg_match('#^/posters/([^/]+)/view$#', $path, $matches)) {
+    handleRecordView($db, $matches[1]);
+} elseif ($method === 'GET' && $path === '/slides') {
+    handleListSlides();
+} elseif ($method === 'POST' && $path === '/admin/slides/upload') {
+    handleUploadSlide();
+} elseif ($method === 'DELETE' && preg_match('#^/admin/slides/(.+)$#', $path, $matches)) {
+    handleDeleteSlide($matches[1]);
 } else {
     jsonResponse(['message' => 'Endpoint niet gevonden'], 404);
 }

@@ -55,7 +55,9 @@ function initDatabaseWithMigrations() {
         'gallery_images' => 'TEXT',
         'ar_camera_feed' => 'INTEGER DEFAULT 0',
         'upload_type' => "TEXT DEFAULT 'poster'",
-        'created_at' => 'DATETIME DEFAULT CURRENT_TIMESTAMP'
+        'created_at' => 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+        'scans' => 'INTEGER DEFAULT 0',
+        'views' => 'INTEGER DEFAULT 0'
     ];
     
     foreach ($columnsToAdd as $column => $type) {

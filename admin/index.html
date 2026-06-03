@@ -454,6 +454,16 @@
                 </section>
 
                 <section class="settings-section">
+                    <div class="settings-section-title">SLIDESHOW BEHEER</div>
+                    <p class="settings-help">Beheer de slides voor de presentatie-popup (klik op ● ONLINE).</p>
+                    <div class="settings-inline-row" style="flex-wrap: wrap; gap: 0.5rem;">
+                        <label class="terminal-btn" style="cursor: pointer; line-height: 1;">SLIDE UPLOADEN<input type="file" id="slide-upload-input" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="uploadSlideFile(this)"></label>
+                    </div>
+                    <div id="slideshow-grid" class="slideshow-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-top: 0.75rem; max-height: 30vh; overflow-y: auto;"></div>
+                    <div id="slideshow-status" class="settings-status">Klaar.</div>
+                </section>
+
+                <section class="settings-section">
                     <div class="settings-section-title">INTEGRATIES</div>
                     <label class="form-label" for="sketchfab-api-key">SKETCHFAB API KEY</label>
                     <p class="settings-help">Aanmaken op <a href="https://sketchfab.com/settings/password" target="_blank" rel="noopener" class="settings-link">sketchfab.com → Account → Password & API → API Token</a></p>

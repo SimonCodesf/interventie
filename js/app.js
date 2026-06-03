@@ -1461,6 +1461,13 @@ function setupChunkEventListeners(scene, chunk) {
             // LAZY LOAD GIFs: Laad nu pas de GIFs voor deze specifieke target
             loadLazyGifsForTarget(target);
             
+            // Track scan (eerste detectie per sessie)
+            if (posterId && !window._scannedIds) window._scannedIds = new Set();
+            if (posterId && !window._scannedIds.has(posterId)) {
+                window._scannedIds.add(posterId);
+                fetch('/api.php/posters/' + encodeURIComponent(posterId) + '/scan', { method: 'POST' }).catch(() => {});
+            }
+            
             // Check if we need to show loader for GIFs
             checkAndShowLoader(poster);
         });

@@ -3980,6 +3980,9 @@ async function openSettingsModal() {
             );
         }
     } catch (e) { /* stil falen */ }
+    
+    // Laad slideshow grid
+    loadSlideshowGrid();
 }
 
 function closeSettingsModal() {
@@ -4022,14 +4025,18 @@ async function renderAnalyticsModal() {
         if (!content) return;
 
         const totalDownloads = posters.reduce((sum, poster) => sum + (parseInt(poster.downloads, 10) || 0), 0);
+        const totalScans = posters.reduce((sum, poster) => sum + (parseInt(poster.upload_meta?.scans || poster.scans, 10) || 0), 0);
+        const totalViews = posters.reduce((sum, poster) => sum + (parseInt(poster.upload_meta?.views || poster.views, 10) || 0), 0);
         const avgDownloads = posters.length ? Math.round(totalDownloads / posters.length) : 0;
         const top = posters.slice().sort((a, b) => (parseInt(b.downloads, 10) || 0) - (parseInt(a.downloads, 10) || 0)).slice(0, 10);
 
         content.innerHTML = `
             <div class="analytics-summary">
-                <div class="analytics-card"><strong>Totaal downloads</strong>${totalDownloads}</div>
-                <div class="analytics-card"><strong>Aantal posters</strong>${posters.length}</div>
-                <div class="analytics-card"><strong>Gem. downloads per poster</strong>${avgDownloads}</div>
+                <div class="analytics-card"><strong>Downloads</strong>${totalDownloads}</div>
+                <div class="analytics-card"><strong>Scans (AR)</strong>${totalScans}</div>
+                <div class="analytics-card"><strong>Views</strong>${totalViews}</div>
+                <div class="analytics-card"><strong>Posters</strong>${posters.length}</div>
+                <div class="analytics-card"><strong>Per poster</strong>${avgDownloads}</div>
             </div>
             <h4 style="margin-top: 1rem; color: rgba(255,255,255,0.9); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;">Top 10 posters</h4>
             <ol class="analytics-toplist">
@@ -4100,6 +4107,77 @@ async function saveSettings() {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'OPSLAAN'; }
     }
 }
+
+// ==================== SLIDESHOW BEHEER ====================
+
+async function loadSlideshowGrid() {
+    const grid = document.getElementById('slideshow-grid');
+    const status = document.getElementById('slideshow-status');
+    if (!grid) return;
+    try {
+        const r = await fetch(API_URL + '/slides');
+        const data = await r.json();
+        if (data.slides.length === 0) {
+            grid.innerHTML = '<span style="color: rgba(255,255,255,0.4); font-size: 0.65rem;">Geen slides gevonden.</span>';
+        } else {
+            grid.innerHTML = data.slides.map(f => `
+                <div style="position: relative; aspect-ratio: 1; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                    <img src="../slides/${f}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="${f}">
+                    <button onclick="deleteSlide('${f}')" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); border: 0.5px solid rgba(255,255,255,0.5); color: #fff; font-size: 0.6rem; cursor: pointer; width: 16px; height: 16px; line-height: 1; padding: 0;">×</button>
+                </div>
+            `).join('');
+        }
+        if (status) status.textContent = data.count + ' slide(s)';
+    } catch (e) {
+        if (status) status.textContent = 'Fout bij laden: ' + e.message;
+    }
+}
+
+async function uploadSlideFile(input) {
+    const status = document.getElementById('slideshow-status');
+    const file = input.files[0];
+    if (!file) return;
+    if (status) status.textContent = 'Uploaden...';
+    const fd = new FormData();
+    fd.append('slide', file);
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const r = await fetch(API_URL + '/admin/slides/upload', {
+            method: 'POST',
+            headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+            body: fd
+        });
+        const data = await r.json();
+        if (r.ok && data.success) {
+            if (status) status.textContent = data.filename + ' geüpload';
+            loadSlideshowGrid();
+        } else {
+            if (status) status.textContent = data.message || 'Upload mislukt';
+        }
+    } catch (e) {
+        if (status) status.textContent = 'Fout: ' + e.message;
+    }
+    input.value = '';
+}
+window.uploadSlideFile = uploadSlideFile;
+
+async function deleteSlide(filename) {
+    if (!confirm('Slide ' + filename + ' verwijderen?')) return;
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const r = await fetch(API_URL + '/admin/slides/' + encodeURIComponent(filename), {
+            method: 'DELETE',
+            headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        if (r.ok) loadSlideshowGrid();
+    } catch (e) {
+        console.error(e);
+    }
+}
+window.deleteSlide = deleteSlide;
+
+// ==================== SETTINGS MODAL (aangepast) ====================
+// Laad slideshow grid bij openen settings
 
 // Setup logout button
 function setupLogoutButton() {

@@ -271,6 +271,11 @@
         setupKeyboard();
         setupOnlineTrigger();
 
+        // Haal dynamisch slide count op (zodat admin uploads kloppen)
+        fetch('/api.php/slides').then(r => r.json()).then(data => {
+            if (data.count > 0) CONFIG.count = data.count;
+        }).catch(() => {});
+
         window.Slideshow = {
             toggle: toggle,
             open: open,

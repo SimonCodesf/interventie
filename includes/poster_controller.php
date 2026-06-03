@@ -316,7 +316,9 @@ function handleAdminBookExport($db) {
                     'ar_camera_feed' => (int)($poster['ar_camera_feed'] ?? 0),
                     'created_at' => $poster['created_at'] ?? null,
                     'upload_date' => $poster['upload_date'] ?? null,
-                    'downloads' => (int)($poster['downloads'] ?? 0)
+                    'downloads' => (int)($poster['downloads'] ?? 0),
+                    'scans' => (int)($poster['scans'] ?? 0),
+                    'views' => (int)($poster['views'] ?? 0)
                 ],
                 'assets' => [
                     'jpeg' => $jpegAsset,
@@ -1540,4 +1542,63 @@ function convertGifToPng($inputPath, $outputPath) {
         error_log("⚠️ GIF to PNG conversion error: " . $e->getMessage());
         return false;
     }
+}
+
+// ==================== ANALYTICS: SCAN / VIEW TRACKING ====================
+
+function handleRecordScan($db, $id) {
+    $stmt = $db->prepare("UPDATE posters SET scans = COALESCE(scans, 0) + 1 WHERE id = ?");
+    $stmt->execute([$id]);
+    jsonResponse(['success' => true]);
+}
+
+function handleRecordView($db, $id) {
+    $stmt = $db->prepare("UPDATE posters SET views = COALESCE(views, 0) + 1 WHERE id = ?");
+    $stmt->execute([$id]);
+    jsonResponse(['success' => true]);
+}
+
+// ==================== SLIDESHOW BEHEER ====================
+
+function handleListSlides() {
+    $dir = dirname(__DIR__) . '/slides';
+    if (!is_dir($dir)) return jsonResponse(['slides' => [], 'count' => 0]);
+    $files = array_values(array_filter(scandir($dir), function($f) use ($dir) {
+        return is_file($dir . '/' . $f) && preg_match('/\.(png|jpg|jpeg|webp)$/i', $f);
+    }));
+    sort($files, SORT_NATURAL);
+    jsonResponse(['slides' => $files, 'count' => count($files)]);
+}
+
+function handleUploadSlide() {
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    if (empty($_FILES['slide'])) jsonResponse(['message' => 'Geen bestand'], 400);
+    
+    $file = $_FILES['slide'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp'])) {
+        jsonResponse(['message' => 'Alleen PNG/JPG/WebP toegestaan'], 400);
+    }
+    
+    // Bepaal volgnummer
+    $dir = dirname(__DIR__) . '/slides';
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    $existing = array_filter(scandir($dir), function($f) { return $f !== '.' && $f !== '..'; });
+    $num = count($existing) + 1;
+    $filename = 'slide-' . str_pad($num, 2, '0', STR_PAD_LEFT) . '.' . $ext;
+    
+    move_uploaded_file($file['tmp_name'], $dir . '/' . $filename);
+    logAdminActivity('SLIDE_UPLOAD', $filename);
+    jsonResponse(['success' => true, 'filename' => $filename, 'count' => count($existing) + 1]);
+}
+
+function handleDeleteSlide($filename) {
+    if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    // Sanitize filename
+    $filename = basename($filename);
+    $file = dirname(__DIR__) . '/slides/' . $filename;
+    if (!file_exists($file)) jsonResponse(['message' => 'Slide niet gevonden'], 404);
+    unlink($file);
+    logAdminActivity('SLIDE_DELETE', $filename);
+    jsonResponse(['success' => true]);
 }

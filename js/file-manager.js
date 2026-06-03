@@ -647,6 +647,13 @@ async function openFileWindow(posterId) {
         return;
     }
     
+    // Track view (eenmalig per sessie) — fire & forget
+    if (!window._viewedIds) window._viewedIds = new Set();
+    if (!window._viewedIds.has(posterId)) {
+        window._viewedIds.add(posterId);
+        fetch('/api.php/posters/' + encodeURIComponent(posterId) + '/view', { method: 'POST' }).catch(() => {});
+    }
+    
     // Haal poster data uit window.allPosters (al geladen)
     const poster = window.allPosters?.find(p => p.id === posterId);
     if (!poster) {
