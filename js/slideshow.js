@@ -150,6 +150,7 @@
                     '<button class="win-btn" data-slide="prev" title="Vorige (\u2190)">\u25c0</button>' +
                     '<button class="win-btn" data-slide="next" title="Volgende (\u2192)">\u25b6</button>' +
                     '<button class="win-btn win-minimize" title="Minimaliseren">_</button>' +
+                    '<button class="win-btn win-maximize" title="Fullscreen">\u25a1</button>' +
                     '<button class="win-btn win-close" title="Sluiten">\u00d7</button>' +
                 '</div>' +
             '</div>' +
@@ -163,6 +164,25 @@
                 popup.classList.remove('minimized');
             } else {
                 popup.classList.add('minimized');
+            }
+        });
+        popup.querySelector('.win-maximize').addEventListener('click', () => {
+            if (popup.classList.contains('maximized')) {
+                popup.classList.remove('maximized');
+                if (popup.dataset.prevStyle) {
+                    var parts = popup.dataset.prevStyle.split(';');
+                    popup.style.left = parts[0] || '';
+                    popup.style.top = parts[1] || '';
+                    popup.style.width = parts[2] || '';
+                    popup.style.height = parts[3] || '';
+                }
+            } else {
+                popup.dataset.prevStyle = popup.style.left + ';' + popup.style.top + ';' + popup.style.width + ';' + popup.style.height;
+                popup.classList.add('maximized');
+                popup.style.left = '0';
+                popup.style.top = '0';
+                popup.style.width = '100vw';
+                popup.style.height = '100vh';
             }
         });
         popup.querySelector('[data-slide="prev"]').addEventListener('click', prevSlide);
