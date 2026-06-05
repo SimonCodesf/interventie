@@ -4208,7 +4208,6 @@ async function uploadSlideFile(input) {
 window.uploadSlideFile = uploadSlideFile;
 
 async function deleteSlide(filename) {
-    if (!confirm('Slide ' + filename + ' verwijderen?')) return;
     try {
         const token = sessionStorage.getItem('adminToken');
         const r = await fetch(API_URL + '/admin/slides/' + encodeURIComponent(filename), {
