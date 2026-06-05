@@ -4168,7 +4168,7 @@ async function loadSlideshowGrid() {
         } else {
             grid.innerHTML = data.slides.map(f => `
                 <div style="position: relative; aspect-ratio: 1; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                    <img src="../slides/${f}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="${f}">
+                    <img src="../slides/${f}?v=${Date.now()}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="${f}">
                     <button onclick="deleteSlide('${f}')" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); border: 0.5px solid rgba(255,255,255,0.5); color: #fff; font-size: 0.6rem; cursor: pointer; width: 16px; height: 16px; line-height: 1; padding: 0;">×</button>
                 </div>
             `).join('');

@@ -45,7 +45,7 @@
     // ============================
 
     function getSlidePath(i) {
-        return CONFIG.dir + CONFIG.prefix + String(i + 1).padStart(CONFIG.pad, '0') + CONFIG.ext;
+        return CONFIG.dir + CONFIG.prefix + String(i + 1).padStart(CONFIG.pad, '0') + CONFIG.ext + '?v=' + (CONFIG._version || Date.now());
     }
 
     function preload(i) {
@@ -321,6 +321,7 @@
         // Haal dynamisch slide count op (zodat admin uploads kloppen)
         fetch('/api.php/slides').then(r => r.json()).then(data => {
             if (data.count > 0) CONFIG.count = data.count;
+            CONFIG._version = Date.now();
         }).catch(() => {
             // Fallback: probeer slide-01 te laden om count te detecteren
             var img = new Image();
