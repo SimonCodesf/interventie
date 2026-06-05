@@ -37,7 +37,6 @@
     let imgEl = null;
     let isOpen = false;
     let currentIndex = 0;
-    let transitionTimer = null;
     let mirrorZIndex = 99999;
     const preloadCache = new Map();
 
@@ -59,18 +58,10 @@
     function showSlide(i) {
         if (!imgEl || CONFIG.count === 0) return;
         if (i < 0 || i >= CONFIG.count) return;
-        clearTimeout(transitionTimer);
         currentIndex = i;
 
-        imgEl.style.transition = 'opacity 0.2s ease';
-        imgEl.style.opacity = '0';
-
-        transitionTimer = setTimeout(() => {
-            const cached = preloadCache.get(i);
-            imgEl.src = (cached && cached.complete) ? cached.src : getSlidePath(i);
-            if (imgEl.complete) imgEl.style.opacity = '1';
-            imgEl.onload = () => { imgEl.style.opacity = '1'; };
-        }, 200);
+        const cached = preloadCache.get(i);
+        imgEl.src = (cached && cached.complete) ? cached.src : getSlidePath(i);
 
         updateTitle();
         preload(i + 1);
