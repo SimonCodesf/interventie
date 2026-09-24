@@ -29,7 +29,8 @@ jobs:
             **/.git*
             **/.git*/**
             **/node_modules/**
-            data/**
+            data/essays.db
+            data/login_attempts.json
             tools/package-lock.json
             .DS_Store
             **/.DS_Store
