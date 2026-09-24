@@ -1,0 +1,204 @@
+/* Krant AR — Admin styling */
+
+:root {
+    --ink: #111;
+    --paper: #f6f4ef;
+    --line: #d9d4c9;
+    --accent: #b22222;
+    --ok: #1a7f37;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+h1 { font-size: 1.3rem; letter-spacing: 0.1em; text-transform: uppercase; }
+h2 { font-size: 1rem; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* Login & setup */
+#login-view, #setup-view {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#login-form, #setup-form {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 2.5rem 2rem;
+    width: min(22rem, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    text-align: center;
+}
+
+#login-form .sub, #setup-form .sub { color: #777; margin-top: -0.5rem; }
+
+/* Panel */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1rem 1.5rem;
+}
+
+main {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 1.5rem;
+}
+
+/* Formulier */
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+label.check {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: none;
+    font-size: 0.9rem;
+}
+
+input[type="text"], input[type="password"], textarea {
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--line);
+    background: #fdfdfb;
+    width: 100%;
+}
+
+input[type="file"] {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px dashed var(--line);
+    background: #fdfdfb;
+    width: 100%;
+    cursor: pointer;
+}
+
+textarea { resize: vertical; }
+
+.row.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+button {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: inherit;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.4rem;
+    cursor: pointer;
+}
+
+button.ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+}
+
+button.danger {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.3rem 0.7rem;
+}
+
+button:disabled { opacity: 0.5; cursor: wait; }
+
+.form-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+
+/* Layers */
+fieldset {
+    border: 1px solid var(--line);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+fieldset legend {
+    padding: 0 0.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #555;
+}
+
+.layer-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+    gap: 0.5rem;
+    align-items: end;
+    margin-bottom: 0.5rem;
+}
+
+.layer-row label { margin-bottom: 0; }
+.layer-row input { min-width: 0; }
+
+.layer-row .remove-layer {
+    background: transparent;
+    color: var(--accent);
+    border: none;
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+/* Statusmeldingen */
+.error { color: var(--accent); font-size: 0.85rem; min-height: 1.2em; }
+.ok { color: var(--ok); font-size: 0.85rem; min-height: 1.2em; }
+
+/* Tabel */
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+th { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #777; }
+td.actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+.badge {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+.badge.live { background: #e3f4e8; color: var(--ok); }
+.badge.draft { background: #eee; color: #777; }
+
+@media (max-width: 700px) {
+    .row.two-col { grid-template-columns: 1fr; }
+    .layer-row { grid-template-columns: 1fr 1fr; }
+}

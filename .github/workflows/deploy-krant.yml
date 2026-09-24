@@ -1,43 +1,36 @@
-name: Deploy to cPanel
+name: Deploy Krant AR
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'krant/**'
+      - '.github/workflows/deploy-krant.yml'
   workflow_dispatch:
 
 jobs:
   web-deploy:
-    name: 🎉 Deploy to cPanel
+    name: Deploy krant naar /krant
     runs-on: ubuntu-latest
     steps:
-      - name: 🚚 Get latest code
+      - name: Get latest code
         uses: actions/checkout@v3
 
-      - name: 📂 Sync files to cPanel
+      - name: Sync krant to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ./
+          local-dir: krant/
+          server-dir: ./krant/
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
-            **/backups/**
-            **/scripts/**
-            **/uploads/**
             data/**
-            krant/**
-            admin/database.db
-            .gitignore
-            README.md
-            TODO.md
-            .cpanel.yml
+            tools/package-lock.json
             .DS_Store
-            .history
-            .specstory
-            .vscode
-            *.py
-            assets/nft/AR_test_01/**
+            **/.DS_Store
+            docs/**

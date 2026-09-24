@@ -1,0 +1,19 @@
+# System files
+.DS_Store
+Thumbs.db
+*.log
+
+# Runtime data & uploads (worden op de server aangemaakt)
+data/*
+!data/.gitkeep
+uploads/essays/*
+!uploads/essays/.gitkeep
+
+# Node
+node_modules/
+tools/node_modules/
+
+# Het bovenliggende interventie-repo negeert deze paden ook — expliciet terug insluiten
+!uploads/
+!uploads/essays/
+!includes/config.php

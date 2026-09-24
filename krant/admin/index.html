@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krant AR — Admin</title>
+    <link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+
+    <!-- First-run setup -->
+    <div id="setup-view" style="display:none;">
+        <form id="setup-form" autocomplete="off">
+            <h1>KRANT AR</h1>
+            <p class="sub">Eerste keer? Kies een admin wachtwoord</p>
+            <input type="password" id="setup-password" placeholder="Nieuw wachtwoord (min. 8 tekens)" required>
+            <input type="password" id="setup-password2" placeholder="Herhaal wachtwoord" required>
+            <button type="submit">OPSLAAN</button>
+            <p id="setup-error" class="error"></p>
+        </form>
+    </div>
+
+    <!-- Login -->
+    <div id="login-view" style="display:none;">
+        <form id="login-form" autocomplete="off">
+            <h1>KRANT AR</h1>
+            <p class="sub">Admin — log in</p>
+            <input type="password" id="login-password" placeholder="Wachtwoord" required>
+            <button type="submit">INLOGGEN</button>
+            <p id="login-error" class="error"></p>
+        </form>
+    </div>
+
+    <!-- Panel -->
+    <div id="panel-view" style="display:none;">
+        <header>
+            <h1>KRANT AR — Admin</h1>
+            <button id="logout-button" class="ghost">UITLOGGEN</button>
+        </header>
+
+        <main>
+            <!-- Nieuw essay -->
+            <section class="card">
+                <h2 id="form-heading">Nieuw essay</h2>
+                <form id="essay-form">
+
+                    <div class="row two-col">
+                        <label>
+                            Week
+                            <input type="text" id="f-week" placeholder="2026-41" required>
+                        </label>
+                        <label class="check">
+                            <input type="checkbox" id="f-published" checked>
+                            Publiceer onmiddellijk
+                        </label>
+                    </div>
+
+                    <label>
+                        Titel
+                        <input type="text" id="f-title" required>
+                    </label>
+
+                    <label>
+                        Essay-tekst (lege regel = nieuwe alinea, **vet**, *cursief*)
+                        <textarea id="f-text" rows="14"></textarea>
+                    </label>
+
+                    <div class="row two-col">
+                        <label>
+                            Pagina-afbeelding (jpg/png/webp)
+                            <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
+                        </label>
+                        <label>
+                            AR marker (.mind — zie tools/make_target.mjs)
+                            <input type="file" id="f-mind" accept=".mind">
+                        </label>
+                    </div>
+
+                    <fieldset>
+                        <legend>AR-lagen (transparante PNG's boven de pagina)</legend>
+                        <div id="layers-rows"></div>
+                        <button type="button" id="add-layer" class="ghost">+ Laag toevoegen</button>
+                    </fieldset>
+
+                    <p id="form-error" class="error"></p>
+                    <p id="form-ok" class="ok"></p>
+
+                    <div class="form-actions">
+                        <button type="submit" id="save-button">OPSLAAN</button>
+                        <button type="button" id="reset-form" class="ghost">Nieuw formulier</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Overzicht -->
+            <section class="card">
+                <h2>Essays</h2>
+                <table id="essays-table">
+                    <thead>
+                        <tr><th>Week</th><th>Titel</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <!-- Wachtwoord wijzigen -->
+            <section class="card">
+                <h2>Wachtwoord wijzigen</h2>
+                <form id="password-form" autocomplete="off">
+                    <div class="row two-col">
+                        <label>
+                            Huidig wachtwoord
+                            <input type="password" id="pw-current" required>
+                        </label>
+                        <label>
+                            Nieuw wachtwoord (min. 8 tekens)
+                            <input type="password" id="pw-new" required>
+                        </label>
+                    </div>
+                    <p id="pw-error" class="error"></p>
+                    <p id="pw-ok" class="ok"></p>
+                    <button type="submit">WIJZIGEN</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="admin.js?v=1"></script>
+</body>
+</html>
