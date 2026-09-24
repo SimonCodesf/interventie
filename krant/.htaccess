@@ -1,4 +1,5 @@
 # Krant AR - Apache configuratie
+Options -Indexes
 RewriteEngine On
 
 # PHP upload limits (valt terug op .user.ini bij FastCGI hosting)
