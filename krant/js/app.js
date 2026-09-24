@@ -70,7 +70,8 @@ function buildScene(mindUrl, targets) {
         '; filterMinCF: ' + AR_TUNING.filterMinCF +
         '; filterBeta: ' + AR_TUNING.filterBeta +
         '; warmupTolerance: ' + AR_TUNING.warmupTolerance +
-        '; missTolerance: ' + AR_TUNING.missTolerance);
+        '; missTolerance: ' + AR_TUNING.missTolerance +
+        '; uiLoading: no; uiScanning: no; uiError: no');
     scene.setAttribute('color-space', 'sRGB');
     scene.setAttribute('renderer', 'colorManagement: true');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
