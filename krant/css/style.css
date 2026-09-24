@@ -23,7 +23,7 @@ html, body {
     top: 3.2rem;
     left: 0.8rem;
     right: 0.8rem;
-    bottom: calc(2.6rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
     border: 1px solid rgba(255,255,255,0.85);
     overflow: hidden;
 }
@@ -67,11 +67,11 @@ html, body {
     color: #fff;
     border: 1px solid rgba(255,255,255,0.55);
     font-family: inherit;
-    font-size: 0.62rem;
+    font-size: 0.55rem;
     font-weight: 400;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    padding: 0.4rem 0.9rem;
+    padding: 0.3rem 0.8rem;
     border-radius: 0;
     cursor: pointer;
     white-space: nowrap;
