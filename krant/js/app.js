@@ -17,13 +17,6 @@ let arStarted = false;
 let activeBlobUrl = null;
 
 const sceneContainer = function () { return document.getElementById('ar-scene'); };
-const scanningOverlay = function () { return document.getElementById('scanning-overlay'); };
-
-function showStatus(msg) {
-    const el = document.getElementById('ar-status');
-    el.textContent = msg;
-    el.style.display = msg ? 'block' : 'none';
-}
 
 function webglSupported() {
     try {
@@ -44,6 +37,12 @@ function loadScript(src) {
         s.onerror = function () { reject(new Error('Script niet geladen: ' + src)); };
         document.head.appendChild(s);
     });
+}
+
+function fatalError() {
+    const btn = document.getElementById('start-btn');
+    btn.textContent = 'NIET BESCHIKBAAR';
+    btn.disabled = true;
 }
 
 // ---- Scene bouwen (wisselt van chunk) ----
@@ -107,22 +106,10 @@ function buildScene(mindUrl, targets) {
             target.appendChild(plane);
         });
 
-        target.addEventListener('targetFound', function () {
-            scanningOverlay().style.display = 'none';
-        });
-        target.addEventListener('targetLost', function () {
-            scanningOverlay().style.display = 'flex';
-        });
-
         scene.appendChild(target);
     });
 
-    scene.addEventListener('arError', function (event) {
-        showStatus('Camera niet beschikbaar: ' + (event.detail && event.detail.error || 'onbekende fout'));
-    });
-
     sceneContainer().appendChild(scene);
-    scanningOverlay().style.display = 'flex';
 }
 
 // ---- Start ----
@@ -131,10 +118,9 @@ async function startAR() {
     if (arStarted) return;
     arStarted = true;
     document.getElementById('start-overlay').style.display = 'none';
-    showStatus('Laden…');
 
     if (!webglSupported()) {
-        showStatus('AR wordt niet ondersteund door deze browser.');
+        fatalError();
         return;
     }
 
@@ -147,17 +133,17 @@ async function startAR() {
             currentEssay = await res.json();
         }
     } catch (err) {
-        showStatus('Kon de app niet laden. Controleer je verbinding.');
+        console.error(err);
+        fatalError();
         return;
     }
 
     if (!currentEssay || !currentEssay.mind) {
-        showStatus('Nog geen essay gepubliceerd.');
+        fatalError();
         return;
     }
 
     buildScene(currentEssay.mind, [{ index: 0, layers: currentEssay.layers }]);
-    showStatus('');
     preloadPrevious();
 }
 
@@ -173,8 +159,7 @@ async function preloadPrevious() {
         const mindRes = await fetch(previousBundle.mind);
         previousBuffer = await mindRes.arrayBuffer();
 
-        const btn = document.getElementById('toggle-prev');
-        btn.style.display = 'block';
+        document.getElementById('toggle-prev').style.display = 'block';
     } catch (err) {
         /* knop blijft verborgen */
     }
@@ -182,20 +167,15 @@ async function preloadPrevious() {
 
 // ---- Knop: wisselen tussen huidige en vorige essays ----
 
-document.getElementById('toggle-prev').addEventListener('click', async function () {
-    const btn = this;
-
+document.getElementById('toggle-prev').addEventListener('click', function () {
     if (mode === 'previous') {
         buildScene(currentEssay.mind, [{ index: 0, layers: currentEssay.layers }]);
         mode = 'current';
-        btn.textContent = 'SCAN VORIGE ESSAYS';
+        this.textContent = 'SCAN VORIGE ESSAYS';
         return;
     }
 
-    if (!previousBundle || !previousBuffer) {
-        showStatus('Vorige essays nog aan het laden…');
-        return;
-    }
+    if (!previousBundle || !previousBuffer) return;
 
     const blob = new Blob([previousBuffer], { type: 'application/octet-stream' });
     activeBlobUrl = URL.createObjectURL(blob);
@@ -206,8 +186,7 @@ document.getElementById('toggle-prev').addEventListener('click', async function 
 
     buildScene(activeBlobUrl, targets);
     mode = 'previous';
-    btn.textContent = 'SCAN HUIDIG ESSAY';
-    showStatus('');
+    this.textContent = 'SCAN HUIDIG ESSAY';
 });
 
 document.getElementById('start-btn').addEventListener('click', startAR);
