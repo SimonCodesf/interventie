@@ -205,6 +205,24 @@ fieldset legend {
     color: var(--ok);
 }
 
+.bundle-info {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+#bundle-status {
+    font-weight: 700;
+    color: var(--ink);
+}
+
+#bundle-progress {
+    font-size: 0.85rem;
+    color: var(--ok);
+}
+
 /* Statusmeldingen */
 .error { color: var(--accent); font-size: 0.85rem; min-height: 1.2em; }
 .ok { color: var(--ok); font-size: 0.85rem; min-height: 1.2em; }

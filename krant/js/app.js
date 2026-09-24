@@ -1,84 +1,29 @@
-// Krant AR - frontend logica
-// - Laadt het actuele essay van de API
-// - AR (A-Frame + MindAR) wordt pas geladen na de scan-tap (snel + iOS camera gesture)
-
-const SITE = {
-    paperName: 'DE KRANT',     // naam van de krant
-    edition: 'Wekelijkse essays',
-};
+// Interventie — AR krant
+// Chunk 0: huidige essay (1 target, instant)
+// Chunk 1: vorige essays (samengevoegde .mind, geladen via de knop)
 
 const AR_TUNING = {
-    filterMinCF: 0.003,
-    filterBeta: 0.025,
+    filterMinCF: 0.0001,
+    filterBeta: 0.001,
+    warmupTolerance: 0,
+    missTolerance: 2,
 };
 
-let essay = null;
-let arActive = false;
+let currentEssay = null;      // { week, mind, layers, ... }
+let previousBundle = null;    // { mind, essays: [{week, title, targetIndex, layers}] }
+let previousBuffer = null;    // ArrayBuffer van previous.mind
+let mode = 'current';         // 'current' | 'previous'
+let arStarted = false;
+let activeBlobUrl = null;
 
-document.getElementById('paper-name').textContent = SITE.paperName;
-document.getElementById('paper-edition').textContent = SITE.edition;
+const sceneContainer = function () { return document.getElementById('ar-scene'); };
+const scanningOverlay = function () { return document.getElementById('scanning-overlay'); };
 
-// ---- Tekst opmaak (veilig escapen, **vet**, *cursief*, alinea's) ----
-
-function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+function showStatus(msg) {
+    const el = document.getElementById('ar-status');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
 }
-
-function formatText(text) {
-    return escapeHtml(text)
-        .split(/\n\s*\n/)
-        .map(function (block) {
-            let html = block
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em>$1</em>');
-            return '<p>' + html.replace(/\n/g, '<br>') + '</p>';
-        })
-        .join('');
-}
-
-function formatWeek(week) {
-    const m = /^(\d{4})-(\d{2})$/.exec(week || '');
-    return m ? 'Week ' + parseInt(m[2], 10) + ' · ' + m[1] : week;
-}
-
-// ---- Essay laden & renderen ----
-
-async function loadEssay() {
-    const titleEl = document.getElementById('essay-title');
-    try {
-        const res = await fetch('api.php/essays/current');
-        if (!res.ok) throw new Error('http ' + res.status);
-        essay = await res.json();
-    } catch (err) {
-        titleEl.textContent = 'Nog geen essay gepubliceerd.';
-        document.getElementById('scan-cta').style.display = 'none';
-        return;
-    }
-
-    document.getElementById('essay-week').textContent = formatWeek(essay.week);
-    titleEl.textContent = essay.title;
-    document.getElementById('essay-text').innerHTML = formatText(essay.text);
-
-    if (essay.page_image) {
-        const img = document.getElementById('essay-page');
-        img.src = essay.page_image;
-        img.style.display = 'block';
-    }
-
-    const scanButton = document.getElementById('scan-button');
-    if (!essay.mind) {
-        scanButton.disabled = true;
-        document.getElementById('scan-hint').textContent =
-            'AR voor dit essay is nog niet beschikbaar.';
-    }
-    scanButton.addEventListener('click', startAR);
-}
-
-// ---- AR ----
 
 function webglSupported() {
     try {
@@ -101,45 +46,32 @@ function loadScript(src) {
     });
 }
 
-function showStatus(msg) {
-    const el = document.getElementById('ar-status');
-    el.textContent = msg;
-    el.style.display = msg ? 'block' : 'none';
-}
+// ---- Scene bouwen (wisselt van chunk) ----
 
-async function startAR() {
-    if (arActive || !essay || !essay.mind) return;
-
-    if (!webglSupported()) {
-        alert('AR wordt niet ondersteund door deze browser. Gebruik een recente versie van Chrome, Safari of Firefox.');
-        return;
+function buildScene(mindUrl, targets) {
+    // Oude scene verwijderen (camera wordt opnieuw opgestart door MindAR)
+    const oldScene = sceneContainer().querySelector('a-scene');
+    if (oldScene) {
+        try {
+            if (oldScene.components && oldScene.components['mindar-image-system']) {
+                oldScene.components['mindar-image-system'].stop();
+            }
+        } catch (e) { /* scene was al afgebroken */ }
+        oldScene.remove();
     }
 
-    arActive = true;
-    showStatus('AR laden…');
-
-    try {
-        await loadScript('js/vendor/aframe.min.js');
-        await loadScript('js/vendor/mindar-image-aframe.prod.js');
-    } catch (err) {
-        arActive = false;
-        showStatus('AR kon niet geladen worden. Controleer je verbinding.');
-        setTimeout(function () { showStatus(''); }, 4000);
-        return;
+    if (activeBlobUrl) {
+        URL.revokeObjectURL(activeBlobUrl);
+        activeBlobUrl = null;
     }
-
-    buildScene();
-}
-
-function buildScene() {
-    const container = document.getElementById('ar-scene');
-    container.innerHTML = '';
 
     const scene = document.createElement('a-scene');
     scene.setAttribute('mindar-image',
-        'imageTargetSrc: ' + essay.mind +
+        'imageTargetSrc: ' + mindUrl +
         '; filterMinCF: ' + AR_TUNING.filterMinCF +
-        '; filterBeta: ' + AR_TUNING.filterBeta);
+        '; filterBeta: ' + AR_TUNING.filterBeta +
+        '; warmupTolerance: ' + AR_TUNING.warmupTolerance +
+        '; missTolerance: ' + AR_TUNING.missTolerance);
     scene.setAttribute('color-space', 'sRGB');
     scene.setAttribute('renderer', 'colorManagement: true');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
@@ -151,68 +83,131 @@ function buildScene() {
     camera.setAttribute('look-controls', 'enabled: false');
     scene.appendChild(camera);
 
-    const target = document.createElement('a-entity');
-    target.setAttribute('mindar-image-target', 'targetIndex: 0');
+    targets.forEach(function (t) {
+        const target = document.createElement('a-entity');
+        target.setAttribute('mindar-image-target', 'targetIndex: ' + t.index);
 
-    essay.layers.forEach(function (layer) {
-        const plane = document.createElement('a-plane');
-        plane.setAttribute('src', layer.file);
-        plane.setAttribute('position', '0 0 ' + layer.z);
-        plane.setAttribute('width', layer.w);
-        plane.setAttribute('height', layer.h);
-        plane.setAttribute('transparent', 'true');
-        plane.setAttribute('opacity', '1');
+        (t.layers || []).forEach(function (layer) {
+            const plane = document.createElement('a-plane');
+            plane.setAttribute('src', layer.file);
+            plane.setAttribute('position', '0 0 ' + layer.z);
+            plane.setAttribute('width', layer.w);
+            plane.setAttribute('height', layer.h);
+            plane.setAttribute('transparent', 'true');
+            plane.setAttribute('opacity', '1');
 
-        if (layer.anim_dur > 0) {
-            plane.setAttribute('animation',
-                'property: position;' +
-                'from: 0 0 ' + layer.z + ';' +
-                'to: 0 0 ' + (layer.z + layer.anim_dist) + ';' +
-                'dur: ' + layer.anim_dur + ';' +
-                'dir: alternate; loop: true; easing: easeInOutSine');
-        }
-        target.appendChild(plane);
-    });
+            if (layer.anim_dur > 0) {
+                plane.setAttribute('animation',
+                    'property: position;' +
+                    'from: 0 0 ' + layer.z + ';' +
+                    'to: 0 0 ' + (layer.z + layer.anim_dist) + ';' +
+                    'dur: ' + layer.anim_dur + ';' +
+                    'dir: alternate; loop: true; easing: easeInOutSine');
+            }
+            target.appendChild(plane);
+        });
 
-    target.addEventListener('targetFound', function () {
-        document.getElementById('scanning-overlay').style.display = 'none';
-        showStatus('AR actief — beweeg rond de pagina');
-        setTimeout(function () { showStatus(''); }, 2500);
-    });
+        target.addEventListener('targetFound', function () {
+            scanningOverlay().style.display = 'none';
+        });
+        target.addEventListener('targetLost', function () {
+            scanningOverlay().style.display = 'flex';
+        });
 
-    target.addEventListener('targetLost', function () {
-        document.getElementById('scanning-overlay').style.display = 'flex';
+        scene.appendChild(target);
     });
 
     scene.addEventListener('arError', function (event) {
         showStatus('Camera niet beschikbaar: ' + (event.detail && event.detail.error || 'onbekende fout'));
     });
 
-    scene.appendChild(target);
-    container.appendChild(scene);
-
-    document.getElementById('scanning-overlay').style.display = 'flex';
-    document.getElementById('ar-view').style.display = 'block';
-    document.body.classList.add('ar-active');
+    sceneContainer().appendChild(scene);
+    scanningOverlay().style.display = 'flex';
 }
 
-function closeAR() {
-    if (!arActive) return;
-    arActive = false;
+// ---- Start ----
 
-    const scene = document.querySelector('#ar-scene a-scene');
+async function startAR() {
+    if (arStarted) return;
+    arStarted = true;
+    document.getElementById('start-overlay').style.display = 'none';
+    showStatus('Laden…');
+
+    if (!webglSupported()) {
+        showStatus('AR wordt niet ondersteund door deze browser.');
+        return;
+    }
+
     try {
-        if (scene && scene.components['mindar-image-system']) {
-            scene.components['mindar-image-system'].stop();
-        }
-    } catch (e) { /* scene was al afgebroken */ }
+        await loadScript('js/vendor/aframe.min.js');
+        await loadScript('js/vendor/mindar-image-aframe.prod.js');
 
-    document.getElementById('ar-scene').innerHTML = '';
-    document.getElementById('ar-view').style.display = 'none';
-    document.body.classList.remove('ar-active');
+        const res = await fetch('api.php/essays/current');
+        if (res.ok) {
+            currentEssay = await res.json();
+        }
+    } catch (err) {
+        showStatus('Kon de app niet laden. Controleer je verbinding.');
+        return;
+    }
+
+    if (!currentEssay || !currentEssay.mind) {
+        showStatus('Nog geen essay gepubliceerd.');
+        return;
+    }
+
+    buildScene(currentEssay.mind, [{ index: 0, layers: currentEssay.layers }]);
     showStatus('');
+    preloadPrevious();
 }
 
-document.getElementById('ar-close').addEventListener('click', closeAR);
+// ---- Vorige essays (chunk 1) op de achtergrond ophalen ----
 
-loadEssay();
+async function preloadPrevious() {
+    try {
+        const res = await fetch('api.php/essays/previous');
+        if (!res.ok) return;
+        previousBundle = await res.json();
+        if (!previousBundle.mind || !previousBundle.essays || !previousBundle.essays.length) return;
+
+        const mindRes = await fetch(previousBundle.mind);
+        previousBuffer = await mindRes.arrayBuffer();
+
+        const btn = document.getElementById('toggle-prev');
+        btn.style.display = 'block';
+    } catch (err) {
+        /* knop blijft verborgen */
+    }
+}
+
+// ---- Knop: wisselen tussen huidige en vorige essays ----
+
+document.getElementById('toggle-prev').addEventListener('click', async function () {
+    const btn = this;
+
+    if (mode === 'previous') {
+        buildScene(currentEssay.mind, [{ index: 0, layers: currentEssay.layers }]);
+        mode = 'current';
+        btn.textContent = 'SCAN VORIGE ESSAYS';
+        return;
+    }
+
+    if (!previousBundle || !previousBuffer) {
+        showStatus('Vorige essays nog aan het laden…');
+        return;
+    }
+
+    const blob = new Blob([previousBuffer], { type: 'application/octet-stream' });
+    activeBlobUrl = URL.createObjectURL(blob);
+
+    const targets = previousBundle.essays.map(function (e) {
+        return { index: e.targetIndex, layers: e.layers };
+    });
+
+    buildScene(activeBlobUrl, targets);
+    mode = 'previous';
+    btn.textContent = 'SCAN HUIDIG ESSAY';
+    showStatus('');
+});
+
+document.getElementById('start-btn').addEventListener('click', startAR);

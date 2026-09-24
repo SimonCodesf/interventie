@@ -4,44 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#111111">
-    <title>Krant AR</title>
-    <link rel="stylesheet" href="css/style.css?v=1">
+    <title>Interventie</title>
+    <link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body>
 
-    <!-- Artikel / Essay view -->
-    <main id="article-view">
-        <header class="masthead">
-            <h1 id="paper-name">DE KRANT</h1>
-            <p id="paper-edition">Wekelijkse essays</p>
+    <div id="ar-view">
+
+        <header id="masthead">
+            <h1>INTERVENTIE</h1>
         </header>
 
-        <article id="essay">
-            <p id="essay-week" class="essay-meta"></p>
-            <h2 id="essay-title"></h2>
-            <img id="essay-page" alt="Krantenpagina" style="display:none;">
-            <div id="essay-text"></div>
-
-            <div id="scan-cta">
-                <button id="scan-button">SCAN DE PAGINA IN AR</button>
-                <p id="scan-hint">Richt je camera op de pagina zoals die in de krant gedrukt staat.</p>
-            </div>
-        </article>
-    </main>
-
-    <!-- AR view (lazy geladen na scan-tap) -->
-    <div id="ar-view" style="display:none;">
         <div id="scanning-overlay">
             <div class="scan-guide">
                 <div class="scan-frame"></div>
-                <p>Richt je camera op de krantenpagina</p>
+                <p id="scan-text">Richt je camera op de krantenpagina</p>
             </div>
         </div>
-        <div id="ar-status"></div>
+
         <div id="ar-scene"></div>
-        <button id="ar-close">TERUG</button>
+        <div id="ar-status"></div>
+
+        <button id="toggle-prev" style="display:none;">SCAN VORIGE ESSAYS</button>
+
+        <div id="start-overlay">
+            <button id="start-btn">START CAMERA</button>
+            <p>Tik om de camera te starten en de pagina te scannen</p>
+        </div>
+
     </div>
 
-    <script src="js/app.js?v=1"></script>
+    <script src="js/app.js?v=2"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 // Krant AR — Admin logica
 
-import { Compiler } from './vendor/mindar-compiler.bundle.js?v=1';
+import { Compiler, msgpack } from './vendor/mindar-compiler.bundle.js?v=2';
 
 const API = '../api.php';
 
@@ -280,6 +280,7 @@ document.getElementById('essay-form').addEventListener('submit', async function 
             okEl.textContent = 'Opgeslagen: ' + data.essay.week + ' — ' + (data.essay.mind ? 'AR marker aanwezig' : 'LET OP: nog geen AR marker (.mind)');
             resetForm(data.essay.week);
             loadEssays();
+            rebuildBundle();
         } else {
             errorEl.textContent = data.message || 'Opslaan mislukt';
         }
@@ -350,6 +351,7 @@ async function togglePublish(week, published) {
         body: JSON.stringify({ published: published }),
     });
     loadEssays();
+    rebuildBundle();
 }
 
 async function deleteEssay(week) {
@@ -357,7 +359,69 @@ async function deleteEssay(week) {
     await fetch(API + '/admin/essays/' + encodeURIComponent(week), { method: 'DELETE' });
     if (editingWeek === week) resetForm();
     loadEssays();
+    rebuildBundle();
 }
+
+// ---- Vorige-bundel (chunk 2) ----
+
+const bundleStatus = document.getElementById('bundle-status');
+const bundleProgress = document.getElementById('bundle-progress');
+
+async function rebuildBundle() {
+    const btn = document.getElementById('bundle-button');
+    btn.disabled = true;
+    bundleProgress.textContent = 'Bezig…';
+
+    try {
+        const res = await fetch(API + '/admin/bundle-sources');
+        const data = await res.json();
+        const essays = (data.essays || []).filter(function (e) { return e.mind; });
+
+        if (essays.length === 0) {
+            const fd = new FormData();
+            fd.append('weeks', '[]');
+            await fetch(API + '/admin/bundle', { method: 'POST', body: fd });
+            bundleStatus.textContent = 'geen vorige essays — knop verborgen op de gsm';
+            bundleProgress.textContent = '';
+            btn.disabled = false;
+            return;
+        }
+
+        const dataList = [];
+        const weeks = [];
+        for (let i = 0; i < essays.length; i++) {
+            bundleProgress.textContent = 'Downloaden ' + (i + 1) + '/' + essays.length + '…';
+            const mindRes = await fetch(essays[i].mind);
+            if (!mindRes.ok) throw new Error('kon marker van ' + essays[i].week + ' niet ophalen');
+            const decoded = msgpack.decode(new Uint8Array(await mindRes.arrayBuffer()));
+            if (!decoded.dataList || !decoded.dataList.length) {
+                throw new Error('ongeldige marker ' + essays[i].week);
+            }
+            dataList.push(decoded.dataList[0]);
+            weeks.push(essays[i].week);
+        }
+
+        bundleProgress.textContent = 'Samenvoegen…';
+        const merged = msgpack.encode({ v: decoded && decoded.v ? decoded.v : 2, dataList });
+
+        const fd = new FormData();
+        fd.append('weeks', JSON.stringify(weeks));
+        fd.append('bundle_file', new Blob([merged], { type: 'application/octet-stream' }), 'previous.mind');
+
+        const upRes = await fetch(API + '/admin/bundle', { method: 'POST', body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.message || 'upload mislukt');
+
+        bundleStatus.textContent = 'up-to-date (' + weeks.length + ' vorige essays)';
+        bundleProgress.textContent = 'Klaar (' + (merged.length / 1024).toFixed(0) + ' KB)';
+    } catch (err) {
+        bundleStatus.textContent = 'NIET up-to-date — herbouw nodig';
+        bundleProgress.textContent = 'Mislukt: ' + (err.message || err);
+    }
+    btn.disabled = false;
+}
+
+document.getElementById('bundle-button').addEventListener('click', rebuildBundle);
 
 // ---- Formulier vullen voor bewerking ----
 
