@@ -71,9 +71,17 @@
                             <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
                         </label>
                         <label>
-                            AR marker (.mind — zie tools/make_target.mjs)
+                            OF upload een bestaand .mind bestand
                             <input type="file" id="f-mind" accept=".mind">
                         </label>
+                    </div>
+
+                    <div id="compile-box" class="compile-box" style="display:none;">
+                        <p>Je pagina-afbeelding wordt automatisch omgezet naar een AR marker (.mind) — dat gebeurt in jouw browser, er is geen extra software nodig. Duurt meestal 30–60 seconden.</p>
+                        <div class="compile-row">
+                            <button type="button" id="compile-button">GENEREER .MIND</button>
+                            <span id="compile-progress"></span>
+                        </div>
                     </div>
 
                     <fieldset>
@@ -125,6 +133,6 @@
         </main>
     </div>
 
-    <script src="admin.js?v=1"></script>
+    <script type="module" src="admin.js?v=2"></script>
 </body>
 </html>

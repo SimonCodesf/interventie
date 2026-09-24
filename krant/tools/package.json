@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "mind-ar": "^1.2.5",
-    "canvas": "^2.11.2"
+    "mind-ar": "^1.2.5"
+  },
+  "devDependencies": {
+    "vite": "^6.4.3"
   }
 }

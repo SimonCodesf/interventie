@@ -1,8 +1,11 @@
 // Krant AR — Admin logica
 
+import { Compiler } from './vendor/mindar-compiler.bundle.js?v=1';
+
 const API = '../api.php';
 
 let editingWeek = null;
+let compiledMind = null; // { blob, size } — .mind gegenereerd in de browser
 
 // ---- ISO week voorstel ----
 
@@ -164,6 +167,71 @@ document.getElementById('add-layer').addEventListener('click', function () {
     addLayerRow();
 });
 
+// ---- .mind generatie in de browser ----
+
+const MAX_DIMENSION = 2400; // maximale zijde voor compilatie (snelheid/geheugen)
+
+const pageInput = document.getElementById('f-page');
+const compileBox = document.getElementById('compile-box');
+const compileButton = document.getElementById('compile-button');
+const compileProgress = document.getElementById('compile-progress');
+
+pageInput.addEventListener('change', function () {
+    compiledMind = null;
+    compileProgress.textContent = '';
+    compileBox.style.display = pageInput.files.length ? 'block' : 'none';
+});
+
+compileButton.addEventListener('click', async function () {
+    const file = pageInput.files[0];
+    if (!file) return;
+
+    compileButton.disabled = true;
+    compileProgress.textContent = 'Afbeelding laden…';
+
+    try {
+        // Afbeelding laden en verkleinen naar max. 2400px (sneller compileren, even goede tracking)
+        const img = await loadImageFile(file);
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const compiler = new Compiler();
+        await compiler.compileImageTargets([canvas], function (percent) {
+            compileProgress.textContent = 'Compileren: ' + Math.round(percent) + '%';
+        });
+
+        const data = compiler.exportData();
+        compiledMind = {
+            blob: new Blob([data], { type: 'application/octet-stream' }),
+            size: data.length,
+        };
+        compileProgress.textContent = 'Klaar (' + (data.length / 1024).toFixed(0) + ' KB) — wordt meegestuurd bij opslaan.';
+    } catch (err) {
+        compileProgress.textContent = 'Compilatie mislukt: ' + (err.message || err) +
+            '. Gebruik een recente browser (Chrome/Safari/Firefox) en probeer opnieuw.';
+    }
+    compileButton.disabled = false;
+});
+
+function loadImageFile(file) {
+    return new Promise(function (resolve, reject) {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+            URL.revokeObjectURL(url);
+            resolve(img);
+        };
+        img.onerror = function () {
+            URL.revokeObjectURL(url);
+            reject(new Error('afbeelding kon niet gelezen worden'));
+        };
+        img.src = url;
+    });
+}
+
 // ---- Essay opslaan ----
 
 document.getElementById('essay-form').addEventListener('submit', async function (e) {
@@ -184,8 +252,12 @@ document.getElementById('essay-form').addEventListener('submit', async function 
     const pageFile = document.getElementById('f-page').files[0];
     if (pageFile) fd.append('page_image', pageFile);
 
-    const mindFile = document.getElementById('f-mind').files[0];
-    if (mindFile) fd.append('mind_file', mindFile);
+    if (compiledMind) {
+        fd.append('mind_file', compiledMind.blob, 'target.mind');
+    } else {
+        const mindFile = document.getElementById('f-mind').files[0];
+        if (mindFile) fd.append('mind_file', mindFile);
+    }
 
     // Enkel rijen met een bestand meesturen (compact, index-consistent)
     let layerIndex = 0;
@@ -323,6 +395,9 @@ async function loadIntoForm(week) {
 
 function resetForm(keepWeek) {
     editingWeek = null;
+    compiledMind = null;
+    compileProgress.textContent = '';
+    compileBox.style.display = 'none';
     document.getElementById('form-heading').textContent = 'Nieuw essay';
     document.getElementById('f-week').value = keepWeek || isoWeek();
     document.getElementById('f-title').value = '';

@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 /**
- * make_target.mjs - Genereert een .mind AR-marker voor één krantenpagina.
+ * make_target.mjs - Genereert een .mind AR-marker voor één krantenpagina (lokaal, optioneel).
+ *
+ * Let op: normaal gebeurt dit AUTOMATISCH in de admin (upload pagina-afbeelding →
+ * "GENEREER .MIND"). Dit script is de offline fallback.
+ *
+ * Vereisten (enkel voor dit script):
+ *   - node >= 18 en de 'canvas' native build. Dat lukt met Node 20 LTS
+ *     (nvm use 20 && npm install) of via Homebrew cairo/pango op andere versies.
  *
  * Gebruik:
- *   cd tools && npm install        (eenmalig)
+ *   npm install
  *   node make_target.mjs <pagina.png> <output.mind>
- *
- * Bijvoorbeeld:
- *   node make_target.mjs ../pagina.png ../uploads/essays/2026-41/target.mind
  *
  * Tips voor een goed trackbare pagina:
  *   - hoge resolutie (min. 1000px op de lange zijde)
