@@ -8,6 +8,13 @@ html, body {
     overflow: hidden;
     font-family: Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+}
+
+/* Papier + grain enkel op html (canvas-achtergrond).
+   Belangrijk: MindAR's video-element heeft z-index -2 en moet
+   boven de pagina-achtergrond blijven — achtergronden op body of
+   op #ar-scene zouden de camerafeed bedekken. */
+html {
     background-color: #f2eee2;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
 }
@@ -26,7 +33,6 @@ html, body {
     right: 0.8rem;
     bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
     border: 1px solid #141414;
-    background: #141414;
     overflow: hidden;
 }
 
