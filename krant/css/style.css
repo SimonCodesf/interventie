@@ -49,8 +49,9 @@ html, body {
 
 #masthead h1 {
     color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 1.1rem;
+    font-weight: 400;
     letter-spacing: 0.35em;
     text-transform: uppercase;
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
@@ -59,7 +60,7 @@ html, body {
 /* Knop: vorige essays (in de zwarte rand onderaan) */
 #toggle-prev {
     position: absolute;
-    bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
