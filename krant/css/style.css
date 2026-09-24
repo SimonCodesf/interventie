@@ -16,13 +16,14 @@ html, body {
     background: #000;
 }
 
-/* Camerafeed in een zwart kader met een dunne witte rand */
+/* Camerafeed in een zwart kader met een dunne witte rand
+   (boven- en onderrand breed genoeg voor titel en knop) */
 #ar-scene {
     position: absolute;
-    top: 0.8rem;
+    top: 3.2rem;
     left: 0.8rem;
     right: 0.8rem;
-    bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px));
     border: 1px solid rgba(255,255,255,0.85);
     overflow: hidden;
 }
@@ -32,14 +33,17 @@ html, body {
     height: 100%;
 }
 
-/* Titel bovenaan */
+/* Titel in de zwarte rand bovenaan */
 #masthead {
     position: absolute;
-    top: 1.35rem;
+    top: 0;
     left: 0;
     right: 0;
+    height: 3.2rem;
     z-index: 40;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
 }
 
@@ -52,10 +56,10 @@ html, body {
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
-/* Knop: vorige essays */
+/* Knop: vorige essays (in de zwarte rand onderaan) */
 #toggle-prev {
     position: absolute;
-    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
