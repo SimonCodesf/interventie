@@ -159,10 +159,8 @@ async function preloadPrevious() {
 
         const mindRes = await fetch(previousBundle.mind);
         previousBuffer = await mindRes.arrayBuffer();
-
-        document.getElementById('toggle-prev').style.display = 'block';
     } catch (err) {
-        /* knop blijft verborgen */
+        /* bundel nog niet beschikbaar */
     }
 }
 
