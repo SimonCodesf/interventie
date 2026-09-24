@@ -51,11 +51,10 @@ html, body {
 
 #masthead h1 {
     color: #141414;
-    font-family: 'Playfair Display', 'Times New Roman', Times, serif;
-    font-size: 1.3rem;
-    font-weight: 400;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
+    font-family: 'Newsreader', 'Times New Roman', Times, serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
 /* Knop: vorige essays (in de rand onderaan) */
@@ -84,7 +83,7 @@ html, body {
     color: #f2eee2;
 }
 
-/* Start overlay (camera-gesture voor iOS) */
+/* Start overlay (camera-gesture voor iOS) — papier, zodat de startknop zichtbaar blijft */
 #start-overlay {
     position: absolute;
     inset: 0;
@@ -92,6 +91,8 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #f2eee2;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
 }
 
 #start-btn {
