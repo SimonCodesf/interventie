@@ -17,7 +17,6 @@ const AR_TUNING = {
 
 let currentEssay = null;
 let currentMindBlobUrl = null;
-let currentLayerBlobs = {};   // originele layer-url -> blob-url
 let previousBundle = null;
 let previousBuffer = null;    // ArrayBuffer van previous.mind
 let mode = 'current';
@@ -101,9 +100,12 @@ async function preloadAll() {
     }
 
     if (currentEssay && currentEssay.layers && currentEssay.layers.length) {
+        // Lagen prefetchen: de volledige afbeelding wordt gedownload zodat
+        // A-Frame ze later instant uit de browser-cache haalt (directe URL).
         await Promise.all(currentEssay.layers.map(async function (layer) {
             try {
-                currentLayerBlobs[layer.file] = await fetchBlobUrl(layer.file);
+                const res = await fetch(layer.file);
+                if (res.ok) await res.arrayBuffer();
             } catch (e) {
                 console.error(e);
             }
@@ -170,7 +172,7 @@ function buildScene(mindSrc, targets) {
 
         (t.layers || []).forEach(function (layer) {
             const plane = document.createElement('a-plane');
-            plane.setAttribute('src', currentLayerBlobs[layer.file] || layer.file);
+            plane.setAttribute('src', layer.file);
             plane.setAttribute('position', '0 0 ' + layer.z);
             plane.setAttribute('width', layer.w);
             plane.setAttribute('height', layer.h);
