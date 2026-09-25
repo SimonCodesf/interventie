@@ -20,8 +20,11 @@
 <body>
 <div id="hint">Open deze pagina ook op je computer → scan met je telefoon het beeld rechtsonder op dat scherm</div>
 <img id="poster" src="../img/AR_test_01.png" alt="testmarker">
+<div id="start" style="position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:#f2eee2">
+    <button id="startbtn" style="font-family:inherit;font-size:14px;letter-spacing:.1em;padding:12px 24px;background:transparent;border:1px solid #141414;color:#141414;cursor:pointer">START CAMERA</button>
+</div>
 <div style="position:fixed;inset:0">
-    <a-scene mindar-image="imageTargetSrc: ../assets/all-posters.mind; warmupTolerance: 0; missTolerance: 2; uiLoading: no; uiScanning: no; uiError: no;" color-space="sRGB" renderer="colorManagement: true; antialias: false" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-scene mindar-image="imageTargetSrc: ../assets/all-posters.mind; warmupTolerance: 0; missTolerance: 2; uiLoading: no; uiScanning: no; uiError: no; autoStart: false;" color-space="sRGB" renderer="colorManagement: true; antialias: false" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
         <a-entity mindar-image-target="targetIndex: 0">
             <a-plane position="0 0 0.01" width="1" height="1.414" color="#ff7f00" opacity="0.6" material="transparent: true"></a-plane>
@@ -46,6 +49,10 @@
     });
     scene.addEventListener('loaded', function () {
         if (scene.renderer && scene.renderer.setPixelRatio) scene.renderer.setPixelRatio(1);
+    });
+    document.getElementById('startbtn').addEventListener('click', function () {
+        document.getElementById('start').style.display = 'none';
+        scene.systems['mindar-image-system'].start();
     });
 </script>
 </body>
