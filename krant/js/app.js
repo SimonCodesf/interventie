@@ -1,6 +1,12 @@
 // Interventie — AR krant
 // Chunk 0: huidige essay (1 target, instant)
 // Chunk 1: vorige essays (samengevoegde .mind, geladen via de knop)
+//
+// Optimalisaties:
+// - vendor-bibliotheken laden direct bij paginaload (scan start instant)
+// - camera start automatisch op Android/desktop (iOS vereist een tap)
+// - pixelRatio 1 + antialias uit voor vloeiendheid op gsm
+// - camerafout toont "CAMERA GEBLOKKEERD" i.p.v. stil beeld
 
 const AR_TUNING = {
     filterMinCF: 0.0001,
@@ -28,21 +34,34 @@ function webglSupported() {
     }
 }
 
-function loadScript(src) {
-    return new Promise(function (resolve, reject) {
-        if (document.querySelector('script[src="' + src + '"]')) return resolve();
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = resolve;
-        s.onerror = function () { reject(new Error('Script niet geladen: ' + src)); };
-        document.head.appendChild(s);
-    });
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-function fatalError() {
+const scriptPromises = {};
+
+function loadScript(src) {
+    if (scriptPromises[src]) return scriptPromises[src];
+    scriptPromises[src] = new Promise(function (resolve, reject) {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = function () { resolve(); };
+        s.onerror = function () {
+            delete scriptPromises[src];
+            reject(new Error('Script niet geladen: ' + src));
+        };
+        document.head.appendChild(s);
+    });
+    return scriptPromises[src];
+}
+
+function fatalError(msg) {
+    const overlay = document.getElementById('start-overlay');
     const btn = document.getElementById('start-btn');
-    btn.textContent = 'NIET BESCHIKBAAR';
+    btn.textContent = msg;
     btn.disabled = true;
+    overlay.style.display = 'flex';
 }
 
 // ---- Scene bouwen (wisselt van chunk) ----
@@ -73,7 +92,7 @@ function buildScene(mindUrl, targets) {
         '; missTolerance: ' + AR_TUNING.missTolerance +
         '; uiLoading: no; uiScanning: no; uiError: no');
     scene.setAttribute('color-space', 'sRGB');
-    scene.setAttribute('renderer', 'colorManagement: true');
+    scene.setAttribute('renderer', 'colorManagement: true; pixelRatio: 1; antialias: false; highRefreshRate: true');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
     scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
     scene.setAttribute('embedded', '');
@@ -110,6 +129,11 @@ function buildScene(mindUrl, targets) {
         scene.appendChild(target);
     });
 
+    scene.addEventListener('arError', function () {
+        console.error('AR fout: camera niet beschikbaar of geblokkeerd');
+        fatalError('CAMERA GEBLOKKEERD');
+    });
+
     sceneContainer().appendChild(scene);
 }
 
@@ -118,10 +142,9 @@ function buildScene(mindUrl, targets) {
 async function startAR() {
     if (arStarted) return;
     arStarted = true;
-    document.getElementById('start-overlay').style.display = 'none';
 
     if (!webglSupported()) {
-        fatalError();
+        fatalError('NIET BESCHIKBAAR');
         return;
     }
 
@@ -135,15 +158,16 @@ async function startAR() {
         }
     } catch (err) {
         console.error(err);
-        fatalError();
+        fatalError('NIET BESCHIKBAAR');
         return;
     }
 
     if (!currentEssay || !currentEssay.mind) {
-        fatalError();
+        fatalError('NIET BESCHIKBAAR');
         return;
     }
 
+    document.getElementById('start-overlay').style.display = 'none';
     buildScene(currentEssay.mind, [{ index: 0, layers: currentEssay.layers }]);
     preloadPrevious();
 }
@@ -188,4 +212,15 @@ document.getElementById('toggle-prev').addEventListener('click', function () {
     this.textContent = 'SCAN HUIDIG ESSAY';
 });
 
-document.getElementById('start-btn').addEventListener('click', startAR);
+// Vendor-bibliotheken direct laden bij paginaload
+loadScript('js/vendor/aframe.min.js');
+loadScript('js/vendor/mindar-image-aframe.prod.js');
+
+if (!isIOS()) {
+    // Android en desktop: camera start automatisch
+    document.getElementById('start-overlay').style.display = 'none';
+    startAR();
+} else {
+    // iOS: camera vereist een gebruikerstap
+    document.getElementById('start-btn').addEventListener('click', startAR);
+}

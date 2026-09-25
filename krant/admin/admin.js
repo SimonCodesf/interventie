@@ -169,7 +169,7 @@ document.getElementById('add-layer').addEventListener('click', function () {
 
 // ---- .mind generatie in de browser ----
 
-const MAX_DIMENSION = 2400; // maximale zijde voor compilatie (snelheid/geheugen)
+const MAX_DIMENSION = 1600; // maximale zijde voor compilatie (sneller laden + detecteren, tracking blijft goed)
 
 const pageInput = document.getElementById('f-page');
 const compileBox = document.getElementById('compile-box');
