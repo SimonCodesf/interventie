@@ -1,12 +1,11 @@
 // Interventie — AR krant (A-Frame + MindAR)
 //
 // Boot-flow:
-//   1. Pagina opent instant (geen blokkerende downloads, fonts non-blocking).
-//   2. Tap op START CAMERA → camera-permissie-popup verschijnt meteen;
-//      intussen worden de bibliotheken, de .mind van deze week én alle
-//      AR-lagen gedownload. De laadtijd valt dus samen met de popup-fase.
-//   3. Zodra alles binnen is: stream overdragen aan MindAR (geen tweede
-//      popup) en de scene start warm — eerste scan voelt als de tweede.
+//   1. Pagina laadt enkel de essentials (laadbalk van de browser is snel klaar).
+//   2. Meteen daarna (window load) downloaden de bibliotheken, de .mind van
+//      deze week én alle AR-lagen op de achtergrond.
+//   3. Tap op START CAMERA → camera-permissie-popup (nooit vanzelf);
+//      alles staat al in het geheugen, dus de scan start warm en instant.
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
@@ -90,7 +89,26 @@ async function loadCurrentChunk() {
     }
 }
 
-// ---- Vorige essays (chunk 1) op de achtergrond ----
+// ---- Chunk van deze week + lagen downloaden (één keer, gedeeld) ----
+
+let currentChunkPromise = null;
+
+function ensureCurrentChunk() {
+    if (!currentChunkPromise) {
+        currentChunkPromise = loadCurrentChunk();
+    }
+    return currentChunkPromise;
+}
+
+// ---- Preload: direct ná de pagina-essentials (laadbalk compleet) ----
+
+function preloadAll() {
+    loadScript('js/vendor/aframe.min.js');
+    loadScript('js/vendor/mindar-image-aframe.prod.js');
+    ensureCurrentChunk()
+        .then(function () { preloadPrevious(); })
+        .catch(function () {});
+}
 
 async function preloadPrevious() {
     try {
@@ -210,7 +228,7 @@ async function bootAR() {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
             loadScript('js/vendor/mindar-image-aframe.prod.js'),
-            loadCurrentChunk(),
+            ensureCurrentChunk(),
         ]);
     } catch (e) {
         console.error(e);
@@ -257,6 +275,12 @@ toggleBtn().addEventListener('click', function () {
     }));
 });
 
-// ---- Boot: wachten op de tap, geen automatische camera-popup ----
+// ---- Boot: essentials eerst, preload erna, popup pas na de tap ----
+
+if (document.readyState === 'complete') {
+    preloadAll();
+} else {
+    window.addEventListener('load', preloadAll);
+}
 
 document.getElementById('start-btn').addEventListener('click', bootAR);
