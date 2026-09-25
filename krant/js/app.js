@@ -9,8 +9,7 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    filterMinCF: 0.0015,
-    filterBeta: 0.008,
+    // filterMinCF/filterBeta weglaten = MindAR-standaard (snelle OneEuro-filter)
     warmupTolerance: 0,
     missTolerance: 2,
 };
@@ -163,8 +162,6 @@ function buildScene(mindSrc, targets) {
     const scene = document.createElement('a-scene');
     scene.setAttribute('mindar-image',
         'imageTargetSrc: ' + mindSrc +
-        '; filterMinCF: ' + AR_TUNING.filterMinCF +
-        '; filterBeta: ' + AR_TUNING.filterBeta +
         '; warmupTolerance: ' + AR_TUNING.warmupTolerance +
         '; missTolerance: ' + AR_TUNING.missTolerance +
         '; uiLoading: no; uiScanning: no; uiError: no');
@@ -182,6 +179,13 @@ function buildScene(mindSrc, targets) {
     targets.forEach(function (t) {
         const target = document.createElement('a-entity');
         target.setAttribute('mindar-image-target', 'targetIndex: ' + t.index);
+
+        target.addEventListener('targetFound', function () {
+            console.log('[AR] target ' + t.index + ' GEVONDEN');
+        });
+        target.addEventListener('targetLost', function () {
+            console.log('[AR] target ' + t.index + ' verloren');
+        });
 
         (t.layers || []).forEach(function (layer) {
             const plane = document.createElement('a-plane');
@@ -207,8 +211,15 @@ function buildScene(mindSrc, targets) {
     });
 
     scene.addEventListener('arError', function () {
+        console.error('[AR] camera-fout');
         fatalError('CAMERA GEBLOKKEERD');
     });
+
+    scene.addEventListener('arReady', function () {
+        console.log('[AR] marker GELADEN (arReady)');
+    });
+
+    console.log('[AR] scene gebouwd, targets: ' + targets.length);
 
     sceneBox().appendChild(scene);
 
