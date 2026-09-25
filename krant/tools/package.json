@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "mind-ar": "^1.2.5"
+    "mind-ar": "^1.2.5",
+    "three": "^0.160.1"
   },
   "devDependencies": {
     "vite": "^6.4.3"
