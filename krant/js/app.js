@@ -91,8 +91,8 @@ async function bootCamera() {
     // Bibliotheken + data op de achtergrond laden terwijl de camera al draait
     try {
         const [threeMod, mindMod, essayRes, currentRes] = await Promise.all([
-            import('js/vendor/three.module.min.js'),
-            import('js/vendor/mindar-runtime.bundle.js'),
+            import('./vendor/three.module.min.js'),
+            import('./vendor/mindar-runtime.bundle.js'),
             fetch('api.php/essays/current'),
             fetch('api.php/essays/previous'),
         ]);
