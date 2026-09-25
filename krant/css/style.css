@@ -41,6 +41,16 @@ html {
     height: 100%;
 }
 
+/* MindAR maakt het video-element pas op maat nadat de stream-metadata binnenkomt;
+   met deze regel vult de camera de feed-box vanaf het begin (geen klein→vullend). */
+#ar-scene video {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
 /* Titel in de papierrand bovenaan — krantenmasthead */
 #masthead {
     position: absolute;

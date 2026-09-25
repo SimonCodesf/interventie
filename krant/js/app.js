@@ -9,8 +9,8 @@
 // - camerafout toont "CAMERA GEBLOKKEERD" i.p.v. stil beeld
 
 const AR_TUNING = {
-    filterMinCF: 0.0001,
-    filterBeta: 0.001,
+    filterMinCF: 0.0015,
+    filterBeta: 0.008,
     warmupTolerance: 0,
     missTolerance: 2,
 };
@@ -92,7 +92,7 @@ function buildScene(mindUrl, targets) {
         '; missTolerance: ' + AR_TUNING.missTolerance +
         '; uiLoading: no; uiScanning: no; uiError: no');
     scene.setAttribute('color-space', 'sRGB');
-    scene.setAttribute('renderer', 'colorManagement: true; pixelRatio: 1; antialias: false; highRefreshRate: true');
+    scene.setAttribute('renderer', 'colorManagement: true; pixelRatio: 1; antialias: false');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
     scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
     scene.setAttribute('embedded', '');
