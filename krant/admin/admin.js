@@ -192,13 +192,18 @@ compileButton.addEventListener('click', async function () {
     compileProgress.textContent = 'Afbeelding laden…';
 
     try {
-        // Afbeelding laden en verkleinen naar max. 2400px (sneller compileren, even goede tracking)
+        // Afbeelding laden en verkleinen naar max. 1600px (sneller compileren, even goede tracking)
         const img = await loadImageFile(file);
         const canvas = document.createElement('canvas');
         const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext('2d');
+        // Transparantie afvlakken op wit: een transparante PNG zou anders zwart
+        // in de marker krijgen, terwijl de print wit papier toont (mismatch).
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         const compiler = new Compiler();
         await compiler.compileImageTargets([canvas], function (percent) {

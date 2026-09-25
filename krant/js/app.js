@@ -9,9 +9,13 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // filterMinCF/filterBeta weglaten = MindAR-standaard (snelle OneEuro-filter)
+    // OneEuro-filter (bewegingsafvlakking): tekstrijke pagina's geven een
+    // glitcherige pose; minCutOff 0.002 + beta 40 dempt de jitter in rust
+    // maar laat snelle beweging nog volledig door (geen achterlopen).
+    filterMinCF: 0.002,
+    filterBeta: 40,
     warmupTolerance: 0,
-    missTolerance: 2,
+    missTolerance: 5, // korte detectie-dips niet meteen als "verloren" tellen (anti-flicker)
 };
 
 let currentEssay = null;
@@ -162,6 +166,8 @@ function buildScene(mindSrc, targets) {
     const scene = document.createElement('a-scene');
     scene.setAttribute('mindar-image',
         'imageTargetSrc: ' + mindSrc +
+        '; filterMinCF: ' + AR_TUNING.filterMinCF +
+        '; filterBeta: ' + AR_TUNING.filterBeta +
         '; warmupTolerance: ' + AR_TUNING.warmupTolerance +
         '; missTolerance: ' + AR_TUNING.missTolerance +
         '; uiLoading: no; uiScanning: no; uiError: no');
