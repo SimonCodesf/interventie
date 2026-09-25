@@ -166,10 +166,17 @@ function buildScene(mindSrc, targets) {
         '; missTolerance: ' + AR_TUNING.missTolerance +
         '; uiLoading: no; uiScanning: no; uiError: no');
     scene.setAttribute('color-space', 'sRGB');
-    scene.setAttribute('renderer', 'colorManagement: true; pixelRatio: 1; antialias: false');
+    scene.setAttribute('renderer', 'colorManagement: true; antialias: false');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
     scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
     scene.setAttribute('embedded', '');
+
+    // pixelRatio 1 via de renderer zelf (A-Frame 1.4.2 kent geen pixelRatio-prop)
+    scene.addEventListener('loaded', function () {
+        if (scene.renderer && scene.renderer.setPixelRatio) {
+            scene.renderer.setPixelRatio(1);
+        }
+    });
 
     const camera = document.createElement('a-camera');
     camera.setAttribute('position', '0 0 0');
@@ -217,6 +224,19 @@ function buildScene(mindSrc, targets) {
 
     scene.addEventListener('arReady', function () {
         console.log('[AR] marker GELADEN (arReady)');
+        // MindAR vertrouwt op autoplay; bij een overgedragen stream kan het
+        // video-element op iOS gepauzeerd blijven — expliciet afspelen.
+        const v = sceneBox().querySelector('video');
+        console.log('[AR] video: ' + (v
+            ? 'readyState=' + v.readyState + ' paused=' + v.paused + ' ' + v.videoWidth + 'x' + v.videoHeight
+            : 'GEEN video-element'));
+        if (v && v.paused) {
+            v.play().then(function () {
+                console.log('[AR] video.play() gelukt');
+            }).catch(function (e) {
+                console.error('[AR] video.play() mislukt:', e);
+            });
+        }
     });
 
     console.log('[AR] scene gebouwd, targets: ' + targets.length);
@@ -237,7 +257,12 @@ function armWatchdog() {
     clearTimeout(watchdogTimer);
     watchdogTimer = setTimeout(function () {
         const video = sceneBox().querySelector('video');
-        if (video && video.videoWidth > 0) return; // feed leeft
+        const live = video && video.videoWidth > 0 && video.readyState >= 2;
+        if (live) return; // feed leeft
+
+        console.warn('[AR] watchdog: feed lijkt dood (' + (video
+            ? 'readyState=' + video.readyState + ' paused=' + video.paused + ' w=' + video.videoWidth
+            : 'geen video') + ')');
 
         if (!watchdogRetried && lastScene) {
             watchdogRetried = true;
