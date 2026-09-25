@@ -6,6 +6,7 @@ const API = '../api.php';
 
 let editingWeek = null;
 let compiledMind = null; // { blob, size } — .mind gegenereerd in de browser
+let compiledMindMatchesPage = false; // marker hoort bij de geselecteerde pagina
 
 // ---- ISO week voorstel ----
 
@@ -178,6 +179,7 @@ const compileProgress = document.getElementById('compile-progress');
 
 pageInput.addEventListener('change', function () {
     compiledMind = null;
+    compiledMindMatchesPage = false;
     compileProgress.textContent = '';
     compileBox.style.display = pageInput.files.length ? 'block' : 'none';
 });
@@ -208,6 +210,7 @@ compileButton.addEventListener('click', async function () {
             blob: new Blob([data], { type: 'application/octet-stream' }),
             size: data.length,
         };
+        compiledMindMatchesPage = true;
         compileProgress.textContent = 'Klaar (' + (data.length / 1024).toFixed(0) + ' KB) — wordt meegestuurd bij opslaan.';
     } catch (err) {
         compileProgress.textContent = 'Compilatie mislukt: ' + (err.message || err) +
@@ -252,11 +255,24 @@ document.getElementById('essay-form').addEventListener('submit', async function 
     const pageFile = document.getElementById('f-page').files[0];
     if (pageFile) fd.append('page_image', pageFile);
 
+    // Bewaak dat de marker overeenkomt met de (nieuwe) pagina
+    const manualMindFile = document.getElementById('f-mind').files[0];
+    if (pageFile && !compiledMind && !compiledMindMatchesPage && !manualMindFile) {
+        const doorgaan = confirm(
+            'Je hebt een (nieuwe) pagina-afbeelding gekozen, maar er is geen .mind-marker ' +
+            'voor gegenereerd. Zonder bijpassende marker kan de AR de pagina niet herkennen. ' +
+            'Klik "ANNULEREN" en gebruik eerst "GENEREER .MIND", of "OK" om toch op te slaan.'
+        );
+        if (!doorgaan) {
+            btn.disabled = false;
+            return;
+        }
+    }
+
     if (compiledMind) {
         fd.append('mind_file', compiledMind.blob, 'target.mind');
-    } else {
-        const mindFile = document.getElementById('f-mind').files[0];
-        if (mindFile) fd.append('mind_file', mindFile);
+    } else if (manualMindFile) {
+        fd.append('mind_file', manualMindFile);
     }
 
     // Enkel rijen met een bestand meesturen (compact, index-consistent)
@@ -460,6 +476,7 @@ async function loadIntoForm(week) {
 function resetForm(keepWeek) {
     editingWeek = null;
     compiledMind = null;
+    compiledMindMatchesPage = false;
     compileProgress.textContent = '';
     compileBox.style.display = 'none';
     document.getElementById('form-heading').textContent = 'Nieuw essay';
