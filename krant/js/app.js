@@ -67,6 +67,24 @@ async function fetchBlobUrl(url) {
     return URL.createObjectURL(await res.blob());
 }
 
+// ---- Camera-handover ----
+// We vragen de camera bij de tap (popup binnen de gesture). In plaats van
+// die stream te stoppen en MindAR een tweede aanvraag te laten doen (dat kan
+// op Safari eindigen in een dode stream), dragen we onze stream over via een
+// shim op getUserMedia.
+
+const realGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+let heldStream = null;
+
+navigator.mediaDevices.getUserMedia = function (constraints) {
+    if (heldStream) {
+        const s = heldStream;
+        heldStream = null;
+        return Promise.resolve(s);
+    }
+    return realGetUserMedia(constraints);
+};
+
 // ---- Chunk van deze week + lagen downloaden (na de tap) ----
 
 async function loadCurrentChunk() {
@@ -193,6 +211,29 @@ function buildScene(mindSrc, targets) {
     });
 
     sceneBox().appendChild(scene);
+
+    lastScene = { mindSrc: mindSrc, targets: targets };
+    armWatchdog();
+}
+
+// ---- Watchdog: stille auto-retry als de feed op Safari dood blijft ----
+
+let lastScene = null;
+let watchdogTimer = null;
+let watchdogRetried = false;
+
+function armWatchdog() {
+    clearTimeout(watchdogTimer);
+    watchdogTimer = setTimeout(function () {
+        const video = sceneBox().querySelector('video');
+        if (video && video.videoWidth > 0) return; // feed leeft
+
+        if (!watchdogRetried && lastScene) {
+            watchdogRetried = true;
+            buildScene(lastScene.mindSrc, lastScene.targets);
+            armWatchdog();
+        }
+    }, 6000);
 }
 
 // ---- Start na de tap ----
@@ -200,6 +241,7 @@ function buildScene(mindSrc, targets) {
 async function bootAR() {
     if (bootStarted) return;
     bootStarted = true;
+    watchdogRetried = false;
 
     if (!webglSupported()) {
         fatalError('NIET BESCHIKBAAR');
@@ -210,11 +252,10 @@ async function bootAR() {
     btn.textContent = 'LADEN…';
     btn.disabled = true;
 
-    // Camera-toestemming meteen vragen (binnen de tap-gesture) — de popup
-    // verschijnt dus direct, terwijl hieronder alles gedownload wordt.
-    let heldStream = null;
+    // Camera-toestemming meteen vragen (binnen de tap-gesture). De stream
+    // wordt later aan MindAR overgedragen i.p.v. gestopt en opnieuw gevraagd.
     try {
-        heldStream = await navigator.mediaDevices.getUserMedia({
+        heldStream = await realGetUserMedia({
             audio: false,
             video: { facingMode: 'environment' },
         });
@@ -233,19 +274,17 @@ async function bootAR() {
     } catch (e) {
         console.error(e);
         heldStream.getTracks().forEach(function (t) { t.stop(); });
+        heldStream = null;
         fatalError('NIET BESCHIKBAAR');
         return;
     }
 
     if (!currentEssay || !currentMindBlobUrl) {
         heldStream.getTracks().forEach(function (t) { t.stop(); });
+        heldStream = null;
         fatalError('NIET BESCHIKBAAR');
         return;
     }
-
-    // Onze eigen stream stoppen; MindAR vraagt de camera opnieuw aan maar
-    // de toestemming is al gegeven, dus zonder tweede popup.
-    heldStream.getTracks().forEach(function (t) { t.stop(); });
 
     overlay().style.display = 'none';
     buildScene(currentMindBlobUrl, [{ index: 0, layers: currentEssay.layers }]);
