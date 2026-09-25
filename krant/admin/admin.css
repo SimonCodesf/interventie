@@ -223,6 +223,14 @@ fieldset legend {
     color: var(--ok);
 }
 
+.hint {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.3;
+}
+
 /* Statusmeldingen */
 .error { color: var(--accent); font-size: 0.85rem; min-height: 1.2em; }
 .ok { color: var(--ok); font-size: 0.85rem; min-height: 1.2em; }

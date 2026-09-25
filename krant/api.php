@@ -346,7 +346,14 @@ if ($method === 'GET' && $path === '/admin/bundle-sources') {
             'mind'  => $row['mind_file'] ? 'uploads/essays/' . rawurlencode($row['week']) . '/' . rawurlencode($row['mind_file']) . '?v=' . urlencode((string)$row['updated_at']) : '',
         ];
     }
-    jsonResponse(['essays' => $essays]);
+
+    $published = $db->query("SELECT COUNT(*) FROM essays WHERE published = 1")->fetchColumn();
+
+    jsonResponse([
+        'essays'    => $essays,
+        'published' => (int)$published,
+        'current'   => $currentWeek,
+    ]);
 }
 
 // Vorige-bundel uploaden (samengevoegde .mind + volgorde)

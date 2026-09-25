@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Krant AR — Admin</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23f2eee2'/%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='56'%20fill='none'%20stroke='%23141414'%20stroke-width='2'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='36'%20text-anchor='middle'%20fill='%23141414'%3EI%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="admin.css?v=1">
+    <link rel="stylesheet" href="admin.css?v=2">
 </head>
 <body>
 
@@ -48,7 +48,8 @@
                     <div class="row two-col">
                         <label>
                             Week
-                            <input type="text" id="f-week" autocomplete="off" placeholder="2026-41" required>
+                            <input type="text" id="f-week" placeholder="2026-41" autocomplete="off" required>
+                            <span id="week-hint" class="hint"></span>
                         </label>
                         <label class="check">
                             <input type="checkbox" id="f-published" checked>
@@ -149,6 +150,6 @@
         </main>
     </div>
 
-    <script type="module" src="admin.js?v=4"></script>
+    <script type="module" src="admin.js?v=5"></script>
 </body>
 </html>

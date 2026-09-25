@@ -355,10 +355,48 @@ async function loadEssays() {
         if (data.essays.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="color:#777">Nog geen essays.</td></tr>';
         }
+        refreshBundleInfo();
     } catch (err) {
         /* geen verbinding */
     }
 }
+
+// Toont hoe de chunks verdeeld zijn: 1 week = 1 essay, vorige-bundel = alle
+// gepubliceerde essays behalve de nieuwste week.
+async function refreshBundleInfo() {
+    try {
+        const res = await fetch(API + '/admin/bundle-sources');
+        const data = await res.json();
+        const n = data.published || 0;
+        const prev = (data.essays || []).length;
+        if (n < 2) {
+            bundleStatus.textContent = n + ' gepubliceerd essay — er zijn minstens 2 nodig (elk met een ANDERE week) voor een vorige-bundel';
+        } else {
+            bundleStatus.textContent = n + ' gepubliceerd: nieuwste week = huidige chunk, ' + prev + ' oudere week(s) = vorige-bundel';
+        }
+    } catch (e) {
+        /* geen verbinding */
+    }
+}
+
+// Waarschuw als een week al bestaat (opslaan = overschrijven van dat essay)
+document.getElementById('f-week').addEventListener('change', async function () {
+    const week = this.value.trim();
+    const hint = document.getElementById('week-hint');
+    if (!week) { hint.textContent = ''; return; }
+    try {
+        const res = await fetch(API + '/admin/essays/' + encodeURIComponent(week));
+        if (res.ok) {
+            hint.textContent = 'Deze week bestaat al — opslaan OVERSCHRIJFT dat essay. Gebruik een andere week voor een nieuw essay.';
+        } else if (res.status === 404) {
+            hint.textContent = 'Nieuwe week — wordt een nieuw essay.';
+        } else {
+            hint.textContent = '';
+        }
+    } catch (e) {
+        hint.textContent = '';
+    }
+});
 
 async function togglePublish(week, published) {
     await fetch(API + '/admin/essays/' + encodeURIComponent(week) + '/publish', {
