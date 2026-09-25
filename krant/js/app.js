@@ -1,12 +1,13 @@
 // Interventie — AR krant (A-Frame + MindAR)
 //
-// Preload-strategie: bij het openen van de pagina worden meteen gedownload:
-//   1. de vendor-bibliotheken (A-Frame + MindAR)
-//   2. het .mind bestand van de huidige week
-//   3. alle AR-lagen van de huidige week
-// Alles staat dan in het geheugen (blob-URLs), zodat wanneer je de camera
-// richt de scan al warmgedraaid is — de eerste detectie voelt als de tweede.
-// De vorige-bundel wordt daarna stilletjes op de achtergrond opgehaald.
+// Boot-flow:
+//   1. Pagina opent instant (geen blokkerende downloads, fonts non-blocking).
+//   2. Tap op START CAMERA → camera-permissie-popup verschijnt meteen;
+//      intussen worden de bibliotheken, de .mind van deze week én alle
+//      AR-lagen gedownload. De laadtijd valt dus samen met de popup-fase.
+//   3. Zodra alles binnen is: stream overdragen aan MindAR (geen tweede
+//      popup) en de scene start warm — eerste scan voelt als de tweede.
+//   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
     filterMinCF: 0.0015,
@@ -20,7 +21,7 @@ let currentMindBlobUrl = null;
 let previousBundle = null;
 let previousBuffer = null;    // ArrayBuffer van previous.mind
 let mode = 'current';
-let gestureStarted = false;   // camera gestart via tap (iOS fallback)
+let bootStarted = false;
 let activeBlobUrl = null;
 
 const sceneBox = function () { return document.getElementById('ar-scene'); };
@@ -44,11 +45,6 @@ function loadScript(src) {
     return scriptPromises[src];
 }
 
-function isIOS() {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-}
-
 function webglSupported() {
     try {
         const canvas = document.createElement('canvas');
@@ -66,54 +62,35 @@ function fatalError(msg) {
     overlay().style.display = 'flex';
 }
 
-function showOverlay() {
-    document.getElementById('start-btn').textContent = 'START CAMERA';
-    document.getElementById('start-btn').disabled = false;
-    overlay().style.display = 'flex';
-}
-
 async function fetchBlobUrl(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status + ' voor ' + url);
     return URL.createObjectURL(await res.blob());
 }
 
-// ---- Preload (start meteen bij paginaload) ----
+// ---- Chunk van deze week + lagen downloaden (na de tap) ----
 
-async function preloadAll() {
-    loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js');
+async function loadCurrentChunk() {
+    const res = await fetch('api.php/essays/current');
+    if (!res.ok) throw new Error('Huidig essay niet gevonden');
+    currentEssay = await res.json();
 
-    try {
-        const res = await fetch('api.php/essays/current');
-        if (res.ok) currentEssay = await res.json();
-    } catch (e) {
-        console.error(e);
-    }
+    if (!currentEssay.mind) throw new Error('Geen AR marker voor huidig essay');
+    currentMindBlobUrl = await fetchBlobUrl(currentEssay.mind);
 
-    if (currentEssay && currentEssay.mind) {
-        try {
-            currentMindBlobUrl = await fetchBlobUrl(currentEssay.mind);
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    if (currentEssay && currentEssay.layers && currentEssay.layers.length) {
-        // Lagen prefetchen: de volledige afbeelding wordt gedownload zodat
-        // A-Frame ze later instant uit de browser-cache haalt (directe URL).
+    if (currentEssay.layers && currentEssay.layers.length) {
         await Promise.all(currentEssay.layers.map(async function (layer) {
             try {
-                const res = await fetch(layer.file);
-                if (res.ok) await res.arrayBuffer();
+                const r = await fetch(layer.file);
+                if (r.ok) await r.arrayBuffer();
             } catch (e) {
                 console.error(e);
             }
         }));
     }
-
-    preloadPrevious();
 }
+
+// ---- Vorige essays (chunk 1) op de achtergrond ----
 
 async function preloadPrevious() {
     try {
@@ -194,44 +171,67 @@ function buildScene(mindSrc, targets) {
     });
 
     scene.addEventListener('arError', function () {
-        if (!gestureStarted && isIOS()) {
-            // Automatische poging zonder tap mislukt: laat de startknop zien
-            showOverlay();
-        } else {
-            fatalError('CAMERA GEBLOKKEERD');
-        }
+        fatalError('CAMERA GEBLOKKEERD');
     });
 
     sceneBox().appendChild(scene);
 }
 
-// ---- Starten ----
+// ---- Start na de tap ----
 
-async function bootAR(byGesture) {
-    if (byGesture) gestureStarted = true;
+async function bootAR() {
+    if (bootStarted) return;
+    bootStarted = true;
 
     if (!webglSupported()) {
         fatalError('NIET BESCHIKBAAR');
         return;
     }
 
+    const btn = document.getElementById('start-btn');
+    btn.textContent = 'LADEN…';
+    btn.disabled = true;
+
+    // Camera-toestemming meteen vragen (binnen de tap-gesture) — de popup
+    // verschijnt dus direct, terwijl hieronder alles gedownload wordt.
+    let heldStream = null;
     try {
-        await preloadPromise; // wacht tot chunk + lagen in het geheugen staan
-        await loadScript('js/vendor/aframe.min.js');
-        await loadScript('js/vendor/mindar-image-aframe.prod.js');
+        heldStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: 'environment' },
+        });
+    } catch (err) {
+        console.error(err);
+        fatalError('CAMERA GEBLOKKEERD');
+        return;
+    }
+
+    try {
+        await Promise.all([
+            loadScript('js/vendor/aframe.min.js'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js'),
+            loadCurrentChunk(),
+        ]);
     } catch (e) {
         console.error(e);
+        heldStream.getTracks().forEach(function (t) { t.stop(); });
         fatalError('NIET BESCHIKBAAR');
         return;
     }
 
     if (!currentEssay || !currentMindBlobUrl) {
+        heldStream.getTracks().forEach(function (t) { t.stop(); });
         fatalError('NIET BESCHIKBAAR');
         return;
     }
 
+    // Onze eigen stream stoppen; MindAR vraagt de camera opnieuw aan maar
+    // de toestemming is al gegeven, dus zonder tweede popup.
+    heldStream.getTracks().forEach(function (t) { t.stop(); });
+
     overlay().style.display = 'none';
     buildScene(currentMindBlobUrl, [{ index: 0, layers: currentEssay.layers }]);
+    preloadPrevious();
 }
 
 // ---- Knop: wisselen tussen huidige en vorige essays ----
@@ -257,15 +257,6 @@ toggleBtn().addEventListener('click', function () {
     }));
 });
 
-// ---- Boot: preload direct, camera daarna ----
+// ---- Boot: wachten op de tap, geen automatische camera-popup ----
 
-const preloadPromise = preloadAll();
-
-// Android, desktop én iOS: camera probeert automatisch te starten zodra de
-// chunk klaar is. Op iOS verschijnt de permissie-prompt; werkt dat niet
-// zonder tap, dan blijft de startknop als fallback staan.
-bootAR(false);
-
-document.getElementById('start-btn').addEventListener('click', function () {
-    bootAR(true);
-});
+document.getElementById('start-btn').addEventListener('click', bootAR);
