@@ -9,13 +9,13 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // OneEuro-filter (bewegingsafvlakking): tekstrijke pagina's geven een
-    // glitcherige pose; minCutOff 0.002 + beta 40 dempt de jitter in rust
-    // maar laat snelle beweging nog volledig door (geen achterlopen).
-    filterMinCF: 0.001,
-    filterBeta: 60,
+    // Tussenweg tegen verspringingen op tekstrijke pagina's: lichte demping in
+    // rust zonder achterlopen bij beweging. Voor échte stabiliteit blijft een
+    // vast contrastrijk kader rond de tekst de beste oplossing.
+    filterMinCF: 0.002,
+    filterBeta: 30,
     warmupTolerance: 0,
-    missTolerance: 5, // korte detectie-dips niet meteen als "verloren" tellen (anti-flicker)
+    missTolerance: 5,
 };
 
 let currentEssay = null;
@@ -182,12 +182,9 @@ function buildScene(mindSrc, targets) {
     scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
     scene.setAttribute('embedded', '');
 
-    // pixelRatio 1 via de renderer zelf (A-Frame 1.4.2 kent geen pixelRatio-prop)
-    scene.addEventListener('loaded', function () {
-        if (scene.renderer && scene.renderer.setPixelRatio) {
-            scene.renderer.setPixelRatio(1);
-        }
-    });
+    // Geen pixelRatio-verlaging: A-Frame cap'ed zelf al op 2, en verlagen naar 1
+    // maakte tekstlagen op retina-schermen wazig én veroorzaakte een zichtbare
+    // herschaling van het beeld vlak na het laden.
 
     const camera = document.createElement('a-camera');
     camera.setAttribute('position', '0 0 0');
