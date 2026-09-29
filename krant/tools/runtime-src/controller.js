@@ -189,18 +189,27 @@ class Controller {
       let frameCount = 0;
       let matchCount = 0;
       let trackFailCount = 0;
+      // dev-diagnostiek: timing + detectie-throttle (duur: 512-crop detectie
+      // elke frame laat de loop naar ~10fps zakken zodra er geen track is)
+      const detectEvery = 2;
+      let detectMsSum = 0, detectMsCount = 0;
+      let trackMsSum = 0, trackMsCount = 0;
+      let loopMsSum = 0, loopMsCount = 0;
       while (true) {
 	if (!this.processingVideo) break;
 
 	try {
+	const loopStart = performance.now();
 	const inputT = this.inputLoader.loadInput(input);
 
 	const nTracking = this.trackingStates.reduce((acc, s) => {
 	  return acc + (!!s.isTracking? 1: 0);
 	}, 0);
 
-	// detect and match only if less then maxTrack
-	if (nTracking < this.maxTrack) {
+	// detect and match only if less then maxTrack (max om de 2 frames:
+	// de 512px-detectie is duur en remt anders de hele loop af)
+	if (nTracking < this.maxTrack && (frameCount % detectEvery === 0 || this._forceDetect)) {
+	  this._forceDetect = false;
 
 	  const matchingIndexes = [];
 	  for (let i = 0; i < this.trackingStates.length; i++) {
@@ -211,7 +220,9 @@ class Controller {
 	    matchingIndexes.push(i);
 	  }
 
+	  const _d0 = performance.now();
 	  const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._detectAndMatch(inputT, matchingIndexes);
+	  detectMsSum += performance.now() - _d0; detectMsCount += 1;
 
 	  if (matchedTargetIndex !== -1) {
 	    matchCount += 1;
@@ -221,13 +232,20 @@ class Controller {
 	}
 
 	frameCount += 1;
+	loopMsSum += performance.now() - loopStart; loopMsCount += 1;
 	if (frameCount % 90 === 0) {
 	  const tr = this.tracker || {};
+	  const st = this.trackingStates[0] || {};
+	  const dAvg = detectMsCount ? (detectMsSum / detectMsCount).toFixed(0) : '-';
+	  const tAvg = trackMsCount ? (trackMsSum / trackMsCount).toFixed(0) : '-';
+	  const lAvg = loopMsCount ? (loopMsSum / loopMsCount).toFixed(0) : '-';
 	  console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount +
 	    ', simMax ' + (tr._dbgMaxSim !== undefined ? tr._dbgMaxSim.toFixed(3) : '?') +
 	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
-	    ' (calls ' + (tr._dbgCalls || 0) + ')');
-	  if (tr) tr._dbgMaxSim = 0;
+	    ', showing ' + (st.showing ? 'Y' : 'n') + ', tracking ' + (st.isTracking ? 'Y' : 'n') +
+	    ', detect ' + dAvg + 'ms, track ' + tAvg + 'ms, loop ' + lAvg + 'ms');
+	  if (tr) { tr._dbgMaxSim = 0; tr._dbgCalls = 0; }
+	  detectMsSum = 0; detectMsCount = 0; trackMsSum = 0; trackMsCount = 0; loopMsSum = 0; loopMsCount = 0;
 	}
 
 	// tracking update
@@ -235,7 +253,9 @@ class Controller {
 	  const trackingState = this.trackingStates[i];
 
 	  if (trackingState.isTracking) {
+	    const _t0 = performance.now();
 	    let modelViewTransform = await this._trackAndUpdate(inputT, trackingState.currentModelViewTransform, i);
+	    trackMsSum += performance.now() - _t0; trackMsCount += 1;
 	    if (modelViewTransform === null) {
 	      trackFailCount += 1;
 	      trackingState.isTracking = false;

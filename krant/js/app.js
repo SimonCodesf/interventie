@@ -14,7 +14,7 @@ const AR_TUNING = {
     filterMinCF: 0.005,
     filterBeta: 60,
     warmupTolerance: 2,
-    missTolerance: 30,
+    missTolerance: 12,
 };
 
 // ---- Vaste cameraresolutie ----
@@ -143,7 +143,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=11');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=12');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -321,7 +321,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=11'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=12'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {
