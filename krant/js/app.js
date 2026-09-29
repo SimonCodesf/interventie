@@ -9,11 +9,12 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // Tussenweg: sterkere demping dan voorheen, maar nog vlot bij beweging.
-    // warmupTolerance 3: vlotte (her)lock; missTolerance 10: laag blijft
-    // zichtbaar door korte detectie-dips (anti-flicker op tekstpagina's).
-    filterMinCF: 0.005,
-    filterBeta: 15,
+    // De bewezen waarden van het originele Interventie-project: zware
+    // OneEuro-afvlakking (0.0001/0.001) → rotsvaste laag, lichte
+    // volgvertraging. Precies wat een ruis-gevoelige tekstpagina nodig heeft.
+    // (missTolerance verhoogd tegen found/lost-geflikker.)
+    filterMinCF: 0.0001,
+    filterBeta: 0.001,
     warmupTolerance: 3,
     missTolerance: 10,
 };
