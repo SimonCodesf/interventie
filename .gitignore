@@ -36,3 +36,6 @@ backups/
 .idea/
 node_modules/
 *.log
+
+# SpecStory (lokale AI-history)
+.specstory/
