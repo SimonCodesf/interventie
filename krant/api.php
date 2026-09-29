@@ -395,5 +395,31 @@ if ($method === 'POST' && $path === '/admin/bundle') {
     jsonResponse(['ok' => true, 'weeks' => $weeks]);
 }
 
+// ---- Dev-feedback (van het dev-paneel; geen auth, klein en gelimiteerd) ----
+
+if ($method === 'POST' && $path === '/dev/feedback') {
+    $input = getJsonInput();
+    $entry = [
+        't'        => date('c'),
+        'rating'   => substr((string)($input['rating'] ?? ''), 0, 40),
+        'text'     => substr((string)($input['text'] ?? ''), 0, 500),
+        'settings' => $input['settings'] ?? null,
+        'stats'    => $input['stats'] ?? null,
+        'ua'       => substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 200),
+    ];
+    $file = dirname(DB_FILE) . '/feedback.json';
+    $list = file_exists($file) ? (json_decode((string)file_get_contents($file), true) ?: []) : [];
+    $list[] = $entry;
+    if (count($list) > 500) $list = array_slice($list, -500);
+    file_put_contents($file, json_encode($list, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    jsonResponse(['ok' => true, 'count' => count($list)]);
+}
+
+if ($method === 'GET' && $path === '/dev/feedback') {
+    $file = dirname(DB_FILE) . '/feedback.json';
+    $list = file_exists($file) ? (json_decode((string)file_get_contents($file), true) ?: []) : [];
+    jsonResponse(['feedback' => $list]);
+}
+
 // Onbekende route
 jsonResponse(['message' => 'Onbekend endpoint'], 404);

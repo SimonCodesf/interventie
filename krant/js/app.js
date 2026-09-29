@@ -474,6 +474,61 @@ toggleBtn().addEventListener('click', function () {
         });
     });
     el.appendChild(btnWrap);
+
+    // ---- Feedback: ratings + vrije tekst -> console EN server ----
+    const fb = document.createElement('div');
+    fb.style.cssText = 'margin-top:6px;border-top:1px solid #555;padding-top:6px';
+    const fbT = document.createElement('div');
+    fbT.textContent = 'FEEDBACK';
+    fbT.style.cssText = 'color:#fc6';
+    fb.appendChild(fbT);
+    const fbStatus = document.createElement('div');
+    fbStatus.style.cssText = 'color:#0f0;min-height:14px';
+    function sendFeedback(rating, text) {
+        const payload = {
+            rating: rating || '',
+            text: text || '',
+            settings: (function () { try { return JSON.parse(localStorage.getItem('AR_TUNE') || '{}'); } catch (e) { return {}; } })(),
+            stats: window.__AR_STATS || null,
+        };
+        console.log('[AR-FEEDBACK] ' + JSON.stringify(payload));
+        try {
+            const hist = JSON.parse(localStorage.getItem('AR_FEEDBACK') || '[]');
+            hist.push(payload);
+            localStorage.setItem('AR_FEEDBACK', JSON.stringify(hist));
+        } catch (e) {}
+        fbStatus.textContent = '\u2713 verzonden (ook in console)';
+        fetch('api.php/dev/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }).catch(function () {});
+    }
+    function fbBtn(label) {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.style.cssText = 'font:11px monospace;padding:3px 6px;margin:2px 3px 0 0;background:#553;color:#eee;border:1px solid #666;cursor:pointer';
+        fb.appendChild(b);
+        return b;
+    }
+    ['GOED', 'TRILT', 'TRAAG', 'SPRINGT', 'VALT WEG'].forEach(function (r) {
+        fbBtn(r).addEventListener('click', function () { sendFeedback(r, ''); });
+    });
+    const fbInput = document.createElement('input');
+    fbInput.type = 'text';
+    fbInput.placeholder = 'opmerking\u2026';
+    fbInput.style.cssText = 'width:150px;font:11px monospace;margin-top:4px;display:block';
+    fb.appendChild(fbInput);
+    fbBtn('STUUR').addEventListener('click', function () { sendFeedback('', fbInput.value); fbInput.value = ''; });
+    fbBtn('EXPORT').addEventListener('click', function () {
+        try {
+            console.log('[AR-FEEDBACK-EXPORT] ' + (localStorage.getItem('AR_FEEDBACK') || '[]'));
+        } catch (e) {}
+        console.log('[AR-STATS-NU] ' + JSON.stringify(window.__AR_STATS || null));
+    });
+    fb.appendChild(fbStatus);
+    el.appendChild(fb);
+
     document.body.appendChild(el);
 
     setInterval(function () {
