@@ -52112,6 +52112,8 @@ class Xy {
         currentModelViewTransform: null,
         trackCount: 0,
         trackMiss: 0,
+        gateRejects: 0,
+        lastAcceptedMatrix: null,
         filter: new n5({ minCutOff: this.filterMinCF, beta: this.filterBeta })
       });
     (async () => {
@@ -52130,13 +52132,18 @@ class Xy {
             let a = await this._trackAndUpdate(s, i.currentModelViewTransform, r);
             a === null ? i.isTracking = !1 : i.currentModelViewTransform = a;
           }
-          if (i.showing || i.isTracking && (i.trackMiss = 0, i.trackCount += 1, i.trackCount > this.warmupTolerance && (i.showing = !0, i.trackingMatrix = null, i.filter.reset())), i.showing && (i.isTracking ? i.trackMiss = 0 : (i.trackCount = 0, i.trackMiss += 1, i.trackMiss > this.missTolerance && (i.showing = !1, i.trackingMatrix = null, this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: null })))), i.showing) {
-            const a = this._glModelViewMatrix(i.currentModelViewTransform, r);
-            i.trackingMatrix = i.filter.filter(Date.now(), a);
-            let l = [];
-            for (let u = 0; u < i.trackingMatrix.length; u++)
-              l[u] = i.trackingMatrix[u];
-            t.width === this.inputHeight && t.height === this.inputWidth && (l = this.getRotatedZ90Matrix(l)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: l });
+          if (i.showing || i.isTracking && (i.trackMiss = 0, i.trackCount += 1, i.trackCount > this.warmupTolerance && (i.showing = !0, i.trackingMatrix = null, i.filter.reset())), i.showing && (i.isTracking ? i.trackMiss = 0 : (i.trackCount = 0, i.trackMiss += 1, i.trackMiss > this.missTolerance && (i.showing = !1, i.trackingMatrix = null, i.lastAcceptedMatrix = null, this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: null })))), i.showing) {
+            const a = this._glModelViewMatrix(i.currentModelViewTransform, r), l = i.lastAcceptedMatrix;
+            if (l) {
+              const h = this.markerDimensions[r][0], d = a[12] - l[12], f = a[13] - l[13], p = a[14] - l[14], g = Math.sqrt(d * d + f * f + p * p) / h, x = a[0] * l[0] + a[1] * l[1] + a[2] * l[2], m = a[4] * l[4] + a[5] * l[5] + a[6] * l[6], b = Math.acos(Math.min(1, Math.max(-1, x))) * 57.2958, y = Math.acos(Math.min(1, Math.max(-1, m))) * 57.2958;
+              if ((g > 0.12 || b > 25 || y > 25) && (i.gateRejects += 1, i.gateRejects < 4))
+                continue;
+            }
+            i.gateRejects = 0, i.lastAcceptedMatrix = a, i.trackingMatrix = i.filter.filter(Date.now(), a);
+            let c = [];
+            for (let h = 0; h < i.trackingMatrix.length; h++)
+              c[h] = i.trackingMatrix[h];
+            t.width === this.inputHeight && t.height === this.inputWidth && (c = this.getRotatedZ90Matrix(c)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: c });
           }
         }
         s.dispose(), this.onUpdate && this.onUpdate({ type: "processDone" }), await Tu.nextFrame();

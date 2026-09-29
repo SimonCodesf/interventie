@@ -177,6 +177,8 @@ class Controller {
 	currentModelViewTransform: null,
 	trackCount: 0,
 	trackMiss: 0,
+	gateRejects: 0,
+	lastAcceptedMatrix: null,
 	filter: new OneEuroFilter({minCutOff: this.filterMinCF, beta: this.filterBeta})
       });
       //console.log("filterMinCF", this.filterMinCF, this.filterBeta);
@@ -247,6 +249,7 @@ class Controller {
 	      if (trackingState.trackMiss > this.missTolerance) {
 		trackingState.showing = false;
 		trackingState.trackingMatrix = null;
+		trackingState.lastAcceptedMatrix = null;
 		this.onUpdate && this.onUpdate({type: 'updateMatrix', targetIndex: i, worldMatrix: null});
 	      }
 	    } else {
@@ -257,6 +260,32 @@ class Controller {
 	  // if showing, then call onUpdate, with world matrix
 	  if (trackingState.showing) {
 	    const worldMatrix = this._glModelViewMatrix(trackingState.currentModelViewTransform, i);
+
+	    // Glitch-gate: op tekstpagina's levert de matcher soms een foutieve
+	    // correspondentie → de pose "springt" naar een verkeerde oplossing.
+	    // Weiger zulke sprongen; na 4 opeenvolgende weigeringen accepteren we
+	    // alsnog (dan is het echte, snelle beweging).
+	    const prevM = trackingState.lastAcceptedMatrix;
+	    if (prevM) {
+	      const mw = this.markerDimensions[i][0];
+	      const dtx = worldMatrix[12] - prevM[12];
+	      const dty = worldMatrix[13] - prevM[13];
+	      const dtz = worldMatrix[14] - prevM[14];
+	      const dTrans = Math.sqrt(dtx * dtx + dty * dty + dtz * dtz) / mw;
+	      const dotR = worldMatrix[0] * prevM[0] + worldMatrix[1] * prevM[1] + worldMatrix[2] * prevM[2];
+	      const dotU = worldMatrix[4] * prevM[4] + worldMatrix[5] * prevM[5] + worldMatrix[6] * prevM[6];
+	      const angR = Math.acos(Math.min(1, Math.max(-1, dotR))) * 57.2958;
+	      const angU = Math.acos(Math.min(1, Math.max(-1, dotU))) * 57.2958;
+	      if (dTrans > 0.12 || angR > 25 || angU > 25) {
+		trackingState.gateRejects += 1;
+		if (trackingState.gateRejects < 4) {
+		  continue; // bevries: houd de vorige pose vast
+		}
+	      }
+	    }
+	    trackingState.gateRejects = 0;
+	    trackingState.lastAcceptedMatrix = worldMatrix;
+
 	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), worldMatrix);
 
 	    let clone = [];
