@@ -10,12 +10,26 @@
 
 const AR_TUNING = {
     // Tussenweg: sterkere demping dan voorheen, maar nog vlot bij beweging.
-    // warmupTolerance 5 zorgt dat de eerste lock met een geraffineerde pose
-    // gebeurt (geen initiële sprong/schaal-snap).
+    // warmupTolerance 3: vlotte (her)lock; missTolerance 10: laag blijft
+    // zichtbaar door korte detectie-dips (anti-flicker op tekstpagina's).
     filterMinCF: 0.005,
     filterBeta: 15,
-    warmupTolerance: 5,
-    missTolerance: 5,
+    warmupTolerance: 3,
+    missTolerance: 10,
+};
+
+// ---- Vaste cameraresolutie ----
+// iOS levert standaard maar 480x640 en past de stream-resolutie in de eerste
+// seconde nog aan (de zichtbare "herschaling" bij het starten). Een vaste
+// 1280x720 vanaf het begin voorkomt die sprong én geeft de tracker meer
+// detail → stabielere pose en minder found/lost-geflikker op tekstpagina's.
+const realGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+navigator.mediaDevices.getUserMedia = function (constraints) {
+    if (constraints && constraints.video && constraints.video.facingMode) {
+        constraints.video.width = { ideal: 1280 };
+        constraints.video.height = { ideal: 720 };
+    }
+    return realGetUserMedia(constraints);
 };
 
 let currentEssay = null;
