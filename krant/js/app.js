@@ -12,8 +12,8 @@ const AR_TUNING = {
     // OneEuro-filter (bewegingsafvlakking): tekstrijke pagina's geven een
     // glitcherige pose; minCutOff 0.002 + beta 40 dempt de jitter in rust
     // maar laat snelle beweging nog volledig door (geen achterlopen).
-    filterMinCF: 0.002,
-    filterBeta: 40,
+    filterMinCF: 0.001,
+    filterBeta: 60,
     warmupTolerance: 0,
     missTolerance: 5, // korte detectie-dips niet meteen als "verloren" tellen (anti-flicker)
 };
@@ -64,6 +64,14 @@ function fatalError(msg) {
     overlay().style.display = 'flex';
 }
 
+function retryOverlay() {
+    bootStarted = false;
+    const btn = document.getElementById('start-btn');
+    btn.textContent = 'OPNIEUW PROBEREN';
+    btn.disabled = false;
+    overlay().style.display = 'flex';
+}
+
 async function fetchBlobUrl(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status + ' voor ' + url);
@@ -71,22 +79,9 @@ async function fetchBlobUrl(url) {
 }
 
 // ---- Camera-handover ----
-// We vragen de camera bij de tap (popup binnen de gesture). In plaats van
-// die stream te stoppen en MindAR een tweede aanvraag te laten doen (dat kan
-// op Safari eindigen in een dode stream), dragen we onze stream over via een
-// shim op getUserMedia.
-
-const realGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-let heldStream = null;
-
-navigator.mediaDevices.getUserMedia = function (constraints) {
-    if (heldStream) {
-        const s = heldStream;
-        heldStream = null;
-        return Promise.resolve(s);
-    }
-    return realGetUserMedia(constraints);
-};
+// De camera wordt door MindAR zelf opgevraagd in de tap-gesture (één enkele
+// aanvraag, geen stream-handover — het meest robuuste pad, net als het
+// originele Interventie-project).
 
 // ---- Chunk van deze week + lagen downloaden (na de tap) ----
 
@@ -225,7 +220,7 @@ function buildScene(mindSrc, targets) {
 
     scene.addEventListener('arError', function () {
         console.error('[AR] camera-fout');
-        fatalError('CAMERA GEBLOKKEERD');
+        retryOverlay();
     });
 
     scene.addEventListener('arReady', function () {
@@ -294,19 +289,6 @@ async function bootAR() {
     btn.textContent = 'LADEN…';
     btn.disabled = true;
 
-    // Camera-toestemming meteen vragen (binnen de tap-gesture). De stream
-    // wordt later aan MindAR overgedragen i.p.v. gestopt en opnieuw gevraagd.
-    try {
-        heldStream = await realGetUserMedia({
-            audio: false,
-            video: { facingMode: 'environment' },
-        });
-    } catch (err) {
-        console.error(err);
-        fatalError('CAMERA GEBLOKKEERD');
-        return;
-    }
-
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
@@ -315,15 +297,11 @@ async function bootAR() {
         ]);
     } catch (e) {
         console.error(e);
-        heldStream.getTracks().forEach(function (t) { t.stop(); });
-        heldStream = null;
         fatalError('NIET BESCHIKBAAR');
         return;
     }
 
     if (!currentEssay || !currentMindBlobUrl) {
-        heldStream.getTracks().forEach(function (t) { t.stop(); });
-        heldStream = null;
         fatalError('NIET BESCHIKBAAR');
         return;
     }
