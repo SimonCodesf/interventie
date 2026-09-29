@@ -1,12 +1,12 @@
 import {memory,nextFrame} from '@tensorflow/tfjs';
 
 const tf = {memory,nextFrame};
-import ControllerWorker  from "mind-ar/src/image-target/controller.worker.js?worker&inline";
-import {Tracker} from 'mind-ar/src/image-target/tracker/tracker.js';
+import ControllerWorker  from "./controller.worker.js?worker&inline";
+import {Tracker} from './tracker/tracker.js';
 import {CropDetector} from './crop-detector.js';
 import * as msgpack from '@msgpack/msgpack';
-import {InputLoader} from 'mind-ar/src/image-target/input-loader.js';
-import {OneEuroFilter} from 'mind-ar/src/libs/one-euro-filter.js';
+import {InputLoader} from './input-loader.js';
+import {OneEuroFilter} from '../libs/one-euro-filter.js';
 
 const DEFAULT_FILTER_CUTOFF = 0.001; // 1Hz. time period in milliseconds
 const DEFAULT_FILTER_BETA = 1000;

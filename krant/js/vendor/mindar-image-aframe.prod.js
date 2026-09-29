@@ -1,4 +1,4 @@
-function _y(n, t) {
+function Oy(n, t) {
   for (var e = 0; e < t.length; e++) {
     const s = t[e];
     if (typeof s != "string" && !Array.isArray(s)) {
@@ -380,7 +380,7 @@ function es(n) {
     $(Number.isInteger(t) && t >= 0, () => `Tensor must have a shape comprised of positive integers but got shape [${n}].`);
   });
 }
-function On(n, t, e) {
+function _n(n, t, e) {
   if (t === 0)
     return 0;
   if (t === 1)
@@ -552,7 +552,7 @@ function gh(n, t) {
     return e.set(n, s), e.get(n);
   }
 }
-const il = "Abs", Lr = "Acos", zr = "Acosh", jo = "Add", xh = "AddN", bh = "All", wh = "Any", al = "ArgMax", ll = "ArgMin", Br = "Asin", Vr = "Asinh", Ur = "Atan", Wr = "Atanh", Gr = "Atan2", cl = "AvgPool", yh = "AvgPoolGrad", ul = "AvgPool3D", vh = "AvgPool3DGrad", hl = "BatchMatMul", dl = "BatchToSpaceND", Ih = "Bincount", kh = "BitwiseAnd", Zy = "BroadcastTo", Qm = "BroadcastArgs", Hr = "Cast", qr = "Ceil", jr = "ClipByValue", Ch = "Complex", fl = "ComplexAbs", pl = "Concat", ml = "Conv2D", Sh = "Conv2DBackpropFilter", gl = "Conv2DBackpropInput", xl = "Conv3D", $h = "Conv3DBackpropFilterV2", Th = "Conv3DBackpropInputV2", Kr = "Cos", Xr = "Cosh", Nh = "Cumprod", bl = "Cumsum", Eh = "CropAndResize", Rh = "DenseBincount", Dh = "DepthToSpace", wl = "DepthwiseConv2dNative", Ah = "DepthwiseConv2dNativeBackpropFilter", Mh = "DepthwiseConv2dNativeBackpropInput", tg = "Diag", yl = "Dilation2D", Su = "Dilation2DBackpropInput", $u = "Dilation2DBackpropFilter", Qy = "Draw", Yr = "RealDiv", Fh = "Einsum", Jr = "Elu", Oh = "EluGrad", Zr = "Erf", vl = "Equal", Qr = "Exp", Il = "ExpandDims", ti = "Expm1", _h = "FFT", Ph = "Fill", Lh = "FlipLeftRight", ei = "Floor", ni = "FloorDiv", kl = "FusedBatchNorm", Cl = "GatherV2", eg = "GatherNd", Sl = "Greater", si = "GreaterEqual", oi = "Identity", zh = "IFFT", Bh = "Imag", ri = "IsFinite", ii = "IsInf", ai = "IsNan", $l = "LeakyRelu", Tl = "Less", Nl = "LessEqual", ng = "LinSpace", li = "Log", ci = "Log1p", El = "LogicalAnd", Rl = "LogicalNot", Dl = "LogicalOr", tv = "LogSoftmax", Al = "LRN", Vh = "LRNGrad", Ml = "Max", ui = "Maximum", Fl = "MaxPool", Uh = "MaxPoolGrad", Ol = "MaxPool3D", Wh = "MaxPool3DGrad", sg = "MaxPoolWithArgmax", _l = "Mean", Pl = "Min", hi = "Minimum", Ll = "MirrorPad", di = "Mod", og = "Multinomial", fi = "Multiply", zl = "Neg", Bl = "NotEqual", Gh = "NonMaxSuppressionV3", Hh = "NonMaxSuppressionV4", qh = "NonMaxSuppressionV5", Vl = "OnesLike", Ul = "OneHot", Wl = "Pack", Gl = "PadV2", pi = "Pow", Hl = "Prelu", ql = "Prod", rg = "RaggedGather", ig = "RaggedRange", ag = "RaggedTensorToTensor", jh = "Range", Kh = "Real", mi = "Reciprocal", gi = "Relu", jl = "Reshape", Kl = "ResizeNearestNeighbor", Xh = "ResizeNearestNeighborGrad", Xl = "ResizeBilinear", Yh = "ResizeBilinearGrad", xi = "Relu6", Yl = "Reverse", bi = "Round", wi = "Rsqrt", lg = "ScatterNd", cg = "TensorScatterUpdate", ug = "SearchSorted", Jl = "Select", yi = "Selu", Zl = "Slice", vi = "Sin", Ii = "Sinh", ki = "Sign", Ci = "Sigmoid", Si = "Softplus", $i = "Sqrt", Ql = "Sum", tc = "SpaceToBatchND", ec = "SplitV", nc = "Softmax", hg = "SparseFillEmptyRows", dg = "SparseReshape", fg = "SparseSegmentMean", pg = "SparseSegmentSum", mg = "SparseToDense", Ti = "SquaredDifference", Jh = "Square", Zh = "StaticRegexReplace", Qh = "StridedSlice", gg = "StringNGrams", xg = "StringSplit", bg = "StringToHashBucketFast", Ni = "Sub", Ei = "Tan", Ri = "Tanh", Di = "Tile", td = "TopK", ed = "Transform", Eo = "Transpose", nd = "Unique", sc = "Unpack", oc = "UnsortedSegmentSum", rc = "ZerosLike", Ai = "Step", Tu = "FromPixels", sd = "RotateWithOffset", Aa = "_FusedMatMul", Ma = "FusedConv2D", wg = "FusedDepthwiseConv2D";
+const il = "Abs", Lr = "Acos", zr = "Acosh", jo = "Add", xh = "AddN", bh = "All", wh = "Any", al = "ArgMax", ll = "ArgMin", Br = "Asin", Vr = "Asinh", Ur = "Atan", Wr = "Atanh", Gr = "Atan2", cl = "AvgPool", yh = "AvgPoolGrad", ul = "AvgPool3D", vh = "AvgPool3DGrad", hl = "BatchMatMul", dl = "BatchToSpaceND", Ih = "Bincount", kh = "BitwiseAnd", Zy = "BroadcastTo", Qm = "BroadcastArgs", Hr = "Cast", qr = "Ceil", jr = "ClipByValue", Ch = "Complex", fl = "ComplexAbs", pl = "Concat", ml = "Conv2D", Sh = "Conv2DBackpropFilter", gl = "Conv2DBackpropInput", xl = "Conv3D", $h = "Conv3DBackpropFilterV2", Th = "Conv3DBackpropInputV2", Kr = "Cos", Xr = "Cosh", Nh = "Cumprod", bl = "Cumsum", Eh = "CropAndResize", Rh = "DenseBincount", Dh = "DepthToSpace", wl = "DepthwiseConv2dNative", Ah = "DepthwiseConv2dNativeBackpropFilter", Mh = "DepthwiseConv2dNativeBackpropInput", tg = "Diag", yl = "Dilation2D", Su = "Dilation2DBackpropInput", $u = "Dilation2DBackpropFilter", Qy = "Draw", Yr = "RealDiv", Fh = "Einsum", Jr = "Elu", _h = "EluGrad", Zr = "Erf", vl = "Equal", Qr = "Exp", Il = "ExpandDims", ti = "Expm1", Oh = "FFT", Ph = "Fill", Lh = "FlipLeftRight", ei = "Floor", ni = "FloorDiv", kl = "FusedBatchNorm", Cl = "GatherV2", eg = "GatherNd", Sl = "Greater", si = "GreaterEqual", oi = "Identity", zh = "IFFT", Bh = "Imag", ri = "IsFinite", ii = "IsInf", ai = "IsNan", $l = "LeakyRelu", Tl = "Less", Nl = "LessEqual", ng = "LinSpace", li = "Log", ci = "Log1p", El = "LogicalAnd", Rl = "LogicalNot", Dl = "LogicalOr", tv = "LogSoftmax", Al = "LRN", Vh = "LRNGrad", Ml = "Max", ui = "Maximum", Fl = "MaxPool", Uh = "MaxPoolGrad", _l = "MaxPool3D", Wh = "MaxPool3DGrad", sg = "MaxPoolWithArgmax", Ol = "Mean", Pl = "Min", hi = "Minimum", Ll = "MirrorPad", di = "Mod", og = "Multinomial", fi = "Multiply", zl = "Neg", Bl = "NotEqual", Gh = "NonMaxSuppressionV3", Hh = "NonMaxSuppressionV4", qh = "NonMaxSuppressionV5", Vl = "OnesLike", Ul = "OneHot", Wl = "Pack", Gl = "PadV2", pi = "Pow", Hl = "Prelu", ql = "Prod", rg = "RaggedGather", ig = "RaggedRange", ag = "RaggedTensorToTensor", jh = "Range", Kh = "Real", mi = "Reciprocal", gi = "Relu", jl = "Reshape", Kl = "ResizeNearestNeighbor", Xh = "ResizeNearestNeighborGrad", Xl = "ResizeBilinear", Yh = "ResizeBilinearGrad", xi = "Relu6", Yl = "Reverse", bi = "Round", wi = "Rsqrt", lg = "ScatterNd", cg = "TensorScatterUpdate", ug = "SearchSorted", Jl = "Select", yi = "Selu", Zl = "Slice", vi = "Sin", Ii = "Sinh", ki = "Sign", Ci = "Sigmoid", Si = "Softplus", $i = "Sqrt", Ql = "Sum", tc = "SpaceToBatchND", ec = "SplitV", nc = "Softmax", hg = "SparseFillEmptyRows", dg = "SparseReshape", fg = "SparseSegmentMean", pg = "SparseSegmentSum", mg = "SparseToDense", Ti = "SquaredDifference", Jh = "Square", Zh = "StaticRegexReplace", Qh = "StridedSlice", gg = "StringNGrams", xg = "StringSplit", bg = "StringToHashBucketFast", Ni = "Sub", Ei = "Tan", Ri = "Tanh", Di = "Tile", td = "TopK", ed = "Transform", Eo = "Transpose", nd = "Unique", sc = "Unpack", oc = "UnsortedSegmentSum", rc = "ZerosLike", Ai = "Step", Tu = "FromPixels", sd = "RotateWithOffset", Aa = "_FusedMatMul", Ma = "FusedConv2D", wg = "FusedDepthwiseConv2D";
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -1272,7 +1272,7 @@ function ov() {
   }, zc;
 }
 var Ig = ov();
-const kg = /* @__PURE__ */ nv(Ig), rv = /* @__PURE__ */ _y({
+const kg = /* @__PURE__ */ nv(Ig), rv = /* @__PURE__ */ Oy({
   __proto__: null,
   default: kg
 }, [Ig]);
@@ -2001,7 +2001,7 @@ function W() {
   return gh("Tensor", () => oe);
 }
 W();
-class Oa extends oe {
+class _a extends oe {
   constructor(t, e, s, o) {
     super(t.shape, t.dtype, t.dataId, o), this.trainable = e, this.name = s;
   }
@@ -2028,7 +2028,7 @@ class Oa extends oe {
     bn().disposeVariable(this), this.isDisposedInternal = !0;
   }
 }
-Object.defineProperty(Oa, Symbol.hasInstance, {
+Object.defineProperty(_a, Symbol.hasInstance, {
   value: (n) => n instanceof oe && n.assign != null && n.assign instanceof Function
 });
 /**
@@ -2171,7 +2171,7 @@ class Qf {
       this.registeredVariables[t].dispose();
   }
 }
-class Oo {
+class _o {
   constructor(t) {
     this.ENV = t, this.registry = {}, this.registryFactory = {}, this.pendingBackendInitId = 0, this.state = new Qf();
   }
@@ -2312,10 +2312,10 @@ class Oo {
     }
   }
   nextTensorId() {
-    return Oo.nextTensorId++;
+    return _o.nextTensorId++;
   }
   nextVariableId() {
-    return Oo.nextVariableId++;
+    return _o.nextVariableId++;
   }
   /**
    * This method is called instead of the public-facing tensor.clone() when
@@ -2495,7 +2495,7 @@ class Oo {
   }
   makeVariable(t, e = !0, s, o) {
     s = s || this.nextVariableId().toString(), o != null && o !== t.dtype && (t = t.cast(o));
-    const r = new Oa(t, e, s, this.nextTensorId());
+    const r = new _a(t, e, s, this.nextTensorId());
     if (this.state.registeredVariables[r.name] != null)
       throw new Error(`Variable with name ${r.name} was already registered`);
     return this.state.registeredVariables[r.name] = r, this.incRef(r, this.backend), r;
@@ -2508,7 +2508,7 @@ class Oo {
       dtype: t.dtype,
       shape: t.shape,
       bytes: s
-    })), t instanceof Oa || this.track(t);
+    })), t instanceof _a || this.track(t);
   }
   // Track the tensor by dataId and increase the refCount for the dataId in the
   // backend.
@@ -2691,8 +2691,8 @@ class Oo {
     this.backendName = null, this.backendInstance = null, this.pendingBackendInit = null;
   }
 }
-Oo.nextTensorId = 0;
-Oo.nextVariableId = 0;
+_o.nextTensorId = 0;
+_o.nextVariableId = 0;
 function kv(n) {
   const t = ph(q(n), "float32");
   return M.makeTensor(t, n, "float32");
@@ -2701,7 +2701,7 @@ function Dg() {
   const n = Zm();
   if (n._tfengine == null) {
     const t = new qy(n);
-    n._tfengine = new Oo(t);
+    n._tfengine = new _o(t);
   }
   return Yy(n._tfengine.ENV), wv(() => n._tfengine), n._tfengine;
 }
@@ -2843,7 +2843,7 @@ function E(n, t, e, s = "numeric") {
   const a = o !== "string" ? uo(n, o) : Xs(n, [], !0);
   return M.makeTensor(a, r, o);
 }
-function Og(n, t, e, s = "numeric") {
+function _g(n, t, e, s = "numeric") {
   if (!Array.isArray(n))
     throw new Error(`Argument ${t} passed to ${e} must be a \`Tensor[]\` or \`TensorLike[]\``);
   return n.map((r, i) => E(r, `${t}[${i}]`, e, s));
@@ -2905,7 +2905,7 @@ function Tv(n, t) {
   const o = { real: e, imag: s };
   return M.runKernel(Ch, o);
 }
-const _o = /* @__PURE__ */ P({ complex_: Tv });
+const Oo = /* @__PURE__ */ P({ complex_: Tv });
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -3052,10 +3052,10 @@ function Nv(n, t) {
 function Lt() {
   return M;
 }
-function Ou() {
+function _u() {
   return M.memory();
 }
-function O(n, t) {
+function _(n, t) {
   return M.tidy(n, t);
 }
 function It(n) {
@@ -3064,7 +3064,7 @@ function It(n) {
 function Je(n) {
   return M.keep(n);
 }
-function _g(n, t, e = 1) {
+function Og(n, t, e = 1) {
   return M.registerBackend(n, t, e);
 }
 function us() {
@@ -3271,7 +3271,7 @@ class he {
     }), o;
   }
 }
-const Ov = (n) => he.getSaveHandlers(n);
+const _v = (n) => he.getSaveHandlers(n);
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -3288,7 +3288,7 @@ const Ov = (n) => he.getSaveHandlers(n);
  * limitations under the License.
  * =============================================================================
  */
-const _u = "tensorflowjs", Pu = 1, Gs = "models_store", hs = "model_info_store";
+const Ou = "tensorflowjs", Pu = 1, Gs = "models_store", hs = "model_info_store";
 function Lg() {
   if (!V().getBool("IS_BROWSER"))
     throw new Error("Failed to obtain IndexedDB factory because the current environmentis not a web browser.");
@@ -3331,7 +3331,7 @@ class Ys {
    */
   databaseAction(t, e) {
     return new Promise((s, o) => {
-      const r = this.indexedDB.open(_u, Pu);
+      const r = this.indexedDB.open(Ou, Pu);
       r.onupgradeneeded = () => Lu(r), r.onsuccess = () => {
         const i = r.result;
         if (e == null) {
@@ -3378,10 +3378,10 @@ class Ys {
   }
 }
 Ys.URL_SCHEME = "indexeddb://";
-const zg = (n) => V().getBool("IS_BROWSER") && !Array.isArray(n) && n.startsWith(Ys.URL_SCHEME) ? _v(n.slice(Ys.URL_SCHEME.length)) : null;
+const zg = (n) => V().getBool("IS_BROWSER") && !Array.isArray(n) && n.startsWith(Ys.URL_SCHEME) ? Ov(n.slice(Ys.URL_SCHEME.length)) : null;
 he.registerSaveRouter(zg);
 he.registerLoadRouter(zg);
-function _v(n) {
+function Ov(n) {
   return new Ys(n);
 }
 function Pv(n) {
@@ -3393,7 +3393,7 @@ class Lv {
   }
   async listModels() {
     return new Promise((t, e) => {
-      const s = this.indexedDB.open(_u, Pu);
+      const s = this.indexedDB.open(Ou, Pu);
       s.onupgradeneeded = () => Lu(s), s.onsuccess = () => {
         const o = s.result, r = o.transaction(hs, "readonly"), a = r.objectStore(hs).getAll();
         a.onsuccess = () => {
@@ -3407,7 +3407,7 @@ class Lv {
   }
   async removeModel(t) {
     return t = Pv(t), new Promise((e, s) => {
-      const o = this.indexedDB.open(_u, Pu);
+      const o = this.indexedDB.open(Ou, Pu);
       o.onupgradeneeded = () => Lu(o), o.onsuccess = () => {
         const r = o.result, i = r.transaction(hs, "readwrite"), a = i.objectStore(hs), l = a.get(t);
         let c;
@@ -4208,7 +4208,7 @@ const kI = /* @__PURE__ */ P({ atanh_: II });
  * limitations under the License.
  * =============================================================================
  */
-function Oi(n, t, e, s, o = "NHWC", r) {
+function _i(n, t, e, s, o = "NHWC", r) {
   const i = n[3], a = [...t, i], l = ss(o);
   return we(n, a, e, r, s, null, null, l);
 }
@@ -4439,7 +4439,7 @@ function NI(n, t) {
   const s = { x: E(n, "x", "reshape", "string_or_numeric") }, o = { shape: t };
   return M.runKernel(jl, s, o);
 }
-const _ = /* @__PURE__ */ P({ reshape_: NI });
+const O = /* @__PURE__ */ P({ reshape_: NI });
 /**
  * @license
  * Copyright 2020 Google LLC. All Rights Reserved.
@@ -4460,10 +4460,10 @@ function EI(n, t, e, s, o) {
   const r = E(n, "x", "avgPool", "float32"), i = 1;
   $(Se(e, i), () => `Error in avgPool: Either strides or dilations must be 1. Got strides ${e} and dilations '${i}'`);
   let a = r, l = !1;
-  r.rank === 3 && (l = !0, a = _(r, [1, r.shape[0], r.shape[1], r.shape[2]])), $(a.rank === 4, () => `Error in avgPool: x must be rank 4 but got rank ${a.rank}.`), Be("avgPool", s, o);
+  r.rank === 3 && (l = !0, a = O(r, [1, r.shape[0], r.shape[1], r.shape[2]])), $(a.rank === 4, () => `Error in avgPool: x must be rank 4 but got rank ${a.rank}.`), Be("avgPool", s, o);
   const c = { x: a }, u = { filterSize: t, strides: e, pad: s, dimRoundingMode: o };
   let h = M.runKernel(cl, c, u);
-  return h = st(h, r.dtype), l ? _(h, [h.shape[1], h.shape[2], h.shape[3]]) : h;
+  return h = st(h, r.dtype), l ? O(h, [h.shape[1], h.shape[2], h.shape[3]]) : h;
 }
 const ad = /* @__PURE__ */ P({ avgPool_: EI });
 /**
@@ -4485,10 +4485,10 @@ const ad = /* @__PURE__ */ P({ avgPool_: EI });
 function RI(n, t, e, s, o, r = "NDHWC") {
   const i = E(n, "x", "avgPool3d", "float32");
   let a = i, l = !1;
-  i.rank === 4 && (l = !0, a = _(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]])), $(a.rank === 5, () => `Error in avgPool3d: x must be rank 5 but got rank ${a.rank}.`), $(r === "NDHWC", () => `Error in avgPool3d: Only NDHWC is currently supported, but got dataFormat of ${r}`), $(typeof e == "number" && e > 0 || Array.isArray(e) && e[0] > 0 && e[1] > 0 && e[2] > 0, () => `Error in avgPool3d: Stride must be > 0, but got '${e}'`), Be("avgPool3d", s, o);
+  i.rank === 4 && (l = !0, a = O(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]])), $(a.rank === 5, () => `Error in avgPool3d: x must be rank 5 but got rank ${a.rank}.`), $(r === "NDHWC", () => `Error in avgPool3d: Only NDHWC is currently supported, but got dataFormat of ${r}`), $(typeof e == "number" && e > 0 || Array.isArray(e) && e[0] > 0 && e[1] > 0 && e[2] > 0, () => `Error in avgPool3d: Stride must be > 0, but got '${e}'`), Be("avgPool3d", s, o);
   const c = { x: a }, u = { filterSize: t, strides: e, pad: s, dimRoundingMode: o, dataFormat: r };
   let h = M.runKernel(ul, c, u);
-  return h = st(h, a.dtype), l ? _(h, [h.shape[1], h.shape[2], h.shape[3], h.shape[4]]) : h;
+  return h = st(h, a.dtype), l ? O(h, [h.shape[1], h.shape[2], h.shape[3], h.shape[4]]) : h;
 }
 const DI = /* @__PURE__ */ P({ avgPool3d_: RI });
 /**
@@ -4509,7 +4509,7 @@ const DI = /* @__PURE__ */ P({ avgPool3d_: RI });
  */
 function AI(n, t = 0) {
   $(n.length >= 1, () => "Pass at least one tensor to concat");
-  const e = Og(n, "tensors", "concat", "string_or_numeric");
+  const e = _g(n, "tensors", "concat", "string_or_numeric");
   if (e[0].dtype === "complex64" && e.forEach((r) => {
     if (r.dtype !== "complex64")
       throw new Error(`Cannot concatenate complex64 tensors with a tensor
@@ -4580,14 +4580,14 @@ const Ko = /* @__PURE__ */ P({ sigmoid_: FI });
  * limitations under the License.
  * =============================================================================
  */
-function OI(n, t, e) {
+function _I(n, t, e) {
   const s = E(n, "x", "slice", "string_or_numeric");
   if (s.rank === 0)
     throw new Error("Slicing scalar is not possible");
   const o = { x: s }, r = { begin: t, size: e };
   return M.runKernel(Zl, o, r);
 }
-const Bt = /* @__PURE__ */ P({ slice_: OI });
+const Bt = /* @__PURE__ */ P({ slice_: _I });
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -4604,11 +4604,11 @@ const Bt = /* @__PURE__ */ P({ slice_: OI });
  * limitations under the License.
  * =============================================================================
  */
-function _I(n) {
+function OI(n) {
   const e = { x: E(n, "x", "tanh", "float32") };
   return M.runKernel(Ri, e);
 }
-const lc = /* @__PURE__ */ P({ tanh_: _I });
+const lc = /* @__PURE__ */ P({ tanh_: OI });
 /**
  * @license
  * Copyright 2020 Google LLC. All Rights Reserved.
@@ -4634,7 +4634,7 @@ function PI(n, t, e) {
 const ld = /* @__PURE__ */ P({ batchToSpaceND_: PI });
 function LI(n) {
   let t;
-  return n.rank === 0 || n.rank === 1 ? t = _(n, [1, 1, 1, n.size]) : n.rank === 2 ? t = _(n, [1, 1, n.shape[0], n.shape[1]]) : n.rank === 3 ? t = _(n, [1, n.shape[0], n.shape[1], n.shape[2]]) : t = n, t;
+  return n.rank === 0 || n.rank === 1 ? t = O(n, [1, 1, 1, n.size]) : n.rank === 2 ? t = O(n, [1, 1, n.shape[0], n.shape[1]]) : n.rank === 3 ? t = O(n, [1, n.shape[0], n.shape[1], n.shape[2]]) : t = n, t;
 }
 /**
  * @license
@@ -4666,7 +4666,7 @@ function zI(n, t, e, s, o, r) {
     mean: a,
     variance: l
   }, f = { varianceEpsilon: r }, p = M.runKernel(kl, d, f);
-  return _(p, i.shape);
+  return O(p, i.shape);
 }
 const cc = /* @__PURE__ */ P({ batchNorm_: zI });
 function BI(n, t, e, s, o, r) {
@@ -4741,7 +4741,7 @@ function KI(n, t) {
     const c = e.shape.slice();
     for (; c.length < t.length; )
       c.unshift(1);
-    e = _(e, c);
+    e = O(e, c);
   }
   const o = e.shape, r = Array.from(t);
   for (let c = t.length - 1; c >= 0; c--)
@@ -4860,19 +4860,19 @@ const rk = /* @__PURE__ */ P({ concat4d_: ok });
 function ik(n, t, e, s, o = "NHWC", r = [1, 1], i) {
   const a = E(n, "x", "conv2d", "float32"), l = E(t, "filter", "conv2d", "float32");
   let c = a, u = !1;
-  a.rank === 3 && (u = !0, c = _(a, [1, a.shape[0], a.shape[1], a.shape[2]])), $(c.rank === 4, () => `Error in conv2d: input must be rank 4, but got rank ${c.rank}.`), $(l.rank === 4, () => `Error in conv2d: filter must be rank 4, but got rank ${l.rank}.`), Be("conv2d", s, i);
+  a.rank === 3 && (u = !0, c = O(a, [1, a.shape[0], a.shape[1], a.shape[2]])), $(c.rank === 4, () => `Error in conv2d: input must be rank 4, but got rank ${c.rank}.`), $(l.rank === 4, () => `Error in conv2d: filter must be rank 4, but got rank ${l.rank}.`), Be("conv2d", s, i);
   const h = o === "NHWC" ? c.shape[3] : c.shape[1];
   $(h === l.shape[2], () => `Error in conv2d: depth of input (${h}) must match input depth for filter ${l.shape[2]}.`), $(Se(e, r), () => `Error in conv2D: Either strides or dilations must be 1. Got strides ${e} and dilations '${r}'`), $(Qs(r), () => "Error in conv2D: Dilated rates should be larger than 0."), $(Qs(e), () => "Error in conv2D: Strides should be larger than 0.");
   const d = { x: c, filter: l }, f = { strides: e, pad: s, dataFormat: o, dilations: r, dimRoundingMode: i }, p = M.runKernel(ml, d, f);
-  return u ? _(p, [p.shape[1], p.shape[2], p.shape[3]]) : p;
+  return u ? O(p, [p.shape[1], p.shape[2], p.shape[3]]) : p;
 }
 const to = /* @__PURE__ */ P({ conv2d_: ik });
 function ak(n, t, e, s, o = "NWC", r = 1, i) {
   const a = E(n, "x", "conv1d"), l = E(t, "filter", "conv1d");
   let c = a, u = !1;
-  a.rank === 2 && (u = !0, c = _(a, [1, a.shape[0], a.shape[1]])), $(c.rank === 3, () => `Error in conv1d: input must be rank 3, but got rank ${c.rank}.`), $(l.rank === 3, () => `Error in conv1d: filter must be rank 3, but got rank ${l.rank}.`), Be("conv1d", s, i), $(c.shape[2] === l.shape[1], () => `Error in conv1d: depth of input (${c.shape[2]}) must match input depth for filter ${l.shape[1]}.`), $(Se(e, r), () => `Error in conv1D: Either stride or dilation must be 1. Got stride ${e} and dilation '${r}'`), $(Qs(r), () => "Error in conv1D: Dilated rates should be larger than 0."), $(Qs(e), () => "Error in conv1D: Stride should be larger than 0."), $(o === "NWC", () => `Error in conv1d: got dataFormat of ${o} but only NWC is currently supported.`);
-  const h = _(l, [1, l.shape[0], l.shape[1], l.shape[2]]), d = _(c, [c.shape[0], 1, c.shape[1], c.shape[2]]), g = to(d, h, [1, e], s, "NHWC", [1, r], i);
-  return u ? _(g, [g.shape[2], g.shape[3]]) : _(g, [g.shape[0], g.shape[2], g.shape[3]]);
+  a.rank === 2 && (u = !0, c = O(a, [1, a.shape[0], a.shape[1]])), $(c.rank === 3, () => `Error in conv1d: input must be rank 3, but got rank ${c.rank}.`), $(l.rank === 3, () => `Error in conv1d: filter must be rank 3, but got rank ${l.rank}.`), Be("conv1d", s, i), $(c.shape[2] === l.shape[1], () => `Error in conv1d: depth of input (${c.shape[2]}) must match input depth for filter ${l.shape[1]}.`), $(Se(e, r), () => `Error in conv1D: Either stride or dilation must be 1. Got stride ${e} and dilation '${r}'`), $(Qs(r), () => "Error in conv1D: Dilated rates should be larger than 0."), $(Qs(e), () => "Error in conv1D: Stride should be larger than 0."), $(o === "NWC", () => `Error in conv1d: got dataFormat of ${o} but only NWC is currently supported.`);
+  const h = O(l, [1, l.shape[0], l.shape[1], l.shape[2]]), d = O(c, [c.shape[0], 1, c.shape[1], c.shape[2]]), g = to(d, h, [1, e], s, "NHWC", [1, r], i);
+  return u ? O(g, [g.shape[2], g.shape[3]]) : O(g, [g.shape[0], g.shape[2], g.shape[3]]);
 }
 const qg = /* @__PURE__ */ P({ conv1d_: ak });
 /**
@@ -4894,11 +4894,11 @@ const qg = /* @__PURE__ */ P({ conv1d_: ak });
 function lk(n, t, e, s, o, r = "NHWC", i) {
   $(n.length === t.rank, () => `Length of inShape (${n.length}) and rank of dy (${t.rank}) must match`);
   let a = n, l = t, c = !1;
-  t.rank === 3 && (c = !0, l = _(t, [1, t.shape[0], t.shape[1], t.shape[2]]), a = [1, n[0], n[1], n[2]]), $(a.length === 4, () => `Error in conv2dDerInput: inShape must be length 4, but got length ${a.length}.`), $(l.rank === 4, () => `Error in conv2dDerInput: dy must be rank 4, but got rank ${l.rank}`), $(e.rank === 4, () => `Error in conv2dDerInput: filter must be rank 4, but got rank ${e.rank}`);
+  t.rank === 3 && (c = !0, l = O(t, [1, t.shape[0], t.shape[1], t.shape[2]]), a = [1, n[0], n[1], n[2]]), $(a.length === 4, () => `Error in conv2dDerInput: inShape must be length 4, but got length ${a.length}.`), $(l.rank === 4, () => `Error in conv2dDerInput: dy must be rank 4, but got rank ${l.rank}`), $(e.rank === 4, () => `Error in conv2dDerInput: filter must be rank 4, but got rank ${e.rank}`);
   const u = r === "NHWC" ? a[3] : a[1], h = r === "NHWC" ? l.shape[3] : l.shape[1];
   $(u === e.shape[2], () => `Error in conv2dDerInput: depth of input (${u}) must match input depth for filter ${e.shape[2]}.`), $(h === e.shape[3], () => `Error in conv2dDerInput: depth of output (${h}) must match output depth for filter ${e.shape[3]}.`), Be("conv2dDerInput", o, i);
   const d = { dy: l, filter: e }, f = { strides: s, pad: o, dataFormat: r, dimRoundingMode: i, inputShape: a }, p = M.runKernel(gl, d, f);
-  return c ? _(p, [p.shape[1], p.shape[2], p.shape[3]]) : p;
+  return c ? O(p, [p.shape[1], p.shape[2], p.shape[3]]) : p;
 }
 const cd = /* @__PURE__ */ P({ conv2DBackpropInput_: lk });
 function ck(n, t, e, s, o, r) {
@@ -4925,9 +4925,9 @@ const jg = /* @__PURE__ */ P({ conv2dTranspose_: ck });
 function uk(n, t, e, s, o = "NDHWC", r = [1, 1, 1]) {
   const i = E(n, "x", "conv3d"), a = E(t, "filter", "conv3d");
   let l = i, c = !1;
-  i.rank === 4 && (c = !0, l = _(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]])), $(l.rank === 5, () => `Error in conv3d: input must be rank 5, but got rank ${l.rank}.`), $(a.rank === 5, () => `Error in conv3d: filter must be rank 5, but got rank ${a.rank}.`), $(l.shape[4] === a.shape[3], () => `Error in conv3d: depth of input (${l.shape[4]}) must match input depth for filter ${a.shape[3]}.`), $(Se(e, r), () => `Error in conv3D: Either strides or dilations must be 1. Got strides ${e} and dilations '${r}'`), $(o === "NDHWC", () => `Error in conv3d: got dataFormat of ${o} but only NDHWC is currently supported.`), $(Qs(r), () => "Error in conv3D: Dilated rates should be larger than 0."), $(Qs(e), () => "Error in conv3D: Strides should be larger than 0.");
+  i.rank === 4 && (c = !0, l = O(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]])), $(l.rank === 5, () => `Error in conv3d: input must be rank 5, but got rank ${l.rank}.`), $(a.rank === 5, () => `Error in conv3d: filter must be rank 5, but got rank ${a.rank}.`), $(l.shape[4] === a.shape[3], () => `Error in conv3d: depth of input (${l.shape[4]}) must match input depth for filter ${a.shape[3]}.`), $(Se(e, r), () => `Error in conv3D: Either strides or dilations must be 1. Got strides ${e} and dilations '${r}'`), $(o === "NDHWC", () => `Error in conv3d: got dataFormat of ${o} but only NDHWC is currently supported.`), $(Qs(r), () => "Error in conv3D: Dilated rates should be larger than 0."), $(Qs(e), () => "Error in conv3D: Strides should be larger than 0.");
   const u = { x: l, filter: a }, h = { strides: e, pad: s, dataFormat: o, dilations: r }, d = M.runKernel(xl, u, h);
-  return c ? _(d, [d.shape[1], d.shape[2], d.shape[3], d.shape[4]]) : d;
+  return c ? O(d, [d.shape[1], d.shape[2], d.shape[3], d.shape[4]]) : d;
 }
 const hk = /* @__PURE__ */ P({ conv3d_: uk });
 /**
@@ -4949,11 +4949,11 @@ const hk = /* @__PURE__ */ P({ conv3d_: uk });
 function dk(n, t, e, s, o) {
   $(n.length === t.rank, () => `Length of inShape (${n.length}) and rank of dy (${t.rank}) must match`);
   let r = n, i = t, a = !1;
-  t.rank === 4 && (a = !0, i = _(t, [1, t.shape[0], t.shape[1], t.shape[2], t.shape[3]]), r = [1, n[0], n[1], n[2], n[3]]);
+  t.rank === 4 && (a = !0, i = O(t, [1, t.shape[0], t.shape[1], t.shape[2], t.shape[3]]), r = [1, n[0], n[1], n[2], n[3]]);
   const l = r[4], c = i.shape[4];
   $(r.length === 5, () => `Error in conv3dDerInput: inShape must be length 5, but got length ${r.length}.`), $(i.rank === 5, () => `Error in conv3dDerInput: dy must be rank 5, but got rank ${i.rank}`), $(e.rank === 5, () => `Error in conv3dDerInput: filter must be rank 5, but got rank ${e.rank}`), $(l === e.shape[3], () => `Error in conv3dDerInput: depth of input (${l}) must match input depth for filter ${e.shape[3]}.`), $(c === e.shape[4], () => `Error in conv3dDerInput: depth of output (${c}) must match output depth for filter ${e.shape[4]}.`);
   const u = { dy: i, filter: e }, h = { pad: o, strides: s, inputShape: r }, d = M.runKernel(Th, u, h);
-  return a ? _(d, [d.shape[1], d.shape[2], d.shape[3], d.shape[4]]) : d;
+  return a ? O(d, [d.shape[1], d.shape[2], d.shape[3], d.shape[4]]) : d;
 }
 const Kg = /* @__PURE__ */ P({ conv3DBackpropInput_: dk });
 function fk(n, t, e, s, o) {
@@ -5114,11 +5114,11 @@ const vk = /* @__PURE__ */ P({ depthToSpace_: yk });
 function Ik(n, t, e, s, o = "NHWC", r = [1, 1], i) {
   const a = E(n, "x", "depthwiseConv2d", "float32"), l = E(t, "filter", "depthwiseConv2d", "float32");
   let c = a, u = !1;
-  a.rank === 3 && (u = !0, c = _(a, [1, a.shape[0], a.shape[1], a.shape[2]])), $(c.rank === 4, () => `Error in depthwiseConv2d: input must be rank 4, but got rank ${c.rank}.`), $(l.rank === 4, () => `Error in depthwiseConv2d: filter must be rank 4, but got rank ${l.rank}.`);
+  a.rank === 3 && (u = !0, c = O(a, [1, a.shape[0], a.shape[1], a.shape[2]])), $(c.rank === 4, () => `Error in depthwiseConv2d: input must be rank 4, but got rank ${c.rank}.`), $(l.rank === 4, () => `Error in depthwiseConv2d: filter must be rank 4, but got rank ${l.rank}.`);
   const h = o === "NHWC" ? c.shape[3] : c.shape[1];
   $(h === l.shape[2], () => `Error in depthwiseConv2d: number of input channels (${h}) must match the inChannels dimension in filter ${l.shape[2]}.`), Be("depthwiseConv2d", s, i);
   const d = { x: c, filter: l }, f = { strides: e, pad: s, dataFormat: o, dilations: r, dimRoundingMode: i }, p = M.runKernel(wl, d, f);
-  return u ? _(p, [p.shape[1], p.shape[2], p.shape[3]]) : p;
+  return u ? O(p, [p.shape[1], p.shape[2], p.shape[3]]) : p;
 }
 const hd = /* @__PURE__ */ P({ depthwiseConv2d_: Ik });
 /**
@@ -5141,9 +5141,9 @@ function kk(n, t, e, s, o = [1, 1], r = "NHWC") {
   const i = E(n, "x", "dilation2d"), a = E(t, "filter", "dilation2d");
   $(i.rank === 3 || i.rank === 4, () => `Error in dilation2d: input must be rank 3 or 4, but got rank ${i.rank}.`), $(a.rank === 3, () => `Error in dilation2d: filter must be rank 3, but got rank ${a.rank}.`), $(r === "NHWC", () => `Error in dilation2d: Only NHWC is currently supported, but got dataFormat of ${r}`);
   let l = i, c = !1;
-  i.rank === 3 && (l = _(i, [1, i.shape[0], i.shape[1], i.shape[2]]), c = !0), $(l.shape[3] === a.shape[2], () => `Error in dilation2d:  input and filter must have the same depth: ${l.shape[3]} vs ${a.shape[2]}`);
+  i.rank === 3 && (l = O(i, [1, i.shape[0], i.shape[1], i.shape[2]]), c = !0), $(l.shape[3] === a.shape[2], () => `Error in dilation2d:  input and filter must have the same depth: ${l.shape[3]} vs ${a.shape[2]}`);
   const u = { x: l, filter: a }, h = { strides: e, pad: s, dilations: o }, d = M.runKernel(yl, u, h);
-  return c ? _(d, [d.shape[1], d.shape[2], d.shape[3]]) : d;
+  return c ? O(d, [d.shape[1], d.shape[2], d.shape[3]]) : d;
 }
 const Ck = /* @__PURE__ */ P({ dilation2d_: kk });
 /**
@@ -5309,16 +5309,16 @@ function Rk(n, t) {
   $((e.rank === 1 || e.rank === 2) && (s.rank === 1 || s.rank === 2), () => `Error in dot: inputs must all be rank 1 or 2, but got ranks ${e.rank} and ${s.rank}.`);
   const o = e.rank === 1 ? e.size : e.shape[1], r = s.rank === 1 ? s.size : s.shape[0];
   if ($(o === r, () => `Error in dot: inner dimensions of inputs must match, but got ${o} and ${r}.`), e.rank === 1 && s.rank === 1) {
-    const i = _(e, [1, -1]), a = _(s, [-1, 1]), l = Tt(i, a);
-    return _(l, []);
+    const i = O(e, [1, -1]), a = O(s, [-1, 1]), l = Tt(i, a);
+    return O(l, []);
   } else if (e.rank === 1 && s.rank === 2) {
-    const i = _(e, [1, -1]), a = _(s, [s.shape[0], s.shape[1]]), l = Tt(i, a);
-    return _(l, [l.size]);
+    const i = O(e, [1, -1]), a = O(s, [s.shape[0], s.shape[1]]), l = Tt(i, a);
+    return O(l, [l.size]);
   } else if (e.rank === 2 && s.rank === 1) {
-    const i = _(s, [-1, 1]), a = Tt(e, i);
-    return _(a, [a.size]);
+    const i = O(s, [-1, 1]), a = Tt(e, i);
+    return O(a, [a.size]);
   } else {
-    const i = _(s, [s.shape[0], s.shape[1]]);
+    const i = O(s, [s.shape[0], s.shape[1]]);
     return Tt(e, i);
   }
 }
@@ -5464,11 +5464,11 @@ function Qt(n, t) {
  * limitations under the License.
  * =============================================================================
  */
-function Ok(n, t = null, e = !1) {
+function _k(n, t = null, e = !1) {
   const o = { x: E(n, "x", "max") }, r = { reductionIndices: t, keepDims: e };
   return M.runKernel(Ml, o, r);
 }
-const In = /* @__PURE__ */ P({ max_: Ok });
+const In = /* @__PURE__ */ P({ max_: _k });
 /**
  * @license
  * Copyright 2020 Google Inc. All Rights Reserved.
@@ -5485,11 +5485,11 @@ const In = /* @__PURE__ */ P({ max_: Ok });
  * limitations under the License.
  * =============================================================================
  */
-function _k(n, t = null, e = !1) {
+function Ok(n, t = null, e = !1) {
   const o = { x: E(n, "x", "min") }, r = { axis: t, keepDims: e };
   return M.runKernel(Pl, o, r);
 }
-const _a = /* @__PURE__ */ P({ min_: _k });
+const Oa = /* @__PURE__ */ P({ min_: Ok });
 /**
  * @license
  * Copyright 2020 Google LLC. All Rights Reserved.
@@ -5625,20 +5625,20 @@ function Vk(n, t = "euclidean", e = null, s = !1) {
     const i = yt(e, n.shape);
     r = se(o.shape, i);
   }
-  return _(o, r);
+  return O(o, r);
 }
 function Qg(n, t, e = null) {
   if (n.rank === 0)
     return Ne(n);
   if (n.rank !== 1 && e === null)
-    return Qg(_(n, [-1]), t, e);
+    return Qg(O(n, [-1]), t, e);
   if (n.rank === 1 || typeof e == "number" || Array.isArray(e) && e.length === 1) {
     if (t === 1)
       return ct(Ne(n), e);
     if (t === 1 / 0)
       return In(Ne(n), e);
     if (t === -1 / 0)
-      return _a(Ne(n), e);
+      return Oa(Ne(n), e);
     if (t === "euclidean" || t === 2)
       return Ce(ct(eo(Ne(n), Nt(2, "int32")), e));
     throw new Error(`Error in norm: invalid ord value: ${t}`);
@@ -5649,7 +5649,7 @@ function Qg(n, t, e = null) {
     if (t === 1 / 0)
       return In(ct(Ne(n), e[1]), e[0]);
     if (t === -1 / 0)
-      return _a(ct(Ne(n), e[1]), e[0]);
+      return Oa(ct(Ne(n), e[1]), e[0]);
     if (t === "fro" || t === "euclidean")
       return Ce(ct(Ut(n), e));
     throw new Error(`Error in norm: invalid ord value: ${t}`);
@@ -5720,7 +5720,7 @@ function Hk(n, t = 0) {
   const s = { input: e }, o = { dim: t };
   return M.runKernel(Il, s, o);
 }
-const Oe = /* @__PURE__ */ P({ expandDims_: Hk });
+const _e = /* @__PURE__ */ P({ expandDims_: Hk });
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -5786,15 +5786,15 @@ function Xk(n, t, e, s = "float32") {
   const o = wt([n, t], s), r = n <= t ? n : t;
   for (let a = 0; a < r; ++a)
     o.set(1, a, a);
-  const i = _(o.toTensor(), [n, t]);
+  const i = O(o.toTensor(), [n, t]);
   if (e == null)
     return i;
   if (e.length === 1)
-    return yn(Oe(i, 0), [e[0], 1, 1]);
+    return yn(_e(i, 0), [e[0], 1, 1]);
   if (e.length === 2)
-    return yn(Oe(Oe(i, 0), 0), [e[0], e[1], 1, 1]);
+    return yn(_e(_e(i, 0), 0), [e[0], e[1], 1, 1]);
   if (e.length === 3)
-    return yn(Oe(Oe(Oe(i, 0), 0), 0), [
+    return yn(_e(_e(_e(i, 0), 0), 0), [
       e[0],
       e[1],
       e[2],
@@ -6064,9 +6064,9 @@ function uC(n, t = 5, e = 1, s = 1, o = 0.5) {
   $(r.rank === 4 || r.rank === 3, () => `Error in localResponseNormalization: x must be rank 3 or 4 but got
                rank ${r.rank}.`), $(Fo(t), () => `Error in localResponseNormalization: depthRadius must be an integer but got depthRadius ${t}.`);
   let i = r, a = !1;
-  r.rank === 3 && (a = !0, i = _(r, [1, r.shape[0], r.shape[1], r.shape[2]]));
+  r.rank === 3 && (a = !0, i = O(r, [1, r.shape[0], r.shape[1], r.shape[2]]));
   const l = { x: i }, c = { depthRadius: t, bias: e, alpha: s, beta: o }, u = M.runKernel(Al, l, c);
-  return a ? _(u, [u.shape[1], u.shape[2], u.shape[3]]) : u;
+  return a ? O(u, [u.shape[1], u.shape[2], u.shape[3]]) : u;
 }
 const hC = /* @__PURE__ */ P({ localResponseNormalization_: uC });
 /**
@@ -6128,7 +6128,7 @@ const e0 = /* @__PURE__ */ P({ log1p_: fC });
  * =============================================================================
  */
 function pC(n, t) {
-  $(ku(n), () => "The f passed in variableGrads(f) must be a function"), $(t == null || Array.isArray(t) && t.every((c) => c instanceof Oa), () => "The varList passed in variableGrads(f, varList) must be an array of variables");
+  $(ku(n), () => "The f passed in variableGrads(f) must be a function"), $(t == null || Array.isArray(t) && t.every((c) => c instanceof _a), () => "The varList passed in variableGrads(f, varList) must be an array of variables");
   const e = t != null;
   if (!e) {
     t = [];
@@ -6188,7 +6188,7 @@ function gC(n) {
   const e = { x: E(n, "x", "softplus") };
   return M.runKernel(Si, e);
 }
-const _i = /* @__PURE__ */ P({ softplus_: gC });
+const Oi = /* @__PURE__ */ P({ softplus_: gC });
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -6207,7 +6207,7 @@ const _i = /* @__PURE__ */ P({ softplus_: gC });
  */
 function xC(n) {
   const t = E(n, "x", "logSigmoid");
-  return Lo((s) => ({ value: Jt(_i(Jt(s))), gradFunc: (i) => A(i, Ko(Jt(s))) }))(t);
+  return Lo((s) => ({ value: Jt(Oi(Jt(s))), gradFunc: (i) => A(i, Ko(Jt(s))) }))(t);
 }
 const bC = /* @__PURE__ */ P({ logSigmoid_: xC });
 /**
@@ -6284,10 +6284,10 @@ function vC(n, t = null, e = !1) {
     o,
     !0
     /* keepDims */
-  ), i = ft(s, r), a = Bn(i), l = ct(a, o), c = Vn(l), u = Z(_(r, c.shape), c);
+  ), i = ft(s, r), a = Bn(i), l = ct(a, o), c = Vn(l), u = Z(O(r, c.shape), c);
   if (e) {
     const h = se(u.shape, o);
-    return _(u, h);
+    return O(u, h);
   }
   return u;
 }
@@ -6399,9 +6399,9 @@ const $C = /* @__PURE__ */ P({ logicalXor_: SC });
 function TC(n, t, e, s, o) {
   const r = E(n, "x", "maxPool"), i = 1;
   let a = r, l = !1;
-  r.rank === 3 && (l = !0, a = _(r, [1, r.shape[0], r.shape[1], r.shape[2]])), $(a.rank === 4, () => `Error in maxPool: input must be rank 4 but got rank ${a.rank}.`), $(Se(e, i), () => `Error in maxPool: Either strides or dilations must be 1. Got strides ${e} and dilations '${i}'`), Be("maxPool", s, o);
+  r.rank === 3 && (l = !0, a = O(r, [1, r.shape[0], r.shape[1], r.shape[2]])), $(a.rank === 4, () => `Error in maxPool: input must be rank 4 but got rank ${a.rank}.`), $(Se(e, i), () => `Error in maxPool: Either strides or dilations must be 1. Got strides ${e} and dilations '${i}'`), Be("maxPool", s, o);
   const c = { x: a }, u = { filterSize: t, strides: e, pad: s, dimRoundingMode: o }, h = M.runKernel(Fl, c, u);
-  return l ? _(h, [h.shape[1], h.shape[2], h.shape[3]]) : h;
+  return l ? O(h, [h.shape[1], h.shape[2], h.shape[3]]) : h;
 }
 const xd = /* @__PURE__ */ P({ maxPool_: TC });
 /**
@@ -6423,9 +6423,9 @@ const xd = /* @__PURE__ */ P({ maxPool_: TC });
 function NC(n, t = [1, 1, 1], e, s, o, r = "NDHWC") {
   const i = E(n, "x", "maxPool3d");
   let a = i, l = !1;
-  i.rank === 4 && (l = !0, a = _(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]])), $(a.rank === 5, () => `Error in maxPool3d: x must be rank 5 but got rank ${a.rank}.`), $(r === "NDHWC", () => `Error in maxPool3d: Only NDHWC is currently supported, but got dataFormat of ${r}`), Be("maxPool3d", s, o);
-  const c = { x: a }, u = { filterSize: t, strides: e, pad: s, dimRoundingMode: o, dataFormat: r }, h = M.runKernel(Ol, c, u);
-  return l ? _(h, [h.shape[1], h.shape[2], h.shape[3], h.shape[4]]) : h;
+  i.rank === 4 && (l = !0, a = O(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]])), $(a.rank === 5, () => `Error in maxPool3d: x must be rank 5 but got rank ${a.rank}.`), $(r === "NDHWC", () => `Error in maxPool3d: Only NDHWC is currently supported, but got dataFormat of ${r}`), Be("maxPool3d", s, o);
+  const c = { x: a }, u = { filterSize: t, strides: e, pad: s, dimRoundingMode: o, dataFormat: r }, h = M.runKernel(_l, c, u);
+  return l ? O(h, [h.shape[1], h.shape[2], h.shape[3], h.shape[4]]) : h;
 }
 const EC = /* @__PURE__ */ P({ maxPool3d_: NC });
 /**
@@ -6469,7 +6469,7 @@ const Es = /* @__PURE__ */ P({ maximum_: RC });
  */
 function DC(n, t = null, e = !1) {
   const o = { x: E(n, "x", "mean") }, r = { axis: t, keepDims: e };
-  return M.runKernel(_l, o, r);
+  return M.runKernel(Ol, o, r);
 }
 const ne = /* @__PURE__ */ P({ mean_: DC });
 /**
@@ -6491,7 +6491,7 @@ const ne = /* @__PURE__ */ P({ mean_: DC });
 function fe(n, t = "float32") {
   if (es(n), t === "complex64") {
     const s = fe(n, "float32"), o = fe(n, "float32");
-    return _o(s, o);
+    return Oo(s, o);
   }
   const e = ke(q(n), t);
   return M.makeTensor(e, n, t);
@@ -6515,7 +6515,7 @@ function fe(n, t = "float32") {
 function Rs(n, t = "float32") {
   if (es(n), t === "complex64") {
     const s = Rs(n, "float32"), o = fe(n, "float32");
-    return _o(s, o);
+    return Oo(s, o);
   }
   const e = ph(q(n), t);
   return M.makeTensor(e, n, t);
@@ -6588,13 +6588,13 @@ const FC = /* @__PURE__ */ P({ mirrorPad_: MC });
  * limitations under the License.
  * =============================================================================
  */
-function OC(n, t) {
+function _C(n, t) {
   let e = E(n, "a", "mod"), s = E(t, "b", "mod");
   [e, s] = Zt(e, s);
   const o = { a: e, b: s };
   return M.runKernel(di, o);
 }
-const _C = /* @__PURE__ */ P({ mod_: OC });
+const OC = /* @__PURE__ */ P({ mod_: _C });
 /**
  * @license
  * Copyright 2020 Google LLC. All Rights Reserved.
@@ -6616,7 +6616,7 @@ function PC(n, t = null, e = !1) {
   const s = yt(t, n.shape), o = ne(n, s, e);
   let r = o.shape;
   e || (r = se(o.shape, s));
-  const i = Ut(ft(st(n, "float32"), _(o, r))), a = ne(i, s, e);
+  const i = Ut(ft(st(n, "float32"), O(o, r))), a = ne(i, s, e);
   return { mean: o, variance: a };
 }
 const bd = /* @__PURE__ */ P({ moments_: PC });
@@ -6754,12 +6754,12 @@ function WC(n, t, e, s, o, r, i) {
   o == null && (o = [1, 1]), r == null && (r = 1), s === 0 && (s = "valid");
   const a = E(n, "x", "maxPool");
   let l = a, c = !1;
-  a.rank === 3 && (c = !0, l = _(a, [1, a.shape[0], a.shape[1], a.shape[2]])), $(Se(r, o), () => `Error in pool: Either strides or dilations must be 1. Got strides ${r} and dilations '${o}'`);
+  a.rank === 3 && (c = !0, l = O(a, [1, a.shape[0], a.shape[1], a.shape[2]])), $(Se(r, o), () => `Error in pool: Either strides or dilations must be 1. Got strides ${r} and dilations '${o}'`);
   const u = dn(l.shape, t, r, o, s), h = [u.dilationHeight, u.dilationWidth];
   let d;
   s === "same" ? d = HC([u.filterHeight, u.filterWidth], h) : d = [[0, 0], [0, 0]];
   const f = h[0] === 1 && h[1] === 1, [p, m] = GC([u.inHeight, u.inWidth], h, d), g = f ? s : "valid", x = f ? l : yd(l, h, p), y = (e === "avg" ? () => ad(x, t, r, g, i) : () => xd(x, t, r, g, i))(), w = f ? y : ld(y, h, m);
-  return c ? _(w, [w.shape[1], w.shape[2], w.shape[3]]) : w;
+  return c ? O(w, [w.shape[1], w.shape[2], w.shape[3]]) : w;
 }
 function GC(n, t, e) {
   const s = e.map((u) => u[0]), o = e.map((u) => u[1]), r = n.concat(s, o), i = t.map((u, h) => (u - r[h] % u) % u), a = o.map((u, h) => u + i[h]), l = t.map((u, h) => [s[h], a[h]]), c = t.map((u, h) => [0, i[h]]);
@@ -7468,13 +7468,13 @@ const u0 = /* @__PURE__ */ P({ selu_: $S });
 function TS(n, t, e, s, o, r = [1, 1], i = "NHWC") {
   const a = E(n, "x", "separableConv2d"), l = E(t, "depthwiseFilter", "separableConv2d"), c = E(e, "pointwiseFilter", "separableConv2d");
   let u = a, h = !1;
-  if (a.rank === 3 && (h = !0, u = _(a, [1, a.shape[0], a.shape[1], a.shape[2]])), i === "NCHW")
+  if (a.rank === 3 && (h = !0, u = O(a, [1, a.shape[0], a.shape[1], a.shape[2]])), i === "NCHW")
     throw new Error("separableConv2d currently does not support dataFormat NCHW; only NHWC is supported");
   $(u.rank === 4, () => `Error in separableConv2d: input must be rank 4, but got rank ${u.rank}.`), $(l.rank === 4, () => `Error in separableConv2d: depthwise filter must be rank 4, but got rank ${l.rank}.`), $(c.rank === 4, () => `Error in separableConv2d: pointwise filter must be rank 4, but got rank ${l.rank}.`), $(c.shape[0] === 1, () => `Error in separableConv2d: the first dimension of pointwise filter  must be 1, but got ${c.shape[0]}.`), $(c.shape[1] === 1, () => `Error in separableConv2d: the second dimension of pointwise filter must be 1, but got ${c.shape[1]}.`);
   const d = l.shape[2], f = l.shape[3];
   $(c.shape[2] === d * f, () => `Error in separableConv2d: the third dimension of pointwise filter must be ${d * f}, but got ${c.shape[2]}.`);
   const p = hd(u, l, s, o, i, r), g = to(p, c, 1, "valid", i);
-  return h ? _(g, [g.shape[1], g.shape[2], g.shape[3]]) : g;
+  return h ? O(g, [g.shape[1], g.shape[2], g.shape[3]]) : g;
 }
 const h0 = /* @__PURE__ */ P({ separableConv2d_: TS });
 /**
@@ -7619,11 +7619,11 @@ const Cd = /* @__PURE__ */ P({ slice3d_: FS });
  * limitations under the License.
  * =============================================================================
  */
-function OS(n, t, e) {
+function _S(n, t, e) {
   const s = E(n, "x", "slice4d");
   return $(s.rank === 4, () => `slice4d expects a rank-4 tensor, but got a rank-${s.rank} tensor`), Bt(s, t, e);
 }
-const Ba = /* @__PURE__ */ P({ slice4d_: OS });
+const Ba = /* @__PURE__ */ P({ slice4d_: _S });
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -7640,14 +7640,14 @@ const Ba = /* @__PURE__ */ P({ slice4d_: OS });
  * limitations under the License.
  * =============================================================================
  */
-function _S(n, t = -1) {
+function OS(n, t = -1) {
   const e = E(n, "logits", "softmax", "float32");
   if (t === -1 && (t = e.rank - 1), t !== e.rank - 1)
     throw Error(`Softmax along a non-last dimension is not yet supported. Logits was rank ${e.rank} and dim was ${t}`);
   const s = { logits: e }, o = { dim: t };
   return M.runKernel(nc, s, o);
 }
-const Sd = /* @__PURE__ */ P({ softmax_: _S });
+const Sd = /* @__PURE__ */ P({ softmax_: OS });
 /**
  * @license
  * Copyright 2020 Google LLC. All Rights Reserved.
@@ -7667,7 +7667,7 @@ const Sd = /* @__PURE__ */ P({ softmax_: _S });
 function PS(n) {
   $(n.dtype === "complex64", () => `The dtype for tf.spectral.fft() must be complex64 but got ${n.dtype}.`);
   const t = { input: n };
-  return M.runKernel(_h, t);
+  return M.runKernel(Oh, t);
 }
 const m0 = /* @__PURE__ */ P({ fft_: PS });
 /**
@@ -7712,15 +7712,15 @@ function zS(n) {
   const t = n.shape[n.shape.length - 1], e = n.size / t;
   let s;
   if (t <= 2) {
-    const o = _(n, [e, t]);
+    const o = O(n, [e, t]);
     s = Uu(o);
   } else {
-    const o = [e, 2 * (t - 1)], r = _(za(n), [e, t]), i = _(pd(n), [e, t]), a = no(Bt(r, [0, 1], [e, t - 2]), 1), l = A(no(Bt(i, [0, 1], [e, t - 2]), 1), Nt(-1)), c = Pe([r, a], 1), u = Pe([i, l], 1), h = _(_o(c, u), [o[0], o[1]]);
+    const o = [e, 2 * (t - 1)], r = O(za(n), [e, t]), i = O(pd(n), [e, t]), a = no(Bt(r, [0, 1], [e, t - 2]), 1), l = A(no(Bt(i, [0, 1], [e, t - 2]), 1), Nt(-1)), c = Pe([r, a], 1), u = Pe([i, l], 1), h = O(Oo(c, u), [o[0], o[1]]);
     s = Uu(h);
   }
   if (s = za(s), n.rank === 3 && n.shape[0] !== 0) {
     const o = s, r = n.shape[0];
-    s = _(s, [r, s.shape[0] / r, s.shape[1]]), o.dispose();
+    s = O(s, [r, s.shape[0] / r, s.shape[1]]), o.dispose();
   }
   return s;
 }
@@ -7775,8 +7775,8 @@ function US(n, t) {
     p[n.shape.length - 1] = t - e, o = Pe([n, fe(p)], n.shape.length - 1), e = t;
   } else
     o = n;
-  const r = Ct(o), i = _(_o(o, r), [s, e]), a = m0(i), l = Math.floor(e / 2) + 1, c = za(a), u = pd(a), h = Ze(c, [l, e - l], c.shape.length - 1), d = Ze(u, [l, e - l], u.shape.length - 1), f = o.shape.slice();
-  return f[o.shape.length - 1] = l, _(_o(h[0], d[0]), f);
+  const r = Ct(o), i = O(Oo(o, r), [s, e]), a = m0(i), l = Math.floor(e / 2) + 1, c = za(a), u = pd(a), h = Ze(c, [l, e - l], c.shape.length - 1), d = Ze(u, [l, e - l], u.shape.length - 1), f = o.shape.slice();
+  return f[o.shape.length - 1] = l, O(Oo(h[0], d[0]), f);
 }
 const WS = /* @__PURE__ */ P({ rfft_: US });
 /**
@@ -7820,7 +7820,7 @@ const HS = /* @__PURE__ */ P({ squaredDifference_: GS });
  */
 function qS(n, t) {
   const e = E(n, "x", "squeeze", "string_or_numeric");
-  return _(e, Cs(e.shape, t).newShape);
+  return O(e, Cs(e.shape, t).newShape);
 }
 const Li = /* @__PURE__ */ P({ squeeze_: qS });
 /**
@@ -7840,7 +7840,7 @@ const Li = /* @__PURE__ */ P({ squeeze_: qS });
  * =============================================================================
  */
 function jS(n, t = 0) {
-  const e = Og(n, "tensors", "stack", "string_or_numeric");
+  const e = _g(n, "tensors", "stack", "string_or_numeric");
   $(e.length >= 1, () => "Pass at least one tensor to tf.stack"), e.length > 0 && $(t <= e[0].rank, () => "Axis must be <= rank of the tensor");
   const s = e, o = { axis: t };
   return M.runKernel(Wl, s, o);
@@ -8193,9 +8193,9 @@ function l$(n, t, e) {
   }), s.rank <= 1)
     return s.clone();
   const o = { x: s }, r = { perm: t };
-  return s.dtype === "complex64" ? O(() => {
+  return s.dtype === "complex64" ? _(() => {
     let i = za(s), a = pd(s);
-    return i = M.runKernel(Eo, { x: i }, r), a = M.runKernel(Eo, { x: a }, r), e && (a = Jt(a)), _o(i, a);
+    return i = M.runKernel(Eo, { x: i }, r), a = M.runKernel(Eo, { x: a }, r), e && (a = Jt(a)), Oo(i, a);
   }) : M.runKernel(Eo, o, r);
 }
 const kt = /* @__PURE__ */ P({ transpose_: l$ });
@@ -8270,9 +8270,9 @@ const h$ = /* @__PURE__ */ P({ dropout_: u$ });
  */
 function d$(n, t, e, s, o, r = "NHWC", i) {
   let a = n;
-  n.rank === 3 && (a = _(n, [1, n.shape[0], n.shape[1], n.shape[2]]));
+  n.rank === 3 && (a = O(n, [1, n.shape[0], n.shape[1], n.shape[2]]));
   let l = t;
-  l.rank === 3 && (l = _(t, [1, t.shape[0], t.shape[1], t.shape[2]])), $(a.rank === 4, () => `Error in conv2dDerFilter: input must be rank 4, but got shape ${a.shape}.`), $(l.rank === 4, () => `Error in conv2dDerFilter: dy must be rank 4, but got shape ${l.shape}.`), $(e.length === 4, () => `Error in conv2dDerFilter: filterShape must be length 4, but got ${e}.`);
+  l.rank === 3 && (l = O(t, [1, t.shape[0], t.shape[1], t.shape[2]])), $(a.rank === 4, () => `Error in conv2dDerFilter: input must be rank 4, but got shape ${a.shape}.`), $(l.rank === 4, () => `Error in conv2dDerFilter: dy must be rank 4, but got shape ${l.shape}.`), $(e.length === 4, () => `Error in conv2dDerFilter: filterShape must be length 4, but got ${e}.`);
   const c = r === "NHWC" ? a.shape[3] : a.shape[1], u = r === "NHWC" ? l.shape[3] : l.shape[1];
   $(c === e[2], () => `Error in conv2dDerFilter: depth of input ${c}) must match input depth in filter (${e[2]}.`), $(u === e[3], () => `Error in conv2dDerFilter: depth of dy (${u}) must match output depth for filter (${e[3]}).`), Be("conv2dDerFilter", o, i);
   const h = { x: a, dy: l }, d = { strides: s, pad: o, dataFormat: r, dimRoundingMode: i, filterShape: e };
@@ -8305,7 +8305,7 @@ function Td(n, t, e) {
 function Nd(n, t) {
   let e = t;
   const s = ce(n.shape, t.shape);
-  return s.length > 0 && (e = ct(e, s)), _(e, n.shape);
+  return s.length > 0 && (e = ct(e, s)), O(e, n.shape);
 }
 function Ed(n, t, e, s) {
   if (t === "linear")
@@ -8349,7 +8349,7 @@ function f$({ x: n, filter: t, strides: e, pad: s, dataFormat: o = "NHWC", dilat
   }
   const h = E(n, "x", "conv2d", "float32"), d = E(t, "filter", "conv2d", "float32");
   let f = h, p = !1;
-  h.rank === 3 && (p = !0, f = _(h, [1, h.shape[0], h.shape[1], h.shape[2]])), $(f.rank === 4, () => `Error in fused conv2d: input must be rank 4, but got rank ${f.rank}.`), $(d.rank === 4, () => `Error in fused conv2d: filter must be rank 4, but got rank ${d.rank}.`), Be("fused conv2d", s, i);
+  h.rank === 3 && (p = !0, f = O(h, [1, h.shape[0], h.shape[1], h.shape[2]])), $(f.rank === 4, () => `Error in fused conv2d: input must be rank 4, but got rank ${f.rank}.`), $(d.rank === 4, () => `Error in fused conv2d: filter must be rank 4, but got rank ${d.rank}.`), Be("fused conv2d", s, i);
   const m = o === "NHWC" ? f.shape[3] : f.shape[1];
   $(d.shape[2] === m, () => `Error in conv2d: depth of input (${m}) must match input depth for filter ${d.shape[2]}.`), $(Se(e, r), () => `Error in conv2D: Either strides or dilations must be 1. Got strides ${e} and dilations '${r}'`);
   const g = we(f.shape, d.shape, e, r, s, i);
@@ -8398,10 +8398,10 @@ function f$({ x: n, filter: t, strides: e, pad: s, dataFormat: o = "NHWC", dilat
       // tslint:disable-next-line: no-unnecessary-type-assertion
       M.runKernel(Ma, w, v)
     );
-    return S([T, N, C]), p && (C = _(C, [C.shape[1], C.shape[2], C.shape[3]])), { value: C, gradFunc: y };
+    return S([T, N, C]), p && (C = O(C, [C.shape[1], C.shape[2], C.shape[3]])), { value: C, gradFunc: y };
   })(f, d) : Lo((N, T, S, C) => {
     let I = M.runKernel(Ma, w, v);
-    return C([T, N, I, S]), p && (I = _(I, [I.shape[1], I.shape[2], I.shape[3]])), { value: I, gradFunc: y };
+    return C([T, N, I, S]), p && (I = O(I, [I.shape[1], I.shape[2], I.shape[3]])), { value: I, gradFunc: y };
   })(f, d, x);
 }
 const p$ = /* @__PURE__ */ P({ fusedConv2d_: f$ });
@@ -8423,9 +8423,9 @@ const p$ = /* @__PURE__ */ P({ fusedConv2d_: f$ });
  */
 function m$(n, t, e, s, o, r = [1, 1], i) {
   let a = n;
-  n.rank === 3 && (a = _(n, [1, n.shape[0], n.shape[1], n.shape[2]]));
+  n.rank === 3 && (a = O(n, [1, n.shape[0], n.shape[1], n.shape[2]]));
   let l = t;
-  l.rank === 3 && (l = _(t, [1, t.shape[0], t.shape[1], t.shape[2]]));
+  l.rank === 3 && (l = O(t, [1, t.shape[0], t.shape[1], t.shape[2]]));
   const c = { x: a, dy: l }, u = { strides: s, pad: o, dimRoundingMode: i, dilations: r, filterShape: e };
   return M.runKernel(Ah, c, u);
 }
@@ -8448,12 +8448,12 @@ const g$ = P({ depthwiseConv2dNativeBackpropFilter_: m$ });
  */
 function x$(n, t, e, s, o, r = [1, 1], i) {
   let a = t, l = !1;
-  t.rank === 3 && (l = !0, a = _(t, [1, t.shape[0], t.shape[1], t.shape[2]]));
+  t.rank === 3 && (l = !0, a = O(t, [1, t.shape[0], t.shape[1], t.shape[2]]));
   const c = { dy: a, filter: e }, u = { strides: s, pad: o, dimRoundingMode: i, dilations: r, inputShape: n }, h = (
     // tslint:disable-next-line: no-unnecessary-type-assertion
     M.runKernel(Mh, c, u)
   );
-  return l ? _(h, [h.shape[1], h.shape[2], h.shape[3]]) : h;
+  return l ? O(h, [h.shape[1], h.shape[2], h.shape[3]]) : h;
 }
 const b$ = P({ depthwiseConv2dNativeBackpropInput_: x$ });
 /**
@@ -8481,13 +8481,13 @@ function w$({ a: n, b: t, transposeA: e = !1, transposeB: s = !1, bias: o, activ
   [l, c] = Zt(l, c);
   const u = e ? l.shape[l.rank - 2] : l.shape[l.rank - 1], h = s ? c.shape[c.rank - 1] : c.shape[c.rank - 2], d = e ? l.shape[l.rank - 1] : l.shape[l.rank - 2], f = s ? c.shape[c.rank - 2] : c.shape[c.rank - 1], p = l.shape.slice(0, -2), m = c.shape.slice(0, -2), g = q(p), x = q(m);
   $(u === h, () => `Error in fused matMul: inner shapes (${u}) and (${h}) of Tensors with shapes ${l.shape} and ${c.shape} and transposeA=${e} and transposeB=${s} must match.`);
-  const y = mt(l.shape.slice(0, -2), c.shape.slice(0, -2)).concat([d, f]), w = e ? _(l, [g, u, d]) : _(l, [g, d, u]), v = s ? _(c, [x, f, h]) : _(c, [x, h, f]);
+  const y = mt(l.shape.slice(0, -2), c.shape.slice(0, -2)).concat([d, f]), w = e ? O(l, [g, u, d]) : O(l, [g, d, u]), v = s ? O(c, [x, f, h]) : O(c, [x, h, f]);
   let k;
   o != null && (k = E(o, "bias", "fused matMul"), [k] = Zt(k, l), mt(y, k.shape));
   let N;
   i != null && (N = E(i, "prelu weights", "fused matMul"));
   const T = (I, R) => {
-    const [F, z, L, B] = R, G = Td(_(I, L.shape), L, r);
+    const [F, z, L, B] = R, G = Td(O(I, L.shape), L, r);
     let U, H;
     if (!e && !s ? (U = Tt(G, z, !1, !0), H = Tt(F, G, !0, !1)) : !e && s ? (U = Tt(G, z, !1, !1), H = Tt(G, F, !0, !1)) : e && !s ? (U = Tt(z, G, !1, !0), H = Tt(F, G, !1, !1)) : (U = Tt(z, G, !0, !0), H = Tt(G, F, !0, !0)), o != null) {
       const j = Nd(B, G);
@@ -8505,13 +8505,13 @@ function w$({ a: n, b: t, transposeA: e = !1, transposeB: s = !1, bias: o, activ
       // tslint:disable-next-line: no-unnecessary-type-assertion
       M.runKernel(Aa, S, C)
     );
-    return z([R, F, L]), { value: _(L, y), gradFunc: T };
+    return z([R, F, L]), { value: O(L, y), gradFunc: T };
   })(w, v) : Lo((R, F, z, L) => {
     const B = (
       // tslint:disable-next-line: no-unnecessary-type-assertion
       M.runKernel(Aa, S, C)
     );
-    return L([R, F, B, z]), { value: _(B, y), gradFunc: T };
+    return L([R, F, B, z]), { value: O(B, y), gradFunc: T };
   })(w, v, k);
 }
 const mp = /* @__PURE__ */ P({ fusedMatMul_: w$ });
@@ -8624,7 +8624,7 @@ function $$(n) {
     default:
       throw new Error("Not a valid tensor rank.");
   }
-  return a = Oe(a, -1), st(a, o);
+  return a = _e(a, -1), st(a, o);
 }
 const T$ = /* @__PURE__ */ P({ rgbToGrayscale_: $$ });
 /**
@@ -8715,12 +8715,12 @@ function A$(n, t, e) {
   n.splice(o, 0, t);
 }
 function M$(n, t, e) {
-  return O$(n, t, e || F$);
+  return _$(n, t, e || F$);
 }
 function F$(n, t) {
   return n > t ? 1 : n < t ? -1 : 0;
 }
-function O$(n, t, e) {
+function _$(n, t, e) {
   let s = 0, o = n.length, r = 0, i = !1;
   for (; s < o; ) {
     r = s + (o - s >>> 1);
@@ -8794,7 +8794,7 @@ function Fd(n, t, e, s, o, r, i = !1, a = !1, l = !1) {
       break;
     let w = !1;
     for (let v = h.length - 1; v >= y; --v) {
-      const k = _$(n, b, h[v]);
+      const k = O$(n, b, h[v]);
       if (k >= s) {
         w = !0;
         break;
@@ -8809,7 +8809,7 @@ function Fd(n, t, e, s, o, r, i = !1, a = !1, l = !1) {
   const m = { selectedIndices: h };
   return i && (m.selectedScores = d), l && (m.validOutputs = f), m;
 }
-function _$(n, t, e) {
+function O$(n, t, e) {
   const s = n.subarray(t * 4, t * 4 + 4), o = n.subarray(e * 4, e * 4 + 4), r = Math.min(s[0], s[2]), i = Math.min(s[1], s[3]), a = Math.max(s[0], s[2]), l = Math.max(s[1], s[3]), c = Math.min(o[0], o[2]), u = Math.min(o[1], o[3]), h = Math.max(o[0], o[2]), d = Math.max(o[1], o[3]), f = (a - r) * (l - i), p = (h - c) * (d - u);
   if (f <= 0 || p <= 0)
     return 0;
@@ -8981,9 +8981,9 @@ function K$(n, t, e = !1, s = !1) {
   const o = E(n, "images", "resizeBilinear");
   $(o.rank === 3 || o.rank === 4, () => `Error in resizeBilinear: x must be rank 3 or 4, but got rank ${o.rank}.`), $(t.length === 2, () => `Error in resizeBilinear: new shape must 2D, but got shape ${t}.`), $(s === !1 || e === !1, () => "Error in resizeBilinear: If halfPixelCenters is true, alignCorners must be false.");
   let r = o, i = !1;
-  o.rank === 3 && (i = !0, r = _(o, [1, o.shape[0], o.shape[1], o.shape[2]]));
+  o.rank === 3 && (i = !0, r = O(o, [1, o.shape[0], o.shape[1], o.shape[2]]));
   const a = { images: r }, l = { alignCorners: e, halfPixelCenters: s, size: t }, c = M.runKernel(Xl, a, l);
-  return i ? _(c, [c.shape[1], c.shape[2], c.shape[3]]) : c;
+  return i ? O(c, [c.shape[1], c.shape[2], c.shape[3]]) : c;
 }
 const w0 = /* @__PURE__ */ P({ resizeBilinear_: K$ });
 /**
@@ -9006,9 +9006,9 @@ function X$(n, t, e = !1, s = !1) {
   const o = E(n, "images", "resizeNearestNeighbor");
   $(o.rank === 3 || o.rank === 4, () => `Error in resizeNearestNeighbor: x must be rank 3 or 4, but got rank ${o.rank}.`), $(t.length === 2, () => `Error in resizeNearestNeighbor: new shape must 2D, but got shape ${t}.`), $(o.dtype === "float32" || o.dtype === "int32", () => "`images` must have `int32` or `float32` as dtype"), $(s === !1 || e === !1, () => "Error in resizeNearestNeighbor: If halfPixelCenters is true, alignCorners must be false.");
   let r = o, i = !1;
-  o.rank === 3 && (i = !0, r = _(o, [1, o.shape[0], o.shape[1], o.shape[2]]));
+  o.rank === 3 && (i = !0, r = O(o, [1, o.shape[0], o.shape[1], o.shape[2]]));
   const a = { images: r }, l = { alignCorners: e, halfPixelCenters: s, size: t }, c = M.runKernel(Kl, a, l);
-  return i ? _(c, [c.shape[1], c.shape[2], c.shape[3]]) : c;
+  return i ? O(c, [c.shape[1], c.shape[2], c.shape[3]]) : c;
 }
 const y0 = /* @__PURE__ */ P({ resizeNearestNeighbor_: X$ });
 /**
@@ -9104,8 +9104,8 @@ function e2(n, t, e) {
   const o = s.shape, [r, i] = s.shape.slice(-2);
   let a, l;
   typeof t == "number" ? ($(t % 1 === 0, () => `bandPart(): numLower must be an integer, got ${t}.`), $(t <= r, () => `bandPart(): numLower (${t}) must not be greater than the number of rows (${r}).`), a = E(t < 0 ? r : t, "numLower", "bandPart")) : ($(t.dtype === "int32", () => "bandPart(): numLower's dtype must be an int32."), a = De(Pa(t, 0), r, Tr(t, r))), typeof e == "number" ? ($(e % 1 === 0, () => `bandPart(): numUpper must be an integer, got ${e}.`), $(e <= i, () => `bandPart(): numUpper (${e}) must not be greater than the number of columns (${i}).`), l = E(e < 0 ? i : e, "numUpper", "bandPart")) : ($(e.dtype === "int32", () => "bandPart(): numUpper's dtype must be an int32."), l = De(Pa(e, 0), i, Tr(e, i)));
-  const c = _(Nr(0, r, 1, "int32"), [-1, 1]), u = Nr(0, i, 1, "int32"), h = ft(c, u), d = Zn(Xo(h, a), ho(h, Jt(l))), f = fe([r, i], s.dtype);
-  return _(Un(so(_(s, [-1, r, i])).map((p) => De(d, p, f))), o);
+  const c = O(Nr(0, r, 1, "int32"), [-1, 1]), u = Nr(0, i, 1, "int32"), h = ft(c, u), d = Zn(Xo(h, a), ho(h, Jt(l))), f = fe([r, i], s.dtype);
+  return O(Un(so(O(s, [-1, r, i])).map((p) => De(d, p, f))), o);
 }
 const n2 = /* @__PURE__ */ P({ bandPart_: e2 });
 /**
@@ -9168,7 +9168,7 @@ function r2(n, t = !1) {
   if ($(n.rank >= 2, () => `qr() requires input tensor to have a rank >= 2, but got rank ${n.rank}`), n.rank === 2)
     return xp(n, t);
   {
-    const e = n.shape.slice(0, n.shape.length - 2).reduce((l, c) => l * c), s = so(_(n, [
+    const e = n.shape.slice(0, n.shape.length - 2).reduce((l, c) => l * c), s = so(O(n, [
       e,
       n.shape[n.shape.length - 2],
       n.shape[n.shape.length - 1]
@@ -9177,7 +9177,7 @@ function r2(n, t = !1) {
       const [c, u] = xp(l, t);
       o.push(c), r.push(u);
     });
-    const i = _(Un(o, 0), n.shape), a = _(Un(r, 0), n.shape);
+    const i = O(Un(o, 0), n.shape), a = O(Un(r, 0), n.shape);
     return [i, a];
   }
 }
@@ -9449,16 +9449,16 @@ class v0 extends Ds {
       const r = M.registeredVariables[s], i = !1;
       this.accumulatedGrads[o] == null && (this.accumulatedGrads[o] = {
         originalName: `${s}/accum_grad`,
-        variable: O(() => Ct(r).variable(i))
+        variable: _(() => Ct(r).variable(i))
       }), this.accumulatedUpdates[o] == null && (this.accumulatedUpdates[o] = {
         originalName: `${s}/accum_var`,
-        variable: O(() => Ct(r).variable(i))
+        variable: _(() => Ct(r).variable(i))
       });
       const a = Array.isArray(t) ? t[o].tensor : t[s];
       if (a == null)
         return;
       const l = this.accumulatedGrads[o].variable, c = this.accumulatedUpdates[o].variable;
-      O(() => {
+      _(() => {
         const u = Z(A(l, this.rho), A(Ut(a), 1 - this.rho)), h = A(ut(Ce(Z(c, this.epsilon)), Ce(Z(l, this.epsilon))), a), d = Z(A(c, this.rho), A(Ut(h), 1 - this.rho));
         l.assign(u), c.assign(d);
         const f = Z(A(h, -this.learningRate), r);
@@ -9525,13 +9525,13 @@ class I0 extends Ds {
       const r = M.registeredVariables[s];
       this.accumulatedGrads[o] == null && (this.accumulatedGrads[o] = {
         originalName: `${s}/accumulator`,
-        variable: O(() => uc(r.shape, this.initialAccumulatorValue).variable(!1))
+        variable: _(() => uc(r.shape, this.initialAccumulatorValue).variable(!1))
       });
       const i = Array.isArray(t) ? t[o].tensor : t[s];
       if (i == null)
         return;
       const a = this.accumulatedGrads[o].variable;
-      O(() => {
+      _(() => {
         const l = Z(a, Ut(i));
         a.assign(l);
         const c = Z(A(ut(i, Ce(Z(l, M.backend.epsilon()))), -this.learningRate), r);
@@ -9583,22 +9583,22 @@ class k0 extends Ds {
     return "Adam";
   }
   constructor(t, e, s, o = null) {
-    super(), this.learningRate = t, this.beta1 = e, this.beta2 = s, this.epsilon = o, this.accumulatedFirstMoment = [], this.accumulatedSecondMoment = [], O(() => {
+    super(), this.learningRate = t, this.beta1 = e, this.beta2 = s, this.epsilon = o, this.accumulatedFirstMoment = [], this.accumulatedSecondMoment = [], _(() => {
       this.accBeta1 = Nt(e).variable(), this.accBeta2 = Nt(s).variable();
     }), o == null && (this.epsilon = M.backend.epsilon());
   }
   applyGradients(t) {
     const e = Array.isArray(t) ? t.map((s) => s.name) : Object.keys(t);
-    O(() => {
+    _(() => {
       const s = ft(1, this.accBeta1), o = ft(1, this.accBeta2);
       e.forEach((r, i) => {
         const a = M.registeredVariables[r], l = !1;
         this.accumulatedFirstMoment[i] == null && (this.accumulatedFirstMoment[i] = {
           originalName: `${r}/m`,
-          variable: O(() => Ct(a).variable(l))
+          variable: _(() => Ct(a).variable(l))
         }), this.accumulatedSecondMoment[i] == null && (this.accumulatedSecondMoment[i] = {
           originalName: `${r}/v`,
-          variable: O(() => Ct(a).variable(l))
+          variable: _(() => Ct(a).variable(l))
         });
         const c = Array.isArray(t) ? t[i].tensor : t[r];
         if (c == null)
@@ -9618,7 +9618,7 @@ class k0 extends Ds {
     return [await this.saveIterations()].concat(t.map((e) => ({ name: e.originalName, tensor: e.variable })));
   }
   async setWeights(t) {
-    t = await this.extractIterations(t), O(() => {
+    t = await this.extractIterations(t), _(() => {
       this.accBeta1.assign(eo(this.beta1, this.iterations_ + 1)), this.accBeta2.assign(eo(this.beta2, this.iterations_ + 1));
     });
     const e = t.length / 2, s = !1;
@@ -9665,13 +9665,13 @@ class C0 extends Ds {
     return "Adamax";
   }
   constructor(t, e, s, o = null, r = 0) {
-    super(), this.learningRate = t, this.beta1 = e, this.beta2 = s, this.epsilon = o, this.decay = r, this.accumulatedFirstMoment = [], this.accumulatedWeightedInfNorm = [], O(() => {
+    super(), this.learningRate = t, this.beta1 = e, this.beta2 = s, this.epsilon = o, this.decay = r, this.accumulatedFirstMoment = [], this.accumulatedWeightedInfNorm = [], _(() => {
       this.iteration = Nt(0).variable(), this.accBeta1 = Nt(e).variable();
     }), o == null && (this.epsilon = M.backend.epsilon());
   }
   applyGradients(t) {
     const e = Array.isArray(t) ? t.map((s) => s.name) : Object.keys(t);
-    O(() => {
+    _(() => {
       const s = ft(1, this.accBeta1), o = ut(-this.learningRate, Z(A(this.iteration, this.decay), 1));
       e.forEach((r, i) => {
         const a = M.registeredVariables[r], l = !1;
@@ -9731,7 +9731,7 @@ class C0 extends Ds {
  * limitations under the License.
  * =============================================================================
  */
-class Od extends Ds {
+class _d extends Ds {
   /** @nocollapse */
   static get className() {
     return "SGD";
@@ -9745,7 +9745,7 @@ class Od extends Ds {
       if (r == null)
         return;
       const i = M.registeredVariables[s];
-      O(() => {
+      _(() => {
         const a = Z(A(this.c, r), i);
         i.assign(a);
       });
@@ -9791,7 +9791,7 @@ class Od extends Ds {
  * limitations under the License.
  * =============================================================================
  */
-class S0 extends Od {
+class S0 extends _d {
   /** @nocollapse */
   // Name matters for Python compatibility.
   static get className() {
@@ -9805,10 +9805,10 @@ class S0 extends Od {
       const r = M.registeredVariables[s];
       this.accumulations[o] == null && (this.accumulations[o] = {
         originalName: `${s}/momentum`,
-        variable: O(() => Ct(r).variable(!1))
+        variable: _(() => Ct(r).variable(!1))
       });
       const i = this.accumulations[o].variable, a = Array.isArray(t) ? t[o].tensor : t[s];
-      a != null && O(() => {
+      a != null && _(() => {
         let l;
         const c = Z(A(this.m, i), a);
         this.useNesterov ? l = Z(A(this.c, Z(a, A(c, this.m))), r) : l = Z(A(this.c, c), r), i.assign(c), r.assign(l);
@@ -9876,19 +9876,19 @@ class $0 extends Ds {
       const r = M.registeredVariables[s], i = !1;
       this.accumulatedMeanSquares[o] == null && (this.accumulatedMeanSquares[o] = {
         originalName: `${s}/rms`,
-        variable: O(() => Ct(r).variable(i))
+        variable: _(() => Ct(r).variable(i))
       }), this.accumulatedMoments[o] == null && (this.accumulatedMoments[o] = {
         originalName: `${s}/momentum`,
-        variable: O(() => Ct(r).variable(i))
+        variable: _(() => Ct(r).variable(i))
       }), this.accumulatedMeanGrads[o] == null && this.centered && (this.accumulatedMeanGrads[o] = {
         originalName: `${s}/mg`,
-        variable: O(() => Ct(r).variable(i))
+        variable: _(() => Ct(r).variable(i))
       });
       const a = Array.isArray(t) ? t[o].tensor : t[s];
       if (a == null)
         return;
       const l = this.accumulatedMeanSquares[o].variable, c = this.accumulatedMoments[o].variable;
-      O(() => {
+      _(() => {
         const u = Z(A(l, this.decay), A(Ut(a), 1 - this.decay));
         if (this.centered) {
           const h = this.accumulatedMeanGrads[o].variable, d = Z(A(h, this.decay), A(a, 1 - this.decay)), f = ut(A(a, this.learningRate), Ce(ft(u, Z(Ut(d), this.epsilon)))), p = Z(A(c, this.momentum), f);
@@ -9962,7 +9962,7 @@ const u2 = [
   C0,
   S0,
   $0,
-  Od
+  _d
 ];
 function h2() {
   for (const n of u2)
@@ -10108,7 +10108,7 @@ function b2(n, t) {
  * =============================================================================
  */
 const w2 = "application/octet-stream", y2 = "application/json";
-class _d {
+class Od {
   constructor(t, e) {
     if (this.DEFAULT_METHOD = "POST", e == null && (e = {}), this.weightPathPrefix = e.weightPathPrefix, this.weightUrlConverter = e.weightUrlConverter, e.fetchFunc != null ? ($(typeof e.fetchFunc == "function", () => "Must pass a function that matches the signature of `fetch` (see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)"), this.fetch = e.fetchFunc) : this.fetch = V().platform.fetch, $(t != null && t.length > 0, () => "URL path for http must not be null, undefined or empty."), Array.isArray(t) && $(t.length === 2, () => `URL paths for http must have a length of 2, (actual length is ${t.length}).`), this.path = t, e.requestInit != null && e.requestInit.body != null)
       throw new Error("requestInit is expected to have no pre-existing body, but has one.");
@@ -10181,13 +10181,13 @@ class _d {
     return [s, o];
   }
 }
-_d.URL_SCHEME_REGEX = /^https?:\/\//;
+Od.URL_SCHEME_REGEX = /^https?:\/\//;
 function v2(n) {
   const t = n.lastIndexOf("/"), e = n.lastIndexOf("?"), s = n.substring(0, t), o = e > t ? n.substring(e) : "";
   return [s + "/", o];
 }
 function yp(n) {
-  return n.match(_d.URL_SCHEME_REGEX) != null;
+  return n.match(Od.URL_SCHEME_REGEX) != null;
 }
 const T0 = (n, t) => {
   if (typeof fetch == "undefined" && (t == null || t.fetchFunc == null))
@@ -10202,7 +10202,7 @@ const T0 = (n, t) => {
 he.registerSaveRouter(T0);
 he.registerLoadRouter(T0);
 function I2(n, t) {
-  return new _d(n, t);
+  return new Od(n, t);
 }
 /**
  * @license
@@ -10220,7 +10220,7 @@ function I2(n, t) {
  * limitations under the License.
  * =============================================================================
  */
-let _s;
+let Os;
 function k2(n, t = 3) {
   if (t > 4)
     throw new Error("Cannot construct Tensor with more than 4 channels from pixels.");
@@ -10256,15 +10256,15 @@ function k2(n, t = 3) {
   else if (s || e)
     h = n.data;
   else if (r || o || a) {
-    if (_s == null)
+    if (Os == null)
       if (typeof document == "undefined")
         if (typeof OffscreenCanvas != "undefined" && typeof OffscreenCanvasRenderingContext2D != "undefined")
-          _s = new OffscreenCanvas(1, 1).getContext("2d");
+          Os = new OffscreenCanvas(1, 1).getContext("2d");
         else
           throw new Error("Cannot parse input in current context. Reason: OffscreenCanvas Context2D rendering is not supported.");
       else
-        _s = document.createElement("canvas").getContext("2d", { willReadFrequently: !0 });
-    _s.canvas.width = c, _s.canvas.height = u, _s.drawImage(n, 0, 0, c, u), h = _s.getImageData(0, 0, c, u).data;
+        Os = document.createElement("canvas").getContext("2d", { willReadFrequently: !0 });
+    Os.canvas.width = c, Os.canvas.height = u, Os.drawImage(n, 0, 0, c, u), h = Os.getImageData(0, 0, c, u).data;
   }
   let d;
   if (t === 4)
@@ -10521,7 +10521,7 @@ class T2 {
    * @doc {heading: 'Training', subheading: 'Optimizers', namespace: 'train'}
    */
   static sgd(t) {
-    return new Od(t);
+    return new _d(t);
   }
   /**
    * Constructs a `tf.MomentumOptimizer` that uses momentum gradient
@@ -10694,7 +10694,7 @@ function zd(n, t) {
       $(i === t || o[i] === s[i], () => `Error in concat${e}D: Shape of tensors[${r}] (${o}) does not match the shape of the rest (${s}) along the non-concatenated axis ${r}.`);
   });
 }
-function _n(n, t) {
+function On(n, t) {
   const e = n[0].slice();
   for (let s = 1; s < n.length; s++)
     e[t] += n[s][t];
@@ -10760,10 +10760,10 @@ function F0(n) {
       break;
   return e;
 }
-function O0(n) {
+function _0(n) {
   return n.length === 0 ? 0 : n[0] === wn.FIRST_DIM_SIZE ? n.length - 1 : n.length;
 }
-function _0(n, t) {
+function O0(n, t) {
   if (n == null || t == null)
     return;
   const e = n.length, s = t.length;
@@ -11280,10 +11280,10 @@ const M2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   computeConv2DInfo: we,
   computeConv3DInfo: Ts,
   computeDefaultPad: id,
-  computeDilation2DInfo: Oi,
+  computeDilation2DInfo: _i,
   computeOptimalWindowSize: mc,
   computeOutAndReduceShapes: me,
-  computeOutShape: _n,
+  computeOutShape: On,
   computePool2DInfo: dn,
   computePool3DInfo: ns,
   convertConv2DDataFormat: ss,
@@ -11304,7 +11304,7 @@ const M2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   getImageCenter: Vd,
   getInnerMostAxes: Qt,
   getPermuted: Vi,
-  getRaggedRank: O0,
+  getRaggedRank: _0,
   getReductionAxes: ce,
   getReshaped: Bi,
   getReshapedPermuted: Ui,
@@ -11333,7 +11333,7 @@ const M2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   stridesOrDilationsArePositive: Qs,
   tupleValuesAreOne: Zs,
   upcastType: Ge,
-  validateDefaultValueShape: _0,
+  validateDefaultValueShape: O0,
   warn: Ke
 }, Symbol.toStringTag, { value: "Module" }));
 /**
@@ -11422,7 +11422,7 @@ const F2 = {
  * limitations under the License.
  * =============================================================================
  */
-const O2 = {
+const _2 = {
   kernelName: zr,
   inputsToSave: ["x"],
   gradFunc: (n, t) => {
@@ -11451,7 +11451,7 @@ const O2 = {
  * limitations under the License.
  * =============================================================================
  */
-const _2 = {
+const O2 = {
   kernelName: jo,
   inputsToSave: ["a", "b"],
   gradFunc: (n, t) => {
@@ -11459,11 +11459,11 @@ const _2 = {
     return { a: () => {
       let a = n;
       const l = ce(e.shape, o);
-      return l.length > 0 && (a = ct(a, l)), _(a, e.shape);
+      return l.length > 0 && (a = ct(a, l)), O(a, e.shape);
     }, b: () => {
       let a = n;
       const l = ce(s.shape, o);
-      return l.length > 0 && (a = ct(a, l)), _(a, s.shape);
+      return l.length > 0 && (a = ct(a, l)), O(a, s.shape);
     } };
   }
 };
@@ -11619,12 +11619,12 @@ const U2 = {
       const a = Z(Ut(e), Ut(s));
       let l = A(n, ut(s, a));
       const c = ce(e.shape, o);
-      return c.length > 0 && (l = ct(l, c)), _(l, e.shape);
+      return c.length > 0 && (l = ct(l, c)), O(l, e.shape);
     }, b: () => {
       const a = Z(Ut(e), Ut(s));
       let l = Jt(A(n, ut(e, a)));
       const c = ce(s.shape, o);
-      return c.length > 0 && (l = ct(l, c)), _(l, s.shape);
+      return c.length > 0 && (l = ct(l, c)), O(l, s.shape);
     } };
   }
 };
@@ -11695,7 +11695,7 @@ const G2 = {
 function H2(n, t, e, s, o, r) {
   const i = E(n, "dy", "avgPool3dGrad"), a = E(t, "input", "avgPool3dGrad");
   let l = i, c = a, u = !1;
-  a.rank === 4 && (u = !0, l = _(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]]), c = _(a, [
+  a.rank === 4 && (u = !0, l = O(i, [1, i.shape[0], i.shape[1], i.shape[2], i.shape[3]]), c = O(a, [
     1,
     a.shape[0],
     a.shape[1],
@@ -11703,7 +11703,7 @@ function H2(n, t, e, s, o, r) {
     a.shape[3]
   ])), $(l.rank === 5, () => `Error in avgPool3dGrad: dy must be rank 5 but got rank ${l.rank}.`), $(c.rank === 5, () => `Error in avgPool3dGrad: input must be rank 5 but got rank ${c.rank}.`), Be("avgPool3dGrad", o, r);
   const h = { dy: l, input: c }, d = { filterSize: e, strides: s, pad: o, dimRoundingMode: r }, f = M.runKernel(vh, h, d);
-  return u ? _(f, [f.shape[1], f.shape[2], f.shape[3], f.shape[4]]) : f;
+  return u ? O(f, [f.shape[1], f.shape[2], f.shape[3], f.shape[4]]) : f;
 }
 const q2 = /* @__PURE__ */ P({ avgPool3dGrad_: H2 });
 /**
@@ -11752,9 +11752,9 @@ function K2(n, t, e, s, o) {
   const r = E(n, "dy", "avgPoolGrad"), i = E(t, "input", "avgPoolGrad");
   $(i.rank === r.rank, () => `Rank of input (${i.rank}) does not match rank of dy (${r.rank})`);
   let a = i, l = r, c = !1;
-  i.rank === 3 && (c = !0, a = _(i, [1, i.shape[0], i.shape[1], i.shape[2]]), l = _(r, [1, r.shape[0], r.shape[1], r.shape[2]])), $(l.rank === 4, () => `Error in avgPoolGrad: dy must be rank 4 but got rank ${l.rank}.`), $(a.rank === 4, () => `Error in avgPoolGrad: input must be rank 4 but got rank ${a.rank}.`);
+  i.rank === 3 && (c = !0, a = O(i, [1, i.shape[0], i.shape[1], i.shape[2]]), l = O(r, [1, r.shape[0], r.shape[1], r.shape[2]])), $(l.rank === 4, () => `Error in avgPoolGrad: dy must be rank 4 but got rank ${l.rank}.`), $(a.rank === 4, () => `Error in avgPoolGrad: input must be rank 4 but got rank ${a.rank}.`);
   const u = { dy: l, input: a }, h = { filterSize: e, strides: s, pad: o }, d = M.runKernel(yh, u, h);
-  return c ? _(d, [d.shape[1], d.shape[2], d.shape[3]]) : d;
+  return c ? O(d, [d.shape[1], d.shape[2], d.shape[3]]) : d;
 }
 const X2 = /* @__PURE__ */ P({ avgPoolGrad_: K2 });
 /**
@@ -12059,9 +12059,9 @@ const iT = {
  */
 function aT(n, t, e, s, o) {
   let r = n;
-  n.rank === 4 && (r = _(n, [1, n.shape[0], n.shape[1], n.shape[2], n.shape[3]]));
+  n.rank === 4 && (r = O(n, [1, n.shape[0], n.shape[1], n.shape[2], n.shape[3]]));
   let i = t;
-  i.rank === 4 && (i = _(t, [1, t.shape[0], t.shape[1], t.shape[2], t.shape[3]])), $(r.rank === 5, () => `Error in conv3dDerFilter: input must be rank 5, but got shape ${r.shape}.`), $(i.rank === 5, () => `Error in conv3dDerFilter: dy must be rank 5, but got shape ${i.shape}.`), $(e.length === 5, () => `Error in conv3dDerFilter: filterShape must be length 5, but got ${e}.`), $(r.shape[4] === e[3], () => `Error in conv3dDerFilter: depth of input ${r.shape[4]}) must match input depth in filter (${e[3]}.`), $(i.shape[4] === e[4], () => `Error in conv3dDerFilter: depth of dy (${i.shape[4]}) must match output depth for filter (${e[4]}).`);
+  i.rank === 4 && (i = O(t, [1, t.shape[0], t.shape[1], t.shape[2], t.shape[3]])), $(r.rank === 5, () => `Error in conv3dDerFilter: input must be rank 5, but got shape ${r.shape}.`), $(i.rank === 5, () => `Error in conv3dDerFilter: dy must be rank 5, but got shape ${i.shape}.`), $(e.length === 5, () => `Error in conv3dDerFilter: filterShape must be length 5, but got ${e}.`), $(r.shape[4] === e[3], () => `Error in conv3dDerFilter: depth of input ${r.shape[4]}) must match input depth in filter (${e[3]}.`), $(i.shape[4] === e[4], () => `Error in conv3dDerFilter: depth of dy (${i.shape[4]}) must match output depth for filter (${e[4]}).`);
   const a = { x: r, dy: i }, l = { strides: s, pad: o, filterShape: e };
   return M.runKernel($h, a, l);
 }
@@ -12250,7 +12250,7 @@ const mT = {
   outputsToSave: [!0],
   gradFunc: (n, t) => {
     const [e] = t, s = { dy: n, y: e };
-    return { x: () => M.runKernel(Oh, s) };
+    return { x: () => M.runKernel(_h, s) };
   }
 };
 /**
@@ -12322,7 +12322,7 @@ const bT = {
   inputsToSave: ["input"],
   gradFunc: (n, t) => {
     const [e] = t;
-    return { input: () => _(n, e.shape) };
+    return { input: () => O(n, e.shape) };
   }
 };
 /**
@@ -12392,11 +12392,11 @@ const vT = {
     const [e, s] = t, o = mt(e.shape, s.shape);
     return { a: () => {
       const a = ut(n, st(s, "float32")), l = ce(e.shape, o);
-      return l.length > 0 ? _(ct(a, l), e.shape) : a;
+      return l.length > 0 ? O(ct(a, l), e.shape) : a;
     }, b: () => {
       let a = A(n, st(e, "float32"));
       const l = ce(s.shape, o);
-      l.length > 0 && (a = _(ct(a, l), s.shape));
+      l.length > 0 && (a = O(ct(a, l), s.shape));
       const c = Ut(s);
       return Jt(ut(a, st(c, "float32")));
     } };
@@ -12430,23 +12430,23 @@ const IT = {
     }
     const h = ft(o, r), d = A(n, l), f = c0(Z(i, Nt(s))), p = A(A(A(f, f), f), Nt(-0.5));
     return {
-      x: () => r.rank === 1 ? _(A(A(n, yn(_(f, [1, 1, 1, r.shape[0]]), u)), l), o.shape) : _(A(A(n, f), l), o.shape),
+      x: () => r.rank === 1 ? O(A(A(n, yn(O(f, [1, 1, 1, r.shape[0]]), u)), l), o.shape) : O(A(A(n, f), l), o.shape),
       mean: () => {
         let w = A(A(f, Nt(-1)), d);
-        return r.rank === 1 && (w = ct(w, c)), _(w, r.shape);
+        return r.rank === 1 && (w = ct(w, c)), O(w, r.shape);
       },
       variance: () => {
         let w = A(A(p, h), d);
-        return r.rank === 1 && (w = ct(w, c)), _(w, r.shape);
+        return r.rank === 1 && (w = ct(w, c)), O(w, r.shape);
       },
       scale: () => {
         const w = A(h, f);
         let v = A(n, w);
-        return r.rank === 1 && (v = ct(v, c)), _(v, r.shape);
+        return r.rank === 1 && (v = ct(v, c)), O(v, r.shape);
       },
       offset: () => {
         let w = n;
-        return r.rank === 1 && (w = ct(w, c)), _(w, r.shape);
+        return r.rank === 1 && (w = ct(w, c)), O(w, r.shape);
       }
     };
   }
@@ -12476,7 +12476,7 @@ const kT = {
         p,
         [f],
         g
-      ]), v = _(h, w), k = _(u, [f]), N = Sp([[m], b, y]), T = kt(v, N);
+      ]), v = O(h, w), k = O(u, [f]), N = Sp([[m], b, y]), T = kt(v, N);
       let S = x0(T, k, c.shape[a]);
       const C = Ns(N);
       return S = kt(S, C), S;
@@ -12744,7 +12744,7 @@ const FT = P({ localResponseNormalizationBackprop_: MT });
  * limitations under the License.
  * =============================================================================
  */
-const OT = {
+const _T = {
   kernelName: Al,
   inputsToSave: ["x"],
   outputsToSave: [!0],
@@ -12772,7 +12772,7 @@ const OT = {
  * =============================================================================
  */
 function sx(n, t, e, s) {
-  return t.rank < e.rank && (t = _(t, se(t.shape, s))), n.rank < e.rank && (n = _(n, se(n.shape, s))), {
+  return t.rank < e.rank && (t = O(t, se(t.shape, s))), n.rank < e.rank && (n = O(n, se(n.shape, s))), {
     x: () => A(n, st(zn(e, t), n.dtype))
   };
 }
@@ -12819,7 +12819,7 @@ const $p = {
  * limitations under the License.
  * =============================================================================
  */
-const _T = {
+const OT = {
   kernelName: ui,
   inputsToSave: ["a", "b"],
   gradFunc: (n, t) => {
@@ -12846,13 +12846,13 @@ const _T = {
 function PT(n, t, e, s, o, r, i) {
   const a = E(n, "dy", "maxPool3dGrad"), l = E(t, "input", "maxPool3dGrad"), c = E(e, "output", "maxPool3dGrad");
   let u = a, h = l, d = c, f = !1;
-  l.rank === 4 && (f = !0, u = _(a, [1, a.shape[0], a.shape[1], a.shape[2], a.shape[3]]), h = _(l, [
+  l.rank === 4 && (f = !0, u = O(a, [1, a.shape[0], a.shape[1], a.shape[2], a.shape[3]]), h = O(l, [
     1,
     l.shape[0],
     l.shape[1],
     l.shape[2],
     l.shape[3]
-  ]), d = _(c, [
+  ]), d = O(c, [
     1,
     c.shape[0],
     c.shape[1],
@@ -12860,7 +12860,7 @@ function PT(n, t, e, s, o, r, i) {
     c.shape[3]
   ])), $(u.rank === 5, () => `Error in maxPool3dGrad: dy must be rank 5 but got rank ${u.rank}.`), $(h.rank === 5, () => `Error in maxPool3dGrad: input must be rank 5 but got rank ${h.rank}.`), $(d.rank === 5, () => `Error in maxPool3dGrad: output must be rank 5 but got rank ${d.rank}.`), Be("maxPool3dGrad", r, i);
   const p = { dy: u, input: h, output: d }, m = { filterSize: s, strides: o, pad: r, dimRoundingMode: i }, g = M.runKernel(Wh, p, m);
-  return f ? _(g, [g.shape[1], g.shape[2], g.shape[3], g.shape[4]]) : g;
+  return f ? O(g, [g.shape[1], g.shape[2], g.shape[3], g.shape[4]]) : g;
 }
 const LT = /* @__PURE__ */ P({ maxPool3dGrad_: PT });
 /**
@@ -12880,7 +12880,7 @@ const LT = /* @__PURE__ */ P({ maxPool3dGrad_: PT });
  * =============================================================================
  */
 const zT = {
-  kernelName: Ol,
+  kernelName: _l,
   inputsToSave: ["x"],
   outputsToSave: [!0],
   gradFunc: (n, t, e) => {
@@ -12957,7 +12957,7 @@ const UT = {
  * =============================================================================
  */
 const WT = {
-  kernelName: _l,
+  kernelName: Ol,
   inputsToSave: ["x"],
   gradFunc: (n, t, e) => {
     const [s] = t, { axis: o } = e, r = yt(o, s.shape), a = me(s.shape, r)[1], l = q(a);
@@ -12966,7 +12966,7 @@ const WT = {
       r.forEach((f) => {
         u[f] = 1;
       });
-      const h = _(n, u);
+      const h = O(n, u);
       return ut(A(h, Rs(s.shape, "float32")), l);
     } };
   }
@@ -13069,10 +13069,10 @@ const jT = {
     const [e, s] = t, o = mt(e.shape, s.shape);
     return { a: () => {
       const a = ce(e.shape, o);
-      return a.length > 0 ? _(ct(n, a), e.shape) : n;
+      return a.length > 0 ? O(ct(n, a), e.shape) : n;
     }, b: () => {
       const a = A(n, Jt(fc(ut(e, s)))), l = ce(s.shape, o);
-      return l.length > 0 ? _(ct(a, l), s.shape) : a;
+      return l.length > 0 ? O(ct(a, l), s.shape) : a;
     } };
   }
 };
@@ -13099,10 +13099,10 @@ const KT = {
     const [e, s] = t, o = mt(e.shape, s.shape);
     return { a: () => {
       const a = A(n, st(s, "float32")), l = ce(e.shape, o);
-      return l.length > 0 ? _(ct(a, l), e.shape) : a;
+      return l.length > 0 ? O(ct(a, l), e.shape) : a;
     }, b: () => {
       const a = A(n, st(e, "float32")), l = ce(s.shape, o);
-      return l.length > 0 ? _(ct(a, l), s.shape) : a;
+      return l.length > 0 ? O(ct(a, l), s.shape) : a;
     } };
   }
 };
@@ -13244,12 +13244,12 @@ const QT = {
       const u = st(i, "float32");
       let h = A(n, A(u, eo(r, ft(u, Nt(1)))));
       const d = ce(r.shape, a);
-      return d.length > 0 && (h = ct(h, d)), _(h, r.shape);
+      return d.length > 0 && (h = ct(h, d)), O(h, r.shape);
     }, b: () => {
       const u = en(r, 0), h = De(u, Vn(r), Ct(r));
       let d = A(n, A(o, h));
       const f = ce(i.shape, a);
-      return f.length > 0 && (d = ct(d, f)), _(d, i.shape);
+      return f.length > 0 && (d = ct(d, f)), O(d, i.shape);
     } };
   }
 };
@@ -13279,7 +13279,7 @@ const tN = {
       alpha: () => {
         let r = De(o, Ct(n), A(n, e));
         const i = ce(s.shape, n.shape);
-        return i.length > 0 && (r = ct(r, i)), _(r, s.shape);
+        return i.length > 0 && (r = ct(r, i)), O(r, s.shape);
       }
     };
   }
@@ -13303,7 +13303,7 @@ const tN = {
 function eN(n, t, e) {
   const s = n.shape.slice();
   s[e] = 1;
-  const o = _(t, s), r = Vu(n, e, !0, !1), i = Vu(n, e, !0, !0), a = A(r, i);
+  const o = O(t, s), r = Vu(n, e, !0, !1), i = Vu(n, e, !0, !0), a = A(r, i);
   return A(o, a);
 }
 function nN(n, t, e) {
@@ -13352,11 +13352,11 @@ const oN = {
     const [e, s] = t, o = mt(e.shape, s.shape);
     return { a: () => {
       const a = ut(n, st(s, "float32")), l = ce(e.shape, o);
-      return l.length > 0 ? _(ct(a, l), e.shape) : a;
+      return l.length > 0 ? O(ct(a, l), e.shape) : a;
     }, b: () => {
       let a = A(n, st(e, "float32"));
       const l = ce(s.shape, o);
-      l.length > 0 && (a = _(ct(a, l), s.shape));
+      l.length > 0 && (a = O(ct(a, l), s.shape));
       const c = Ut(s);
       return Jt(ut(a, st(c, "float32")));
     } };
@@ -13455,7 +13455,7 @@ const lN = {
   inputsToSave: ["x"],
   gradFunc: (n, t) => {
     const [e] = t;
-    return { x: () => _(n, e.shape) };
+    return { x: () => O(n, e.shape) };
   }
 };
 /**
@@ -13968,11 +13968,11 @@ const TN = {
     return { a: () => {
       let a = n;
       const l = ce(e.shape, o);
-      return l.length > 0 && (a = ct(a, l)), _(a, e.shape);
+      return l.length > 0 && (a = ct(a, l)), O(a, e.shape);
     }, b: () => {
       let a = n;
       const l = ce(s.shape, o);
-      return l.length > 0 && (a = ct(a, l)), _(Jt(a), s.shape);
+      return l.length > 0 && (a = ct(a, l)), O(Jt(a), s.shape);
     } };
   }
 };
@@ -14000,7 +14000,7 @@ const NN = {
     yt(r, s.shape).forEach((c) => {
       o[c] = 1;
     });
-    const a = _(n, o), l = A(a, Rs(s.shape, "float32"));
+    const a = O(n, o), l = A(a, Rs(s.shape, "float32"));
     return { x: () => l };
   }
 };
@@ -14174,15 +14174,15 @@ const FN = {
   inputsToSave: ["segmentIds"],
   gradFunc: (n, t) => {
     const [e] = t;
-    return { x: () => ON(n, e) };
+    return { x: () => _N(n, e) };
   }
 };
-function ON(n, t) {
+function _N(n, t) {
   const e = Es(t, Ct(t)), s = fd(n, e);
   let o = ho(t, Nt(0, "int32"));
   const r = s.rank - o.rank;
   for (let a = 0; a < r; ++a)
-    o = Oe(o, a + 1);
+    o = _e(o, a + 1);
   o = Zn(o, Rs(s.shape, "bool"));
   const i = Ct(s);
   return De(o, s, i);
@@ -14203,7 +14203,7 @@ function ON(n, t) {
  * limitations under the License.
  * =============================================================================
  */
-const _N = {
+const ON = {
   kernelName: rc,
   gradFunc: (n) => ({ x: () => Ct(n) })
 };
@@ -14226,8 +14226,8 @@ const _N = {
 const PN = [
   nx,
   F2,
-  O2,
   _2,
+  O2,
   P2,
   L2,
   z2,
@@ -14273,10 +14273,10 @@ const PN = [
   RT,
   DT,
   AT,
-  OT,
-  $p,
-  $p,
   _T,
+  $p,
+  $p,
+  OT,
   zT,
   UT,
   WT,
@@ -14328,7 +14328,7 @@ const PN = [
   AN,
   MN,
   FN,
-  _N
+  ON
 ];
 for (const n of PN)
   ev(n);
@@ -14501,7 +14501,7 @@ W().prototype.argMin = function(n) {
  * =============================================================================
  */
 W().prototype.asScalar = function() {
-  return this.throwIfDisposed(), $(this.size === 1, () => "The array must have only 1 element."), _(this, []);
+  return this.throwIfDisposed(), $(this.size === 1, () => "The array must have only 1 element."), O(this, []);
 };
 /**
  * @license
@@ -14539,7 +14539,7 @@ W().prototype.asType = function(n) {
  * =============================================================================
  */
 W().prototype.as1D = function() {
-  return this.throwIfDisposed(), _(this, [this.size]);
+  return this.throwIfDisposed(), O(this, [this.size]);
 };
 /**
  * @license
@@ -14558,7 +14558,7 @@ W().prototype.as1D = function() {
  * =============================================================================
  */
 W().prototype.as2D = function(n, t) {
-  return this.throwIfDisposed(), _(this, [n, t]);
+  return this.throwIfDisposed(), O(this, [n, t]);
 };
 /**
  * @license
@@ -14577,7 +14577,7 @@ W().prototype.as2D = function(n, t) {
  * =============================================================================
  */
 W().prototype.as3D = function(n, t, e) {
-  return this.throwIfDisposed(), _(this, [n, t, e]);
+  return this.throwIfDisposed(), O(this, [n, t, e]);
 };
 /**
  * @license
@@ -14596,7 +14596,7 @@ W().prototype.as3D = function(n, t, e) {
  * =============================================================================
  */
 W().prototype.as4D = function(n, t, e, s) {
-  return this.throwIfDisposed(), _(this, [n, t, e, s]);
+  return this.throwIfDisposed(), O(this, [n, t, e, s]);
 };
 /**
  * @license
@@ -14615,7 +14615,7 @@ W().prototype.as4D = function(n, t, e, s) {
  * =============================================================================
  */
 W().prototype.as5D = function(n, t, e, s, o) {
-  return this.throwIfDisposed(), _(this, [n, t, e, s, o]);
+  return this.throwIfDisposed(), O(this, [n, t, e, s, o]);
 };
 /**
  * @license
@@ -15207,7 +15207,7 @@ W().prototype.exp = function() {
  * =============================================================================
  */
 W().prototype.expandDims = function(n) {
-  return this.throwIfDisposed(), Oe(this, n);
+  return this.throwIfDisposed(), _e(this, n);
 };
 /**
  * @license
@@ -15264,7 +15264,7 @@ W().prototype.fft = function() {
  * =============================================================================
  */
 W().prototype.flatten = function() {
-  return this.throwIfDisposed(), _(this, [this.size]);
+  return this.throwIfDisposed(), O(this, [this.size]);
 };
 /**
  * @license
@@ -15799,7 +15799,7 @@ W().prototype.mean = function(n, t) {
  * =============================================================================
  */
 W().prototype.min = function(n, t) {
-  return this.throwIfDisposed(), _a(this, n, t);
+  return this.throwIfDisposed(), Oa(this, n, t);
 };
 /**
  * @license
@@ -15856,7 +15856,7 @@ W().prototype.mirrorPad = function(n, t) {
  * =============================================================================
  */
 W().prototype.mod = function(n) {
-  return this.throwIfDisposed(), _C(this, n);
+  return this.throwIfDisposed(), OC(this, n);
 };
 /**
  * @license
@@ -16125,7 +16125,7 @@ W().prototype.relu6 = function() {
  * =============================================================================
  */
 W().prototype.reshapeAs = function(n) {
-  return this.throwIfDisposed(), _(this, n.shape);
+  return this.throwIfDisposed(), O(this, n.shape);
 };
 /**
  * @license
@@ -16144,7 +16144,7 @@ W().prototype.reshapeAs = function(n) {
  * =============================================================================
  */
 W().prototype.reshape = function(n) {
-  return this.throwIfDisposed(), _(this, n);
+  return this.throwIfDisposed(), O(this, n);
 };
 /**
  * @license
@@ -16429,7 +16429,7 @@ W().prototype.softmax = function(n) {
  * =============================================================================
  */
 W().prototype.softplus = function() {
-  return this.throwIfDisposed(), _i(this);
+  return this.throwIfDisposed(), Oi(this);
 };
 /**
  * @license
@@ -17007,7 +17007,7 @@ function Rp(n, t) {
     s === t && e++;
   return e;
 }
-function _e(n) {
+function Oe(n) {
   return n.length === 1 ? n[0] : n;
 }
 function Dt(n) {
@@ -17290,10 +17290,10 @@ function Pn(n, t) {
 }
 function Gi(n, t = -1) {
   const e = n.shape.slice();
-  return t < 0 && (t = e.length + t + 1), e.splice(t, 0, 1), _(n, e);
+  return t < 0 && (t = e.length + t + 1), e.splice(t, 0, 1), O(n, e);
 }
 function JN(n, t) {
-  return O(() => {
+  return _(() => {
     if (n.shape.length !== 2)
       throw new D(`repeat() expects a rank-2 tensor, but received a rank-${n.shape.length} tensor.`);
     const e = Gi(n, 1);
@@ -17302,16 +17302,16 @@ function JN(n, t) {
 }
 function ZN(n) {
   const t = [xs(n.shape)];
-  return _(n, t);
+  return O(n, t);
 }
 function QN(n) {
   if (n.rank <= 1)
     throw new D(`batchFlatten requires a minimum rank of 2. Got rank: ${n.rank}.`);
   const t = [n.shape[0], xs(n.shape, 1)];
-  return _(n, t);
+  return O(n, t);
 }
 function Ks(n, t, e) {
-  return O(() => {
+  return _(() => {
     switch (n.rank) {
       case 1:
         return kd(n, t, e);
@@ -17344,7 +17344,7 @@ function Ks(n, t, e) {
   });
 }
 function jc(n, t, e) {
-  return O(() => {
+  return _(() => {
     switch (n.rank) {
       case 1:
         return kd(n, t, e);
@@ -17360,7 +17360,7 @@ function jc(n, t, e) {
   });
 }
 function aa(n, t, e, s) {
-  return O(() => {
+  return _(() => {
     switch (n.rank) {
       case 1:
         return kd(n, t, e);
@@ -17447,11 +17447,11 @@ function Ln(n, t, e, s) {
     });
   {
     const o = n.shape.slice(), r = o.pop();
-    n = _(n, [-1, r]);
+    n = O(n, [-1, r]);
     const i = t.shape.slice(), a = i.pop(), l = i.pop(), c = [...i, a], u = Array.from({ length: t.rank }, (p, m) => m === 0 ? t.rank - 2 : m <= t.rank - 2 ? m - 1 : m);
-    t = _(kt(t, u), [l, -1]);
+    t = O(kt(t, u), [l, -1]);
     const h = [...o, ...c];
-    return _(mp({
+    return O(mp({
       a: n,
       b: t,
       transposeA: !1,
@@ -17462,7 +17462,7 @@ function Ln(n, t, e, s) {
   }
 }
 function dx(n, t, e) {
-  return O(() => (Array.isArray(t) ? t = We(t, "int32") : t = st(t, "int32"), fd(n, t, e)));
+  return _(() => (Array.isArray(t) ? t = We(t, "int32") : t = st(t, "int32"), fd(n, t, e)));
 }
 function Hi(n) {
   return A(n, n);
@@ -17473,25 +17473,25 @@ function ju(n, t, e) {
     throw new D(`Unexpected bias dimensions: ${t.rank}; expected it to be 1 or ${n}`);
   if (n === 5) {
     if (e === "channelsFirst")
-      return s.length === 1 ? _(t, [1, s[0], 1, 1, 1]) : _(t, [1, s[3], s[0], s[1], s[2]]);
+      return s.length === 1 ? O(t, [1, s[0], 1, 1, 1]) : O(t, [1, s[3], s[0], s[1], s[2]]);
     if (e === "channelsLast")
-      return s.length === 1 ? _(t, [1, 1, 1, 1, s[0]]) : _(t, [1].concat(s));
+      return s.length === 1 ? O(t, [1, 1, 1, 1, s[0]]) : O(t, [1].concat(s));
   } else if (n === 4) {
     if (e === "channelsFirst")
-      return s.length === 1 ? _(t, [1, s[0], 1, 1]) : _(t, [1, s[2], s[0], s[1]]);
+      return s.length === 1 ? O(t, [1, s[0], 1, 1]) : O(t, [1, s[2], s[0], s[1]]);
     if (e === "channelsLast")
-      return s.length === 1 ? _(t, [1, 1, 1, s[0]]) : _(t, [1].concat(s));
+      return s.length === 1 ? O(t, [1, 1, 1, s[0]]) : O(t, [1].concat(s));
   } else if (n === 3) {
     if (e === "channelsFirst")
-      return s.length === 1 ? _(t, [1, s[0], 1]) : _(t, [1, s[1], s[0]]);
+      return s.length === 1 ? O(t, [1, s[0], 1]) : O(t, [1, s[1], s[0]]);
     if (e === "channelsLast")
-      return s.length === 1 ? _(t, [1, 1, s[0]]) : _(t, [1].concat(s));
+      return s.length === 1 ? O(t, [1, 1, s[0]]) : O(t, [1].concat(s));
   } else if (n < 3)
     return t;
   throw new D(`Unsupported input rank by biasAdd: ${t.rank}`);
 }
 function Tn(n, t, e) {
-  return O(() => (e == null && (e = Sn()), te(e), Z(n, ju(n.rank, t, e))));
+  return _(() => (e == null && (e = Sn()), te(e), Z(n, ju(n.rank, t, e))));
 }
 function tE(n, t = 1) {
   if (t !== 1)
@@ -17499,13 +17499,13 @@ function tE(n, t = 1) {
   return hc(n);
 }
 function eE(n) {
-  return O(() => ut(n, Z(Ne(n), 1)));
+  return _(() => ut(n, Z(Ne(n), 1)));
 }
 function fx(n, t, e, s) {
-  return O(() => h$(n, t, e, s));
+  return _(() => h$(n, t, e, s));
 }
 function nE(n) {
-  return O(() => {
+  return _(() => {
     const t = Z(0.5, A(0.2, n));
     return Qe(t, 0, 1);
   });
@@ -17569,7 +17569,7 @@ class mx extends fn {
     this.value = t.value;
   }
   apply(t, e) {
-    return O(() => A(Nt(this.value), Rs(t, e)));
+    return _(() => A(Nt(this.value), Rs(t, e)));
   }
   getConfig() {
     return {
@@ -17627,7 +17627,7 @@ class wx extends fn {
     super(), this.gain = t.gain != null ? t.gain : 1;
   }
   apply(t, e) {
-    return O(() => {
+    return _(() => {
       if (t.length !== 2 || t[0] !== t[1])
         throw new D("Identity matrix initializer can only be used for 2D square matrices.");
       return A(this.gain, t0(t[0]));
@@ -17800,7 +17800,7 @@ class yx extends fn {
     super(), this.DEFAULT_GAIN = 1, this.ELEMENTS_WARN_SLOW = 2e3, this.gain = t.gain == null ? this.DEFAULT_GAIN : t.gain, this.seed = t.seed;
   }
   apply(t, e) {
-    return O(() => {
+    return _(() => {
       if (t.length < 2)
         throw new xt("Shape must be at least 2D.");
       if (e !== "int32" && e !== "float32" && e !== void 0)
@@ -17924,7 +17924,7 @@ function Ua(n) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
-const Op = "Variable";
+const _p = "Variable";
 class lE {
   /**
    * Construct Variable from a `tf.Tensor`.
@@ -17940,8 +17940,8 @@ class lE {
    * variable after optimize updates
    * @throws ValueError if `name` is `null` or `undefined`.
    */
-  constructor(t, e = "float32", s = Op, o = !0, r = null) {
-    this.dtype = e == null ? "float32" : e, this.shape = t.shape, this.id = ax(), s = s == null ? Op : s, this.originalName = cx(s), this.name = ux(this.originalName), this.trainable_ = o, this.constraint = r, this.val = a$(t, this.trainable_, this.name, this.dtype);
+  constructor(t, e = "float32", s = _p, o = !0, r = null) {
+    this.dtype = e == null ? "float32" : e, this.shape = t.shape, this.id = ax(), s = s == null ? _p : s, this.originalName = cx(s), this.name = ux(this.originalName), this.trainable_ = o, this.constraint = r, this.val = a$(t, this.trainable_, this.name, this.dtype);
   }
   /**
    * Get a snapshot of the Variable's value.
@@ -18103,7 +18103,7 @@ class vt extends Jo {
    * @return A tensor (or list of tensors if the layer has multiple inputs).
    */
   getInputAt(t) {
-    return _e(this.getNodeAtIndex(t, "input").inputTensors);
+    return Oe(this.getNodeAtIndex(t, "input").inputTensors);
   }
   /**
    * Retrieves the output tensor(s) of a layer at a given node.
@@ -18115,7 +18115,7 @@ class vt extends Jo {
    * @return A tensor (or list of tensors if the layer has multiple outputs).
    */
   getOutputAt(t) {
-    return _e(this.getNodeAtIndex(t, "output").outputTensors);
+    return Oe(this.getNodeAtIndex(t, "output").outputTensors);
   }
   // Properties
   /**
@@ -18134,7 +18134,7 @@ class vt extends Jo {
       throw new Dn(`Layer ${this.name} has multiple inbound nodes, hence the notion of "layer input" is ill-defined. Use \`getInputAt(nodeIndex)\` instead.`);
     if (this.inboundNodes.length === 0)
       throw new Dn(`Layer ${this.name} is not connected, no input to return.`);
-    return _e(this.getNodeAtIndex(0, "input").inputTensors);
+    return Oe(this.getNodeAtIndex(0, "input").inputTensors);
   }
   /**
    * Retrieves the output tensor(s) of a layer.
@@ -18152,7 +18152,7 @@ class vt extends Jo {
       throw new Dn(`Layer ${this.name} has no inbound nodes.`);
     if (this.inboundNodes.length > 1)
       throw new Dn(`Layer ${this.name} has multiple inbound nodes, hence the notion of "layer output" is ill-defined. Use \`getOutputAt(nodeIndex)\` instead.`);
-    return _e(this.getNodeAtIndex(0, "output").outputTensors);
+    return Oe(this.getNodeAtIndex(0, "output").outputTensors);
   }
   get losses() {
     return this._losses;
@@ -18370,7 +18370,7 @@ class vt extends Jo {
         const i = [];
         for (const a of Dt(t))
           i.push(a.shape);
-        this.build(_e(i)), this.built = !0, this.initialWeights && this.setWeights(this.initialWeights), this._refCount === null && r && (this._refCount = 1);
+        this.build(Oe(i)), this.built = !0, this.initialWeights && this.setWeights(this.initialWeights), this._refCount === null && r && (this._refCount = 1);
       }
       if (this.assertInputCompatibility(t), r) {
         let i = this.call(t, e);
@@ -18378,7 +18378,7 @@ class vt extends Jo {
         const a = Dt(i), l = [];
         for (let c of a)
           s.indexOf(c) !== -1 && (c = c.clone()), l.push(c);
-        if (i = _e(l), this.activityRegularizer != null)
+        if (i = Oe(l), this.activityRegularizer != null)
           throw new xt("Layer invocation in the presence of activity regularizer(s) is not supported yet.");
         return i;
       } else {
@@ -18488,7 +18488,7 @@ class vt extends Jo {
    * @doc {heading: 'Models', 'subheading': 'Classes'}
    */
   setWeights(t) {
-    O(() => {
+    _(() => {
       const e = this.weights;
       if (e.length !== t.length)
         throw new D(`You called setWeights(weights) on layer "${this.name}" with a weight list of length ${t.length}, but the layer was expecting ${e.length} weights. Provided weights: ${t}...`);
@@ -18711,7 +18711,7 @@ function dE(n) {
   const t = [];
   for (const e of n)
     t.push(e.shape);
-  return _e(t);
+  return Oe(t);
 }
 function fE(n) {
   return "float32";
@@ -18983,12 +18983,12 @@ function wE(n, t) {
   $(n != null && n.length > 0, () => "Expected at least one fetch, got none");
   let e = [], s = {};
   if (n.length === 1) {
-    const o = _p(n[0], t);
+    const o = Op(n[0], t);
     e = o.sorted, s = o.recipientMap;
   } else {
     const o = /* @__PURE__ */ new Set();
     for (const r of n) {
-      const { sorted: i, recipientMap: a } = _p(r, t);
+      const { sorted: i, recipientMap: a } = Op(r, t);
       for (const l of i)
         o.has(l.name) || (e.push(l), o.add(l.name));
       for (const l in a)
@@ -19006,7 +19006,7 @@ function yE(n) {
     t[e] = n[e].size;
   return t;
 }
-function _p(n, t) {
+function Op(n, t) {
   const e = /* @__PURE__ */ new Set(), s = [], o = {};
   for (const a of t.names())
     e.add(a);
@@ -19072,7 +19072,7 @@ IE.registerFlag("TOPOLOGICAL_SORT_CACHE_MAX_ENTRIES", () => 100, bE);
  * =============================================================================
  */
 function gf(n, t) {
-  return O(() => Ce(ct(A(n, n), t, !0)));
+  return _(() => Ce(ct(A(n, n), t, !0)));
 }
 class Ki extends Jo {
   getConfig() {
@@ -19084,7 +19084,7 @@ class Ix extends Ki {
     super(), this.defaultMaxValue = 2, this.defaultAxis = 0, this.maxValue = t.maxValue != null ? t.maxValue : this.defaultMaxValue, this.axis = t.axis != null ? t.axis : this.defaultAxis;
   }
   apply(t) {
-    return O(() => {
+    return _(() => {
       const e = gf(t, this.axis), s = Qe(e, 0, this.maxValue);
       return A(t, ut(s, Z(re(), e)));
     });
@@ -19100,7 +19100,7 @@ class kx extends Ki {
     super(), this.defaultAxis = 0, this.axis = t.axis != null ? t.axis : this.defaultAxis;
   }
   apply(t) {
-    return O(() => ut(t, Z(re(), gf(t, this.axis))));
+    return _(() => ut(t, Z(re(), gf(t, this.axis))));
   }
   getConfig() {
     return { axis: this.axis };
@@ -19120,7 +19120,7 @@ class Sx extends Ki {
     super(), this.defaultMinValue = 0, this.defaultMaxValue = 1, this.defaultRate = 1, this.defaultAxis = 0, this.minValue = t.minValue != null ? t.minValue : this.defaultMinValue, this.maxValue = t.maxValue != null ? t.maxValue : this.defaultMaxValue, this.rate = t.rate != null ? t.rate : this.defaultRate, this.axis = t.axis != null ? t.axis : this.defaultAxis;
   }
   apply(t) {
-    return O(() => {
+    return _(() => {
       const e = gf(t, this.axis), s = Z(A(this.rate, Qe(e, this.minValue, this.maxValue)), A(1 - this.rate, e));
       return A(t, ut(s, Z(re(), e)));
     });
@@ -19336,7 +19336,7 @@ class SE extends Er {
       else {
         let i;
         o in this.totals ? i = this.totals[o] : this.totals[o] = 0;
-        const a = O(() => Z(this.totals[o], A(r, s)));
+        const a = _(() => Z(this.totals[o], A(r, s)));
         this.totals[o] = a, i != null && i.dispose();
       }
     }
@@ -19344,7 +19344,7 @@ class SE extends Er {
   async onEpochEnd(t, e) {
     if (e != null)
       for (const s of this.params.metrics)
-        this.totals[s] != null && (typeof this.totals[s] == "number" ? e[s] = this.totals[s] / this.seen : O(() => {
+        this.totals[s] != null && (typeof this.totals[s] == "number" ? e[s] = this.totals[s] / this.seen : _(() => {
           const o = A(ut(1, this.seen), this.totals[s]);
           e[s] = o, this.totals[s].dispose(), Je(e[s]);
         }));
@@ -19503,56 +19503,56 @@ function Jn(n, t = {}, e = !1) {
  * =============================================================================
  */
 function Ha(n, t) {
-  return O(() => {
+  return _(() => {
     n.dtype !== "float32" && (n = st(n, "float32"));
     const e = ct(Hi(n), t, !0), s = uc(e.shape, re()), o = Ce(Es(e, s));
     return ut(n, o);
   });
 }
 function vc(n, t) {
-  return O(() => ne(Hi(ft(t, n)), -1));
+  return _(() => ne(Hi(ft(t, n)), -1));
 }
 function xf(n, t) {
-  return O(() => ne(Ne(ft(t, n)), -1));
+  return _(() => ne(Ne(ft(t, n)), -1));
 }
 function bf(n, t) {
-  return O(() => {
+  return _(() => {
     const e = ft(n, t), s = Qe(Ne(n), re(), Number.MAX_VALUE), o = Ne(ut(e, s));
     return A(100, ne(o, -1));
   });
 }
 function NE(n, t) {
-  return O(() => {
+  return _(() => {
     const e = Qe(t, re(), Number.MAX_VALUE), s = Vn(Z(1, e)), o = Qe(n, re(), Number.MAX_VALUE), r = Vn(Z(1, o));
     return ne(Hi(ft(s, r)), -1);
   });
 }
 function EE(n, t) {
-  return O(() => {
+  return _(() => {
     const e = Es(0, ft(1, A(n, t)));
     return ne(Hi(e), -1);
   });
 }
 function RE(n, t) {
-  return O(() => {
+  return _(() => {
     const e = Es(0, ft(1, A(n, t)));
     return ne(e, -1);
   });
 }
 function DE(n, t) {
-  return O(() => {
+  return _(() => {
     const e = ct(A(n, t), -1), s = In(A(ft(1, n), t), -1);
     return Es(0, Z(1, ft(s, e)));
   });
 }
 function AE(n, t) {
-  return O(() => {
-    const e = Math.log(2), s = ft(t, n), o = ft(Z(s, _i(A(-2, s))), e);
+  return _(() => {
+    const e = Math.log(2), s = ft(t, n), o = ft(Z(s, Oi(A(-2, s))), e);
     return ne(o, -1);
   });
 }
 function Rr(n, t, e = !1) {
-  return O(() => {
+  return _(() => {
     if (e)
       t = Sd(t);
     else {
@@ -19563,41 +19563,41 @@ function Rr(n, t, e = !1) {
   });
 }
 function qa(n, t, e = !1) {
-  return O(() => {
+  return _(() => {
     const s = st(fc(ZN(n)), "int32");
     t = Qe(t, re(), 1 - re());
-    const o = t.shape, r = _(r0(s, o[o.length - 1]), o);
+    const o = t.shape, r = O(r0(s, o[o.length - 1]), o);
     return Rr(r, t, e);
   });
 }
 function ME(n, t) {
   if (!Et(n.shape, t.shape))
     throw new D(`logits and labels must have the same shape, but got shapes ${JSON.stringify(n.shape)} and ${JSON.stringify(t.shape)}`);
-  return O(() => {
+  return _(() => {
     const e = fo(t), s = Jt(Ne(t));
     return Z(ft(e, A(t, n)), e0(Bn(s)));
   });
 }
 function Ic(n, t) {
-  return O(() => {
+  return _(() => {
     let e;
     return e = Qe(t, re(), 1 - re()), e = Vn(ut(e, ft(1, e))), ne(ME(n, e), -1);
   });
 }
 function FE(n, t) {
-  return O(() => {
+  return _(() => {
     const e = Qe(n, re(), 1), s = Qe(t, re(), 1);
     return ct(A(n, Vn(ut(e, s))), -1);
   });
 }
-function OE(n, t) {
-  return O(() => {
+function _E(n, t) {
+  return _(() => {
     const e = Vn(Z(re(), t));
     return ne(ft(t, A(n, e)), -1);
   });
 }
 function Ex(n, t) {
-  return O(() => {
+  return _(() => {
     const e = Ha(n, -1), s = Ha(t, -1), o = A(e, s);
     return Jt(ct(o, -1));
   });
@@ -19615,7 +19615,7 @@ const ja = {
   sparseCategoricalCrossentropy: qa,
   binaryCrossentropy: Ic,
   kullbackLeiblerDivergence: FE,
-  poisson: OE,
+  poisson: _E,
   cosineProximity: Ex
 };
 function Kc(n) {
@@ -19637,23 +19637,23 @@ function Kc(n) {
  * =============================================================================
  */
 function Rx(n, t) {
-  return O(() => {
+  return _(() => {
     const e = A(0.5, hn(t)), s = Pn(en(t, e), n.dtype);
     return ne(zn(n, s), -1);
   });
 }
 function Dx(n, t) {
-  return O(() => Pn(zn(Cr(n, -1), Cr(t, -1)), "float32"));
+  return _(() => Pn(zn(Cr(n, -1), Cr(t, -1)), "float32"));
 }
-function _E(n, t) {
-  return O(() => st(ct(Zn(zn(n, 1), zn(t, 1))), "float32"));
+function OE(n, t) {
+  return _(() => st(ct(Zn(zn(n, 1), zn(t, 1))), "float32"));
 }
 function PE(n, t) {
-  return O(() => st(ct(Zn(zn(n, 0), zn(t, 1))), "float32"));
+  return _(() => st(ct(Zn(zn(n, 0), zn(t, 1))), "float32"));
 }
 function LE(n, t) {
-  return O(() => {
-    const e = _E(n, t), s = PE(n, t), o = Z(e, s);
+  return _(() => {
+    const e = OE(n, t), s = PE(n, t), o = Z(e, s);
     return st(De(en(o, 0), ut(e, o), 0), "float32");
   });
 }
@@ -19943,7 +19943,7 @@ function Zu(n, t) {
   }
 }
 /** @license See the LICENSE file. */
-const Ox = "4.22.0";
+const _x = "4.22.0";
 /**
  * @license
  * Copyright 2018 Google LLC
@@ -20207,7 +20207,7 @@ class xn extends vt {
    */
   updatedConfig() {
     const t = this.getConfig(), e = {};
-    return e.className = this.getClassName(), e.config = t, e.kerasVersion = `tfjs-layers ${Ox}`, e.backend = "TensorFlow.js", e;
+    return e.className = this.getClassName(), e.config = t, e.kerasVersion = `tfjs-layers ${_x}`, e.backend = "TensorFlow.js", e;
   }
   /**
    * Returns a JSON string containing the network configuration.
@@ -20239,7 +20239,7 @@ class xn extends vt {
    *   are more than one outputs.
    */
   call(t, e) {
-    return O(() => {
+    return _(() => {
       t = Dt(t);
       const s = new ds();
       for (let o = 0; o < this.inputs.length; ++o)
@@ -20257,7 +20257,7 @@ class xn extends vt {
    * layer).
    */
   computeMask(t, e) {
-    return O(() => {
+    return _(() => {
       t = Dt(t);
       let s;
       return e == null ? s = ro(null, t.length) : s = Dt(e), this.runInternalGraph(t, s)[1];
@@ -20294,7 +20294,7 @@ class xn extends vt {
             const g = c.inboundLayers[m], x = c.nodeIndices[m], b = c.tensorIndices[m], y = `${g.name}_${x}_${b}`, w = s[y];
             h.push(w);
           }
-          const d = u.computeOutputShape(_e(h)), f = Va(d), p = u.inboundNodes.indexOf(c);
+          const d = u.computeOutputShape(Oe(h)), f = Va(d), p = u.inboundNodes.indexOf(c);
           for (let m = 0; m < f.length; m++) {
             const g = `${u.name}_${p}_${m}`;
             s[g] = f[m];
@@ -20310,7 +20310,7 @@ class xn extends vt {
       const l = i[a];
       An(l in s), r.push(s[l]);
     }
-    return _e(r);
+    return Oe(r);
   }
   /**
    * Computes output tensors for new inputs.
@@ -20403,7 +20403,7 @@ class xn extends vt {
    * Used for regularizers during training.
    */
   calculateLosses() {
-    return O(() => {
+    return _(() => {
       const t = [];
       for (const e of this.layers)
         for (let s = 0; s < e.inboundNodes.length; ++s) {
@@ -20500,7 +20500,7 @@ class xn extends vt {
         const S = T.inboundNodes[k];
         b.push(S.outputTensors[N]);
       }
-      b.length > 0 && g.apply(_e(b), y);
+      b.length > 0 && g.apply(Oe(b), y);
     }
     function c(g) {
       const x = g.name, b = Jn(g, e.customObjects != null ? e.customObjects : {});
@@ -20560,7 +20560,7 @@ class xn extends vt {
    * is set as `true`.
    */
   resetStates() {
-    O(() => {
+    _(() => {
       this.layers.forEach((t) => {
         t.stateful && t.resetStates();
       });
@@ -20594,19 +20594,19 @@ function nR(n, t, e) {
   } else
     throw new Error(`The model has multiple (${s}) outputs, so ${e} must be either an array with ${s} elements or an object with ${t} keys. Provided ${e} not understood: ${JSON.stringify(n)}`);
 }
-function _x(n, t) {
+function Ox(n, t) {
   return nR(n, t, "classWeight");
 }
 async function Px(n, t, e, s) {
   if (e != null) {
-    const o = O(() => {
+    const o = _(() => {
       if (n.shape.length === 1)
         return qs(n);
       if (n.shape.length === 2) {
         if (n.shape[1] > 1)
           return Cr(n, 1);
         if (n.shape[1] === 1)
-          return _(n, [n.shape[0]]);
+          return O(n, [n.shape[0]]);
         throw new Error(`Encountered unexpected last-dimension size (${n.shape[1]}) during handling of class weights. The size is expected to be >= 1.`);
       } else
         throw new Error(`Unexpected rank of target (y) tensor (${n.rank}) during handling of class weights. The rank is expected to be 1 or 2.`);
@@ -20717,7 +20717,7 @@ async function iR(n, t, e) {
           k.batch = b, k.size = w[0].shape[0], await d.onBatchBegin(b, k);
           const N = [];
           if (e.classWeight != null) {
-            const C = _x(e.classWeight, n.outputNames);
+            const C = Ox(e.classWeight, n.outputNames);
             for (let I = 0; I < C.length; ++I)
               N.push(await Px(v[I], null, C[I]));
           }
@@ -20773,16 +20773,16 @@ async function cR(n, t, e) {
   let a = 0, l = 0;
   for (; !s || l < e.batches; ) {
     const c = await i.next();
-    if (r = O(() => {
+    if (r = _(() => {
       if (c.value) {
-        const { xs: u, ys: h } = Lx(n, c.value), d = u.concat(h), f = O(() => o(d));
+        const { xs: u, ys: h } = Lx(n, c.value), d = u.concat(h), f = _(() => o(d));
         if (It(d), l === 0)
           for (let m = 0; m < f.length; ++m)
             r.push(Nt(0));
         const p = d[0].shape[0];
         for (let m = 0; m < f.length; ++m) {
           const g = f[m], x = r[m];
-          r[m] = O(() => Z(r[m], A(p, g))), l > 0 && It(x);
+          r[m] = _(() => Z(r[m], A(p, g))), l > 0 && It(x);
         }
         It(f), a += p, ++l;
       }
@@ -20796,7 +20796,7 @@ async function cR(n, t, e) {
     const u = r[c];
     r[c] = ut(r[c], a), It(u);
   }
-  return _e(r);
+  return Oe(r);
 }
 /**
  * @license
@@ -20814,7 +20814,7 @@ function ur(n, t, e) {
   return n == null ? [null] : Array.isArray(n) ? n.map((s) => Ks(s, t, e - t)) : Ks(n, t, e - t);
 }
 function Qu(n, t) {
-  return O(() => n == null ? null : Array.isArray(n) ? n.map((e) => Qu(e, t)) : dx(n, t.dtype === "int32" ? t : st(t, "int32")));
+  return _(() => n == null ? null : Array.isArray(n) ? n.map((e) => Qu(e, t)) : dx(n, t.dtype === "int32" ? t : st(t, "int32")));
 }
 function Yc(n, t) {
   const e = [];
@@ -21194,7 +21194,7 @@ class Do extends xn {
       const a = i[0].concat(i[1]);
       this.makeTestFunction();
       const l = this.testFunction, c = this.testLoop(l, a, o, s.verbose, s.steps);
-      return _e(c);
+      return Oe(c);
     } finally {
       gn(i[0], t), gn(i[1], e);
     }
@@ -21309,13 +21309,13 @@ class Do extends xn {
    *   `tf.Tensor` (if multipe outputs).
    */
   predictLoop(t, e = 32, s = !1) {
-    return O(() => {
+    return _(() => {
       const o = this.checkNumSamples(t);
       if (s)
         throw new xt("Verbose predictLoop() is not implemented yet.");
       const r = Yc(o, e), i = this.outputs.map((a) => []);
       for (let a = 0; a < r.length; ++a)
-        O(() => {
+        _(() => {
           const c = r[a][0], u = r[a][1], h = ur(t, c, u), d = [];
           if (Array.isArray(h))
             for (let p = 0; p < h.length; ++p)
@@ -21325,7 +21325,7 @@ class Do extends xn {
           const f = new ds(d);
           return xr(this.outputs, f);
         }).forEach((c, u) => i[u].push(c));
-      return _e(i.map((a) => Pe(a, 0)));
+      return Oe(i.map((a) => Pe(a, 0)));
     });
   }
   /**
@@ -21403,7 +21403,7 @@ class Do extends xn {
       throw new Error("sample weight is not supported yet.");
     let c = null;
     if (o != null) {
-      const u = _x(o, this.outputNames);
+      const u = Ox(o, this.outputNames);
       c = [];
       for (let h = 0; h < u.length; ++h)
         c.push(await Px(l[h], null, u[h]));
@@ -21422,7 +21422,7 @@ class Do extends xn {
    * @returns Array of Scalars.
    */
   testLoop(t, e, s, o = 0, r) {
-    return O(() => {
+    return _(() => {
       const i = this.checkNumSamples(e, s, r, "steps"), a = [];
       if (o > 0)
         throw new xt("Verbose mode is not implemented yet.");
@@ -21507,7 +21507,7 @@ class Do extends xn {
    * under the batch of input data.
    */
   makeTestFunction() {
-    this.testFunction = (t) => O(() => {
+    this.testFunction = (t) => _(() => {
       const e = [];
       let s;
       const o = t.slice(0, this.inputs.length), r = t.slice(this.inputs.length, this.inputs.length + this.outputs.length), i = [];
@@ -21649,7 +21649,7 @@ class Do extends xn {
         const k = We(x), N = Yc(g, o);
         for (let T = 0; T < N.length; ++T) {
           const S = {};
-          if (await b.onBatchBegin(T, S), O(() => {
+          if (await b.onBatchBegin(T, S), _(() => {
             const C = N[T][0], I = N[T][1], R = Ks(k, C, I - C);
             S.batch = T, S.size = I - C;
             const F = Qu(e, R), z = t(F);
@@ -21729,7 +21729,7 @@ class Do extends xn {
       const u = await c.data();
       l.push(u[0]);
     }
-    return It(a), gn(s[0], t), gn(s[1], e), _e(l);
+    return It(a), gn(s[0], t), gn(s[1], e), Oe(l);
   }
   /**
    * Extract weight values of the model.
@@ -21791,8 +21791,8 @@ class Do extends xn {
   dispose() {
     const t = super.dispose();
     if (t.refCountAfterDispose === 0 && this.optimizer != null && this.isOptimizerOwned) {
-      const e = Ou().numTensors;
-      this.optimizer_.dispose(), t.numDisposedVariables += e - Ou().numTensors;
+      const e = _u().numTensors;
+      this.optimizer_.dispose(), t.numDisposedVariables += e - _u().numTensors;
     }
     return t;
   }
@@ -21950,7 +21950,7 @@ class Do extends xn {
    */
   async save(t, e) {
     if (typeof t == "string") {
-      const c = Ov(t);
+      const c = _v(t);
       if (c.length === 0)
         throw new D(`Cannot find any save handlers for URL '${t}'`);
       if (c.length > 1)
@@ -21962,7 +21962,7 @@ class Do extends xn {
     const s = await np(this.getNamedWeights(e)), a = {
       modelTopology: this.toJSON(null, !1),
       format: pR,
-      generatedBy: `TensorFlow.js tfjs-layers v${Ox}`,
+      generatedBy: `TensorFlow.js tfjs-layers v${_x}`,
       convertedBy: null
     };
     if ((e == null ? !1 : e.includeOptimizer) && this.optimizer != null) {
@@ -22552,7 +22552,7 @@ Wx.className = "relu";
 X(Wx);
 class Gx extends $e {
   apply(t) {
-    return O(() => Tr(6, fo(t)));
+    return _(() => Tr(6, fo(t)));
   }
 }
 Gx.className = "relu6";
@@ -22580,7 +22580,7 @@ jx.className = "hardSigmoid";
 X(jx);
 class Kx extends $e {
   apply(t) {
-    return _i(t);
+    return Oi(t);
   }
 }
 Kx.className = "softplus";
@@ -22646,7 +22646,7 @@ class Zx extends $e {
    * @returns a Tensor of the same shape as x
    */
   apply(t) {
-    return O(() => O(() => {
+    return _(() => _(() => {
       const e = Math.sqrt(2), s = A(0.5, Z(1, Jg(ut(t, e))));
       return A(t, s);
     }));
@@ -22662,7 +22662,7 @@ class Qx extends $e {
    * @returns a Tensor of the same shape as x
    */
   apply(t) {
-    return O(() => A(0.5, A(t, Z(1, lc(A(Ce(ut(2, Math.PI)), Z(t, A(0.044715, eo(t, 3)))))))));
+    return _(() => A(0.5, A(t, Z(1, lc(A(Ce(ut(2, Math.PI)), Z(t, A(0.044715, eo(t, 3)))))))));
   }
 }
 Qx.className = "gelu_new";
@@ -22675,7 +22675,7 @@ class t1 extends $e {
    * @returns a Tensor of the same shape as x
    */
   apply(t) {
-    return O(() => A(t, lc(_i(t))));
+    return _(() => A(t, lc(Oi(t))));
   }
 }
 t1.className = "mish";
@@ -22689,7 +22689,7 @@ class e1 extends $e {
    * @returns a Tensor of the same shape as x
    */
   apply(t, e = 1) {
-    return O(() => A(Ko(A(t, e)), t));
+    return _(() => A(Ko(A(t, e)), t));
   }
 }
 e1.className = "swish";
@@ -22734,9 +22734,9 @@ class s1 extends n1 {
    * @param x Variable of which to calculate the regularization score.
    */
   apply(t) {
-    return O(() => {
+    return _(() => {
       let e = fe([1]);
-      return this.hasL1 && (e = Z(e, ct(A(this.l1, Ne(t))))), this.hasL2 && (e = Z(e, ct(A(this.l2, Hi(t))))), _(e, []);
+      return this.hasL1 && (e = Z(e, ct(A(this.l1, Ne(t))))), this.hasL2 && (e = Z(e, ct(A(this.l2, Hi(t))))), O(e, []);
     });
   }
   getConfig() {
@@ -22752,7 +22752,7 @@ X(s1);
 const jp = {
   l1l2: "L1L2"
 };
-function Ot(n) {
+function _t(n) {
   return of(n);
 }
 function Kp(n, t = {}) {
@@ -22845,7 +22845,7 @@ class i1 extends vt {
   getConfig() {
     const t = {
       alphaInitializer: jt(this.alphaInitializer),
-      alphaRegularizer: Ot(this.alphaRegularizer),
+      alphaRegularizer: _t(this.alphaRegularizer),
       alphaConstraint: ae(this.alphaConstraint),
       sharedAxes: this.sharedAxes
     }, e = super.getConfig();
@@ -22897,7 +22897,7 @@ class c1 extends vt {
     super(t == null ? {} : t), this.DEFAULT_AXIS = 1, t == null && (t = {}), this.softmax = new wf().apply, this.axis = t.axis == null ? this.DEFAULT_AXIS : t.axis;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       let s = pt(t);
       const o = e.mask;
       if (o != null) {
@@ -22966,13 +22966,13 @@ function Mn(n, t, e, s) {
  * =============================================================================
  */
 function yf(n, t) {
-  return O(() => (te(t), t === "channelsFirst" ? kt(n, [0, 2, 3, 1]) : n));
+  return _(() => (te(t), t === "channelsFirst" ? kt(n, [0, 2, 3, 1]) : n));
 }
 function u1(n, t) {
-  return O(() => (te(t), t === "channelsFirst" ? kt(n, [0, 2, 3, 4, 1]) : n));
+  return _(() => (te(t), t === "channelsFirst" ? kt(n, [0, 2, 3, 4, 1]) : n));
 }
 function gR(n, t, e, s = 1, o = "valid", r, i = 1) {
-  return O(() => {
+  return _(() => {
     if (r == null && (r = Sn()), te(r), n.shape.length !== 3)
       throw new D(`The input of a conv1dWithBias operation should be 3, but is ${n.shape.length} instead.`);
     if (t.shape.length !== 3)
@@ -22986,7 +22986,7 @@ function gR(n, t, e, s = 1, o = "valid", r, i = 1) {
   });
 }
 function Xp(n, t, e, s = [1, 1], o = "valid", r, i, a = null) {
-  return O(() => {
+  return _(() => {
     if (r == null && (r = Sn()), te(r), n.rank !== 3 && n.rank !== 4)
       throw new D(`conv2dWithBiasActivation expects input to be of rank 3 or 4, but received ${n.rank}.`);
     if (t.rank !== 3 && t.rank !== 4)
@@ -23007,7 +23007,7 @@ function Xp(n, t, e, s = [1, 1], o = "valid", r, i, a = null) {
   });
 }
 function xR(n, t, e, s = [1, 1, 1], o = "valid", r, i) {
-  return O(() => {
+  return _(() => {
     if (r == null && (r = Sn()), te(r), n.rank !== 4 && n.rank !== 5)
       throw new D(`conv3dWithBias expects input to be of rank 4 or 5, but received ${n.rank}.`);
     if (t.rank !== 4 && t.rank !== 5)
@@ -23050,8 +23050,8 @@ class kc extends vt {
       activation: ys(this.activation),
       useBias: this.useBias,
       biasInitializer: jt(this.biasInitializer),
-      biasRegularizer: Ot(this.biasRegularizer),
-      activityRegularizer: Ot(this.activityRegularizer),
+      biasRegularizer: _t(this.biasRegularizer),
+      activityRegularizer: _t(this.activityRegularizer),
       biasConstraint: ae(this.biasConstraint)
     }, e = super.getConfig();
     return Object.assign(t, e), t;
@@ -23070,7 +23070,7 @@ class Zo extends kc {
     this.kernel = this.addWeight("kernel", o, null, this.kernelInitializer, this.kernelRegularizer, !0, this.kernelConstraint), this.useBias && (this.bias = this.addWeight("bias", [this.filters], null, this.biasInitializer, this.biasRegularizer, !0, this.biasConstraint)), this.inputSpec = [{ ndim: this.rank + 2, axes: { [e]: s } }], this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       t = pt(t);
       let s;
       const o = this.bias == null ? null : this.bias.read(), r = ix(this.activation.getClassName());
@@ -23104,7 +23104,7 @@ class Zo extends kc {
     const t = {
       filters: this.filters,
       kernelInitializer: jt(this.kernelInitializer),
-      kernelRegularizer: Ot(this.kernelRegularizer),
+      kernelRegularizer: _t(this.kernelRegularizer),
       kernelConstraint: ae(this.kernelConstraint)
     }, e = super.getConfig();
     return Object.assign(t, e), t;
@@ -23159,7 +23159,7 @@ class h1 extends Xi {
     this.kernel = this.addWeight("kernel", o, "float32", this.kernelInitializer, this.kernelRegularizer, !0, this.kernelConstraint), this.useBias && (this.bias = this.addWeight("bias", [this.filters], "float32", this.biasInitializer, this.biasRegularizer, !0, this.biasConstraint)), this.inputSpec = [new ie({ ndim: 4, axes: { [e]: s } })], this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       let s = pt(t);
       if (s.shape.length !== 4)
         throw new D(`Conv2DTranspose.call() expects input tensor to be rank-4, but received a tensor of rank-${s.shape.length}`);
@@ -23202,7 +23202,7 @@ class d1 extends Yi {
     this.kernel = this.addWeight("kernel", o, "float32", this.kernelInitializer, this.kernelRegularizer, !0, this.kernelConstraint), this.useBias && (this.bias = this.addWeight("bias", [this.filters], "float32", this.biasInitializer, this.biasRegularizer, !0, this.biasConstraint)), this.inputSpec = [new ie({ ndim: 5, axes: { [e]: s } })], this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       let s = pt(t);
       if (s.shape.length !== 5)
         throw new D(`Conv3DTranspose.call() expects input tensor to be rank-4, but received a tensor of rank-${s.shape.length}`);
@@ -23254,7 +23254,7 @@ class f1 extends Zo {
     this.depthwiseKernel = this.addWeight("depthwise_kernel", o, "float32", this.depthwiseInitializer, this.depthwiseRegularizer, i, this.depthwiseConstraint), this.pointwiseKernel = this.addWeight("pointwise_kernel", r, "float32", this.pointwiseInitializer, this.pointwiseRegularizer, i, this.pointwiseConstraint), this.useBias ? this.bias = this.addWeight("bias", [this.filters], "float32", this.biasInitializer, this.biasRegularizer, i, this.biasConstraint) : this.bias = null, this.inputSpec = [new ie({ ndim: this.rank + 2, axes: { [e]: s } })], this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       t = pt(t);
       let s;
       if (this.rank === 1)
@@ -23264,7 +23264,7 @@ class f1 extends Zo {
   }
   getConfig() {
     const t = super.getConfig();
-    return delete t.rank, delete t.kernelInitializer, delete t.kernelRegularizer, delete t.kernelConstraint, t.depthwiseInitializer = jt(this.depthwiseInitializer), t.pointwiseInitializer = jt(this.pointwiseInitializer), t.depthwiseRegularizer = Ot(this.depthwiseRegularizer), t.pointwiseRegularizer = Ot(this.pointwiseRegularizer), t.depthwiseConstraint = ae(this.depthwiseConstraint), t.pointwiseConstraint = ae(this.pointwiseConstraint), t;
+    return delete t.rank, delete t.kernelInitializer, delete t.kernelRegularizer, delete t.kernelConstraint, t.depthwiseInitializer = jt(this.depthwiseInitializer), t.pointwiseInitializer = jt(this.pointwiseInitializer), t.depthwiseRegularizer = _t(this.depthwiseRegularizer), t.pointwiseRegularizer = _t(this.pointwiseRegularizer), t.depthwiseConstraint = ae(this.depthwiseConstraint), t.pointwiseConstraint = ae(this.pointwiseConstraint), t;
   }
 }
 f1.className = "SeparableConv";
@@ -23311,7 +23311,7 @@ class m1 extends vt {
     ];
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (t = pt(t), this.dataFormat === "channelsLast") {
         const s = aa(t, this.cropping[0][0], t.shape[1] - this.cropping[0][0] - this.cropping[0][1], 2);
         return aa(s, this.cropping[1][0], t.shape[2] - this.cropping[1][1] - this.cropping[1][0], 3);
@@ -23342,7 +23342,7 @@ class g1 extends vt {
     }
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       let s = pt(t);
       const o = s.shape;
       if (this.dataFormat === "channelsFirst") {
@@ -23376,7 +23376,7 @@ X(g1);
  * =============================================================================
  */
 function bR(n, t, e = [1, 1], s = "valid", o, r) {
-  return O(() => {
+  return _(() => {
     o == null && (o = Sn()), te(o);
     let i = yf(n, o);
     if (n.rank !== 4)
@@ -23405,7 +23405,7 @@ class x1 extends kc {
     this.depthwiseKernel = this.addWeight("depthwise_kernel", o, null, this.depthwiseInitializer, this.depthwiseRegularizer, !0, this.depthwiseConstraint), this.useBias ? this.bias = this.addWeight("bias", [s * this.depthMultiplier], null, this.biasInitializer, this.biasRegularizer, !0, this.biasConstraint) : this.bias = null, this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       t = pt(t);
       let s = bR(t, this.depthwiseKernel.read(), this.strides, this.padding, this.dataFormat, null);
       return this.useBias && (s = Tn(s, this.bias.read(), this.dataFormat)), this.activation != null && (s = this.activation.apply(s)), s;
@@ -23418,7 +23418,7 @@ class x1 extends kc {
   }
   getConfig() {
     const t = super.getConfig();
-    return t.depthMultiplier = this.depthMultiplier, t.depthwiseInitializer = jt(this.depthwiseInitializer), t.depthwiseRegularizer = Ot(this.depthwiseRegularizer), t.depthwiseConstraint = ae(this.depthwiseRegularizer), t;
+    return t.depthMultiplier = this.depthMultiplier, t.depthwiseInitializer = jt(this.depthwiseInitializer), t.depthwiseRegularizer = _t(this.depthwiseRegularizer), t.depthwiseConstraint = ae(this.depthwiseRegularizer), t;
   }
 }
 x1.className = "DepthwiseConv2D";
@@ -23444,23 +23444,23 @@ function b1(n, t, e, s) {
   return t = o(t), e = o(e), { inputs: n, initialState: t, constants: e };
 }
 function w1(n, t, e, s = !1, o, r, i = !1, a = !1) {
-  return O(() => {
+  return _(() => {
     const l = t.shape.length;
     if (l < 3)
       throw new D(`Input should be at least 3D, but is ${l}D.`);
     const c = [1, 0].concat(Cn(2, l));
-    t = kt(t, c), i && console.warn("Backend rnn(): the unroll = true option is not applicable to the imperative deeplearn.js backend."), o != null && (o = st(st(o, "bool"), "float32"), o.rank === l - 1 && (o = Oe(o, -1)), o = kt(o, c)), s && (t = no(t, 0), o != null && (o = no(o, 0)));
+    t = kt(t, c), i && console.warn("Backend rnn(): the unroll = true option is not applicable to the imperative deeplearn.js backend."), o != null && (o = st(st(o, "bool"), "float32"), o.rank === l - 1 && (o = _e(o, -1)), o = kt(o, c)), s && (t = no(t, 0), o != null && (o = no(o, 0)));
     const u = [];
     let h, d = e;
     const f = t.shape[0], p = so(t);
     let m;
     o != null && (m = so(o));
     for (let x = 0; x < f; ++x) {
-      const b = p[x], y = O(() => n(b, d));
+      const b = p[x], y = _(() => n(b, d));
       if (o == null)
         h = y[0], d = y[1];
       else {
-        const w = O(() => {
+        const w = _(() => {
           const v = m[x], k = ft(hn(v), v), N = Z(A(y[0], v), A(d[0], k)), T = d.map((S, C) => Z(A(y[1][C], v), A(S, k)));
           return { output: N, newStates: T };
         });
@@ -23511,7 +23511,7 @@ class As extends vt {
       return o;
   }
   computeMask(t, e) {
-    return O(() => {
+    return _(() => {
       Array.isArray(e) && (e = e[0]);
       const s = this.returnSequences ? e : null;
       if (this.returnState) {
@@ -23573,7 +23573,7 @@ class As extends vt {
    *   Else, the old states will be discarded.
    */
   resetStates(t, e = !1) {
-    O(() => {
+    _(() => {
       if (!this.stateful)
         throw new Dn("Cannot call resetStates() on an RNN Layer that is not stateful.");
       const s = this.inputSpec[0].shape[0];
@@ -23619,7 +23619,7 @@ class As extends vt {
   }
   // tslint:disable-next-line:no-any
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = e == null ? null : e.mask, o = e == null ? null : e.training;
       let r = e == null ? null : e.initialState;
       t = pt(t), r == null && (this.stateful ? r = this.states_ : r = this.getInitialState(t));
@@ -23637,7 +23637,7 @@ class As extends vt {
     });
   }
   getInitialState(t) {
-    return O(() => {
+    return _(() => {
       let e = fe(t.shape);
       return e = ct(e, [1, 2]), e = Gi(e), Array.isArray(this.cell.stateSize) ? this.cell.stateSize.map((s) => s > 1 ? qu(e, [1, s]) : e) : this.cell.stateSize > 1 ? [qu(e, [1, this.cell.stateSize])] : [e];
     });
@@ -23693,7 +23693,7 @@ class vf extends Sc {
   //    `output` and `[output]`. Here the two are combined into one length-2
   //    `Tensor[]`, consisting of `output` repeated.
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (t = t, t.length !== 2)
         throw new D(`SimpleRNNCell expects 2 input Tensors, got ${t.length}.`);
       let s = t[1];
@@ -23725,10 +23725,10 @@ class vf extends Sc {
       kernelInitializer: jt(this.kernelInitializer),
       recurrentInitializer: jt(this.recurrentInitializer),
       biasInitializer: jt(this.biasInitializer),
-      kernelRegularizer: Ot(this.kernelRegularizer),
-      recurrentRegularizer: Ot(this.recurrentRegularizer),
-      biasRegularizer: Ot(this.biasRegularizer),
-      activityRegularizer: Ot(this.activityRegularizer),
+      kernelRegularizer: _t(this.kernelRegularizer),
+      recurrentRegularizer: _t(this.recurrentRegularizer),
+      biasRegularizer: _t(this.biasRegularizer),
+      activityRegularizer: _t(this.activityRegularizer),
       kernelConstraint: ae(this.kernelConstraint),
       recurrentConstraint: ae(this.recurrentConstraint),
       biasConstraint: ae(this.biasConstraint),
@@ -23745,7 +23745,7 @@ class y1 extends As {
     t.cell = new vf(t), super(t);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.cell.dropoutMask != null && (It(this.cell.dropoutMask), this.cell.dropoutMask = null), this.cell.recurrentDropoutMask != null && (It(this.cell.recurrentDropoutMask), this.cell.recurrentDropoutMask = null);
       const s = e == null ? null : e.mask, o = e == null ? null : e.training, r = e == null ? null : e.initialState;
       return super.call(t, { mask: s, training: o, initialState: r });
@@ -23773,7 +23773,7 @@ class If extends Sc {
     this.kernel = this.addWeight("kernel", [e, this.units * 3], null, this.kernelInitializer, this.kernelRegularizer, !0, this.kernelConstraint), this.recurrentKernel = this.addWeight("recurrent_kernel", [this.units, this.units * 3], null, this.recurrentInitializer, this.recurrentRegularizer, !0, this.recurrentConstraint), this.useBias ? this.bias = this.addWeight("bias", [this.units * 3], null, this.biasInitializer, this.biasRegularizer, !0, this.biasConstraint) : this.bias = null, this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (t = t, t.length !== 2)
         throw new D(`GRUCell expects 2 input Tensors (inputs, h, c), got ${t.length}.`);
       const s = e.training == null ? !1 : e.training;
@@ -23813,10 +23813,10 @@ class If extends Sc {
       kernelInitializer: jt(this.kernelInitializer),
       recurrentInitializer: jt(this.recurrentInitializer),
       biasInitializer: jt(this.biasInitializer),
-      kernelRegularizer: Ot(this.kernelRegularizer),
-      recurrentRegularizer: Ot(this.recurrentRegularizer),
-      biasRegularizer: Ot(this.biasRegularizer),
-      activityRegularizer: Ot(this.activityRegularizer),
+      kernelRegularizer: _t(this.kernelRegularizer),
+      recurrentRegularizer: _t(this.recurrentRegularizer),
+      biasRegularizer: _t(this.biasRegularizer),
+      activityRegularizer: _t(this.activityRegularizer),
       kernelConstraint: ae(this.kernelConstraint),
       recurrentConstraint: ae(this.recurrentConstraint),
       biasConstraint: ae(this.biasConstraint),
@@ -23835,7 +23835,7 @@ class v1 extends As {
     t.implementation === 0 && console.warn("`implementation=0` has been deprecated, and now defaults to `implementation=1`. Please update your layer call."), t.cell = new If(t), super(t);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.cell.dropoutMask != null && (It(this.cell.dropoutMask), this.cell.dropoutMask = null), this.cell.recurrentDropoutMask != null && (It(this.cell.recurrentDropoutMask), this.cell.recurrentDropoutMask = null);
       const s = e == null ? null : e.mask, o = e == null ? null : e.training, r = e == null ? null : e.initialState;
       return super.call(t, { mask: s, training: o, initialState: r });
@@ -23879,7 +23879,7 @@ class $c extends Sc {
     this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = e.training == null ? !1 : e.training;
       if (t = t, t.length !== 3)
         throw new D(`LSTMCell expects 3 input Tensors (inputs, h, c), got ${t.length}.`);
@@ -23919,10 +23919,10 @@ class $c extends Sc {
       recurrentInitializer: jt(this.recurrentInitializer),
       biasInitializer: jt(this.biasInitializer),
       unitForgetBias: this.unitForgetBias,
-      kernelRegularizer: Ot(this.kernelRegularizer),
-      recurrentRegularizer: Ot(this.recurrentRegularizer),
-      biasRegularizer: Ot(this.biasRegularizer),
-      activityRegularizer: Ot(this.activityRegularizer),
+      kernelRegularizer: _t(this.kernelRegularizer),
+      recurrentRegularizer: _t(this.recurrentRegularizer),
+      biasRegularizer: _t(this.biasRegularizer),
+      activityRegularizer: _t(this.activityRegularizer),
       kernelConstraint: ae(this.kernelConstraint),
       recurrentConstraint: ae(this.recurrentConstraint),
       biasConstraint: ae(this.biasConstraint),
@@ -23940,7 +23940,7 @@ class I1 extends As {
     t.implementation === 0 && console.warn("`implementation=0` has been deprecated, and now defaults to `implementation=1`. Please update your layer call."), t.cell = new $c(t), super(t);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.cell.dropoutMask != null && (It(this.cell.dropoutMask), this.cell.dropoutMask = null), this.cell.recurrentDropoutMask != null && (It(this.cell.recurrentDropoutMask), this.cell.recurrentDropoutMask = null);
       const s = e == null ? null : e.mask, o = e == null ? null : e.training, r = e == null ? null : e.initialState;
       return super.call(t, { mask: s, training: o, initialState: r });
@@ -23964,7 +23964,7 @@ class kf extends Sc {
     return t;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       t = t;
       let s = t.slice(1);
       const o = [];
@@ -24085,7 +24085,7 @@ class k1 extends As {
     super(t), this.inputSpec = [new ie({ ndim: 5 })];
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (this.cell.dropoutMask != null && (It(this.cell.dropoutMask), this.cell.dropoutMask = null), this.cell.recurrentDropoutMask != null && (It(this.cell.recurrentDropoutMask), this.cell.recurrentDropoutMask = null), e && e.constants)
         throw new D("ConvRNN2D cell does not support constants");
       const s = e == null ? null : e.mask, o = e == null ? null : e.training, r = e == null ? null : e.initialState;
@@ -24097,13 +24097,13 @@ class k1 extends As {
     return this.returnSequences || (e = [e[0], ...e.slice(2)]), this.returnState && (e = [e, ...Array(2).fill([t[0], ...e.slice(-3)])]), e;
   }
   getInitialState(t) {
-    return O(() => {
+    return _(() => {
       const { stateSize: e } = this.cell, s = t.shape, o = this.computeSingleOutputShape(s), r = [o[0], ...o.slice(2)], i = fe(r);
       return Array.isArray(e) ? Array(e.length).fill(i) : [i];
     });
   }
   resetStates(t, e = !1) {
-    O(() => {
+    _(() => {
       if (!this.stateful)
         throw new Dn("Cannot call resetStates() on an RNN Layer that is not stateful.");
       const s = this.inputSpec[0].shape, o = this.computeSingleOutputShape(s), r = [o[0], ...o.slice(2)];
@@ -24168,7 +24168,7 @@ class Cf extends $c {
     this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (t.length !== 3)
         throw new D(`ConvLSTM2DCell expects 3 input Tensors (inputs, h, c), got ${t.length}.`);
       const s = e.training || !1, o = t[0], r = t[1], i = t[2], a = 4;
@@ -24253,7 +24253,7 @@ class Sf extends vt {
     return s;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t);
       if (0 < this.rate && this.rate < 1) {
@@ -24307,7 +24307,7 @@ class $1 extends vt {
     return e[e.length - 1] = this.units, e;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t), o = ix(this.activation.getClassName());
       let r;
@@ -24321,9 +24321,9 @@ class $1 extends vt {
       useBias: this.useBias,
       kernelInitializer: jt(this.kernelInitializer),
       biasInitializer: jt(this.biasInitializer),
-      kernelRegularizer: Ot(this.kernelRegularizer),
-      biasRegularizer: Ot(this.biasRegularizer),
-      activityRegularizer: Ot(this.activityRegularizer),
+      kernelRegularizer: _t(this.kernelRegularizer),
+      biasRegularizer: _t(this.biasRegularizer),
+      activityRegularizer: _t(this.activityRegularizer),
       kernelConstraint: ae(this.kernelConstraint),
       biasConstraint: ae(this.biasConstraint)
     }, e = super.getConfig();
@@ -24344,7 +24344,7 @@ class T1 extends vt {
     return [t[0], xs(t, 1)];
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       let s = pt(t);
       if (this.dataFormat === "channelsFirst" && s.rank > 1) {
@@ -24370,7 +24370,7 @@ class N1 extends vt {
     super(t), this.supportsMasking = !0, this.activation = vs(t.activation);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t);
       return this.activation.apply(s);
@@ -24391,7 +24391,7 @@ class E1 extends vt {
     return [t[0], this.n, t[1]];
   }
   call(t, e) {
-    return O(() => (t = pt(t), JN(t, this.n)));
+    return _(() => (t = pt(t), JN(t, this.n)));
   }
   getConfig() {
     const t = {
@@ -24457,10 +24457,10 @@ class R1 extends vt {
     return e ? t.slice(0, 1).concat(this.targetShape) : t.slice(0, 1).concat(this.fixUnknownDimension(t.slice(1), this.targetShape));
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t), o = s.shape, r = o.slice(0, 1).concat(this.fixUnknownDimension(o.slice(1), this.targetShape));
-      return _(s, r);
+      return O(s, r);
     });
   }
   getConfig() {
@@ -24518,7 +24518,7 @@ class A1 extends vt {
     return zu(La(s, this.maskValue), -1);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t), i = zu(La(s, this.maskValue), -1, !0);
       return A(s, st(i, s.dtype));
@@ -24552,7 +24552,7 @@ class M1 extends vt {
   warnOnIncompatibleInputShape(t) {
   }
   computeMask(t, e) {
-    return O(() => this.maskZero ? (t = pt(t), La(t, Ct(t))) : null);
+    return _(() => this.maskZero ? (t = pt(t), La(t, Ct(t))) : null);
   }
   computeOutputShape(t) {
     if (t = $t(t), this.inputLength == null)
@@ -24572,12 +24572,12 @@ class M1 extends vt {
     return [t[0], ...e, this.outputDim];
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       let s = pt(t);
       s.dtype !== "int32" && (s = Pn(s, "int32"));
-      const o = dx(this.embeddings.read(), _(s, [s.size]));
-      return _(o, $t(this.computeOutputShape(s.shape)));
+      const o = dx(this.embeddings.read(), O(s, [s.size]));
+      return O(o, $t(this.computeOutputShape(s.shape)));
     });
   }
   getConfig() {
@@ -24585,8 +24585,8 @@ class M1 extends vt {
       inputDim: this.inputDim,
       outputDim: this.outputDim,
       embeddingsInitializer: jt(this.embeddingsInitializer),
-      embeddingsRegularizer: Ot(this.embeddingsRegularizer),
-      activityRegularizer: Ot(this.activityRegularizer),
+      embeddingsRegularizer: _t(this.embeddingsRegularizer),
+      activityRegularizer: _t(this.activityRegularizer),
       embeddingsConstraint: ae(this.embeddingsConstraint),
       maskZero: this.maskZero,
       inputLength: this.inputLength
@@ -24667,7 +24667,7 @@ class go extends vt {
     t.indexOf(null) === -1 && gs(o).length === 1 ? this.reshapeRequired = !1 : this.reshapeRequired = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (t = t, this.reshapeRequired) {
         const s = [], o = t.map((r) => r.rank);
         if (o.indexOf(null) === -1) {
@@ -24685,8 +24685,8 @@ class go extends vt {
             const c = l.rank;
             if (c == null) {
               const u = l.shape, h = u[0], d = u.slice(1).concat([h]);
-              let f = _(l, [h].concat(xs(u.slice(1))));
-              f = kt(f, [1, 0]), f = _(f, d), s.push(f), r = !0;
+              let f = O(l, [h].concat(xs(u.slice(1))));
+              f = kt(f, [1, 0]), f = O(f, d), s.push(f), r = !0;
             } else if (c > 1) {
               const u = Cn(1, c).concat([0]);
               s.push(kt(l, u)), r = !0;
@@ -24698,7 +24698,7 @@ class go extends vt {
           if (r) {
             if (a == null) {
               const l = i.shape, c = l.length, u = l[c - 1], h = [u].concat(l.slice(0, l.length - 1));
-              i = _(kt(_(i, [-1, u]), [1, 0]), h);
+              i = O(kt(O(i, [-1, u]), [1, 0]), h);
             } else if (a > 1) {
               const l = [a - 1].concat(Cn(0, a - 1));
               i = kt(i, l);
@@ -24724,7 +24724,7 @@ class go extends vt {
     return s = gs(s), s.length === 1 ? e = s.concat(e) : e = [null].concat(e), e;
   }
   computeMask(t, e) {
-    return O(() => {
+    return _(() => {
       if (e == null)
         return null;
       if (!Array.isArray(e))
@@ -24735,7 +24735,7 @@ class go extends vt {
         throw new D(`The Array 'inputs' and 'mask' are expected to have the same length, but have different lengths (${t.length} vs ${e.length})`);
       if (e.every((o) => o == null))
         return null;
-      e = e.map((o) => o == null ? o : Oe(o, 0));
+      e = e.map((o) => o == null ? o : _e(o, 0));
       let s = e[0];
       for (let o = 1; o < e.length - 1; ++o)
         s = Zn(s, e[o]);
@@ -24748,7 +24748,7 @@ class F1 extends go {
     super(t);
   }
   mergeFunction(t) {
-    return O(() => {
+    return _(() => {
       let e = t[0].clone();
       for (let s = 1; s < t.length; ++s)
         e = Z(e, t[s]);
@@ -24758,12 +24758,12 @@ class F1 extends go {
 }
 F1.className = "Add";
 X(F1);
-class O1 extends go {
+class _1 extends go {
   constructor(t) {
     super(t);
   }
   mergeFunction(t) {
-    return O(() => {
+    return _(() => {
       let e = t[0].clone();
       for (let s = 1; s < t.length; ++s)
         e = A(e, t[s]);
@@ -24771,14 +24771,14 @@ class O1 extends go {
     });
   }
 }
-O1.className = "Multiply";
-X(O1);
-class _1 extends go {
+_1.className = "Multiply";
+X(_1);
+class O1 extends go {
   constructor(t) {
     super(t);
   }
   mergeFunction(t) {
-    return O(() => {
+    return _(() => {
       let e = t[0].clone();
       for (let s = 1; s < t.length; ++s)
         e = Z(e, t[s]);
@@ -24786,14 +24786,14 @@ class _1 extends go {
     });
   }
 }
-_1.className = "Average";
-X(_1);
+O1.className = "Average";
+X(O1);
 class P1 extends go {
   constructor(t) {
     super(t);
   }
   mergeFunction(t) {
-    return O(() => {
+    return _(() => {
       let e = t[0];
       for (let s = 1; s < t.length; ++s)
         e = Es(e, t[s]);
@@ -24808,7 +24808,7 @@ class L1 extends go {
     super(t);
   }
   mergeFunction(t) {
-    return O(() => {
+    return _(() => {
       let e = t[0];
       for (let s = 1; s < t.length; ++s)
         e = Tr(e, t[s]);
@@ -24850,7 +24850,7 @@ class z1 extends go {
       throw new D("A `Concatenate` layer requires inputs with matching shapes except for the concat axis. Got input shapes: " + JSON.stringify(t));
   }
   mergeFunction(t) {
-    return O(() => af(t, this.axis));
+    return _(() => af(t, this.axis));
   }
   computeOutputShape(t) {
     if (!(Array.isArray(t) && Array.isArray(t[0])))
@@ -24874,7 +24874,7 @@ class z1 extends go {
       throw new D("`inputs` should be an array for Concatenate");
     if (e.length !== t.length)
       throw new D(`Mismatch in the length of mask (${e.length}) and the legnth of inputs (${t.length})`);
-    return O(() => {
+    return _(() => {
       let s = !0;
       if (e.forEach((i) => {
         if (i != null) {
@@ -24885,7 +24885,7 @@ class z1 extends go {
         return null;
       const o = [];
       for (let i = 0; i < t.length; ++i)
-        e[i] == null ? o.push(st(hn(t[i]), "bool")) : e[i].rank < t[i].rank ? o.push(Oe(e[i], -1)) : o.push(e[i]);
+        e[i] == null ? o.push(st(hn(t[i]), "bool")) : e[i].rank < t[i].rank ? o.push(_e(e[i], -1)) : o.push(e[i]);
       const r = Pe(o, this.axis);
       return Hg(r, -1, !1);
     });
@@ -24912,20 +24912,20 @@ function yR(n, t, e) {
   const s = n.shape.length, o = t.shape.length;
   e == null && (e = [s - 1, o - 2]);
   const r = e;
-  return O(() => {
+  return _(() => {
     let i;
     if (s > o) {
       i = s - o;
       const l = [];
       for (let c = 0; c < i; ++c)
         l.push(1);
-      t = _(t, t.shape.concat(l));
+      t = O(t, t.shape.concat(l));
     } else if (o > s) {
       i = o - s;
       const l = [];
       for (let c = 0; c < i; ++c)
         l.push(1);
-      n = _(n, n.shape.concat(l));
+      n = O(n, n.shape.concat(l));
     } else
       i = 0;
     let a;
@@ -24943,7 +24943,7 @@ function yR(n, t, e) {
         c.push(u);
       a = Li(a, c);
     }
-    return a.shape.length === 1 && (a = Oe(a, 1)), a;
+    return a.shape.length === 1 && (a = _e(a, 1)), a;
   });
 }
 class B1 extends go {
@@ -25019,7 +25019,7 @@ class V1 extends vt {
     return Object.assign(e, t), e;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t);
       return qi(() => Z(wc(s.shape, 0, this.stddev), s), () => s, e.training || !1);
@@ -25040,7 +25040,7 @@ class U1 extends vt {
     return Object.assign(e, t), e;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e);
       const s = pt(t);
       return this.rate > 0 && this.rate < 1 ? qi(() => {
@@ -25067,7 +25067,7 @@ class W1 extends vt {
     return Object.assign(e, t), e;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       if (this.rate < 1 && this.rate > 0) {
         const s = this._getNoiseShape(t);
         return qi(() => {
@@ -25106,17 +25106,17 @@ function Ar(n, t, e, s, o, r = 1e-3) {
   return i;
 }
 function vR(n, t, e, s, o = 1e-3) {
-  return O(() => {
+  return _(() => {
     const r = bd(n, s), i = r.mean, a = r.variance;
     return [Ar(n, i, a, e, t, o), i, a];
   });
 }
 function IR(n, t, e, s, o = 1e-3) {
-  return O(() => {
+  return _(() => {
     const r = bd(n, s), i = r.mean, a = r.variance, l = [];
     for (const p of Cn(0, n.rank))
       s.indexOf(p) !== -1 ? l.push(1) : l.push(n.shape[p]);
-    const c = _(i, l), u = _(a, l), h = t == null ? null : _(t, l), d = e == null ? null : _(e, l);
+    const c = O(i, l), u = O(a, l), h = t == null ? null : O(t, l), d = e == null ? null : O(e, l);
     return [Ar(n, c, u, d, h, o), i, a];
   });
 }
@@ -25137,7 +25137,7 @@ class G1 extends vt {
     this.scale && (this.gamma = this.addWeight("gamma", o, null, this.gammaInitializer, this.gammaRegularizer, !0, this.gammaConstraint)), this.center && (this.beta = this.addWeight("beta", o, null, this.betaInitializer, this.betaRegularizer, !0, this.betaConstraint)), this.movingMean = this.addWeight("moving_mean", o, null, this.movingMeanInitializer, null, !1), this.movingVariance = this.addWeight("moving_variance", o, null, this.movingVarianceInitializer, null, !1), this.built = !0;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = e.training == null ? !1 : e.training, o = pt(t), r = o.shape, i = r.length, a = Cn(0, i), l = this.axis >= 0 ? this.axis : this.axis + i;
       a.splice(l, 1);
       const c = ro(1, i);
@@ -25146,7 +25146,7 @@ class G1 extends vt {
       u.sort();
       const h = !Et(u, Cn(0, i).slice(0, i - 1)), d = () => {
         if (h) {
-          const b = _(this.movingMean.read(), c), y = _(this.movingVariance.read(), c), w = this.center ? _(this.beta.read(), c) : null, v = this.scale ? _(this.gamma.read(), c) : null;
+          const b = O(this.movingMean.read(), c), y = O(this.movingVariance.read(), c), w = this.center ? O(this.beta.read(), c) : null, v = this.scale ? O(this.gamma.read(), c) : null;
           return Ar(o, b, y, w, v, this.epsilon);
         } else
           return Ar(o, this.movingMean.read(), this.movingVariance.read(), this.beta == null ? null : this.beta.read(), this.gamma == null ? null : this.gamma.read(), this.epsilon);
@@ -25154,7 +25154,7 @@ class G1 extends vt {
       if (!s)
         return d();
       const [f, p, m] = kR(o, this.gamma.read(), this.beta.read(), a, this.epsilon), g = (b, y, w) => {
-        O(() => {
+        _(() => {
           const v = 1 - w, k = b.read(), N = A(ft(k, y), v);
           b.write(ft(k, N));
         });
@@ -25175,8 +25175,8 @@ class G1 extends vt {
       gammaInitializer: jt(this.gammaInitializer),
       movingMeanInitializer: jt(this.movingMeanInitializer),
       movingVarianceInitializer: jt(this.movingVarianceInitializer),
-      betaRegularizer: Ot(this.betaRegularizer),
-      gammaRegularizer: Ot(this.gammaRegularizer),
+      betaRegularizer: _t(this.betaRegularizer),
+      gammaRegularizer: _t(this.gammaRegularizer),
       betaConstraint: ae(this.betaConstraint),
       gammaConstraint: ae(this.gammaConstraint)
     }, e = super.getConfig();
@@ -25214,12 +25214,12 @@ class H1 extends vt {
   }
   call(t, e) {
     const s = pt(t), o = s.shape, r = o.length;
-    return O(() => {
+    return _(() => {
       let { mean: a, variance: l } = bd(s, this.axis, !0);
       const c = ro(1, r);
       for (const m of this.axis)
         c[m] = o[m];
-      const u = (m) => m != null && m.shape.length !== r ? _(m, c) : m;
+      const u = (m) => m != null && m.shape.length !== r ? O(m, c) : m;
       let h = this.scale ? u(this.gamma.read()) : null, d = this.center ? u(this.beta.read()) : null;
       const f = [], p = [];
       for (let m = 0; m < r; ++m)
@@ -25235,8 +25235,8 @@ class H1 extends vt {
       scale: this.scale,
       betaInitializer: jt(this.betaInitializer),
       gammaInitializer: jt(this.gammaInitializer),
-      betaRegularizer: Ot(this.betaRegularizer),
-      gammaRegularizer: Ot(this.gammaRegularizer)
+      betaRegularizer: _t(this.betaRegularizer),
+      gammaRegularizer: _t(this.gammaRegularizer)
     }, e = super.getConfig();
     return Object.assign(t, e), t;
   }
@@ -25253,7 +25253,7 @@ X(H1);
  * =============================================================================
  */
 function CR(n, t, e) {
-  return O(() => {
+  return _(() => {
     if (n.rank !== 4)
       throw new D(`temporalPadding expects input tensor to be 4-D, but received a ${n.rank}-D tensor.`);
     if (t == null && (t = [[1, 1], [1, 1]]), t.length !== 2 || t[0].length !== 2 || t[1].length !== 2)
@@ -25293,7 +25293,7 @@ class q1 extends vt {
     return this.dataFormat === "channelsFirst" ? (t[2] != null && t[2] >= 0 ? e = t[2] + this.padding[0][0] + this.padding[0][1] : e = null, t[3] != null && t[3] >= 0 ? s = t[3] + this.padding[1][0] + this.padding[1][1] : s = null, [t[0], t[1], e, s]) : (t[1] != null && t[1] >= 0 ? e = t[1] + this.padding[0][0] + this.padding[0][1] : e = null, t[2] != null && t[2] >= 0 ? s = t[2] + this.padding[1][0] + this.padding[1][1] : s = null, [t[0], e, s, t[3]]);
   }
   call(t, e) {
-    return O(() => CR(pt(t), this.padding, this.dataFormat));
+    return _(() => CR(pt(t), this.padding, this.dataFormat));
   }
   getConfig() {
     const t = {
@@ -25315,7 +25315,7 @@ X(q1);
  * =============================================================================
  */
 function Tc(n, t, e, s, o, r) {
-  return O(() => {
+  return _(() => {
     te(o), lx(r), nn(s), e == null && (e = [1, 1]), s == null && (s = "valid"), o == null && (o = Sn()), r == null && (r = "max"), n = yf(n, o);
     let i;
     const a = s === "same" ? "same" : "valid";
@@ -25329,7 +25329,7 @@ function Tc(n, t, e, s, o, r) {
   });
 }
 function j1(n, t, e, s, o, r) {
-  return O(() => {
+  return _(() => {
     te(o), lx(r), nn(s), e == null && (e = [1, 1, 1]), s == null && (s = "valid"), o == null && (o = Sn()), r == null && (r = "max"), n = u1(n, o);
     let i;
     const a = s === "same" ? "same" : "valid";
@@ -25366,7 +25366,7 @@ class K1 extends vt {
     return [t[0], e, t[2]];
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       this.invokeCallHook(t, e), t = Gi(pt(t), 2);
       const s = this.poolingFunction(pt(t), [this.poolSize[0], 1], [this.strides[0], 1], this.padding, "channelsLast");
       return Li(s, [2]);
@@ -25419,7 +25419,7 @@ class J1 extends vt {
     return e = kn(e, this.poolSize[0], this.padding, this.strides[0]), s = kn(s, this.poolSize[1], this.padding, this.strides[1]), this.dataFormat === "channelsFirst" ? [t[0], t[1], e, s] : [t[0], e, s, t[3]];
   }
   call(t, e) {
-    return O(() => (this.invokeCallHook(t, e), this.poolingFunction(pt(t), this.poolSize, this.strides, this.padding, this.dataFormat)));
+    return _(() => (this.invokeCallHook(t, e), this.poolingFunction(pt(t), this.poolSize, this.strides, this.padding, this.dataFormat)));
   }
   getConfig() {
     const t = {
@@ -25469,7 +25469,7 @@ class tb extends vt {
     return e = kn(e, this.poolSize[0], this.padding, this.strides[0]), s = kn(s, this.poolSize[1], this.padding, this.strides[1]), o = kn(o, this.poolSize[2], this.padding, this.strides[2]), this.dataFormat === "channelsFirst" ? [t[0], t[1], e, s, o] : [t[0], e, s, o, t[4]];
   }
   call(t, e) {
-    return O(() => (this.invokeCallHook(t, e), this.poolingFunction(pt(t), this.poolSize, this.strides, this.padding, this.dataFormat)));
+    return _(() => (this.invokeCallHook(t, e), this.poolingFunction(pt(t), this.poolSize, this.strides, this.padding, this.dataFormat)));
   }
   getConfig() {
     const t = {
@@ -25517,7 +25517,7 @@ class ob extends sb {
     super(t || {});
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = pt(t);
       return ne(s, 1);
     });
@@ -25530,7 +25530,7 @@ class rb extends sb {
     super(t || {});
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = pt(t);
       return In(s, 1);
     });
@@ -25555,7 +25555,7 @@ class ib extends vt {
 }
 class ab extends ib {
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = pt(t);
       return this.dataFormat === "channelsLast" ? ne(s, [1, 2]) : ne(s, [2, 3]);
     });
@@ -25565,7 +25565,7 @@ ab.className = "GlobalAveragePooling2D";
 X(ab);
 class lb extends ib {
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = pt(t);
       return this.dataFormat === "channelsLast" ? In(s, [1, 2]) : In(s, [2, 3]);
     });
@@ -25655,7 +25655,7 @@ class ub extends cb {
     return [s[0], o].concat(s.slice(1));
   }
   call(t, e) {
-    return O(() => (t = pt(t), w1(
+    return _(() => (t = pt(t), w1(
       (i, a) => [pt(this.layer.call(i, e)), []],
       t,
       [],
@@ -25701,7 +25701,7 @@ class hb extends cb {
     let e = this.forwardLayer.computeOutputShape(t);
     Array.isArray(e) && Array.isArray(e[0]) || (e = [e]), e = e;
     let s, o, r;
-    return this.returnState && (r = e.slice(1)), s = e[0], s = s, this.mergeMode === "concat" ? (s[s.length - 1] *= 2, o = [s]) : this.mergeMode == null ? o = [s, s.slice()] : o = [s], this.returnState ? this.mergeMode == null ? o.concat(r).concat(r.slice()) : [s].concat(r).concat(r.slice()) : _e(o);
+    return this.returnState && (r = e.slice(1)), s = e[0], s = s, this.mergeMode === "concat" ? (s[s.length - 1] *= 2, o = [s]) : this.mergeMode == null ? o = [s, s.slice()] : o = [s], this.returnState ? this.mergeMode == null ? o.concat(r).concat(r.slice()) : [s].concat(r).concat(r.slice()) : Oe(o);
   }
   apply(t, e) {
     let s = e == null ? null : e.initialState, o = e == null ? null : e.constants;
@@ -25733,7 +25733,7 @@ class hb extends cb {
       return super.apply(t, e);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = e.initialState;
       let o, r;
       if (s == null)
@@ -25815,7 +25815,7 @@ class db extends vt {
     return Object.assign(t, e), t;
   }
   call(t, e) {
-    return O(() => (t = pt(t), t.dtype !== "float32" && (t = Pn(t, "float32")), Z(A(t, this.scale), this.offset)));
+    return _(() => (t = pt(t), t.dtype !== "float32" && (t = Pn(t, "float32")), Z(A(t, this.scale), this.offset)));
   }
 }
 db.className = "Rescaling";
@@ -25835,7 +25835,7 @@ class fb extends vt {
     super(t), this.height = t.height, this.width = t.width;
   }
   centerCrop(t, e, s, o, r, i, a, l) {
-    return O(() => {
+    return _(() => {
       let c, u = !1;
       const h = e / i, d = s / a, f = (o + e) / i, p = (r + s) / a, m = [h, d, f, p], g = [];
       t.rank === 3 ? (u = !0, c = Un([t])) : c = t;
@@ -25846,13 +25846,13 @@ class fb extends vt {
     });
   }
   upsize(t, e, s, o) {
-    return O(() => {
+    return _(() => {
       const r = TR(t, [e, s]);
       return Pn(r, o);
     });
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = pt(t), o = s.dtype, r = s.shape, i = r[r.length - 3], a = r[r.length - 2];
       let l = 0;
       i !== this.height && (l = Math.floor((i - this.height) / 2));
@@ -25889,7 +25889,7 @@ function ER(n, t, e, s) {
   if (o.dtype !== "int32" && (o = Pn(o, "int32")), t === "int")
     return o;
   const r = o.shape;
-  if (o.rank === 0 && (o = Oe(o, -1)), t === "oneHot" && o.shape[o.shape.length - 1] !== 1 && (o = Oe(o, -1)), o.rank > 2)
+  if (o.rank === 0 && (o = _e(o, -1)), t === "oneHot" && o.shape[o.shape.length - 1] !== 1 && (o = _e(o, -1)), o.rank > 2)
     throw new D(`When outputMode is not int, maximum output rank is 2 Received outputMode ${t} and input shape ${r} which would result in output rank ${o.rank}.`);
   const i = ["multiHot", "oneHot"].includes(t), a = o;
   let l;
@@ -25923,7 +25923,7 @@ class pb extends vt {
     return t = $t(t), t == null ? [this.numTokens] : this.outputMode === "oneHot" && t[t.length - 1] !== 1 ? (t.push(this.numTokens), t) : (t[t.length - 1] = this.numTokens, t);
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       t = pt(t), t.dtype !== "int32" && (t = Pn(t, "int32"));
       let s;
       if (typeof e.countWeights != "undefined") {
@@ -25932,7 +25932,7 @@ class pb extends vt {
               Received countWeights=${e.countWeights}`);
         s = pt(e.countWeights);
       }
-      const o = In(t), r = _a(t), i = en(this.numTokens, o).bufferSync().get(0), a = ho(r, 0).bufferSync().get(0);
+      const o = In(t), r = Oa(t), i = en(this.numTokens, o).bufferSync().get(0), a = ho(r, 0).bufferSync().get(0);
       if (!(i && a))
         throw new D(`Input values must be between 0 < values <= numTokens with numTokens=${this.numTokens}`);
       return ER(t, this.outputMode, this.numTokens, s);
@@ -25977,7 +25977,7 @@ class mb extends vt {
     return Object.assign(t, e), t;
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = [this.height, this.width];
       if (this.interpolation === "bilinear")
         return Yn.resizeBilinear(t, s, !this.cropToAspectRatio);
@@ -26075,7 +26075,7 @@ class bb extends xb {
     return [this.imgHeight, -1, e];
   }
   call(t, e) {
-    return O(() => {
+    return _(() => {
       const s = pt(t);
       this.imgHeight = s.shape[s.shape.length - 3];
       const o = s.shape[s.shape.length - 2];
@@ -26354,7 +26354,7 @@ const FR = (n) => {
   let s = new Float32Array(q(t.shape));
   const o = e.data.get(t.dataId).values;
   return s = wb(o), e.makeOutput(s, t.shape, t.dtype);
-}, OR = {
+}, _R = {
   kernelName: il,
   backendName: "cpu",
   kernelFunc: FR
@@ -26385,9 +26385,9 @@ function ee(n) {
       for (let x = 0; x < u.length; ++x) {
         const b = qo(x, a, l), y = b.slice(-h);
         m.forEach((N) => y[N] = 0);
-        const w = On(y, h, f), v = b.slice(-d);
+        const w = _n(y, h, f), v = b.slice(-d);
         g.forEach((N) => v[N] = 0);
-        const k = On(v, d, p);
+        const k = _n(v, d, p);
         u[x] = n(s[w], o[k]);
       }
     return [u, i];
@@ -26416,7 +26416,7 @@ function Ue(n) {
     imag: e.makeTensorInfo(o.shape, "float32", i)
   }, a;
 }
-const _R = {
+const OR = {
   kernelName: Ch,
   backendName: "cpu",
   kernelFunc: Ue
@@ -26597,9 +26597,9 @@ function $f(n) {
       for (let v = 0; v < h.length; v++) {
         const k = qo(v, c, u), N = k.slice(-x);
         f.forEach((R) => N[R] = 0);
-        const T = On(N, x, b), S = k.slice(-y);
+        const T = _n(N, x, b), S = k.slice(-y);
         p.forEach((R) => S[R] = 0);
-        const C = On(S, y, w), I = n(m[T * 2], m[T * 2 + 1], g[C * 2], g[C * 2 + 1]);
+        const C = _n(S, y, w), I = n(m[T * 2], m[T * 2 + 1], g[C * 2], g[C * 2 + 1]);
         h[v] = I.real, d[v] = I.imag;
       }
     return [h, d, a];
@@ -26983,7 +26983,7 @@ function Fb(n, t, e) {
  * limitations under the License.
  * =============================================================================
  */
-const Ob = ee((n, t) => n > t ? 1 : 0), tD = ue(Sl, Ob, null, "bool"), eD = {
+const _b = ee((n, t) => n > t ? 1 : 0), tD = ue(Sl, _b, null, "bool"), eD = {
   kernelName: Sl,
   backendName: "cpu",
   kernelFunc: tD
@@ -27004,7 +27004,7 @@ const Ob = ee((n, t) => n > t ? 1 : 0), tD = ue(Sl, Ob, null, "bool"), eD = {
  * limitations under the License.
  * =============================================================================
  */
-const _b = ee((n, t) => n >= t ? 1 : 0), nD = ue(si, _b, null, "bool"), sD = {
+const Ob = ee((n, t) => n >= t ? 1 : 0), nD = ue(si, Ob, null, "bool"), sD = {
   kernelName: si,
   backendName: "cpu",
   kernelFunc: nD
@@ -27264,7 +27264,7 @@ function Ef(n, t, e, s, o) {
     const h = qo(u, r, a), d = new Array(h.length);
     for (let p = 0; p < d.length; p++)
       d[p] = h[s[p]];
-    const f = On(d, r, l);
+    const f = _n(d, r, l);
     c[f] = n[u];
   }
   return c;
@@ -27522,7 +27522,7 @@ function Kb(n, t, e, s, o, r, i) {
 var on = wn;
 class Ja {
   constructor(t, e, s, o, r, i, a, l, c, u) {
-    this.shape = t, this.shapeShape = e, this.values = s, this.valuesShape = o, this.valuesDType = r, this.defaultValue = i, this.defaultValueShape = a, this.rowPartitionValues = l, this.rowPartitionValuesShapes = c, this.rowPartitionTypes = F0(u), this.raggedRank = O0(this.rowPartitionTypes);
+    this.shape = t, this.shapeShape = e, this.values = s, this.valuesShape = o, this.valuesDType = r, this.defaultValue = i, this.defaultValueShape = a, this.rowPartitionValues = l, this.rowPartitionValuesShapes = c, this.rowPartitionTypes = F0(u), this.raggedRank = _0(this.rowPartitionTypes);
   }
   getRowPartitionTypeByDimension(t) {
     return this.rowPartitionTypes[0] === on.FIRST_DIM_SIZE ? this.rowPartitionTypes[t + 1] : this.rowPartitionTypes[t];
@@ -27574,7 +27574,7 @@ class Ja {
   }
   calculateOutputSize(t) {
     const e = this.valuesShape, s = this.defaultValueShape;
-    _0(s, e);
+    O0(s, e);
     const o = this.tensorShapeFromTensor(this.shape, this.shapeShape), i = M0(this.raggedRank, o, e);
     i[0] < 0 && (i[0] = t);
     for (let a = 1; a <= this.raggedRank; ++a)
@@ -27715,8 +27715,8 @@ class Ja {
     let u = this.defaultValue;
     if (u.length !== l && u.length !== 1) {
       const p = this.defaultValueShape;
-      O(() => {
-        const m = _(u, p);
+      _(() => {
+        const m = O(u, p);
         u = vr(m, a).dataSync();
       });
     }
@@ -28131,10 +28131,10 @@ function Rf(n, t, e, s, o, r = !1, i = 0) {
  * limitations under the License.
  * =============================================================================
  */
-const FD = Hn((n) => Math.sqrt(n)), OD = At($i, (n) => Math.sqrt(n)), _D = {
+const FD = Hn((n) => Math.sqrt(n)), _D = At($i, (n) => Math.sqrt(n)), OD = {
   kernelName: $i,
   backendName: "cpu",
-  kernelFunc: OD
+  kernelFunc: _D
 };
 /**
  * @license
@@ -28593,8 +28593,8 @@ const HD = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   floorImpl: Db,
   gatherNdImpl: Mb,
   gatherV2Impl: Fb,
-  greaterEqualImpl: _b,
-  greaterImpl: Ob,
+  greaterEqualImpl: Ob,
+  greaterImpl: _b,
   lessEqualImpl: Lb,
   lessImpl: Pb,
   linSpaceImpl: zb,
@@ -28647,7 +28647,7 @@ const HD = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
  * limitations under the License.
  * =============================================================================
  */
-_g(
+Og(
   "cpu",
   () => new Nc(),
   1
@@ -28865,12 +28865,12 @@ function bw(n) {
       const gt = Math.min(ht + Q, S);
       for (let bt = 0; bt < C; bt += Q) {
         const Rt = Math.min(bt + Q, C);
-        for (let _t = 0; _t < T; _t += Q) {
-          const Xt = Math.min(_t + Q, T);
+        for (let Ot = 0; Ot < T; Ot += Q) {
+          const Xt = Math.min(Ot + Q, T);
           for (let Pt = ht; Pt < gt; Pt++)
             for (let Mt = bt; Mt < Rt; Mt++) {
               let qt = 0;
-              for (let Wt = _t; Wt < Xt; Wt++) {
+              for (let Wt = Ot; Wt < Xt; Wt++) {
                 const qn = (
                   // tslint:disable-next-line: max-line-length
                   R[at * B + Pt * G + Wt * U]
@@ -29374,9 +29374,9 @@ function yw(n, t, e, s, o, r) {
             const ot = Math.min(o.inWidth, p + tt), at = Y + J * T;
             let dt = b, ht = 0, gt = 0;
             for (let Rt = L; Rt < B; Rt += c) {
-              const _t = I + Rt * s[1];
+              const Ot = I + Rt * s[1];
               for (let Xt = j; Xt < K; Xt += u) {
-                const Pt = _t + Xt * s[2];
+                const Pt = Ot + Xt * s[2];
                 for (let Mt = Q; Mt < ot; Mt += h) {
                   const qt = Pt + Mt * s[3], Wt = n[qt + R];
                   if (r === "max" && Wt > dt ? dt = Wt : r === "avg" && (ht += Wt, gt++), isNaN(dt))
@@ -29590,7 +29590,7 @@ function FA(n) {
         }
   return e.makeTensorInfo(v.shape, v.dtype, v.values);
 }
-const OA = {
+const _A = {
   kernelName: yh,
   backendName: "cpu",
   kernelFunc: FA
@@ -29611,7 +29611,7 @@ const OA = {
  * limitations under the License.
  * =============================================================================
  */
-function _A(n) {
+function OA(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o, scale: r, offset: i, mean: a, variance: l } = t;
   $(a.shape.length === l.shape.length, () => "Batch normalization gradient requires mean and variance to have equal ranks."), $(i == null || a.shape.length === i.shape.length, () => "Batch normalization gradient requires mean and offset to have equal ranks."), $(r == null || a.shape.length === r.shape.length, () => "Batch normalization gradient requires mean and scale to have equal ranks."), rt([o, a, l, r, i], "batchNorm");
   let { varianceEpsilon: c } = s;
@@ -29625,7 +29625,7 @@ function _A(n) {
 const PA = {
   kernelName: kl,
   backendName: "cpu",
-  kernelFunc: _A
+  kernelFunc: OA
 };
 /**
  * @license
@@ -29804,7 +29804,7 @@ const KA = {
 function Uo(n) {
   const { inputs: t, backend: e, attrs: s } = n, { axis: o } = s, r = yt(o, t[0].shape)[0], i = t.map((m) => m.shape);
   zd(i, r);
-  let a = _n(t.map((m) => m.shape), r);
+  let a = On(t.map((m) => m.shape), r);
   if (q(a) === 0)
     return e.makeTensorInfo(a, t[0].dtype, []);
   const l = t.filter((m) => q(m.shape) > 0);
@@ -29818,12 +29818,12 @@ function Uo(n) {
     const x = [-1, q(m.shape.slice(r))];
     return Vt({ inputs: { x: m }, backend: e, attrs: { shape: x } });
   }), u = c.map((m) => ({ vals: e.data.get(m.dataId).values, shape: m.shape }));
-  a = _n(
+  a = On(
     c.map((m) => m.shape),
     1
     /* axis */
   );
-  const h = c[0].shape[0] === 1, d = Sb(u, a, t[0].dtype, h), f = _n(l.map((m) => m.shape), r), p = e.makeTensorInfo(f, t[0].dtype, d);
+  const h = c[0].shape[0] === 1, d = Sb(u, a, t[0].dtype, h), f = On(l.map((m) => m.shape), r), p = e.makeTensorInfo(f, t[0].dtype, d);
   return c.forEach((m) => e.disposeIntermediateTensorInfo(m)), p;
 }
 const XA = {
@@ -29866,8 +29866,8 @@ function vw(n) {
             const Rt = gt + bt * g;
             if (Rt < 0 || Rt >= d.inWidth)
               continue;
-            const _t = ot + bt * k[1], Xt = at + Rt * S;
-            let Pt = _t;
+            const Ot = ot + bt * k[1], Xt = at + Rt * S;
+            let Pt = Ot;
             for (let Mt = 0; Mt < d.inChannels; ++Mt) {
               const qt = L[Xt + Mt * C];
               for (let Wt = 0; Wt < d.outChannels; ++Wt)
@@ -29959,14 +29959,14 @@ function QA(n) {
   for (let dt = 0; dt < k; ++dt)
     for (let ht = 0; ht < S; ++ht)
       for (let gt = 0; gt < C; ++gt) {
-        const bt = gt - G, Rt = Math.max(0, Math.ceil(bt / L)), _t = Math.min(F, (N + bt) / L);
+        const bt = gt - G, Rt = Math.max(0, Math.ceil(bt / L)), Ot = Math.min(F, (N + bt) / L);
         for (let Xt = 0; Xt < I; ++Xt) {
           const Pt = Xt - U, Mt = Math.max(0, Math.ceil(Pt / B)), qt = Math.min(z, (T + Pt) / B);
           let Wt = 0;
-          for (let ge = Rt; ge < _t; ++ge) {
+          for (let ge = Rt; ge < Ot; ++ge) {
             const rs = ge * L - bt;
             for (let je = Mt; je < qt; ++je) {
-              const Os = je * B - Pt, mn = tt * dt + Q * ge + ot * je, jn = y * (N - 1 - rs) + w * (T - 1 - Os) + v * ht;
+              const _s = je * B - Pt, mn = tt * dt + Q * ge + ot * je, jn = y * (N - 1 - rs) + w * (T - 1 - _s) + v * ht;
               for (let is = 0; is < R; ++is) {
                 const as = x[mn + at * is], ls = b[jn + is];
                 Wt += as * ls;
@@ -30026,10 +30026,10 @@ function eM(n) {
                 const bt = ht + gt * m;
                 if (bt < 0 || bt >= c.inWidth)
                   continue;
-                const Rt = Q + gt * S[2], _t = ot + bt * c.inChannels;
+                const Rt = Q + gt * S[2], Ot = ot + bt * c.inChannels;
                 let Xt = Rt;
                 for (let Pt = 0; Pt < c.inChannels; ++Pt) {
-                  const Mt = v[_t + Pt];
+                  const Mt = v[Ot + Pt];
                   for (let qt = 0; qt < c.outChannels; ++qt)
                     N[dt + qt] += Mt * k[Xt + qt];
                   Xt += c.outChannels;
@@ -30074,19 +30074,19 @@ function sM(n) {
       const ot = Math.max(0, Math.ceil((j - Q) / f)), at = Math.min(h.outHeight, (h.inHeight + j - Q) / f), dt = Q * v + tt;
       for (let ht = 0; ht < x; ++ht) {
         const gt = Math.max(0, Math.ceil((H - ht) / p)), bt = Math.min(h.outWidth, (h.inWidth + H - ht) / p), Rt = ht * k + dt;
-        for (let _t = 0; _t < h.inChannels; ++_t) {
-          const Xt = _t * N + Rt;
+        for (let Ot = 0; Ot < h.inChannels; ++Ot) {
+          const Xt = Ot * N + Rt;
           for (let Pt = 0; Pt < h.outChannels; ++Pt) {
             let Mt = 0;
             for (let qt = 0; qt < h.batchSize; ++qt) {
               const Wt = qt * z, qn = qt * S;
               for (let ge = Y; ge < J; ++ge) {
-                const je = (K + ge * d - U) * L + Wt, Os = ge * C + qn;
+                const je = (K + ge * d - U) * L + Wt, _s = ge * C + qn;
                 for (let mn = ot; mn < at; ++mn) {
-                  const is = (Q + mn * f - j) * B + je, as = mn * I + Os;
+                  const is = (Q + mn * f - j) * B + je, as = mn * I + _s;
                   for (let ls = gt; ls < bt; ++ls) {
-                    const _c = (ht + ls * p - H) * G + is, Pc = ls * R + as;
-                    Mt += F[_c + _t] * T[Pc + Pt];
+                    const Oc = (ht + ls * p - H) * G + is, Pc = ls * R + as;
+                    Mt += F[Oc + Ot] * T[Pc + Pt];
                   }
                 }
               }
@@ -30127,21 +30127,21 @@ function rM(n) {
   for (let gt = 0; gt < R; ++gt)
     for (let bt = 0; bt < B; ++bt)
       for (let Rt = 0; Rt < G; ++Rt) {
-        const _t = Rt - at, Xt = Math.max(0, Math.ceil(_t / tt)), Pt = Math.min(K, (F + _t) / tt);
+        const Ot = Rt - at, Xt = Math.max(0, Math.ceil(Ot / tt)), Pt = Math.min(K, (F + Ot) / tt);
         for (let Mt = 0; Mt < U; ++Mt) {
           const qt = Mt - dt, Wt = Math.max(0, Math.ceil(qt / Q)), qn = Math.min(Y, (z + qt) / Q);
           for (let ge = 0; ge < H; ++ge) {
-            const rs = ge - ht, je = Math.max(0, Math.ceil(rs / ot)), Os = Math.min(J, (L + rs) / ot);
+            const rs = ge - ht, je = Math.max(0, Math.ceil(rs / ot)), _s = Math.min(J, (L + rs) / ot);
             let mn = 0;
             for (let jn = Xt; jn < Pt; ++jn) {
-              const is = jn * tt - _t;
+              const is = jn * tt - Ot;
               for (let as = Wt; as < qn; ++as) {
                 const ls = as * Q - qt;
-                for (let ar = je; ar < Os; ++ar) {
-                  const _c = ar * ot - rs, Pc = y * gt + w * jn + v * as + k * ar, My = T * (F - 1 - is) + S * (z - 1 - ls) + C * (L - 1 - _c) + I * bt;
+                for (let ar = je; ar < _s; ++ar) {
+                  const Oc = ar * ot - rs, Pc = y * gt + w * jn + v * as + k * ar, My = T * (F - 1 - is) + S * (z - 1 - ls) + C * (L - 1 - Oc) + I * bt;
                   for (let sa = 0; sa < j; ++sa) {
-                    const Fy = b[Pc + sa], Oy = N[My + sa];
-                    mn += Fy * Oy;
+                    const Fy = b[Pc + sa], _y = N[My + sa];
+                    mn += Fy * _y;
                   }
                 }
               }
@@ -30252,8 +30252,8 @@ function hM(n) {
             at = ot + J * v[2] + H * v[1] + F * v[0];
             const gt = w[at];
             at = ot + tt * v[2] + H * v[1] + F * v[0];
-            const bt = w[at], Rt = dt + (ht - dt) * Q, _t = gt + (bt - gt) * Q;
-            at = ot + K * k[2] + B * k[1] + N * k[0], x.values[at] = Rt + (_t - Rt) * j;
+            const bt = w[at], Rt = dt + (ht - dt) * Q, Ot = gt + (bt - gt) * Q;
+            at = ot + K * k[2] + B * k[1] + N * k[0], x.values[at] = Rt + (Ot - Rt) * j;
           }
         }
       } else
@@ -30604,14 +30604,14 @@ function CM(n) {
       for (let at = 0; at < L; ++at) {
         const dt = at - Y, ht = Math.max(0, Math.ceil(dt / j)), gt = Math.min(U, (R + dt) / j);
         for (let bt = 0; bt < B; ++bt) {
-          const Rt = bt - J, _t = Math.max(0, Math.ceil(Rt / K)), Xt = Math.min(H, (F + Rt) / K);
+          const Rt = bt - J, Ot = Math.max(0, Math.ceil(Rt / K)), Xt = Math.min(H, (F + Rt) / K);
           let Pt = 0;
           for (let Mt = ht; Mt < gt; ++Mt) {
             const qt = Mt * j - dt;
-            for (let Wt = _t; Wt < Xt; ++Wt) {
+            for (let Wt = Ot; Wt < Xt; ++Wt) {
               const qn = Wt * K - Rt, ge = w * Q + v * Mt + k * Wt, rs = T * (R - 1 - qt) + S * (F - 1 - qn) + C * ot;
               for (let je = 0; je < tt; ++je) {
-                const Os = ot * tt + je, mn = y[ge + Os], jn = N[rs + je];
+                const _s = ot * tt + je, mn = y[ge + _s], jn = N[rs + je];
                 Pt += mn * jn;
               }
             }
@@ -30674,7 +30674,7 @@ const NM = {
   kernelName: yl,
   backendName: "cpu",
   kernelFunc: ({ inputs: n, backend: t, attrs: e }) => {
-    const { x: s, filter: o } = n, { strides: r, pad: i, dilations: a } = e, l = t, c = l.data.get(s.dataId).values, u = s.shape.length, h = l.data.get(o.dataId).values, d = o.shape.length, { batchSize: f, inHeight: p, inWidth: m, inChannels: g, outHeight: x, outWidth: b, padInfo: y, strideHeight: w, strideWidth: v, filterHeight: k, filterWidth: N, dilationHeight: T, dilationWidth: S, outShape: C } = Oi(s.shape, o.shape, r, i, "NHWC", a), I = q(C), R = C.length, F = Yt(s.dtype, I);
+    const { x: s, filter: o } = n, { strides: r, pad: i, dilations: a } = e, l = t, c = l.data.get(s.dataId).values, u = s.shape.length, h = l.data.get(o.dataId).values, d = o.shape.length, { batchSize: f, inHeight: p, inWidth: m, inChannels: g, outHeight: x, outWidth: b, padInfo: y, strideHeight: w, strideWidth: v, filterHeight: k, filterWidth: N, dilationHeight: T, dilationWidth: S, outShape: C } = _i(s.shape, o.shape, r, i, "NHWC", a), I = q(C), R = C.length, F = Yt(s.dtype, I);
     for (let L = 0; L < f; ++L)
       for (let B = 0; B < x; ++B) {
         const G = B * w - y.top;
@@ -30688,12 +30688,12 @@ const NM = {
                 for (let Q = 0; Q < N; ++Q) {
                   const ot = H + Q * S;
                   if (ot >= 0 && ot < m) {
-                    const at = On([L, tt, ot, j], u, lt(s.shape)), dt = On([J, Q, j], d, lt(o.shape)), ht = c[at] + h[dt];
+                    const at = _n([L, tt, ot, j], u, lt(s.shape)), dt = _n([J, Q, j], d, lt(o.shape)), ht = c[at] + h[dt];
                     ht > K && (K = ht);
                   }
                 }
             }
-            const Y = On([L, B, U, j], R, lt(C));
+            const Y = _n([L, B, U, j], R, lt(C));
             F[Y] = K;
           }
         }
@@ -30721,7 +30721,7 @@ const EM = {
   kernelName: $u,
   backendName: "cpu",
   kernelFunc: ({ inputs: n, backend: t, attrs: e }) => {
-    const { x: s, filter: o, dy: r } = n, { strides: i, pad: a, dilations: l } = e, c = t, u = vn(s.shape, c.data.get(s.dataId).values), h = vn(o.shape, c.data.get(o.dataId).values), { batchSize: d, inHeight: f, inWidth: p, inChannels: m, outHeight: g, outWidth: x, padInfo: b, strideHeight: y, strideWidth: w, filterHeight: v, filterWidth: k, dilationHeight: N, dilationWidth: T, outShape: S } = Oi(s.shape, o.shape, i, a, "NHWC", l);
+    const { x: s, filter: o, dy: r } = n, { strides: i, pad: a, dilations: l } = e, c = t, u = vn(s.shape, c.data.get(s.dataId).values), h = vn(o.shape, c.data.get(o.dataId).values), { batchSize: d, inHeight: f, inWidth: p, inChannels: m, outHeight: g, outWidth: x, padInfo: b, strideHeight: y, strideWidth: w, filterHeight: v, filterWidth: k, dilationHeight: N, dilationWidth: T, outShape: S } = _i(s.shape, o.shape, i, a, "NHWC", l);
     $(r.rank === S.length, () => `Error in ${$u}, dy must have the same rank as output ${S.length}, but got ${r.rank}`);
     const C = vn(S, c.data.get(r.dataId).values), I = Ym(o.shape, o.dtype);
     for (let F = 0; F < d; ++F)
@@ -30769,7 +30769,7 @@ const RM = {
   kernelName: Su,
   backendName: "cpu",
   kernelFunc: ({ inputs: n, backend: t, attrs: e }) => {
-    const { x: s, filter: o, dy: r } = n, { strides: i, pad: a, dilations: l } = e, c = t, u = vn(s.shape, c.data.get(s.dataId).values), h = vn(o.shape, c.data.get(o.dataId).values), { batchSize: d, inHeight: f, inWidth: p, inChannels: m, outHeight: g, outWidth: x, padInfo: b, strideHeight: y, strideWidth: w, filterHeight: v, filterWidth: k, dilationHeight: N, dilationWidth: T, outShape: S } = Oi(s.shape, o.shape, i, a, "NHWC", l);
+    const { x: s, filter: o, dy: r } = n, { strides: i, pad: a, dilations: l } = e, c = t, u = vn(s.shape, c.data.get(s.dataId).values), h = vn(o.shape, c.data.get(o.dataId).values), { batchSize: d, inHeight: f, inWidth: p, inChannels: m, outHeight: g, outWidth: x, padInfo: b, strideHeight: y, strideWidth: w, filterHeight: v, filterWidth: k, dilationHeight: N, dilationWidth: T, outShape: S } = _i(s.shape, o.shape, i, a, "NHWC", l);
     $(r.rank === S.length, () => `Error in ${Su}, dy must have the same rank as output ${S.length}, but got ${r.rank}`);
     const C = vn(S, c.data.get(r.dataId).values), I = Ym(s.shape, s.dtype);
     for (let F = 0; F < d; ++F)
@@ -30934,7 +30934,7 @@ function FM(n) {
     m !== d && e.disposeIntermediateTensorInfo(m);
   return d;
 }
-const OM = {
+const _M = {
   kernelName: Fh,
   backendName: "cpu",
   kernelFunc: FM
@@ -30955,7 +30955,7 @@ const OM = {
  * limitations under the License.
  * =============================================================================
  */
-function _M(n) {
+function OM(n) {
   const { inputs: t, backend: e } = n, { dy: s, y: o } = t;
   rt([s, o], "eluGrad");
   const r = new Float32Array(q(o.shape)), i = e.data.get(o.dataId).values, a = e.data.get(s.dataId).values;
@@ -30966,9 +30966,9 @@ function _M(n) {
   return e.makeTensorInfo(o.shape, "float32", r);
 }
 const PM = {
-  kernelName: Oh,
+  kernelName: _h,
   backendName: "cpu",
-  kernelFunc: _M
+  kernelFunc: OM
 };
 /**
  * @license
@@ -31115,8 +31115,8 @@ function nh(n, t, e, s, o) {
     inputs: [ht, gt],
     backend: o,
     attrs: { axis: 0 }
-  }), _t = o.data.get(bt.dataId).values, Xt = o.data.get(Rt.dataId).values;
-  return o.disposeIntermediateTensorInfo(h), o.disposeIntermediateTensorInfo(d), o.disposeIntermediateTensorInfo(f), o.disposeIntermediateTensorInfo(b), o.disposeIntermediateTensorInfo(y), o.disposeIntermediateTensorInfo(w), o.disposeIntermediateTensorInfo(S), o.disposeIntermediateTensorInfo(C), o.disposeIntermediateTensorInfo(I), o.disposeIntermediateTensorInfo(B), o.disposeIntermediateTensorInfo(G), o.disposeIntermediateTensorInfo(U), o.disposeIntermediateTensorInfo(K), o.disposeIntermediateTensorInfo(Y), o.disposeIntermediateTensorInfo(J), o.disposeIntermediateTensorInfo(tt), o.disposeIntermediateTensorInfo(Q), o.disposeIntermediateTensorInfo(ot), o.disposeIntermediateTensorInfo(at), o.disposeIntermediateTensorInfo(ht), o.disposeIntermediateTensorInfo(dt), o.disposeIntermediateTensorInfo(gt), o.disposeIntermediateTensorInfo(bt), o.disposeIntermediateTensorInfo(Rt), { real: _t, imag: Xt };
+  }), Ot = o.data.get(bt.dataId).values, Xt = o.data.get(Rt.dataId).values;
+  return o.disposeIntermediateTensorInfo(h), o.disposeIntermediateTensorInfo(d), o.disposeIntermediateTensorInfo(f), o.disposeIntermediateTensorInfo(b), o.disposeIntermediateTensorInfo(y), o.disposeIntermediateTensorInfo(w), o.disposeIntermediateTensorInfo(S), o.disposeIntermediateTensorInfo(C), o.disposeIntermediateTensorInfo(I), o.disposeIntermediateTensorInfo(B), o.disposeIntermediateTensorInfo(G), o.disposeIntermediateTensorInfo(U), o.disposeIntermediateTensorInfo(K), o.disposeIntermediateTensorInfo(Y), o.disposeIntermediateTensorInfo(J), o.disposeIntermediateTensorInfo(tt), o.disposeIntermediateTensorInfo(Q), o.disposeIntermediateTensorInfo(ot), o.disposeIntermediateTensorInfo(at), o.disposeIntermediateTensorInfo(ht), o.disposeIntermediateTensorInfo(dt), o.disposeIntermediateTensorInfo(gt), o.disposeIntermediateTensorInfo(bt), o.disposeIntermediateTensorInfo(Rt), { real: Ot, imag: Xt };
 }
 function YM(n, t, e) {
   const s = new Float32Array(t * 2);
@@ -31155,7 +31155,7 @@ function JM(n) {
   return e.disposeIntermediateTensorInfo(a), e.disposeIntermediateTensorInfo(l), c;
 }
 const ZM = {
-  kernelName: _h,
+  kernelName: Oh,
   backendName: "cpu",
   kernelFunc: JM
 };
@@ -31737,7 +31737,7 @@ const FF = {
  * limitations under the License.
  * =============================================================================
  */
-function OF(n) {
+function _F(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t;
   rt(o, "maxPool");
   const { filterSize: r, strides: i, pad: a, dimRoundingMode: l } = s, c = 1;
@@ -31752,10 +31752,10 @@ function OF(n) {
   }
   return h;
 }
-const _F = {
+const OF = {
   kernelName: Fl,
   backendName: "cpu",
-  kernelFunc: OF
+  kernelFunc: _F
 };
 /**
  * @license
@@ -31780,7 +31780,7 @@ function PF(n) {
   return e.makeTensorInfo(d.shape, "float32", d.values);
 }
 const LF = {
-  kernelName: Ol,
+  kernelName: _l,
   backendName: "cpu",
   kernelFunc: PF
 };
@@ -31963,7 +31963,7 @@ function HF(n) {
   return h.forEach((g) => e.disposeIntermediateTensorInfo(g)), m;
 }
 const qF = {
-  kernelName: _l,
+  kernelName: Ol,
   backendName: "cpu",
   kernelFunc: HF
 };
@@ -32042,7 +32042,7 @@ function XF(n) {
     for (let k = 0; k < m; k++)
       w[k] < l[k] ? w[k] = l[k] * 2 - w[k] - u : w[k] >= c[k] && (w[k] = (c[k] - 1) * 2 - w[k] + u);
     w = w.map((k, N) => k - l[N]);
-    const v = On(w, d, f);
+    const v = _n(w, d, f);
     x[y] = h[v];
   }
   return { dataId: e.write(x, a, o.dtype), shape: a, dtype: o.dtype };
@@ -32104,7 +32104,7 @@ function Sw(n) {
   }), u = se(c.shape, l), h = Vt({ inputs: { x: c }, backend: e, attrs: { shape: u } }), d = Df({ inputs: { a: o, b: h }, backend: e }), f = Eb({ inputs: { x: d }, backend: e }), p = Ji({ inputs: { x: f }, backend: e, attrs: { axis: l, keepDims: !1 } }), m = Vt({ inputs: { x: p }, backend: e, attrs: { shape: u } }), g = Mf({ inputs: { a: f, b: m }, backend: e });
   return e.disposeIntermediateTensorInfo(c), e.disposeIntermediateTensorInfo(h), e.disposeIntermediateTensorInfo(d), e.disposeIntermediateTensorInfo(f), e.disposeIntermediateTensorInfo(p), e.disposeIntermediateTensorInfo(m), g;
 }
-const tO = {
+const t_ = {
   kernelName: nc,
   backendName: "cpu",
   kernelFunc: Sw
@@ -32125,7 +32125,7 @@ const tO = {
  * limitations under the License.
  * =============================================================================
  */
-function eO(n) {
+function e_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { logits: o } = t, { numSamples: r, seed: i, normalized: a } = s;
   rt(o, "multinomial");
   const l = a ? o : Sw({ inputs: { logits: o }, backend: e, attrs: { dim: -1 } }), c = l.shape[0], u = l.shape[1], h = e.data.get(l.dataId).values, d = [c, r], f = ke(q(d), "int32");
@@ -32147,10 +32147,10 @@ function eO(n) {
   }
   return a || e.disposeIntermediateTensorInfo(l), e.makeTensorInfo(d, "int32", f);
 }
-const nO = {
+const n_ = {
   kernelName: og,
   backendName: "cpu",
-  kernelFunc: eO
+  kernelFunc: e_
 };
 /**
  * @license
@@ -32168,17 +32168,17 @@ const nO = {
  * limitations under the License.
  * =============================================================================
  */
-const sO = Dd;
-function oO(n) {
+const s_ = Dd;
+function o_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { boxes: o, scores: r } = t, { maxOutputSize: i, iouThreshold: a, scoreThreshold: l } = s;
   rt(o, "NonMaxSuppression");
-  const c = e.data.get(o.dataId).values, u = e.data.get(r.dataId).values, { selectedIndices: h } = sO(c, u, i, a, l);
+  const c = e.data.get(o.dataId).values, u = e.data.get(r.dataId).values, { selectedIndices: h } = s_(c, u, i, a, l);
   return e.makeTensorInfo([h.length], "int32", new Int32Array(h));
 }
-const rO = {
+const r_ = {
   kernelName: Gh,
   backendName: "cpu",
-  kernelFunc: oO
+  kernelFunc: o_
 };
 /**
  * @license
@@ -32196,20 +32196,20 @@ const rO = {
  * limitations under the License.
  * =============================================================================
  */
-const iO = Ad;
-function aO(n) {
+const i_ = Ad;
+function a_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { boxes: o, scores: r } = t, { maxOutputSize: i, iouThreshold: a, scoreThreshold: l, padToMaxOutputSize: c } = s;
   rt(o, "NonMaxSuppressionPadded");
-  const u = e.data.get(o.dataId).values, h = e.data.get(r.dataId).values, { selectedIndices: d, validOutputs: f } = iO(u, h, i, a, l, c);
+  const u = e.data.get(o.dataId).values, h = e.data.get(r.dataId).values, { selectedIndices: d, validOutputs: f } = i_(u, h, i, a, l, c);
   return [
     e.makeTensorInfo([d.length], "int32", new Int32Array(d)),
     e.makeTensorInfo([], "int32", new Int32Array([f]))
   ];
 }
-const lO = {
+const l_ = {
   kernelName: Hh,
   backendName: "cpu",
-  kernelFunc: aO
+  kernelFunc: a_
 };
 /**
  * @license
@@ -32227,20 +32227,20 @@ const lO = {
  * limitations under the License.
  * =============================================================================
  */
-const cO = Md;
-function uO(n) {
+const c_ = Md;
+function u_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { boxes: o, scores: r } = t, { maxOutputSize: i, iouThreshold: a, scoreThreshold: l, softNmsSigma: c } = s;
   rt(o, "NonMaxSuppressionWithScore");
-  const u = e.data.get(o.dataId).values, h = e.data.get(r.dataId).values, d = i, f = a, p = l, m = c, { selectedIndices: g, selectedScores: x } = cO(u, h, d, f, p, m);
+  const u = e.data.get(o.dataId).values, h = e.data.get(r.dataId).values, d = i, f = a, p = l, m = c, { selectedIndices: g, selectedScores: x } = c_(u, h, d, f, p, m);
   return [
     e.makeTensorInfo([g.length], "int32", new Int32Array(g)),
     e.makeTensorInfo([x.length], "float32", new Float32Array(x))
   ];
 }
-const hO = {
+const h_ = {
   kernelName: qh,
   backendName: "cpu",
-  kernelFunc: uO
+  kernelFunc: u_
 };
 /**
  * @license
@@ -32258,7 +32258,7 @@ const hO = {
  * limitations under the License.
  * =============================================================================
  */
-function dO(n) {
+function d_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { indices: o } = t, { dtype: r, depth: i, onValue: a, offValue: l } = s;
   rt(o, "oneHot");
   const c = q(o.shape), u = new Float32Array(c * i);
@@ -32268,10 +32268,10 @@ function dO(n) {
     h[d] >= 0 && h[d] < i && (u[d * i + h[d]] = a);
   return e.makeTensorInfo([...o.shape, i], r, u);
 }
-const fO = {
+const f_ = {
   kernelName: Ul,
   backendName: "cpu",
-  kernelFunc: dO
+  kernelFunc: d_
 };
 /**
  * @license
@@ -32299,7 +32299,7 @@ function tl(n) {
   } else
     return Ff({ backend: e, attrs: { shape: s.shape, value: 0, dtype: s.dtype } });
 }
-const pO = {
+const p_ = {
   kernelName: rc,
   backendName: "cpu",
   kernelFunc: tl
@@ -32330,7 +32330,7 @@ function $w(n) {
   } else
     return Ff({ backend: e, attrs: { shape: s.shape, value: 1, dtype: s.dtype } });
 }
-const mO = {
+const m_ = {
   kernelName: Vl,
   backendName: "cpu",
   kernelFunc: $w
@@ -32365,7 +32365,7 @@ function Tw(n) {
   }), c = Uo({ inputs: l, backend: e, attrs: { axis: o } });
   return a.forEach((u) => e.disposeIntermediateTensorInfo(u)), c;
 }
-const gO = {
+const g_ = {
   kernelName: Wl,
   backendName: "cpu",
   kernelFunc: Tw
@@ -32386,7 +32386,7 @@ const gO = {
  * limitations under the License.
  * =============================================================================
  */
-function xO(n) {
+function x_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { paddings: r, constantValue: i } = s;
   rt(o, "pad");
   const a = r.map(
@@ -32395,7 +32395,7 @@ function xO(n) {
   ), l = r.map((b) => b[0]), c = e.data.get(o.dataId).values, u = q(o.shape), h = o.shape.length, d = lt(o.shape), f = q(a), p = a.length, m = lt(a), g = Ie(o.dtype, f);
   i !== 0 && g.fill(i);
   for (let b = 0; b < u; b++) {
-    const w = qo(b, h, d).map((k, N) => k + l[N]), v = On(w, p, m);
+    const w = qo(b, h, d).map((k, N) => k + l[N]), v = _n(w, p, m);
     g[v] = c[b];
   }
   return { dataId: e.write(g, a, o.dtype), shape: a, dtype: o.dtype };
@@ -32403,7 +32403,7 @@ function xO(n) {
 const Nw = {
   kernelName: Gl,
   backendName: "cpu",
-  kernelFunc: xO
+  kernelFunc: x_
 };
 /**
  * @license
@@ -32421,10 +32421,10 @@ const Nw = {
  * limitations under the License.
  * =============================================================================
  */
-const bO = ee((n, t) => Math.pow(n, t)), wO = ue(pi, bO), yO = {
+const b_ = ee((n, t) => Math.pow(n, t)), w_ = ue(pi, b_), y_ = {
   kernelName: pi,
   backendName: "cpu",
-  kernelFunc: wO
+  kernelFunc: w_
 };
 /**
  * @license
@@ -32442,14 +32442,14 @@ const bO = ee((n, t) => Math.pow(n, t)), wO = ue(pi, bO), yO = {
  * limitations under the License.
  * =============================================================================
  */
-function vO(n) {
+function v_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { paramsNestedSplits: o, paramsDenseValues: r, indices: i } = t, { outputRaggedRank: a } = s, l = o.map((x) => e.data.get(x.dataId).values), c = o.map((x) => x.shape), u = e.data.get(r.dataId).values, h = e.data.get(i.dataId).values, [d, f, p] = jb(l, c, u, r.shape, r.dtype, h, i.shape), m = d.map((x) => e.makeTensorInfo([x.length], "int32", x)), g = e.makeTensorInfo(p, r.dtype, f);
   return m.concat([g]);
 }
-const IO = {
+const I_ = {
   kernelName: rg,
   backendName: "cpu",
-  kernelFunc: vO
+  kernelFunc: v_
 };
 /**
  * @license
@@ -32467,14 +32467,14 @@ const IO = {
  * limitations under the License.
  * =============================================================================
  */
-function kO(n) {
+function k_(n) {
   const { inputs: t, backend: e } = n, { starts: s, limits: o, deltas: r } = t, i = e.data.get(s.dataId).values, a = e.data.get(o.dataId).values, l = e.data.get(r.dataId).values, [c, u] = Kb(i, s.shape, s.dtype, a, o.shape, l, r.shape), h = e.makeTensorInfo([c.length], "int32", c), d = e.makeTensorInfo([u.length], s.dtype, u);
   return [h, d];
 }
-const CO = {
+const C_ = {
   kernelName: ig,
   backendName: "cpu",
-  kernelFunc: kO
+  kernelFunc: k_
 };
 /**
  * @license
@@ -32492,14 +32492,14 @@ const CO = {
  * limitations under the License.
  * =============================================================================
  */
-function SO(n) {
+function S_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { shape: o, values: r, defaultValue: i, rowPartitionTensors: a } = t, { rowPartitionTypes: l } = s, c = e.data.get(o.dataId).values, u = e.data.get(r.dataId).values, h = e.data.get(i.dataId).values, d = a.map((g) => e.data.get(g.dataId).values), f = a.map((g) => g.shape), [p, m] = Xb(c, o.shape, u, r.shape, r.dtype, h, i.shape, d, f, l);
   return e.makeTensorInfo(p, r.dtype, m);
 }
-const $O = {
+const $_ = {
   kernelName: ag,
   backendName: "cpu",
-  kernelFunc: SO
+  kernelFunc: S_
 };
 /**
  * @license
@@ -32517,14 +32517,14 @@ const $O = {
  * limitations under the License.
  * =============================================================================
  */
-function TO(n) {
+function T_(n) {
   const { backend: t, attrs: e } = n, { start: s, stop: o, dtype: r, step: i } = e, a = Yb(s, o, i, r);
   return t.makeTensorInfo([a.length], r, a);
 }
-const NO = {
+const N_ = {
   kernelName: jh,
   backendName: "cpu",
-  kernelFunc: TO
+  kernelFunc: T_
 };
 /**
  * @license
@@ -32542,10 +32542,10 @@ const NO = {
  * limitations under the License.
  * =============================================================================
  */
-const EO = At(mi, (n) => 1 / n), RO = {
+const E_ = At(mi, (n) => 1 / n), R_ = {
   kernelName: mi,
   backendName: "cpu",
-  kernelFunc: EO
+  kernelFunc: E_
 };
 /**
  * @license
@@ -32563,7 +32563,7 @@ const EO = At(mi, (n) => 1 / n), RO = {
  * limitations under the License.
  * =============================================================================
  */
-function DO(n) {
+function D_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { images: o } = t, { alignCorners: r, halfPixelCenters: i, size: a } = s;
   rt(o, "resizeBilinear");
   const l = lt(o.shape), [c, u] = a, [h, d, f, p] = o.shape, m = e.data.get(o.dataId).values, g = new Float32Array(q([h, c, u, p])), x = [
@@ -32592,10 +32592,10 @@ function DO(n) {
     }
   return e.makeTensorInfo([h, c, u, p], "float32", g);
 }
-const AO = {
+const A_ = {
   kernelName: Xl,
   backendName: "cpu",
-  kernelFunc: DO
+  kernelFunc: D_
 };
 /**
  * @license
@@ -32613,7 +32613,7 @@ const AO = {
  * limitations under the License.
  * =============================================================================
  */
-function MO(n) {
+function M_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { images: o, dy: r } = t, { alignCorners: i } = s;
   rt([r, o], "resizeBilinearGrad");
   const a = lt(o.shape), [l, c, u, h] = o.shape, [, d, f] = r.shape, p = new Float32Array(l * c * u * h), m = [
@@ -32639,10 +32639,10 @@ function MO(n) {
   }
   return e.makeTensorInfo([l, u, c, h], "float32", p);
 }
-const FO = {
+const F_ = {
   kernelName: Yh,
   backendName: "cpu",
-  kernelFunc: MO
+  kernelFunc: M_
 };
 /**
  * @license
@@ -32660,7 +32660,7 @@ const FO = {
  * limitations under the License.
  * =============================================================================
  */
-function OO(n) {
+function __(n) {
   const { inputs: t, backend: e, attrs: s } = n, { images: o } = t, { alignCorners: r, halfPixelCenters: i, size: a } = s;
   rt(o, "resizeNearestNeighbor");
   const l = lt(o.shape), [c, u] = a, [h, d, f, p] = o.shape, m = e.data.get(o.dataId).values, g = new Float32Array(h * c * u * p), x = [
@@ -32692,10 +32692,10 @@ function OO(n) {
   }
   return e.makeTensorInfo([h, c, u, p], o.dtype, g);
 }
-const _O = {
+const O_ = {
   kernelName: Kl,
   backendName: "cpu",
-  kernelFunc: OO
+  kernelFunc: __
 };
 /**
  * @license
@@ -32713,7 +32713,7 @@ const _O = {
  * limitations under the License.
  * =============================================================================
  */
-function PO(n) {
+function P_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { images: o, dy: r } = t, { alignCorners: i } = s;
   rt([r, o], "resizeNearestNeighborGrad");
   const a = lt(o.shape), l = lt(r.shape), [c, u, h, d] = o.shape, [, f, p] = r.shape, m = new Float32Array(c * u * h * d), g = e.data.get(r.dataId).values, x = [
@@ -32752,10 +32752,10 @@ function PO(n) {
   }
   return e.makeTensorInfo(o.shape, o.dtype, m);
 }
-const LO = {
+const L_ = {
   kernelName: Xh,
   backendName: "cpu",
-  kernelFunc: PO
+  kernelFunc: P_
 };
 /**
  * @license
@@ -32773,7 +32773,7 @@ const LO = {
  * limitations under the License.
  * =============================================================================
  */
-function zO(n) {
+function z_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { dims: r } = s;
   rt(o, "reverse");
   const i = o.shape.length, a = yt(r, o.shape);
@@ -32786,10 +32786,10 @@ function zO(n) {
   }
   return e.makeTensorInfo(l.shape, l.dtype, l.values);
 }
-const BO = {
+const B_ = {
   kernelName: Yl,
   backendName: "cpu",
-  kernelFunc: zO
+  kernelFunc: z_
 };
 /**
  * @license
@@ -32807,7 +32807,7 @@ const BO = {
  * limitations under the License.
  * =============================================================================
  */
-const VO = {
+const V_ = {
   kernelName: sd,
   backendName: "cpu",
   kernelFunc: ({ inputs: n, attrs: t, backend: e }) => {
@@ -32852,13 +32852,13 @@ const VO = {
  * limitations under the License.
  * =============================================================================
  */
-const UO = At(bi, (n) => {
+const U_ = At(bi, (n) => {
   const t = Math.floor(n);
   return n - t < 0.5 ? Math.floor(n) : n - t > 0.5 ? Math.ceil(n) : t % 2 === 0 ? t : t + 1;
-}), WO = {
+}), W_ = {
   kernelName: bi,
   backendName: "cpu",
-  kernelFunc: UO
+  kernelFunc: U_
 };
 /**
  * @license
@@ -32876,14 +32876,14 @@ const UO = At(bi, (n) => {
  * limitations under the License.
  * =============================================================================
  */
-function GO(n) {
+function G_(n) {
   const { inputs: t, backend: e, attrs: s } = n, { indices: o, updates: r } = t, { shape: i } = s, { sliceRank: a, numUpdates: l, sliceSize: c, strides: u, outputSize: h } = po(r, o, i), d = !0, f = e.bufferSync(o), p = e.bufferSync(r), m = Hs(f, p, i, h, c, l, a, u, 0, d);
   return e.makeTensorInfo(i, m.dtype, m.values);
 }
-const HO = {
+const H_ = {
   kernelName: lg,
   backendName: "cpu",
-  kernelFunc: GO
+  kernelFunc: G_
 };
 /**
  * @license
@@ -32901,24 +32901,24 @@ const HO = {
  * limitations under the License.
  * =============================================================================
  */
-function qO(n, t) {
+function q_(n, t) {
   let e = 0, s = n.length, o = 0;
   for (; e < s; )
     o = Math.floor((e + s) / 2), n[o] < t ? e = o + 1 : s = o;
   return s;
 }
-function jO(n, t) {
+function j_(n, t) {
   let e = 0, s = n.length, o = 0;
   for (; e < s; )
     o = Math.floor((e + s) / 2), n[o] <= t ? e = o + 1 : s = o;
   return s;
 }
-function KO(n, t, e, s, o, r) {
+function K_(n, t, e, s, o, r) {
   const i = Yt("int32", e * o);
   for (let a = 0; a < e; ++a) {
     const l = n.slice(a * s, (a + 1) * s), c = a * o;
     for (let u = 0; u < o; ++u)
-      i[c + u] = r === "left" ? qO(l, t[u + c]) : jO(l, t[u + c]);
+      i[c + u] = r === "left" ? q_(l, t[u + c]) : j_(l, t[u + c]);
   }
   return i;
 }
@@ -32938,14 +32938,14 @@ function KO(n, t, e, s, o, r) {
  * limitations under the License.
  * =============================================================================
  */
-function XO(n) {
-  const { inputs: t, backend: e, attrs: s } = n, { sortedSequence: o, values: r } = t, { side: i } = s, a = e.data.get(o.dataId).values, l = e.data.get(r.dataId).values, c = KO(a, l, o.shape[0], o.shape[1], r.shape[1], i);
+function X_(n) {
+  const { inputs: t, backend: e, attrs: s } = n, { sortedSequence: o, values: r } = t, { side: i } = s, a = e.data.get(o.dataId).values, l = e.data.get(r.dataId).values, c = K_(a, l, o.shape[0], o.shape[1], r.shape[1], i);
   return e.makeTensorInfo(r.shape, "int32", c);
 }
-const YO = {
+const Y_ = {
   kernelName: ug,
   backendName: "cpu",
-  kernelFunc: XO
+  kernelFunc: X_
 };
 /**
  * @license
@@ -32963,7 +32963,7 @@ const YO = {
  * limitations under the License.
  * =============================================================================
  */
-function JO(n) {
+function J_(n) {
   const { inputs: t, backend: e } = n, { condition: s, t: o, e: r } = t;
   rt([s, o, r], "select");
   const i = s.shape.length, a = e.data.get(s.dataId).values, l = e.data.get(o.dataId).values, c = e.data.get(r.dataId).values, u = Ge(o.dtype, r.dtype), h = ke(q(o.shape), u);
@@ -32974,10 +32974,10 @@ function JO(n) {
       a[p] === 1 ? h[d++] = l[p] : h[d++] = c[p];
   return e.makeTensorInfo(o.shape, u, h);
 }
-const ZO = {
+const Z_ = {
   kernelName: Jl,
   backendName: "cpu",
-  kernelFunc: JO
+  kernelFunc: J_
 };
 /**
  * @license
@@ -32995,10 +32995,10 @@ const ZO = {
  * limitations under the License.
  * =============================================================================
  */
-const QO = gc, t_ = xc, e_ = At(yi, (n) => n >= 0 ? t_ * n : QO * (Math.exp(n) - 1)), n_ = {
+const Q_ = gc, tO = xc, eO = At(yi, (n) => n >= 0 ? tO * n : Q_ * (Math.exp(n) - 1)), nO = {
   kernelName: yi,
   backendName: "cpu",
-  kernelFunc: e_
+  kernelFunc: eO
 };
 /**
  * @license
@@ -33016,10 +33016,10 @@ const QO = gc, t_ = xc, e_ = At(yi, (n) => n >= 0 ? t_ * n : QO * (Math.exp(n) -
  * limitations under the License.
  * =============================================================================
  */
-const s_ = At(ki, (n) => n < 0 ? -1 : n > 0 ? 1 : 0), o_ = {
+const sO = At(ki, (n) => n < 0 ? -1 : n > 0 ? 1 : 0), oO = {
   kernelName: ki,
   backendName: "cpu",
-  kernelFunc: s_
+  kernelFunc: sO
 };
 /**
  * @license
@@ -33037,10 +33037,10 @@ const s_ = At(ki, (n) => n < 0 ? -1 : n > 0 ? 1 : 0), o_ = {
  * limitations under the License.
  * =============================================================================
  */
-const r_ = At(vi, (n) => Math.sin(n)), i_ = {
+const rO = At(vi, (n) => Math.sin(n)), iO = {
   kernelName: vi,
   backendName: "cpu",
-  kernelFunc: r_
+  kernelFunc: rO
 };
 /**
  * @license
@@ -33058,10 +33058,10 @@ const r_ = At(vi, (n) => Math.sin(n)), i_ = {
  * limitations under the License.
  * =============================================================================
  */
-const a_ = At(Ii, (n) => Math.sinh(n)), l_ = {
+const aO = At(Ii, (n) => Math.sinh(n)), lO = {
   kernelName: Ii,
   backendName: "cpu",
-  kernelFunc: a_
+  kernelFunc: aO
 };
 /**
  * @license
@@ -33079,14 +33079,14 @@ const a_ = At(Ii, (n) => Math.sinh(n)), l_ = {
  * limitations under the License.
  * =============================================================================
  */
-const c_ = 11920928955078125e-23, rm = Math.log(c_) + 2, u_ = At(Si, (n) => {
+const cO = 11920928955078125e-23, rm = Math.log(cO) + 2, uO = At(Si, (n) => {
   const t = n > -rm, e = n < rm, s = Math.exp(n);
   let o;
   return e ? o = s : t ? o = n : o = Math.log(1 + s), o;
-}), h_ = {
+}), hO = {
   kernelName: Si,
   backendName: "cpu",
-  kernelFunc: u_
+  kernelFunc: uO
 };
 /**
  * @license
@@ -33104,7 +33104,7 @@ const c_ = 11920928955078125e-23, rm = Math.log(c_) + 2, u_ = At(Si, (n) => {
  * limitations under the License.
  * =============================================================================
  */
-function d_(n) {
+function dO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { blockShape: r, paddings: i } = s;
   rt([o], "spaceToBatchND");
   const a = q(r), l = [[0, 0]];
@@ -33118,10 +33118,10 @@ function d_(n) {
   }), u = Bi(c.shape, r, a, !1), h = Vi(u.length, r.length, !1), d = Ui(c.shape, r, a, !1), m = Vt({ inputs: { x: c }, backend: e, attrs: { shape: u } }), b = ze({ inputs: { x: m }, backend: e, attrs: { perm: h } }), v = Vt({ inputs: { x: b }, backend: e, attrs: { shape: d } });
   return e.disposeIntermediateTensorInfo(c), e.disposeIntermediateTensorInfo(m), e.disposeIntermediateTensorInfo(b), v;
 }
-const f_ = {
+const fO = {
   kernelName: tc,
   backendName: "cpu",
-  kernelFunc: d_
+  kernelFunc: dO
 };
 /**
  * @license
@@ -33139,7 +33139,7 @@ const f_ = {
  * limitations under the License.
  * =============================================================================
  */
-function p_(n) {
+function pO(n) {
   const { inputs: t, backend: e } = n, { indices: s, values: o, denseShape: r, defaultValue: i } = t;
   if (r.shape.length !== 1)
     throw new Error(`Dense shape must be a vector, saw:
@@ -33161,10 +33161,10 @@ function p_(n) {
     e.makeTensorInfo([m.length], s.dtype, new Int32Array(m))
   ];
 }
-const m_ = {
+const mO = {
   kernelName: hg,
   backendName: "cpu",
-  kernelFunc: p_
+  kernelFunc: pO
 };
 /**
  * @license
@@ -33182,7 +33182,7 @@ const m_ = {
  * limitations under the License.
  * =============================================================================
  */
-function g_(n) {
+function gO(n) {
   const { inputs: t, backend: e } = n, { inputIndices: s, inputShape: o, newShape: r } = t;
   if (s.shape.length !== 2)
     throw new Error(`Input indices should be a matrix but received shape
@@ -33198,10 +33198,10 @@ function g_(n) {
     e.makeTensorInfo([h.length], r.dtype, new Int32Array(h))
   ];
 }
-const x_ = {
+const xO = {
   kernelName: dg,
   backendName: "cpu",
-  kernelFunc: g_
+  kernelFunc: gO
 };
 /**
  * @license
@@ -33219,7 +33219,7 @@ const x_ = {
  * limitations under the License.
  * =============================================================================
  */
-function b_(n) {
+function bO(n) {
   const { inputs: t, backend: e } = n, { data: s, indices: o, segmentIds: r } = t;
   if (s.shape.length < 1)
     throw new Error("Data should be at least 1 dimensional but received scalar");
@@ -33234,10 +33234,10 @@ function b_(n) {
   const i = e.data.get(s.dataId).values, a = e.data.get(o.dataId).values, l = e.data.get(r.dataId).values, [c, u] = Rf(i, s.shape, s.dtype, a, l, !0);
   return e.makeTensorInfo(u, s.dtype, c);
 }
-const w_ = {
+const wO = {
   kernelName: fg,
   backendName: "cpu",
-  kernelFunc: b_
+  kernelFunc: bO
 };
 /**
  * @license
@@ -33255,7 +33255,7 @@ const w_ = {
  * limitations under the License.
  * =============================================================================
  */
-function y_(n) {
+function yO(n) {
   const { inputs: t, backend: e } = n, { data: s, indices: o, segmentIds: r } = t;
   if (s.shape.length < 1)
     throw new Error("Data should be at least 1 dimensional but received scalar");
@@ -33270,10 +33270,10 @@ function y_(n) {
   const i = e.data.get(s.dataId).values, a = e.data.get(o.dataId).values, l = e.data.get(r.dataId).values, [c, u] = Rf(i, s.shape, s.dtype, a, l);
   return e.makeTensorInfo(u, s.dtype, c);
 }
-const v_ = {
+const vO = {
   kernelName: pg,
   backendName: "cpu",
-  kernelFunc: y_
+  kernelFunc: yO
 };
 /**
  * @license
@@ -33291,7 +33291,7 @@ const v_ = {
  * limitations under the License.
  * =============================================================================
  */
-function I_(n) {
+function IO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { sparseIndices: o, sparseValues: r, defaultValue: i } = t, { outputShape: a } = s, { sliceRank: l, numUpdates: c, sliceSize: u, strides: h, outputSize: d } = po(r, o, a), f = !1, p = e.bufferSync(o);
   let m;
   switch (r.dtype) {
@@ -33320,10 +33320,10 @@ function I_(n) {
   }
   return e.makeTensorInfo(a, m.dtype, m.values);
 }
-const k_ = {
+const kO = {
   kernelName: mg,
   backendName: "cpu",
-  kernelFunc: I_
+  kernelFunc: IO
 };
 /**
  * @license
@@ -33341,7 +33341,7 @@ const k_ = {
  * limitations under the License.
  * =============================================================================
  */
-function C_(n) {
+function CO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { numOrSizeSplits: r, axis: i } = s, a = yt(i, o.shape)[0], l = nf(o, r, a), c = new Array(o.shape.length).fill(0), u = o.shape.slice();
   return l.map((h) => {
     const d = [...u];
@@ -33350,10 +33350,10 @@ function C_(n) {
     return c[a] += h, f;
   });
 }
-const S_ = {
+const SO = {
   kernelName: ec,
   backendName: "cpu",
-  kernelFunc: C_
+  kernelFunc: CO
 };
 /**
  * @license
@@ -33371,7 +33371,7 @@ const S_ = {
  * limitations under the License.
  * =============================================================================
  */
-const $_ = {
+const $O = {
   kernelName: Jh,
   backendName: "cpu",
   kernelFunc: ({ inputs: n, backend: t }) => {
@@ -33401,13 +33401,13 @@ const $_ = {
  * limitations under the License.
  * =============================================================================
  */
-const T_ = At(Ai, (n, t) => {
+const TO = At(Ai, (n, t) => {
   const e = t;
   return isNaN(n) ? NaN : n > 0 ? 1 : e.alpha;
-}), N_ = {
+}), NO = {
   kernelName: Ai,
   backendName: "cpu",
-  kernelFunc: T_
+  kernelFunc: TO
 };
 /**
  * @license
@@ -33425,7 +33425,7 @@ const T_ = At(Ai, (n, t) => {
  * limitations under the License.
  * =============================================================================
  */
-function E_(n) {
+function EO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { begin: r, end: i, strides: a, beginMask: l, endMask: c, ellipsisMask: u, newAxisMask: h, shrinkAxisMask: d } = s;
   rt(o, "stridedSlice");
   const { finalShapeSparse: f, finalShape: p, isIdentity: m, sliceDim0: g, isSimpleSlice: x, begin: b, end: y, strides: w } = A0(o.shape, r, i, a, l, c, u, h, d);
@@ -33442,10 +33442,10 @@ function E_(n) {
   }
   return v;
 }
-const R_ = {
+const RO = {
   kernelName: Qh,
   backendName: "cpu",
-  kernelFunc: E_
+  kernelFunc: EO
 };
 /**
  * @license
@@ -33463,17 +33463,17 @@ const R_ = {
  * limitations under the License.
  * =============================================================================
  */
-function D_(n) {
+function DO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { separator: o, nGramWidths: r, leftPad: i, rightPad: a, padWidth: l, preserveShortSequences: c } = s, { data: u, dataSplits: h } = t, d = e.data.get(u.dataId).values, f = e.data.get(h.dataId).values, [p, m] = rw(d, f, o, r, i, a, l, c);
   return [
     e.makeTensorInfo([p.length], "string", p),
     e.makeTensorInfo(h.shape, "int32", m)
   ];
 }
-const A_ = {
+const AO = {
   kernelName: gg,
   backendName: "cpu",
-  kernelFunc: D_
+  kernelFunc: DO
 };
 /**
  * @license
@@ -33491,7 +33491,7 @@ const A_ = {
  * limitations under the License.
  * =============================================================================
  */
-function M_(n) {
+function MO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { skipEmpty: o } = s, { input: r, delimiter: i } = t;
   if (r.dtype !== "string")
     throw new Error("Input must be of datatype string");
@@ -33506,10 +33506,10 @@ function M_(n) {
     e.makeTensorInfo([2], "int32", new Int32Array(h))
   ];
 }
-const F_ = {
+const FO = {
   kernelName: xg,
   backendName: "cpu",
-  kernelFunc: M_
+  kernelFunc: MO
 };
 /**
  * @license
@@ -33527,7 +33527,7 @@ const F_ = {
  * limitations under the License.
  * =============================================================================
  */
-function O_(n) {
+function _O(n) {
   const { inputs: t, backend: e, attrs: s } = n, { numBuckets: o } = s, { input: r } = t;
   if (r.dtype !== "string")
     throw new Error("Input must be of datatype string");
@@ -33536,10 +33536,10 @@ function O_(n) {
   const i = e.data.get(r.dataId).values, a = aw(i, o);
   return e.makeTensorInfo(r.shape, "int32", a);
 }
-const __ = {
+const OO = {
   kernelName: bg,
   backendName: "cpu",
-  kernelFunc: O_
+  kernelFunc: _O
 };
 /**
  * @license
@@ -33557,10 +33557,10 @@ const __ = {
  * limitations under the License.
  * =============================================================================
  */
-const P_ = At(Ei, (n) => Math.tan(n)), L_ = {
+const PO = At(Ei, (n) => Math.tan(n)), LO = {
   kernelName: Ei,
   backendName: "cpu",
-  kernelFunc: P_
+  kernelFunc: PO
 };
 /**
  * @license
@@ -33578,10 +33578,10 @@ const P_ = At(Ei, (n) => Math.tan(n)), L_ = {
  * limitations under the License.
  * =============================================================================
  */
-const z_ = At(Ri, (n) => Math.tanh(n)), B_ = {
+const zO = At(Ri, (n) => Math.tanh(n)), BO = {
   kernelName: Ri,
   backendName: "cpu",
-  kernelFunc: z_
+  kernelFunc: zO
 };
 /**
  * @license
@@ -33599,14 +33599,14 @@ const z_ = At(Ri, (n) => Math.tanh(n)), B_ = {
  * limitations under the License.
  * =============================================================================
  */
-function V_(n) {
+function VO(n) {
   const { inputs: t, backend: e } = n, { tensor: s, indices: o, updates: r } = t, { sliceRank: i, numUpdates: a, sliceSize: l, strides: c, outputSize: u } = po(r, o, s.shape), h = !1, d = e.bufferSync(o), f = e.bufferSync(r), p = e.bufferSync(s), m = Hs(d, f, s.shape, u, l, a, i, c, p, h);
   return e.makeTensorInfo(s.shape, m.dtype, m.values);
 }
-const U_ = {
+const UO = {
   kernelName: cg,
   backendName: "cpu",
-  kernelFunc: V_
+  kernelFunc: VO
 };
 /**
  * @license
@@ -33624,16 +33624,16 @@ const U_ = {
  * limitations under the License.
  * =============================================================================
  */
-function W_(n) {
+function WO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { reps: r } = s;
   rt(o, "tile");
   const i = cw(e.bufferSync(o), r);
   return e.makeTensorInfo(i.shape, i.dtype, i.values);
 }
-const G_ = {
+const GO = {
   kernelName: Di,
   backendName: "cpu",
-  kernelFunc: W_
+  kernelFunc: WO
 };
 /**
  * @license
@@ -33651,7 +33651,7 @@ const G_ = {
  * limitations under the License.
  * =============================================================================
  */
-function H_(n) {
+function HO(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { k: r, sorted: i } = s;
   rt(o, "topk");
   const a = e.data.get(o.dataId).values, [l, c] = hw(a, o.shape, o.dtype, r, i);
@@ -33660,10 +33660,10 @@ function H_(n) {
     e.makeTensorInfo(c.shape, c.dtype, c.values)
   ];
 }
-const q_ = {
+const qO = {
   kernelName: td,
   backendName: "cpu",
-  kernelFunc: H_
+  kernelFunc: HO
 };
 /**
  * @license
@@ -33681,7 +33681,7 @@ const q_ = {
  * limitations under the License.
  * =============================================================================
  */
-function j_(n) {
+function jO(n) {
   const { inputs: t, attrs: e, backend: s } = n, { image: o, transforms: r } = t, { interpolation: i, fillMode: a, fillValue: l, outputShape: c } = e, [u, h, d, f] = o.shape, [p, m] = c != null ? c : [h, d], g = [u, p, m, f], x = lt(o.shape), b = x[0], y = x[1], w = x[2], v = lt(g), k = v[0], N = v[1], T = v[2], S = Ie(o.dtype, q(g));
   S.fill(l);
   const C = s.data.get(o.dataId).values, I = s.data.get(r.dataId).values;
@@ -33697,7 +33697,7 @@ function j_(n) {
           const j = (z[0] * B + z[1] * L + z[2]) / H, K = (z[3] * B + z[4] * L + z[5]) / H, Y = im(j, d, a), J = im(K, h, a);
           switch (i) {
             case "nearest":
-              U = Q_(C, h, d, b, y, w, F, J, Y, G, l);
+              U = QO(C, h, d, b, y, w, F, J, Y, G, l);
               break;
             case "bilinear":
               U = tP(C, h, d, b, y, w, F, J, Y, G, l);
@@ -33712,25 +33712,25 @@ function j_(n) {
   }
   return { dataId: s.write(S, g, o.dtype), shape: o.shape, dtype: o.dtype };
 }
-const K_ = {
+const KO = {
   kernelName: ed,
   backendName: "cpu",
-  kernelFunc: j_
+  kernelFunc: jO
 };
 function im(n, t, e) {
   switch (e) {
     case "reflect":
-      return X_(n, t);
+      return XO(n, t);
     case "wrap":
-      return Y_(n, t);
+      return YO(n, t);
     case "nearest":
-      return Z_(n, t);
+      return ZO(n, t);
     case "constant":
     default:
-      return J_(n);
+      return JO(n);
   }
 }
-function X_(n, t) {
+function XO(n, t) {
   let e = n;
   if (e < 0)
     if (t <= 1)
@@ -33748,7 +33748,7 @@ function X_(n, t) {
     }
   return uh(0, e, t - 1);
 }
-function Y_(n, t) {
+function YO(n, t) {
   let e = n;
   if (e < 0)
     if (t <= 1)
@@ -33766,17 +33766,17 @@ function Y_(n, t) {
     }
   return uh(0, e, t - 1);
 }
-function J_(n, t) {
+function JO(n, t) {
   return n;
 }
-function Z_(n, t) {
+function ZO(n, t) {
   return uh(0, n, t - 1);
 }
 function wr(n, t, e, s, o, r, i, a, l, c, u) {
   const h = i * s + a * o + l * r + c;
   return 0 <= a && a < t && 0 <= l && l < e ? n[h] : u;
 }
-function Q_(n, t, e, s, o, r, i, a, l, c, u) {
+function QO(n, t, e, s, o, r, i, a, l, c, u) {
   const h = Math.round(a), d = Math.round(l);
   return wr(n, t, e, s, o, r, i, h, d, c, u);
 }
@@ -33908,7 +33908,7 @@ const iP = {
  */
 const aP = [
   eA,
-  OR,
+  _R,
   sA,
   rA,
   VR,
@@ -33925,7 +33925,7 @@ const aP = [
   EA,
   DA,
   MA,
-  OA,
+  _A,
   QD,
   PA,
   zA,
@@ -33935,7 +33935,7 @@ const aP = [
   zR,
   HR,
   HA,
-  _R,
+  OR,
   jA,
   XA,
   YA,
@@ -33959,7 +33959,7 @@ const aP = [
   EM,
   RM,
   AM,
-  OM,
+  _M,
   qD,
   PM,
   qR,
@@ -33997,7 +33997,7 @@ const aP = [
   MF,
   FF,
   hD,
-  _F,
+  OF,
   LF,
   BF,
   UF,
@@ -34007,78 +34007,78 @@ const aP = [
   fD,
   YF,
   QF,
-  nO,
+  n_,
   mD,
   xD,
-  rO,
-  lO,
-  hO,
+  r_,
+  l_,
+  h_,
   wD,
-  fO,
-  mO,
-  gO,
+  f_,
+  m_,
+  g_,
   Nw,
-  yO,
+  y_,
   XD,
   ID,
-  IO,
-  CO,
-  $O,
-  NO,
+  I_,
+  C_,
+  $_,
+  N_,
   LR,
   eh,
-  RO,
+  R_,
   YD,
   JD,
   ZD,
-  AO,
-  FO,
-  _O,
-  LO,
-  BO,
-  VO,
-  WO,
-  RD,
-  HO,
-  YO,
-  ZO,
-  n_,
-  AD,
-  o_,
-  i_,
-  l_,
-  MD,
-  tO,
-  h_,
-  f_,
-  m_,
-  x_,
-  w_,
-  v_,
-  k_,
-  S_,
-  _D,
-  $_,
-  LD,
-  BD,
-  N_,
-  R_,
   A_,
   F_,
-  __,
-  GD,
-  MM,
+  O_,
   L_,
   B_,
-  U_,
-  G_,
-  q_,
-  K_,
+  V_,
+  W_,
+  RD,
+  H_,
+  Y_,
+  Z_,
+  nO,
+  AD,
+  oO,
+  iO,
+  lO,
+  MD,
+  t_,
+  hO,
+  fO,
+  mO,
+  xO,
+  wO,
+  vO,
+  kO,
+  SO,
+  OD,
+  $O,
+  LD,
+  BD,
+  NO,
+  RO,
+  AO,
+  FO,
+  OO,
+  GD,
+  MM,
+  LO,
+  BO,
+  UO,
+  GO,
+  qO,
+  KO,
   yD,
   nP,
   oP,
   iP,
-  pO
+  p_
 ];
 for (const n of aP)
   tn(n);
@@ -34187,7 +34187,7 @@ function dP(n, t) {
   const [e, s] = Qo(n, t);
   return e * s * 4;
 }
-function Of(n, t) {
+function _f(n, t) {
   const e = n;
   let s, o, r, i, a, l, c, u, h, d;
   return V().getNumber("WEBGL_VERSION") === 2 ? (s = e.R32F, o = e.R16F, r = e.RGBA16F, i = e.RGBA32F, a = e.RED, c = 4, u = 1, h = e.HALF_FLOAT, d = e.FLOAT, l = e.RGBA8) : (s = n.RGBA, o = n.RGBA, r = n.RGBA, i = e.RGBA, a = n.RGBA, c = 4, u = 4, h = t != null ? t.HALF_FLOAT_OES : null, d = n.FLOAT, l = n.RGBA), {
@@ -34421,14 +34421,14 @@ function el(n, t) {
   return n[1] === t[1] && pa(n[0]) && pa(t[0]);
 }
 let tu, eu;
-function OP(n) {
+function _P(n) {
   if (tu == null) {
     const t = $n(n);
     tu = t.getParameter(t.MAX_TEXTURE_SIZE);
   }
   return tu;
 }
-function _P(n) {
+function OP(n) {
   if (eu == null) {
     const t = $n(n);
     eu = t.getParameter(t.MAX_TEXTURE_IMAGE_UNITS);
@@ -34485,7 +34485,7 @@ function zP(n) {
   return sh(t);
 }
 function sh(n) {
-  const t = Of(n), e = n.createTexture();
+  const t = _f(n), e = n.createTexture();
   n.bindTexture(n.TEXTURE_2D, e), n.texImage2D(n.TEXTURE_2D, 0, t.internalFormatFloat, 1, 1, 0, t.textureFormatFloat, t.textureTypeFloat, null);
   const r = n.createFramebuffer();
   n.bindFramebuffer(n.FRAMEBUFFER, r), n.framebufferTexture2D(n.FRAMEBUFFER, n.COLOR_ATTACHMENT0, n.TEXTURE_2D, e, 0);
@@ -34493,7 +34493,7 @@ function sh(n) {
   return n.bindTexture(n.TEXTURE_2D, null), n.bindFramebuffer(n.FRAMEBUFFER, null), n.deleteTexture(e), n.deleteFramebuffer(r), i;
 }
 function BP(n, t) {
-  const e = Of(n, t), s = n.createTexture();
+  const e = _f(n, t), s = n.createTexture();
   n.bindTexture(n.TEXTURE_2D, s), n.texImage2D(n.TEXTURE_2D, 0, e.internalFormatHalfFloat, 1, 1, 0, e.textureFormatFloat, e.textureTypeHalfFloat, null);
   const i = n.createFramebuffer();
   n.bindFramebuffer(n.FRAMEBUFFER, i), n.framebufferTexture2D(n.FRAMEBUFFER, n.COLOR_ATTACHMENT0, n.TEXTURE_2D, s, 0);
@@ -34543,8 +34543,8 @@ it.registerFlag("WEBGL_PACK_REDUCE", () => it.getBool("WEBGL_PACK"));
 it.registerFlag("WEBGL_LAZILY_UNPACK", () => it.getBool("WEBGL_PACK"));
 it.registerFlag("WEBGL_CONV_IM2COL", () => it.getBool("WEBGL_PACK"));
 it.registerFlag("WEBGL_PACK_CONV2DTRANSPOSE", () => it.getBool("WEBGL_PACK"));
-it.registerFlag("WEBGL_MAX_TEXTURE_SIZE", () => OP(it.getNumber("WEBGL_VERSION")));
-it.registerFlag("WEBGL_MAX_TEXTURES_IN_SHADER", () => _P(it.getNumber("WEBGL_VERSION")));
+it.registerFlag("WEBGL_MAX_TEXTURE_SIZE", () => _P(it.getNumber("WEBGL_VERSION")));
+it.registerFlag("WEBGL_MAX_TEXTURES_IN_SHADER", () => OP(it.getNumber("WEBGL_VERSION")));
 it.registerFlag("WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION", () => {
   const n = it.getNumber("WEBGL_VERSION");
   return n === 0 ? 0 : PP(n);
@@ -34698,7 +34698,7 @@ function WP(n, t, e = "index") {
     return `${a}; ${l};`;
   }).join("");
 }
-function _f(n) {
+function Of(n) {
   const t = lt(n).map((e) => e.toString());
   return `
   int getFlatIndex(ivec3 coords) {
@@ -36408,7 +36408,7 @@ class hm {
           }`;
     }
     this.userCode = `
-      ${this.enableShapeUniforms ? Pf() : _f(t)}
+      ${this.enableShapeUniforms ? Pf() : Of(t)}
 
       void main() {
         ivec3 coords = getOutputCoords();
@@ -36487,7 +36487,7 @@ class FL {
         `;
       }
     this.userCode = `
-        ${this.enableShapeUniforms ? Pf() : _f(t)}
+        ${this.enableShapeUniforms ? Pf() : Of(t)}
 
         void main() {
           ivec3 coords = getOutputCoords();
@@ -36521,7 +36521,7 @@ class FL {
  * limitations under the License.
  * =============================================================================
  */
-function OL(n) {
+function _L(n) {
   const t = Me(), e = `${t.version}
     precision highp float;
     ${t.attribute} vec3 clipSpacePos;
@@ -36534,7 +36534,7 @@ function OL(n) {
     }`;
   return bP(n, e);
 }
-function _L(n) {
+function OL(n) {
   const t = new Float32Array([-1, 1, 0, 0, 1, -1, -1, 0, 0, 0, 1, 1, 0, 1, 1, 1, -1, 0, 1, 0]);
   return kP(n, t);
 }
@@ -36547,19 +36547,19 @@ function ta(n, t, e, s, o, r) {
   const i = SP(n), a = n.TEXTURE_2D;
   return nt(n, () => n.bindTexture(a, i)), nt(n, () => n.texParameteri(a, n.TEXTURE_WRAP_S, n.CLAMP_TO_EDGE)), nt(n, () => n.texParameteri(a, n.TEXTURE_WRAP_T, n.CLAMP_TO_EDGE)), nt(n, () => n.texParameteri(a, n.TEXTURE_MIN_FILTER, n.NEAREST)), nt(n, () => n.texParameteri(a, n.TEXTURE_MAG_FILTER, n.NEAREST)), V().getNumber("WEBGL_VERSION") === 1 ? nt(n, () => n.texImage2D(a, 0, s, t, e, 0, o, r, null)) : nt(n, () => n.texStorage2D(a, 1, s, t, e)), nt(n, () => n.bindTexture(n.TEXTURE_2D, null)), { texture: i, texShape: [e, t] };
 }
-function Ow(n) {
+function _w(n) {
   return n.internalFormatFloat;
 }
 function LL(n, t, e, s) {
   const [o, r] = Zi(t, e);
-  return ta(n, o, r, Ow(s), s.textureFormatFloat, n.FLOAT);
+  return ta(n, o, r, _w(s), s.textureFormatFloat, n.FLOAT);
 }
-function _w(n) {
+function Ow(n) {
   return n.internalFormatHalfFloat;
 }
 function zL(n, t, e, s) {
   const [o, r] = Zi(t, e);
-  return ta(n, o, r, _w(s), s.textureFormatFloat, s.textureTypeHalfFloat);
+  return ta(n, o, r, Ow(s), s.textureFormatFloat, s.textureTypeHalfFloat);
 }
 function Pw(n) {
   return n.downloadTextureFormat;
@@ -36662,7 +36662,7 @@ class nu {
       this.colorBufferHalfFloatExtension = this.gl.getExtension(o);
     else
       throw new Error("GL context does not support color renderable floats");
-    this.vertexBuffer = _L(this.gl), this.indexBuffer = PL(this.gl), this.framebuffer = TP(this.gl), this.textureConfig = Of(this.gl, this.textureHalfFloatExtension);
+    this.vertexBuffer = OL(this.gl), this.indexBuffer = PL(this.gl), this.framebuffer = TP(this.gl), this.textureConfig = _f(this.gl, this.textureHalfFloatExtension);
   }
   get debug() {
     return V().getBool("DEBUG");
@@ -36733,7 +36733,7 @@ class nu {
   createProgram(t) {
     this.throwIfDisposed();
     const e = this.gl;
-    this.vertexShader == null && (this.vertexShader = OL(e));
+    this.vertexShader == null && (this.vertexShader = _L(e));
     const s = vP(e);
     nt(e, () => e.attachShader(s, this.vertexShader)), nt(e, () => e.attachShader(s, t)), IP(e, s);
     const o = Object.assign(s, { vao: this.createVertexArray() });
@@ -36914,7 +36914,7 @@ function JL(n) {
  * limitations under the License.
  * =============================================================================
  */
-const { addImpl: ZL, bincountImpl: Bw, bincountReduceImpl: QL, bitwiseAndImpl: t3, castImpl: e3, ceilImpl: n3, concatImpl: s3, equalImpl: o3, expImpl: r3, expm1Impl: i3, floorImpl: a3, gatherNdImpl: l3, gatherV2Impl: c3, greaterImpl: u3, greaterEqualImpl: h3, lessImpl: d3, lessEqualImpl: f3, linSpaceImpl: p3, logImpl: m3, maxImpl: g3, maximumImpl: x3, minimumImpl: b3, multiplyImpl: w3, negImpl: y3, notEqualImpl: v3, prodImpl: I3, raggedGatherImpl: k3, raggedRangeImpl: C3, raggedTensorToTensorImpl: S3, rangeImpl: $3, rsqrtImpl: T3, scatterImpl: N3, sigmoidImpl: E3, simpleAbsImpl: Vw, sliceImpl: R3, sparseFillEmptyRowsImpl: D3, sparseReshapeImpl: A3, sparseSegmentReductionImpl: Uw, sqrtImpl: M3, staticRegexReplaceImpl: F3, stridedSliceImpl: O3, stringNGramsImpl: _3, stringSplitImpl: P3, stringToHashBucketFastImpl: L3, subImpl: z3, tileImpl: B3, topKImpl: V3, transposeImpl: zf, uniqueImpl: U3 } = HD;
+const { addImpl: ZL, bincountImpl: Bw, bincountReduceImpl: QL, bitwiseAndImpl: t3, castImpl: e3, ceilImpl: n3, concatImpl: s3, equalImpl: o3, expImpl: r3, expm1Impl: i3, floorImpl: a3, gatherNdImpl: l3, gatherV2Impl: c3, greaterImpl: u3, greaterEqualImpl: h3, lessImpl: d3, lessEqualImpl: f3, linSpaceImpl: p3, logImpl: m3, maxImpl: g3, maximumImpl: x3, minimumImpl: b3, multiplyImpl: w3, negImpl: y3, notEqualImpl: v3, prodImpl: I3, raggedGatherImpl: k3, raggedRangeImpl: C3, raggedTensorToTensorImpl: S3, rangeImpl: $3, rsqrtImpl: T3, scatterImpl: N3, sigmoidImpl: E3, simpleAbsImpl: Vw, sliceImpl: R3, sparseFillEmptyRowsImpl: D3, sparseReshapeImpl: A3, sparseSegmentReductionImpl: Uw, sqrtImpl: M3, staticRegexReplaceImpl: F3, stridedSliceImpl: _3, stringNGramsImpl: O3, stringSplitImpl: P3, stringToHashBucketFastImpl: L3, subImpl: z3, tileImpl: B3, topKImpl: V3, transposeImpl: zf, uniqueImpl: U3 } = HD;
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -37064,7 +37064,7 @@ class Gw {
     }
     this.userCode = `
       ${H3(e, this.enableShapeUniforms)}
-      ${this.enableShapeUniforms ? Pf() : _f(t)}
+      ${this.enableShapeUniforms ? Pf() : Of(t)}
 
       void main() {
         ivec3 rc = getOutputCoords();
@@ -37204,9 +37204,9 @@ function K3(n, t) {
     case xe.PACKED_2X2_FLOAT16:
       return zw(t);
     case xe.UNPACKED_FLOAT32:
-      return Ow(t);
-    case xe.UNPACKED_FLOAT16:
       return _w(t);
+    case xe.UNPACKED_FLOAT16:
+      return Ow(t);
     case xe.PACKED_4X1_UNSIGNED_BYTE:
       return Pw(t);
     default:
@@ -37787,7 +37787,7 @@ class Dc extends ch {
     }), this.textureManager.dispose(), this.canvas != null && typeof HTMLCanvasElement != "undefined" && this.canvas instanceof HTMLCanvasElement ? this.canvas.remove() : this.canvas = null, this.gpgpuCreatedLocally && (this.gpgpu.program = null, this.gpgpu.dispose()), this.disposed = !0);
   }
   floatPrecision() {
-    return this.floatPrecisionValue == null && (this.floatPrecisionValue = O(() => {
+    return this.floatPrecisionValue == null && (this.floatPrecisionValue = _(() => {
       if (!V().get("WEBGL_RENDER_FLOAT32_ENABLED")) {
         const t = V().getBool("DEBUG");
         V().set("DEBUG", !1);
@@ -37918,7 +37918,7 @@ function pz(n, t) {
  * limitations under the License.
  * =============================================================================
  */
-Mg() && _g(
+Mg() && Og(
   "webgl",
   () => new Dc(),
   2
@@ -39011,7 +39011,7 @@ function Fz(n) {
   let o;
   return V().getBool("WEBGL_PACK_UNARY_OPERATIONS") ? o = new fs(s.shape, ym) : o = new Fn(s.shape, ym), e.runWebGLProgram(o, [s], s.dtype);
 }
-const Oz = {
+const _z = {
   kernelName: il,
   backendName: "webgl",
   kernelFunc: Fz
@@ -39032,12 +39032,12 @@ const Oz = {
  * limitations under the License.
  * =============================================================================
  */
-const _z = pn + `
+const Oz = pn + `
   if (abs(x) > 1.) {
     return NAN;
   }
   return acos(x);
-`, Pz = St({ opSnippet: _z }), Lz = {
+`, Pz = St({ opSnippet: Oz }), Lz = {
   kernelName: Lr,
   backendName: "webgl",
   kernelFunc: Pz
@@ -39656,7 +39656,7 @@ return (log(1.0 + x) - log(1.0 - x)) / 2.0;`, xB = St({ opSnippet: gB }), bB = {
  * limitations under the License.
  * =============================================================================
  */
-class Or {
+class _r {
   constructor(t, e, s, o = !1, r = !1) {
     if (this.variableNames = ["x"], e === "avg" && s)
       throw new Error("Cannot compute positions for average pool.");
@@ -40022,7 +40022,7 @@ function wB(n) {
   const u = dn(o.shape, r, i, c, a, l);
   if (u.filterWidth === 1 && u.filterHeight === 1 && Et(u.inShape, u.outShape))
     return qe({ inputs: { x: o }, backend: e });
-  const h = new Or(u, "avg", !1);
+  const h = new _r(u, "avg", !1);
   return e.runWebGLProgram(h, [o], "float32");
 }
 const yB = {
@@ -40382,12 +40382,12 @@ const MB = ({ inputs: n, backend: t, attrs: e }) => {
  * limitations under the License.
  * =============================================================================
  */
-class OB {
+class _B {
   constructor(t) {
     this.variableNames = ["source"], this.outputShape = t, this.rank = t.length;
     const e = Ft(this.rank);
     this.customUniforms = [{ name: "start", arrayIndex: this.rank, type: "int" }];
-    const s = _B(this.rank);
+    const s = OB(this.rank);
     let o;
     const r = t.map((i, a) => `sourceLoc.${oh[a]} = start[${a}] + coords.${oh[a]};`);
     o = `
@@ -40404,7 +40404,7 @@ class OB {
   }
 }
 const oh = ["x", "y", "z", "w", "u", "v"];
-function _B(n) {
+function OB(n) {
   if (n === 1)
     return "sourceLoc";
   if (n <= 6)
@@ -40501,7 +40501,7 @@ function ir(n) {
   }
   const { isPacked: c } = e.texData.get(o.dataId), u = R0(o.shape, a, l);
   if (c || !u) {
-    const h = V().getBool("WEBGL_PACK_ARRAY_OPERATIONS") ? new PB(l) : new OB(l), d = [a];
+    const h = V().getBool("WEBGL_PACK_ARRAY_OPERATIONS") ? new PB(l) : new _B(l), d = [a];
     return e.runWebGLProgram(h, [o], o.dtype, d);
   }
   return e.uploadToGPU(o.dataId), LB(o, a, l, e);
@@ -40957,7 +40957,7 @@ const uV = {
 class hV {
   // Concats 2d tensors along axis=1. See comments in MathBackendWebGL.concat().
   constructor(t) {
-    this.outputShape = [], this.outputShape = _n(
+    this.outputShape = [], this.outputShape = On(
       t,
       1
       /* axis */
@@ -41002,7 +41002,7 @@ class hV {
  */
 class dV {
   constructor(t, e) {
-    this.packedInputs = !0, this.packedOutput = !0, this.outputShape = [], this.outputShape = _n(t, e);
+    this.packedInputs = !0, this.packedOutput = !0, this.outputShape = [], this.outputShape = On(t, e);
     const s = this.outputShape, o = s.length, r = Ft(o), i = Re("coords", o), a = ["x", "y", "z", "w", "u", "v"].slice(0, o);
     this.variableNames = t.map((m, g) => `T${g}`);
     const l = new Array(t.length - 1);
@@ -41112,11 +41112,11 @@ function yr(n, t, e) {
     const f = n.map((w) => {
       const k = [-1, q(w.shape.slice(t))];
       return et({ inputs: { x: w }, backend: e, attrs: { shape: k } });
-    }), p = f.map((w) => ({ vals: e.readSync(w.dataId), shape: w.shape })), m = _n(
+    }), p = f.map((w) => ({ vals: e.readSync(w.dataId), shape: w.shape })), m = On(
       f.map((w) => w.shape),
       1
       /* axis */
-    ), g = f[0].shape[0] === 1, x = s3(p, m, s, g), b = _n(n.map((w) => w.shape), t), y = e.makeTensorInfo(b, s, x);
+    ), g = f[0].shape[0] === 1, x = s3(p, m, s, g), b = On(n.map((w) => w.shape), t), y = e.makeTensorInfo(b, s, x);
     return f.forEach((w) => e.disposeIntermediateTensorInfo(w)), y;
   }
   const r = n.filter((f) => q(f.shape) > 0), i = V().getBool("WEBGL_PACK_ARRAY_OPERATIONS") && r[0].shape.length > 1;
@@ -41146,7 +41146,7 @@ function yr(n, t, e) {
   return e.disposeIntermediateTensorInfo(h), d;
 }
 function pV(n, t, e) {
-  const s = _n(n.map((r) => r.shape), t);
+  const s = On(n.map((r) => r.shape), t);
   return { tensors2D: n.map((r) => et({
     inputs: { x: r },
     attrs: { shape: [-1, q(r.shape.slice(t))] },
@@ -41172,7 +41172,7 @@ function pV(n, t, e) {
 function ey(n) {
   const { inputs: t, backend: e, attrs: s } = n, { axis: o } = s, r = yt(o, t[0].shape)[0], i = t.map((c) => c.shape);
   zd(i, r);
-  const a = _n(t.map((c) => c.shape), r);
+  const a = On(t.map((c) => c.shape), r);
   if (q(a) === 0)
     return e.makeTensorInfo(a, t[0].dtype, []);
   const l = t.filter((c) => q(c.shape) > 0);
@@ -42430,14 +42430,14 @@ const FV = {
  * limitations under the License.
  * =============================================================================
  */
-const OV = rr + `
+const _V = rr + `
   return cos(x);
-`, _V = `
+`, OV = `
   vec4 result = cos(x);
   bvec4 isNaN = isnan(x);
   ${wo}
   return result;
-`, PV = St({ opSnippet: OV, packedOpSnippet: _V }), LV = {
+`, PV = St({ opSnippet: _V, packedOpSnippet: OV }), LV = {
   kernelName: Kr,
   backendName: "webgl",
   kernelFunc: PV
@@ -42592,14 +42592,14 @@ const WV = (n) => {
   backendName: "webgl",
   kernelFunc: WV
 };
-var _r;
+var Or;
 (function(n) {
   n.Prod = "*", n.Sum = "+";
-})(_r || (_r = {}));
+})(Or || (Or = {}));
 class Cm {
   constructor(t, e, s, o) {
     this.op = t, this.outputShape = e, this.variableNames = ["x"], this.customUniforms = [{ name: "index", type: "float" }];
-    const r = this.outputShape.length, i = this.op === _r.Prod ? "1.0" : "0.0", a = s ? i : `getX(${Sm(r, "coords", this.op)})`, l = this.outputShape[this.outputShape.length - 1];
+    const r = this.outputShape.length, i = this.op === Or.Prod ? "1.0" : "0.0", a = s ? i : `getX(${Sm(r, "coords", this.op)})`, l = this.outputShape[this.outputShape.length - 1];
     let c = "", u = "";
     s ? (c = o ? `end != ${l - 1}` : "end != 0", u = o ? "end + 1" : "end - 1") : (c = o ? `end + pow2 < ${l}` : "end >= pow2", u = o ? "end + pow2" : "end - pow2"), this.userCode = `
       void main() {
@@ -42696,7 +42696,7 @@ function iy(n, t, e, s, o, r) {
  */
 function HV(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { axis: r, exclusive: i, reverse: a } = s;
-  return iy(_r.Prod, o, e, r, i, a);
+  return iy(Or.Prod, o, e, r, i, a);
 }
 const qV = {
   kernelName: Nh,
@@ -42721,7 +42721,7 @@ const qV = {
  */
 function jV(n) {
   const { inputs: t, backend: e, attrs: s } = n, { x: o } = t, { axis: r, exclusive: i, reverse: a } = s;
-  return iy(_r.Sum, o, e, r, i, a);
+  return iy(Or.Sum, o, e, r, i, a);
 }
 const KV = {
   kernelName: bl,
@@ -43516,7 +43516,7 @@ class h4 {
  * =============================================================================
  */
 function d4(n) {
-  const { inputs: t, backend: e, attrs: s } = n, { x: o, filter: r } = t, { strides: i, pad: a, dilations: l } = s, c = Oi(o.shape, r.shape, i, a, "NHWC", l);
+  const { inputs: t, backend: e, attrs: s } = n, { x: o, filter: r } = t, { strides: i, pad: a, dilations: l } = s, c = _i(o.shape, r.shape, i, a, "NHWC", l);
   let u;
   const h = new h4(c);
   u = e.runWebGLProgram(h, [o, r], "float32");
@@ -43631,7 +43631,7 @@ const y4 = "return (b >= 0.0) ? a : a * (b + 1.0);", v4 = `
   const { inputs: t, backend: e } = n, { dy: s, y: o } = t, r = V().getBool("WEBGL_PACK_BINARY_OPERATIONS") ? new or(v4, s.shape, o.shape) : new lo(y4, s.shape, o.shape);
   return e.runWebGLProgram(r, [s, o], s.dtype);
 }, k4 = {
-  kernelName: Oh,
+  kernelName: _h,
   backendName: "webgl",
   kernelFunc: I4
 };
@@ -43778,10 +43778,10 @@ const F4 = {
  * limitations under the License.
  * =============================================================================
  */
-const Tm = "return exp(x) - 1.0;", O4 = St({ opSnippet: Tm, packedOpSnippet: Tm, cpuKernelImpl: i3 }), _4 = {
+const Tm = "return exp(x) - 1.0;", _4 = St({ opSnippet: Tm, packedOpSnippet: Tm, cpuKernelImpl: i3 }), O4 = {
   kernelName: ti,
   backendName: "webgl",
-  kernelFunc: O4
+  kernelFunc: _4
 };
 /**
  * @license
@@ -43902,7 +43902,7 @@ function P4(n) {
   return uy(s, !1, e);
 }
 const L4 = {
-  kernelName: _h,
+  kernelName: Oh,
   backendName: "webgl",
   kernelFunc: P4
 };
@@ -44718,7 +44718,7 @@ const AU = "return float(a <= b);", MU = `
   packedOpSnippet: MU,
   cpuKernelImpl: f3,
   dtype: "bool"
-}), OU = {
+}), _U = {
   kernelName: Nl,
   backendName: "webgl",
   kernelFunc: FU
@@ -44739,14 +44739,14 @@ const AU = "return float(a <= b);", MU = `
  * limitations under the License.
  * =============================================================================
  */
-function _U(n) {
+function OU(n) {
   const { backend: t, attrs: e } = n, { start: s, stop: o, num: r } = e, i = p3(s, o, r);
   return t.makeTensorInfo([i.length], "float32", i);
 }
 const PU = {
   kernelName: ng,
   backendName: "webgl",
-  kernelFunc: _U
+  kernelFunc: OU
 };
 /**
  * @license
@@ -45266,7 +45266,7 @@ function mW(n) {
   const u = dn(o.shape, r, i, c, a, l);
   if (u.filterWidth === 1 && u.filterHeight === 1 && Et(u.inShape, u.outShape))
     return qe({ inputs: { x: o }, backend: e });
-  const h = new Or(u, "max", !1);
+  const h = new _r(u, "max", !1);
   return e.runWebGLProgram(h, [o], o.dtype);
 }
 const gW = {
@@ -45295,7 +45295,7 @@ function xW(n) {
   return e.runWebGLProgram(d, [o], o.dtype);
 }
 const bW = {
-  kernelName: Ol,
+  kernelName: _l,
   backendName: "webgl",
   kernelFunc: xW
 };
@@ -45488,7 +45488,7 @@ const IW = {
 function kW(n) {
   const { inputs: t, backend: e, attrs: s } = n, { dy: o, input: r, output: i } = t, a = r;
   Qi([r, i], "maxPoolGrad");
-  const { filterSize: l, strides: c, pad: u, dimRoundingMode: h } = s, d = dn(a.shape, l, c, 1, u, h), f = !0, p = new Or(d, "max", f), m = e.runWebGLProgram(p, [a], a.dtype), g = new wW(d), x = e.runWebGLProgram(g, [o, m], a.dtype);
+  const { filterSize: l, strides: c, pad: u, dimRoundingMode: h } = s, d = dn(a.shape, l, c, 1, u, h), f = !0, p = new _r(d, "max", f), m = e.runWebGLProgram(p, [a], a.dtype), g = new wW(d), x = e.runWebGLProgram(g, [o, m], a.dtype);
   return e.disposeIntermediateTensorInfo(m), x;
 }
 const CW = {
@@ -45513,9 +45513,9 @@ const CW = {
  * =============================================================================
  */
 function SW(n, t, e, s) {
-  let o = new Or(e, "max", !1);
+  let o = new _r(e, "max", !1);
   const r = s.runWebGLProgram(o, [n], "float32");
-  o = new Or(e, "max", !0, !0, t);
+  o = new _r(e, "max", !0, !0, t);
   const i = s.runWebGLProgram(o, [n], "float32");
   return [r, i];
 }
@@ -45584,7 +45584,7 @@ function TW(n, t, e, s) {
  * =============================================================================
  */
 const NW = {
-  kernelName: _l,
+  kernelName: Ol,
   backendName: "webgl",
   kernelFunc: ({ inputs: n, attrs: t, backend: e }) => {
     const { x: s } = n, { keepDims: o, axis: r } = t, i = e, a = s.shape.length, l = yt(r, s.shape);
@@ -45700,7 +45700,7 @@ const DW = Bf + `
  * limitations under the License.
  * =============================================================================
  */
-class OW {
+class _W {
   constructor(t, e, s) {
     this.variableNames = ["x"], this.outputShape = e.map(
       (u, h) => u[0] + t[h] + u[1]
@@ -45759,7 +45759,7 @@ class OW {
  * limitations under the License.
  * =============================================================================
  */
-class _W {
+class OW {
   constructor(t, e, s) {
     this.variableNames = ["x"], this.packedInputs = !0, this.packedOutput = !0, this.outputShape = e.map(
       (p, m) => p[0] + t[m] + p[1]
@@ -45850,7 +45850,7 @@ class _W {
  * =============================================================================
  */
 const PW = ({ inputs: n, backend: t, attrs: e }) => {
-  const { x: s } = n, { paddings: o, mode: r } = e, i = V().getBool("WEBGL_PACK_ARRAY_OPERATIONS") ? new _W(s.shape, o, r) : new OW(s.shape, o, r);
+  const { x: s } = n, { paddings: o, mode: r } = e, i = V().getBool("WEBGL_PACK_ARRAY_OPERATIONS") ? new OW(s.shape, o, r) : new _W(s.shape, o, r);
   return t.runWebGLProgram(i, [s], s.dtype);
 }, LW = {
   kernelName: Ll,
@@ -46690,7 +46690,7 @@ const by = (n) => {
  * limitations under the License.
  * =============================================================================
  */
-const MG = "return 1.0 / x;", FG = St({ opSnippet: MG }), OG = {
+const MG = "return 1.0 / x;", FG = St({ opSnippet: MG }), _G = {
   kernelName: mi,
   backendName: "webgl",
   kernelFunc: FG
@@ -46711,7 +46711,7 @@ const MG = "return 1.0 / x;", FG = St({ opSnippet: MG }), OG = {
  * limitations under the License.
  * =============================================================================
  */
-const _G = pn + `
+const OG = pn + `
   return (x < 0.0) ? 0.0 : x;
 `, PG = `
   vec4 result = x * vec4(greaterThanEqual(x, vec4(0.0)));
@@ -46723,7 +46723,7 @@ const _G = pn + `
   result.a = isNaN.a ? x.a : result.a;
 
   return result;
-`, LG = St({ opSnippet: _G, packedOpSnippet: PG }), zG = {
+`, LG = St({ opSnippet: OG, packedOpSnippet: PG }), zG = {
   kernelName: gi,
   backendName: "webgl",
   kernelFunc: LG
@@ -48036,14 +48036,14 @@ const AH = `
  * limitations under the License.
  * =============================================================================
  */
-const OH = rr + `
+const _H = rr + `
   return sin(x);
-`, _H = `
+`, OH = `
   vec4 result = sin(x);
   bvec4 isNaN = isnan(x);
   ${wo}
   return result;
-`, PH = St({ opSnippet: OH, packedOpSnippet: _H }), LH = {
+`, PH = St({ opSnippet: _H, packedOpSnippet: OH }), LH = {
   kernelName: vi,
   backendName: "webgl",
   kernelFunc: PH
@@ -48539,7 +48539,7 @@ function xq(n) {
     const N = E0(b, y, w), T = ir({ inputs: { x: o }, backend: e, attrs: { begin: b, size: N } });
     v = et({ inputs: { x: T }, backend: e, attrs: { shape: p } }), e.disposeIntermediateTensorInfo(T);
   } else if (e.shouldExecuteOnCPU([o])) {
-    const T = e.readSync(o.dataId), S = wt(o.shape, o.dtype, T), C = O3(f, S, w, b);
+    const T = e.readSync(o.dataId), S = wt(o.shape, o.dtype, T), C = _3(f, S, w, b);
     v = e.makeTensorInfo(p, o.dtype, C.values);
   } else {
     const T = new gq(b, w, f);
@@ -48570,7 +48570,7 @@ const bq = {
  * =============================================================================
  */
 function wq(n) {
-  const { inputs: t, backend: e, attrs: s } = n, { separator: o, nGramWidths: r, leftPad: i, rightPad: a, padWidth: l, preserveShortSequences: c } = s, { data: u, dataSplits: h } = t, d = e.readSync(u.dataId), f = e.readSync(h.dataId), [p, m] = _3(d, f, o, r, i, a, l, c);
+  const { inputs: t, backend: e, attrs: s } = n, { separator: o, nGramWidths: r, leftPad: i, rightPad: a, padWidth: l, preserveShortSequences: c } = s, { data: u, dataSplits: h } = t, d = e.readSync(u.dataId), f = e.readSync(h.dataId), [p, m] = O3(d, f, o, r, i, a, l, c);
   return [
     e.makeTensorInfo([p.length], "string", p),
     e.makeTensorInfo(h.shape, "int32", m)
@@ -48788,12 +48788,12 @@ function wy(n) {
   const i = new Mq(o.shape, r);
   return e.runWebGLProgram(i, [o], o.dtype);
 }
-const Oq = {
+const _q = {
   kernelName: Di,
   backendName: "webgl",
   kernelFunc: wy
 };
-class _q {
+class Oq {
   /**
    * @param shape desired output shape (can be larger than input shape, output
    *                                    will be padded with -Infinity)
@@ -48943,7 +48943,7 @@ function Lq(n) {
   const x = Mm(r), b = Mm(u);
   let y = null;
   const w = () => y === null ? [g, g] : [g, y], v = (C, I, R) => {
-    const F = w(), z = new _q(R), B = [[u], [y === null ? 1 : 0], [Number.NEGATIVE_INFINITY], [C], [I]], G = y;
+    const F = w(), z = new Oq(R), B = [[u], [y === null ? 1 : 0], [Number.NEGATIVE_INFINITY], [C], [I]], G = y;
     y = e.runWebGLProgram(z, F, "int32", B), Ls(e, G);
   };
   for (let C = 1; C < x; C *= 2) {
@@ -49427,7 +49427,7 @@ const Xq = {
  */
 const Yq = [
   Mz,
-  Oz,
+  _z,
   Lz,
   Vz,
   Wz,
@@ -49482,7 +49482,7 @@ const Yq = [
   R4,
   M4,
   F4,
-  _4,
+  O4,
   L4,
   B4,
   U4,
@@ -49503,7 +49503,7 @@ const Yq = [
   TU,
   bz,
   DU,
-  OU,
+  _U,
   PU,
   VU,
   GU,
@@ -49544,7 +49544,7 @@ const Yq = [
   AG,
   ZB,
   qW,
-  OG,
+  _G,
   zG,
   WG,
   kz,
@@ -49588,7 +49588,7 @@ const Yq = [
   Tq,
   Rq,
   Aq,
-  Oq,
+  _q,
   zq,
   Uq,
   Dz,
@@ -49646,7 +49646,7 @@ const Zq = (n, t) => [
 }, tj = (n, t, e, s) => {
   const { x: o, y: r, z: i } = Qq(n, t, e);
   return { x: o / i, y: r / i };
-}, ej = 6, nj = 1, sj = 10, oj = 1, rj = 0.8, ij = 1, Nn = 1e3;
+}, ej = 6, nj = 1, sj = 10, oj = 1, rj = 0.6, ij = 1, Nn = 1e3;
 class aj {
   constructor(t, e, s, o, r, i = !1) {
     this.markerDimensions = t, this.trackingDataList = e, this.projectionTransform = s, this.debugMode = i, this.trackingKeyframeList = [];
@@ -49672,13 +49672,16 @@ class aj {
     const r = Zq(this.projectionTransform, e), i = this._buildAdjustedModelViewTransform(r);
     this.markerDimensions[s][0], this.markerDimensions[s][1], this.trackingKeyframeList[s].width, this.trackingKeyframeList[s].height;
     const a = this.featurePointsListT[s], l = this.imagePixelsListT[s], c = this.imagePropertiesListT[s], u = this._computeProjection(i, t, s), { matchingPointsT: h, simT: d } = this._computeMatching(a, l, c, u), f = h.arraySync(), p = d.arraySync(), m = this.trackingKeyframeList[s], g = [], x = [], b = [];
-    for (let y = 0; y < f.length; y++)
-      if (p[y] > rj && y < m.points.length) {
-        b.push(y);
-        const w = tj(r, f[y][0], f[y][1]);
-        x.push(w), g.push({ x: m.points[y].x / m.scale, y: m.points[y].y / m.scale, z: 0 });
+    for (let w = 0; w < f.length; w++)
+      if (p[w] > rj && w < m.points.length) {
+        b.push(w);
+        const v = tj(r, f[w][0], f[w][1]);
+        x.push(v), g.push({ x: m.points[w].x / m.scale, y: m.points[w].y / m.scale, z: 0 });
       }
-    return this.debugMode && (o = {
+    let y = 0;
+    for (let w = 0; w < p.length; w++)
+      p[w] > y && (y = p[w]);
+    return this._dbgMaxSim = Math.max(this._dbgMaxSim || 0, y), this._dbgGood = b.length, this._dbgCalls = (this._dbgCalls || 0) + 1, this.debugMode && (o = {
       projectedImage: u.arraySync(),
       matchingPoints: h.arraySync(),
       goodTrack: b,
@@ -49799,7 +49802,7 @@ class aj {
       };
       this.kernelCaches.computeMatching = [p, m, g];
     }
-    return O(() => {
+    return _(() => {
       const p = this.kernelCaches.computeMatching, m = this._compileAndRun(p[0], [t, e, s, o]), g = m.argMax(1), x = this._compileAndRun(p[1], [t, s, g]), b = this._compileAndRun(p[2], [m, g]);
       return { matchingPointsT: x, simT: b };
     });
@@ -49840,13 +49843,13 @@ class aj {
       };
       this.kernelCaches.computeProjection[a] = l;
     }
-    return O(() => {
+    return _(() => {
       const l = this.kernelCaches.computeProjection[a];
       return this._compileAndRun(l, [t, e]);
     });
   }
   _buildAdjustedModelViewTransform(t) {
-    return O(() => {
+    return _(() => {
       let e = [];
       for (let o = 0; o < t.length; o++) {
         e.push([]);
@@ -49857,7 +49860,7 @@ class aj {
     });
   }
   _prebuild(t, e) {
-    return O(() => {
+    return _(() => {
       const s = t.scale, o = [];
       for (let l = 0; l < e; l++)
         l < t.points.length ? o.push([t.points[l].x / s, t.points[l].y / s]) : o.push([-1, -1]);
@@ -50011,7 +50014,7 @@ const cj = (n) => {
   backendName: "webgl",
   kernelFunc: cj
   // as {} as KernelFunc,
-}, ba = 7, Om = 3, hj = Om * Om, ru = 4, dj = (ru + 1) * (ru + 1) / ru, iu = {};
+}, ba = 7, _m = 3, hj = _m * _m, ru = 4, dj = (ru + 1) * (ru + 1) / ru, iu = {};
 function fj(n) {
   const t = n.shape[1], e = n.shape[0], s = "w" + t + "h" + e;
   if (!iu.hasOwnProperty(s)) {
@@ -50171,7 +50174,7 @@ const xj = (n) => {
   backendName: "webgl",
   kernelFunc: xj
   // as {} as KernelFunc,
-}, _m = 7, lu = {};
+}, Om = 7, lu = {};
 function wj(n, t) {
   const e = `${n}|${t.shape[0]}`;
   if (!lu.hasOwnProperty(e)) {
@@ -50204,8 +50207,8 @@ function wj(n, t) {
 	float inputY = getExtrema(featureIndex, 2);
 	float inputX = getExtrema(featureIndex, 3);
 	float inputAngle = getAngles(featureIndex);
-	float cos = ${_m}. * cos(inputAngle);
-	float sin = ${_m}. * sin(inputAngle);
+	float cos = ${Om}. * cos(inputAngle);
+	float sin = ${Om}. * sin(inputAngle);
 
 	float yp = inputY + freakX * sin + freakY * cos;
 	float xp = inputX + freakX * cos + freakY * -sin;
@@ -50475,13 +50478,13 @@ function Mj(n) {
 const Fj = (n) => {
   const t = n.inputs.image, e = n.backend, s = Mj(t);
   return e.runWebGLProgram(s, [t], t.dtype);
-}, Oj = {
+}, _j = {
   //: KernelConfig
   kernelName: "DownsampleBilinear",
   backendName: "webgl",
   kernelFunc: Fj
   // as {} as KernelFunc,
-}, _j = (n) => {
+}, Oj = (n) => {
   const { extremasResultT: t } = n.inputs, e = n.backend, s = t.shape[0], o = t.shape[1], r = {
     variableNames: ["extrema"],
     outputShape: [Math.floor(s / 2), Math.floor(o / 2)],
@@ -50520,7 +50523,7 @@ const Fj = (n) => {
   //: KernelConfig
   kernelName: "ExtremaReduction",
   backendName: "webgl",
-  kernelFunc: _j
+  kernelFunc: Oj
   // as {} as KernelFunc,
 }, wa = 36, Lj = 5, fu = {};
 function zj(n) {
@@ -50618,7 +50621,7 @@ tn(vj);
 tn(Sj);
 tn(Nj);
 tn(Aj);
-tn(Oj);
+tn(_j);
 tn(Pj);
 tn(Vj);
 tn(Gj);
@@ -50704,10 +50707,10 @@ class Iy {
       };
     }
     const { positionT: e } = this.tensorCaches.computeFreakDescriptors;
-    return O(() => Lt().runKernel("ComputeFreakDescriptors", { extremaFreaks: t, positionT: e }));
+    return _(() => Lt().runKernel("ComputeFreakDescriptors", { extremaFreaks: t, positionT: e }));
   }
   _computeExtremaFreak(t, e, s) {
-    this.tensorCaches._computeExtremaFreak || O(() => {
+    this.tensorCaches._computeExtremaFreak || _(() => {
       const i = Xe(co);
       this.tensorCaches._computeExtremaFreak = {
         freakPointsT: Je(i)
@@ -50716,7 +50719,7 @@ class Iy {
     const { freakPointsT: o } = this.tensorCaches._computeExtremaFreak, r = [];
     for (let i = 1; i < t.length; i++)
       r.push(t[i][1]);
-    return O(() => Lt().runKernel("ComputeExtremaFreak", { gaussianImagesT: r, prunedExtremas: e, prunedExtremasAngles: s, freakPointsT: o, pyramidImagesLength: t.length }));
+    return _(() => Lt().runKernel("ComputeExtremaFreak", { gaussianImagesT: r, prunedExtremas: e, prunedExtremasAngles: s, freakPointsT: o, pyramidImagesLength: t.length }));
   }
   /**
    * 
@@ -50724,7 +50727,7 @@ class Iy {
    * @returns 
    */
   _computeExtremaAngles(t) {
-    return O(() => Lt().runKernel("ComputeExtremaAngles", { histograms: t }));
+    return _(() => Lt().runKernel("ComputeExtremaAngles", { histograms: t }));
   }
   // TODO: maybe can try just using average momentum, instead of histogram method. histogram might be overcomplicated
   /**
@@ -50737,7 +50740,7 @@ class Iy {
     const s = [];
     for (let r = 1; r < e.length; r++)
       s.push(e[r][1]);
-    this.tensorCaches.orientationHistograms || O(() => {
+    this.tensorCaches.orientationHistograms || _(() => {
       const r = -1 / (2 * mu * mu), i = mu * jj, a = Math.ceil(i), l = [];
       for (let c = -a; c <= a; c++)
         for (let u = -a; u <= a; u++) {
@@ -50753,11 +50756,11 @@ class Iy {
       };
     });
     const { radialPropertiesT: o } = this.tensorCaches.orientationHistograms;
-    return O(() => Lt().runKernel("ComputeOrientationHistograms", { gaussianImagesT: s, prunedExtremasT: t, radialPropertiesT: o, pyramidImagesLength: e.length }));
+    return _(() => Lt().runKernel("ComputeOrientationHistograms", { gaussianImagesT: s, prunedExtremasT: t, radialPropertiesT: o, pyramidImagesLength: e.length }));
   }
   // The histogram is smoothed with a Gaussian, with sigma = 1
   _smoothHistograms(t) {
-    return O(() => Lt().runKernel("SmoothHistograms", { histograms: t }));
+    return _(() => Lt().runKernel("SmoothHistograms", { histograms: t }));
   }
   /**
    * 
@@ -50766,7 +50769,7 @@ class Iy {
    * @returns 
    */
   _computeLocalization(t, e) {
-    return O(() => {
+    return _(() => {
       const o = Lt().runKernel("ComputeLocalization", { prunedExtremasList: t, dogPyramidImagesT: e }).arraySync(), r = [];
       for (let a = 0; a < o.length; a++) {
         r.push([]);
@@ -50805,7 +50808,7 @@ class Iy {
       for (let l = 0; l < s; l++)
         r[a].push([0, 0, 0, 0]), o[a].push(0);
     }
-    O(() => {
+    _(() => {
       for (let a = 0; a < t.length; a++) {
         const l = Lt().runKernel("ExtremaReduction", { extremasResultT: t[a] }), c = a + 1, u = l.arraySync(), h = l.shape[0], d = l.shape[1], f = d * 2 / fr, p = h * 2 / fr;
         for (let m = 0; m < h; m++)
@@ -50831,7 +50834,7 @@ class Iy {
     return i;
   }
   _buildExtremas(t, e, s) {
-    return O(() => Lt().runKernel("BuildExtremas", { image0: t, image1: e, image2: s }));
+    return _(() => Lt().runKernel("BuildExtremas", { image0: t, image1: e, image2: s }));
   }
   /**
    * 
@@ -50840,11 +50843,11 @@ class Iy {
    * @returns 
    */
   _differenceImageBinomial(t, e) {
-    return O(() => t.sub(e));
+    return _(() => t.sub(e));
   }
   // 4th order binomail filter [1,4,6,4,1] X [1,4,6,4,1]
   _applyFilter(t) {
-    return O(() => Lt().runKernel("BinomialFilter", { image: t }));
+    return _(() => Lt().runKernel("BinomialFilter", { image: t }));
   }
   /* _upsampleBilinear(image, targetImage) {
   		const imageHeight = image.shape[0];
@@ -50896,7 +50899,7 @@ class Iy {
   		});
   	} */
   _downsampleBilinear(t) {
-    return O(() => Lt().runKernel("DownsampleBilinear", { image: t }));
+    return _(() => Lt().runKernel("DownsampleBilinear", { image: t }));
   }
   /**
    * 
@@ -50952,7 +50955,7 @@ function Yj(n, t) {
   var e = n.getUint32(t), s = n.getUint32(t + 4);
   return e * 4294967296 + s;
 }
-var gu, xu, bu, Oc = (typeof process == "undefined" || ((gu = process == null ? void 0 : process.env) === null || gu === void 0 ? void 0 : gu.TEXT_ENCODING) !== "never") && typeof TextEncoder != "undefined" && typeof TextDecoder != "undefined";
+var gu, xu, bu, _c = (typeof process == "undefined" || ((gu = process == null ? void 0 : process.env) === null || gu === void 0 ? void 0 : gu.TEXT_ENCODING) !== "never") && typeof TextEncoder != "undefined" && typeof TextDecoder != "undefined";
 function Lm(n) {
   for (var t = n.length, e = 0, s = 0; s < t; ) {
     var o = n.charCodeAt(s++);
@@ -50989,7 +50992,7 @@ function Jj(n, t, e) {
     t[o++] = i & 63 | 128;
   }
 }
-var kr = Oc ? new TextEncoder() : void 0, Zj = Oc ? typeof process != "undefined" && ((xu = process == null ? void 0 : process.env) === null || xu === void 0 ? void 0 : xu.TEXT_ENCODING) !== "force" ? 200 : 0 : Ws;
+var kr = _c ? new TextEncoder() : void 0, Zj = _c ? typeof process != "undefined" && ((xu = process == null ? void 0 : process.env) === null || xu === void 0 ? void 0 : xu.TEXT_ENCODING) !== "force" ? 200 : 0 : Ws;
 function Qj(n, t, e) {
   t.set(kr.encode(n), e);
 }
@@ -51017,7 +51020,7 @@ function Sy(n, t, e) {
   }
   return r.length > 0 && (i += String.fromCharCode.apply(String, r)), i;
 }
-var s6 = Oc ? new TextDecoder() : null, o6 = Oc ? typeof process != "undefined" && ((bu = process == null ? void 0 : process.env) === null || bu === void 0 ? void 0 : bu.TEXT_DECODER) !== "force" ? 200 : 0 : Ws;
+var s6 = _c ? new TextDecoder() : null, o6 = _c ? typeof process != "undefined" && ((bu = process == null ? void 0 : process.env) === null || bu === void 0 ? void 0 : bu.TEXT_DECODER) !== "force" ? 200 : 0 : Ws;
 function r6(n, t, e) {
   var s = n.subarray(t, t + e);
   return s6.decode(s);
@@ -51941,7 +51944,7 @@ class A6 {
   }
   // old method
   _loadInput(t) {
-    return O(() => {
+    return _(() => {
       let e = C2(t);
       return e = e.mean(2), e;
     });
@@ -52007,7 +52010,7 @@ class M6 {
     return this.xPrev = u, this.dxPrev = c, this.tPrev = t, u;
   }
 }
-const va = { memory: Ou, nextFrame: pc }, F6 = 1e-3, O6 = 1e3, _6 = 5, P6 = 5;
+const va = { memory: _u, nextFrame: pc }, F6 = 1e-3, _6 = 1e3, O6 = 5, P6 = 5;
 class Ny {
   constructor({
     inputWidth: t,
@@ -52020,7 +52023,7 @@ class Ny {
     filterMinCF: l = null,
     filterBeta: c = null
   }) {
-    this.inputWidth = t, this.inputHeight = e, this.maxTrack = r, this.filterMinCF = l === null ? F6 : l, this.filterBeta = c === null ? O6 : c, this.warmupTolerance = i === null ? _6 : i, this.missTolerance = a === null ? P6 : a, this.cropDetector = new Kj(this.inputWidth, this.inputHeight, o), console.log("[AR] runtime cropSize:", this.cropDetector.cropSize), this.inputLoader = new A6(this.inputWidth, this.inputHeight), this.markerDimensions = null, this.onUpdate = s, this.debugMode = o, this.processingVideo = !1, this.interestedTargetIndex = -1, this.trackingStates = [];
+    this.inputWidth = t, this.inputHeight = e, this.maxTrack = r, this.filterMinCF = l === null ? F6 : l, this.filterBeta = c === null ? _6 : c, this.warmupTolerance = i === null ? O6 : i, this.missTolerance = a === null ? P6 : a, this.cropDetector = new Kj(this.inputWidth, this.inputHeight, o), console.log("[AR] runtime cropSize:", this.cropDetector.cropSize), this.inputLoader = new A6(this.inputWidth, this.inputHeight), this.markerDimensions = null, this.onUpdate = s, this.debugMode = o, this.processingVideo = !1, this.interestedTargetIndex = -1, this.trackingStates = [];
     const u = 10, h = 1e5, d = 45 * Math.PI / 180, f = this.inputHeight / 2 / Math.tan(d / 2);
     this.projectionTransform = [
       [f, 0, this.inputWidth / 2],
@@ -52452,7 +52455,7 @@ const X6 = async (n, t) => {
   const e = [];
   for (let s = 0; s < n.length; s++) {
     const o = n[s], r = new Iy(o.width, o.height);
-    await pc(), O(() => {
+    await pc(), _(() => {
       const i = Xe(o.data, [o.data.length], "float32").reshape([o.height, o.width]), { featurePoints: a } = r.detect(i), l = a.filter((d) => d.maxima), c = a.filter((d) => !d.maxima), u = Wm({ points: l }), h = Wm({ points: c });
       e.push({
         maximaPoints: l,
