@@ -13,6 +13,9 @@ uploads/essays/*
 node_modules/
 tools/node_modules/
 
+# Gegenereerde runtime-bronnen (via tools/prepare_runtime.sh)
+tools/.runtime-src/
+
 # Het bovenliggende interventie-repo negeert deze paden ook — expliciet terug insluiten
 !uploads/
 !uploads/essays/
