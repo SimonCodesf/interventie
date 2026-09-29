@@ -1,11 +1,11 @@
 import * as tf from '@tensorflow/tfjs';
 import {buildModelViewProjectionTransform, computeScreenCoordiate} from '../estimation/utils.js';
 
-const AR2_DEFAULT_TS = 12; // 25x25 template (was 13x13): onderscheidend op tekstpagina's
+const AR2_DEFAULT_TS = 6;
 const AR2_DEFAULT_TS_GAP = 1;
 const AR2_SEARCH_SIZE = 10;
 const AR2_SEARCH_GAP = 1;
-const AR2_SIM_THRESH = 0.8;
+const AR2_SIM_THRESH = 0.6; // was 0.8: te streng voor echte (tekst)beelden via camera
 
 const TRACKING_KEYFRAME = 1; // 0: 256px, 1: 128px
 
