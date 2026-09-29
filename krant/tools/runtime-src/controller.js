@@ -188,6 +188,7 @@ class Controller {
     const startProcessing = async() => {
       let frameCount = 0;
       let matchCount = 0;
+      let trackFailCount = 0;
       while (true) {
 	if (!this.processingVideo) break;
 
@@ -231,7 +232,7 @@ class Controller {
 	}
 
 	frameCount += 1;
-	if (frameCount % 90 === 0) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount);
+	if (frameCount % 90 === 0) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount);
 
 	// tracking update
 	for (let i = 0; i < this.trackingStates.length; i++) {
@@ -240,6 +241,7 @@ class Controller {
 	  if (trackingState.isTracking) {
 	    let modelViewTransform = await this._trackAndUpdate(inputT, trackingState.currentModelViewTransform, i);
 	    if (modelViewTransform === null) {
+	      trackFailCount += 1;
 	      trackingState.isTracking = false;
 	    } else {
 	      trackingState.currentModelViewTransform = modelViewTransform;

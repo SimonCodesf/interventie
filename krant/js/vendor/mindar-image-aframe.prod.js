@@ -52118,65 +52118,65 @@ class Ny {
         filter: new M6({ minCutOff: this.filterMinCF, beta: this.filterBeta })
       });
     (async () => {
-      let s = 0, o = 0;
+      let s = 0, o = 0, r = 0;
       for (; this.processingVideo; )
         try {
-          const r = this.inputLoader.loadInput(t);
-          if (this.trackingStates.reduce((a, l) => a + (l.isTracking ? 1 : 0), 0) < this.maxTrack) {
-            const a = [];
-            for (let u = 0; u < this.trackingStates.length; u++)
-              this.trackingStates[u].isTracking !== !0 && (this.interestedTargetIndex !== -1 && this.interestedTargetIndex !== u || a.push(u));
-            const { targetIndex: l, modelViewTransform: c } = await this._detectAndMatch(r, a);
-            if (l !== -1) {
-              o += 1, this.trackingStates[l].isTracking = !0, this.trackingStates[l].currentModelViewTransform = c;
-              const u = this.trackingStates[l];
-              u.showing || (u.trackCount += 1, u.trackCount > this.warmupTolerance && (u.showing = !0, u.trackingMatrix = null, u.filter.reset()));
+          const i = this.inputLoader.loadInput(t);
+          if (this.trackingStates.reduce((l, c) => l + (c.isTracking ? 1 : 0), 0) < this.maxTrack) {
+            const l = [];
+            for (let h = 0; h < this.trackingStates.length; h++)
+              this.trackingStates[h].isTracking !== !0 && (this.interestedTargetIndex !== -1 && this.interestedTargetIndex !== h || l.push(h));
+            const { targetIndex: c, modelViewTransform: u } = await this._detectAndMatch(i, l);
+            if (c !== -1) {
+              o += 1, this.trackingStates[c].isTracking = !0, this.trackingStates[c].currentModelViewTransform = u;
+              const h = this.trackingStates[c];
+              h.showing || (h.trackCount += 1, h.trackCount > this.warmupTolerance && (h.showing = !0, h.trackingMatrix = null, h.filter.reset()));
             }
           }
-          s += 1, s % 90 === 0 && console.log("[AR] frames " + s + ", matches " + o);
-          for (let a = 0; a < this.trackingStates.length; a++) {
-            const l = this.trackingStates[a];
-            if (l.isTracking) {
-              let c = await this._trackAndUpdate(r, l.currentModelViewTransform, a);
-              c === null ? l.isTracking = !1 : l.currentModelViewTransform = c;
+          s += 1, s % 90 === 0 && console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r);
+          for (let l = 0; l < this.trackingStates.length; l++) {
+            const c = this.trackingStates[l];
+            if (c.isTracking) {
+              let u = await this._trackAndUpdate(i, c.currentModelViewTransform, l);
+              u === null ? (r += 1, c.isTracking = !1) : c.currentModelViewTransform = u;
             }
-            if (l.showing && (l.isTracking ? l.trackMiss = 0 : (l.trackCount = 0, l.trackMiss += 1, l.trackMiss > this.missTolerance && (l.showing = !1, l.trackingMatrix = null, l.lastAcceptedMatrix = null, l.medianBuf = [], this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: a, worldMatrix: null })))), l.showing) {
-              const c = this._glModelViewMatrix(l.currentModelViewTransform, a), u = l.lastAcceptedMatrix;
-              let h = !1;
-              if (u) {
-                const m = this.markerDimensions[a][0], g = c[12] - u[12], x = c[13] - u[13], b = c[14] - u[14], y = Math.sqrt(g * g + x * x + b * b) / m, w = c[0] * u[0] + c[1] * u[1] + c[2] * u[2], v = c[4] * u[4] + c[5] * u[5] + c[6] * u[6], k = Math.acos(Math.min(1, Math.max(-1, w))) * 57.2958, N = Math.acos(Math.min(1, Math.max(-1, v))) * 57.2958;
-                if (h = y > 0.02 || k > 3 || N > 3, (y > 0.12 || k > 25 || N > 25) && (l.gateRejects += 1, l.gateRejects < 4))
+            if (c.showing && (c.isTracking ? c.trackMiss = 0 : (c.trackCount = 0, c.trackMiss += 1, c.trackMiss > this.missTolerance && (c.showing = !1, c.trackingMatrix = null, c.lastAcceptedMatrix = null, c.medianBuf = [], this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: l, worldMatrix: null })))), c.showing) {
+              const u = this._glModelViewMatrix(c.currentModelViewTransform, l), h = c.lastAcceptedMatrix;
+              let d = !1;
+              if (h) {
+                const g = this.markerDimensions[l][0], x = u[12] - h[12], b = u[13] - h[13], y = u[14] - h[14], w = Math.sqrt(x * x + b * b + y * y) / g, v = u[0] * h[0] + u[1] * h[1] + u[2] * h[2], k = u[4] * h[4] + u[5] * h[5] + u[6] * h[6], N = Math.acos(Math.min(1, Math.max(-1, v))) * 57.2958, T = Math.acos(Math.min(1, Math.max(-1, k))) * 57.2958;
+                if (d = w > 0.02 || N > 3 || T > 3, (w > 0.12 || N > 25 || T > 25) && (c.gateRejects += 1, c.gateRejects < 4))
                   continue;
               }
-              l.gateRejects = 0, l.lastAcceptedMatrix = c;
-              const d = l.medianBuf;
-              if (h)
-                d.length = 0, l.trackingMatrix = c;
+              c.gateRejects = 0, c.lastAcceptedMatrix = u;
+              const f = c.medianBuf;
+              if (d)
+                f.length = 0, c.trackingMatrix = u;
               else {
-                d.push(c), d.length > 5 && d.shift();
-                let m = c;
-                if (d.length >= 3) {
-                  m = [];
-                  for (let g = 0; g < 16; g++) {
-                    const x = d.map(function(b) {
-                      return b[g];
-                    }).sort(function(b, y) {
-                      return b - y;
+                f.push(u), f.length > 5 && f.shift();
+                let g = u;
+                if (f.length >= 3) {
+                  g = [];
+                  for (let x = 0; x < 16; x++) {
+                    const b = f.map(function(y) {
+                      return y[x];
+                    }).sort(function(y, w) {
+                      return y - w;
                     });
-                    m[g] = x[Math.floor(x.length / 2)];
+                    g[x] = b[Math.floor(b.length / 2)];
                   }
                 }
-                l.trackingMatrix = l.filter.filter(Date.now(), m);
+                c.trackingMatrix = c.filter.filter(Date.now(), g);
               }
-              let f = [];
-              for (let m = 0; m < l.trackingMatrix.length; m++)
-                f[m] = l.trackingMatrix[m];
-              t.width === this.inputHeight && t.height === this.inputWidth && (f = this.getRotatedZ90Matrix(f)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: a, worldMatrix: f });
+              let p = [];
+              for (let g = 0; g < c.trackingMatrix.length; g++)
+                p[g] = c.trackingMatrix[g];
+              t.width === this.inputHeight && t.height === this.inputWidth && (p = this.getRotatedZ90Matrix(p)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: l, worldMatrix: p });
             }
           }
-          r.dispose(), this.onUpdate && this.onUpdate({ type: "processDone" }), await va.nextFrame();
-        } catch (r) {
-          console.error("[AR] tracking fout:", r && r.message), await va.nextFrame();
+          i.dispose(), this.onUpdate && this.onUpdate({ type: "processDone" }), await va.nextFrame();
+        } catch (i) {
+          console.error("[AR] tracking fout:", i && i.message), await va.nextFrame();
         }
     })();
   }
