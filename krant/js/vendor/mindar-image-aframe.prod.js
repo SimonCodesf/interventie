@@ -52133,7 +52133,10 @@ class Ny {
               h.showing || (h.trackCount += 1, h.trackCount > this.warmupTolerance && (h.showing = !0, h.trackingMatrix = null, h.filter.reset()));
             }
           }
-          s += 1, s % 90 === 0 && console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r);
+          if (s += 1, s % 90 === 0) {
+            const l = this.tracker || {};
+            console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r + ", simMax " + (l._dbgMaxSim !== void 0 ? l._dbgMaxSim.toFixed(3) : "?") + ", good " + (l._dbgGood !== void 0 ? l._dbgGood : "?") + " (calls " + (l._dbgCalls || 0) + ")"), l && (l._dbgMaxSim = 0);
+          }
           for (let l = 0; l < this.trackingStates.length; l++) {
             const c = this.trackingStates[l];
             if (c.isTracking) {

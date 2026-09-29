@@ -232,7 +232,14 @@ class Controller {
 	}
 
 	frameCount += 1;
-	if (frameCount % 90 === 0) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount);
+	if (frameCount % 90 === 0) {
+	  const tr = this.tracker || {};
+	  console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount +
+	    ', simMax ' + (tr._dbgMaxSim !== undefined ? tr._dbgMaxSim.toFixed(3) : '?') +
+	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
+	    ' (calls ' + (tr._dbgCalls || 0) + ')');
+	  if (tr) tr._dbgMaxSim = 0;
+	}
 
 	// tracking update
 	for (let i = 0; i < this.trackingStates.length; i++) {

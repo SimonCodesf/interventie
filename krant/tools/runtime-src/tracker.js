@@ -89,6 +89,15 @@ class Tracker {
       }
     }
 
+    // Diagnose: welke correlaties haalt deze content?
+    let maxSim = 0;
+    for (let i = 0; i < sim.length; i++) {
+      if (sim[i] > maxSim) maxSim = sim[i];
+    }
+    this._dbgMaxSim = Math.max(this._dbgMaxSim || 0, maxSim);
+    this._dbgGood = goodTrack.length;
+    this._dbgCalls = (this._dbgCalls || 0) + 1;
+
     if (this.debugMode) {
       debugExtra = {
 	projectedImage: projectedImageT.arraySync(),
