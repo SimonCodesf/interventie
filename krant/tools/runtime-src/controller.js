@@ -216,6 +216,17 @@ class Controller {
 	    matchCount += 1;
 	    this.trackingStates[matchedTargetIndex].isTracking = true;
 	    this.trackingStates[matchedTargetIndex].currentModelViewTransform = modelViewTransform;
+
+	    // warmup op matches (tekstpagina's verliezen de lokale track vaak direct)
+	    const mst = this.trackingStates[matchedTargetIndex];
+	    if (!mst.showing) {
+	      mst.trackCount += 1;
+	      if (mst.trackCount > this.warmupTolerance) {
+		mst.showing = true;
+		mst.trackingMatrix = null;
+		mst.filter.reset();
+	      }
+	    }
 	  }
 	}
 
@@ -235,18 +246,6 @@ class Controller {
 	    }
 	  }
 
-	  // if not showing, then show it once it reaches warmup number of frames
-	  if (!trackingState.showing) {
-	    if (trackingState.isTracking) {
-	      trackingState.trackMiss = 0;
-	      trackingState.trackCount += 1;
-	      if (trackingState.trackCount > this.warmupTolerance) {
-		trackingState.showing = true;
-		trackingState.trackingMatrix = null;
-		trackingState.filter.reset();
-	      }
-	    }
-	  }
 	  
 	  // if showing, then count miss, and hide it when reaches tolerance
 	  if (trackingState.showing) {
@@ -304,12 +303,15 @@ class Controller {
 	    //  - stilstand → mediaan over 5 poses (ruis weg, geen drift)
 	    //  - beweging  → ruwe pose direct doorgeven (instant volgen)
 	    const buf = trackingState.medianBuf;
-	    let filteredInput = worldMatrix;
 	    if (moving) {
+	      // beweging: volledig ruwe pose → geen enkele vertraging
 	      buf.length = 0;
+	      trackingState.trackingMatrix = worldMatrix;
 	    } else {
+	      // stilstand: mediaan (ruis weg) + lichte OneEuro (restdemping)
 	      buf.push(worldMatrix);
 	      if (buf.length > 5) buf.shift();
+	      let filteredInput = worldMatrix;
 	      if (buf.length >= 3) {
 		filteredInput = [];
 		for (let j = 0; j < 16; j++) {
@@ -317,9 +319,8 @@ class Controller {
 		  filteredInput[j] = vals[Math.floor(vals.length / 2)];
 		}
 	      }
+	      trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), filteredInput);
 	    }
-
-	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), filteredInput);
 
 	    let clone = [];
 	    for (let j = 0; j < trackingState.trackingMatrix.length; j++) {
