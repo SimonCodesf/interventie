@@ -9,12 +9,12 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // Tussenweg tegen verspringingen op tekstrijke pagina's: lichte demping in
-    // rust zonder achterlopen bij beweging. Voor échte stabiliteit blijft een
-    // vast contrastrijk kader rond de tekst de beste oplossing.
-    filterMinCF: 0.002,
-    filterBeta: 30,
-    warmupTolerance: 0,
+    // Tussenweg: sterkere demping dan voorheen, maar nog vlot bij beweging.
+    // warmupTolerance 5 zorgt dat de eerste lock met een geraffineerde pose
+    // gebeurt (geen initiële sprong/schaal-snap).
+    filterMinCF: 0.005,
+    filterBeta: 15,
+    warmupTolerance: 5,
     missTolerance: 5,
 };
 
@@ -244,6 +244,15 @@ function buildScene(mindSrc, targets) {
             }).catch(function (e) {
                 console.error('[AR] video.play() mislukt:', e);
             });
+        }
+        // Diagnose voor de "herschaling": log elke wijziging van de feed-box
+        if (v && window.ResizeObserver) {
+            new ResizeObserver(function (entries) {
+                for (const e of entries) {
+                    console.log('[AR] feed-box veranderd naar ' +
+                        Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height));
+                }
+            }).observe(v);
         }
     });
 
