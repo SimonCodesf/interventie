@@ -14,7 +14,6 @@ cd "$(dirname "$0")"
 rm -rf .runtime-src
 cp -r node_modules/mind-ar/src .runtime-src
 cp runtime-src/controller.js .runtime-src/image-target/controller.js
-cp runtime-src/crop-detector.js .runtime-src/image-target/detector/crop-detector.js
 cp runtime-src/crop-detector.js .runtime-src/image-target/crop-detector.js
 
 echo "Runtime bronnen klaar in tools/.runtime-src"

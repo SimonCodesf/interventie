@@ -179,6 +179,7 @@ class Controller {
 	trackMiss: 0,
 	gateRejects: 0,
 	lastAcceptedMatrix: null,
+	medianBuf: [],
 	filter: new OneEuroFilter({minCutOff: this.filterMinCF, beta: this.filterBeta})
       });
       //console.log("filterMinCF", this.filterMinCF, this.filterBeta);
@@ -250,6 +251,7 @@ class Controller {
 		trackingState.showing = false;
 		trackingState.trackingMatrix = null;
 		trackingState.lastAcceptedMatrix = null;
+		trackingState.medianBuf = [];
 		this.onUpdate && this.onUpdate({type: 'updateMatrix', targetIndex: i, worldMatrix: null});
 	      }
 	    } else {
@@ -286,7 +288,21 @@ class Controller {
 	    trackingState.gateRejects = 0;
 	    trackingState.lastAcceptedMatrix = worldMatrix;
 
-	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), worldMatrix);
+	    // Mediaanfilter over de laatste 5 poses: verwijdert per-frame ruis en
+	    // uitschieters zonder de vertraging die exponentiële smoothing geeft.
+	    const buf = trackingState.medianBuf;
+	    buf.push(worldMatrix);
+	    if (buf.length > 5) buf.shift();
+	    let medianMatrix = worldMatrix;
+	    if (buf.length >= 3) {
+	      medianMatrix = [];
+	      for (let j = 0; j < 16; j++) {
+		const vals = buf.map(function (m) { return m[j]; }).sort(function (a, b) { return a - b; });
+		medianMatrix[j] = vals[Math.floor(vals.length / 2)];
+	      }
+	    }
+
+	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), medianMatrix);
 
 	    let clone = [];
 	    for (let j = 0; j < trackingState.trackingMatrix.length; j++) {
