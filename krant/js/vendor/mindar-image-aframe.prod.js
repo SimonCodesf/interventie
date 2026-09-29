@@ -52130,11 +52130,7 @@ class Ny {
             for (let h = 0; h < this.trackingStates.length; h++)
               this.trackingStates[h].isTracking !== !0 && (this.interestedTargetIndex !== -1 && this.interestedTargetIndex !== h || l.push(h));
             const { targetIndex: c, modelViewTransform: u } = await this._detectAndMatch(i, l);
-            if (c !== -1) {
-              o += 1, this.trackingStates[c].isTracking = !0, this.trackingStates[c].currentModelViewTransform = u;
-              const h = this.trackingStates[c];
-              h.showing || (h.trackCount += 1, h.trackCount > this.warmupTolerance && (h.showing = !0, h.trackingMatrix = null, h.filter.reset()));
-            }
+            c !== -1 && (o += 1, this.trackingStates[c].isTracking = !0, this.trackingStates[c].currentModelViewTransform = u);
           }
           if (s += 1, s % 90 === 0) {
             const l = this.tracker || {};
@@ -52146,38 +52142,34 @@ class Ny {
               let u = await this._trackAndUpdate(i, c.currentModelViewTransform, l);
               u === null ? (r += 1, c.isTracking = !1) : c.currentModelViewTransform = u;
             }
-            if (c.showing && (c.isTracking ? c.trackMiss = 0 : (c.trackCount = 0, c.trackMiss += 1, c.trackMiss > this.missTolerance && (c.showing = !1, c.trackingMatrix = null, c.lastAcceptedMatrix = null, c.medianBuf = [], this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: l, worldMatrix: null })))), c.showing) {
+            if (c.showing || c.isTracking && (c.trackMiss = 0, c.trackCount += 1, c.trackCount > this.warmupTolerance && (c.showing = !0, c.trackingMatrix = null, c.filter.reset())), c.showing && (c.isTracking ? c.trackMiss = 0 : (c.trackCount = 0, c.trackMiss += 1, c.trackMiss > this.missTolerance && (c.showing = !1, c.trackingMatrix = null, c.lastAcceptedMatrix = null, c.medianBuf = [], this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: l, worldMatrix: null })))), c.showing) {
               const u = this._glModelViewMatrix(c.currentModelViewTransform, l), h = c.lastAcceptedMatrix;
               let d = !1;
               if (h) {
-                const g = this.markerDimensions[l][0], x = u[12] - h[12], b = u[13] - h[13], y = u[14] - h[14], w = Math.sqrt(x * x + b * b + y * y) / g, v = u[0] * h[0] + u[1] * h[1] + u[2] * h[2], k = u[4] * h[4] + u[5] * h[5] + u[6] * h[6], N = Math.acos(Math.min(1, Math.max(-1, v))) * 57.2958, T = Math.acos(Math.min(1, Math.max(-1, k))) * 57.2958;
-                if (d = w > 0.02 || N > 3 || T > 3, (w > 0.12 || N > 25 || T > 25) && (c.gateRejects += 1, c.gateRejects < 4))
+                const b = this.markerDimensions[l][0], y = u[12] - h[12], w = u[13] - h[13], v = u[14] - h[14], k = Math.sqrt(y * y + w * w + v * v) / b, N = u[0] * h[0] + u[1] * h[1] + u[2] * h[2], T = u[4] * h[4] + u[5] * h[5] + u[6] * h[6], S = Math.acos(Math.min(1, Math.max(-1, N))) * 57.2958, C = Math.acos(Math.min(1, Math.max(-1, T))) * 57.2958;
+                if (d = k > 0.02 || S > 3 || C > 3, (k > 0.12 || S > 25 || C > 25) && (c.gateRejects += 1, c.gateRejects < 4))
                   continue;
               }
               c.gateRejects = 0, c.lastAcceptedMatrix = u;
-              const f = c.medianBuf;
-              if (d)
-                f.length = 0, c.trackingMatrix = u;
-              else {
-                f.push(u), f.length > 5 && f.shift();
-                let g = u;
-                if (f.length >= 3) {
-                  g = [];
-                  for (let x = 0; x < 16; x++) {
-                    const b = f.map(function(y) {
-                      return y[x];
-                    }).sort(function(y, w) {
-                      return y - w;
-                    });
-                    g[x] = b[Math.floor(b.length / 2)];
-                  }
+              const f = c.medianBuf, p = d ? 3 : 5;
+              for (f.push(u); f.length > p; ) f.shift();
+              let m = u;
+              if (f.length >= 3) {
+                m = [];
+                for (let b = 0; b < 16; b++) {
+                  const y = f.map(function(w) {
+                    return w[b];
+                  }).sort(function(w, v) {
+                    return w - v;
+                  });
+                  m[b] = y[Math.floor(y.length / 2)];
                 }
-                c.trackingMatrix = c.filter.filter(Date.now(), g);
               }
-              let p = [];
-              for (let g = 0; g < c.trackingMatrix.length; g++)
-                p[g] = c.trackingMatrix[g];
-              t.width === this.inputHeight && t.height === this.inputWidth && (p = this.getRotatedZ90Matrix(p)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: l, worldMatrix: p });
+              c.trackingMatrix = c.filter.filter(Date.now(), m);
+              let g = [];
+              for (let b = 0; b < c.trackingMatrix.length; b++)
+                g[b] = c.trackingMatrix[b];
+              t.width === this.inputHeight && t.height === this.inputWidth && (g = this.getRotatedZ90Matrix(g)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: l, worldMatrix: g });
             }
           }
           i.dispose(), this.onUpdate && this.onUpdate({ type: "processDone" }), await va.nextFrame();
