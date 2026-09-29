@@ -9,13 +9,14 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // GEVONDEN→verloren-cycli voorkomen: missTolerance 20 laat de laag
-    // korte detectie-dips overleven (geen verdwijnen, geen pose-reset-snap).
-    // Lichte OneEuro (0.002/100): direct volgen, rest-jitter ~gedempt.
-    filterMinCF: 0.002,
-    filterBeta: 100,
-    warmupTolerance: 3,
-    missTolerance: 20,
+    // Tegen found/lost-flikkeren op tekstpagina's: laag verschijnt bij de
+    // eerste match (warmup 0) en blijft ~1 seconde staan door tracking-dips
+    // (missTolerance 30) — geen verdwijnen, geen pose-reset-snap.
+    // Lichte OneEuro (0.003/30) voor de ergste micro-ruis.
+    filterMinCF: 0.003,
+    filterBeta: 30,
+    warmupTolerance: 0,
+    missTolerance: 30,
 };
 
 // ---- Vaste cameraresolutie ----
