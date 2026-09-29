@@ -186,9 +186,12 @@ class Controller {
     }
 
     const startProcessing = async() => {
+      let frameCount = 0;
+      let matchCount = 0;
       while (true) {
 	if (!this.processingVideo) break;
 
+	try {
 	const inputT = this.inputLoader.loadInput(input);
 
 	const nTracking = this.trackingStates.reduce((acc, s) => {
@@ -210,10 +213,14 @@ class Controller {
 	  const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._detectAndMatch(inputT, matchingIndexes);
 
 	  if (matchedTargetIndex !== -1) {
+	    matchCount += 1;
 	    this.trackingStates[matchedTargetIndex].isTracking = true;
 	    this.trackingStates[matchedTargetIndex].currentModelViewTransform = modelViewTransform;
 	  }
 	}
+
+	frameCount += 1;
+	if (frameCount % 90 === 0) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount);
 
 	// tracking update
 	for (let i = 0; i < this.trackingStates.length; i++) {
@@ -331,6 +338,10 @@ class Controller {
 	inputT.dispose();
         this.onUpdate && this.onUpdate({type: 'processDone'});
 	await tf.nextFrame();
+	} catch (e) {
+	  console.error('[AR] tracking fout:', e && e.message);
+	  await tf.nextFrame();
+	}
       }
     }
     startProcessing();
