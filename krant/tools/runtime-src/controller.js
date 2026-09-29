@@ -153,8 +153,16 @@ class Controller {
   }
 
   async _detectAndMatch(inputT, targetIndexes) {
+    // dev-diagnostiek: splits de detectiekost op in feature-extractie (crop)
+    // vs. worker-matching (tegen de matchingData-schalen van de marker)
+    const _c0 = performance.now();
     const {featurePoints} = this.cropDetector.detectMoving(inputT);
+    const _c1 = performance.now();
     const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._workerMatch(featurePoints, targetIndexes);
+    const _c2 = performance.now();
+    this._dbgCropMs = _c1 - _c0;
+    this._dbgMatchMs = _c2 - _c1;
+    this._dbgFeatures = featurePoints.length;
     return {targetIndex: matchedTargetIndex, modelViewTransform}
   }
   async _trackAndUpdate(inputT, lastModelViewTransform, targetIndex) {
@@ -243,7 +251,8 @@ class Controller {
 	    ', simMax ' + (tr._dbgMaxSim !== undefined ? tr._dbgMaxSim.toFixed(3) : '?') +
 	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
 	    ', showing ' + (st.showing ? 'Y' : 'n') + ', tracking ' + (st.isTracking ? 'Y' : 'n') +
-	    ', detect ' + dAvg + 'ms, track ' + tAvg + 'ms, loop ' + lAvg + 'ms');
+	    ', detect ' + dAvg + 'ms (crop ' + (this._dbgCropMs!==undefined?this._dbgCropMs.toFixed(0):'?') + 'ms, match ' + (this._dbgMatchMs!==undefined?this._dbgMatchMs.toFixed(0):'?') + 'ms, feats ' + (this._dbgFeatures!==undefined?this._dbgFeatures:'?') + ')' +
+	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)');
 	  if (tr) { tr._dbgMaxSim = 0; tr._dbgCalls = 0; }
 	  detectMsSum = 0; detectMsCount = 0; trackMsSum = 0; trackMsCount = 0; loopMsSum = 0; loopMsCount = 0;
 	}

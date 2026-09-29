@@ -52098,8 +52098,8 @@ class Ny {
     return this._glModelViewMatrix(t, e);
   }
   async _detectAndMatch(t, e) {
-    const { featurePoints: s } = this.cropDetector.detectMoving(t), { targetIndex: o, modelViewTransform: r } = await this._workerMatch(s, e);
-    return { targetIndex: o, modelViewTransform: r };
+    const s = performance.now(), { featurePoints: o } = this.cropDetector.detectMoving(t), r = performance.now(), { targetIndex: i, modelViewTransform: a } = await this._workerMatch(o, e), l = performance.now();
+    return this._dbgCropMs = r - s, this._dbgMatchMs = l - r, this._dbgFeatures = o.length, { targetIndex: i, modelViewTransform: a };
   }
   async _trackAndUpdate(t, e, s) {
     const { worldCoords: o, screenCoords: r } = this.tracker.track(t, e, s);
@@ -52137,7 +52137,7 @@ class Ny {
           }
           if (s += 1, h += performance.now() - f, d += 1, s % 90 === 0) {
             const x = this.tracker || {}, m = this.trackingStates[0] || {}, b = l ? (a / l).toFixed(0) : "-", y = u ? (c / u).toFixed(0) : "-", w = d ? (h / d).toFixed(0) : "-";
-            console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r + ", simMax " + (x._dbgMaxSim !== void 0 ? x._dbgMaxSim.toFixed(3) : "?") + ", good " + (x._dbgGood !== void 0 ? x._dbgGood : "?") + ", showing " + (m.showing ? "Y" : "n") + ", tracking " + (m.isTracking ? "Y" : "n") + ", detect " + b + "ms, track " + y + "ms, loop " + w + "ms"), x && (x._dbgMaxSim = 0, x._dbgCalls = 0), a = 0, l = 0, c = 0, u = 0, h = 0, d = 0;
+            console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r + ", simMax " + (x._dbgMaxSim !== void 0 ? x._dbgMaxSim.toFixed(3) : "?") + ", good " + (x._dbgGood !== void 0 ? x._dbgGood : "?") + ", showing " + (m.showing ? "Y" : "n") + ", tracking " + (m.isTracking ? "Y" : "n") + ", detect " + b + "ms (crop " + (this._dbgCropMs !== void 0 ? this._dbgCropMs.toFixed(0) : "?") + "ms, match " + (this._dbgMatchMs !== void 0 ? this._dbgMatchMs.toFixed(0) : "?") + "ms, feats " + (this._dbgFeatures !== void 0 ? this._dbgFeatures : "?") + "), track " + y + "ms, loop " + w + "ms (" + (w !== "-" ? (1e3 / w).toFixed(0) : "?") + "fps)"), x && (x._dbgMaxSim = 0, x._dbgCalls = 0), a = 0, l = 0, c = 0, u = 0, h = 0, d = 0;
           }
           for (let x = 0; x < this.trackingStates.length; x++) {
             const m = this.trackingStates[x];
