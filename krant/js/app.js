@@ -9,14 +9,13 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // De bewezen waarden van het originele Interventie-project: zware
-    // OneEuro-afvlakking (0.0001/0.001) → rotsvaste laag, lichte
-    // volgvertraging. Precies wat een ruis-gevoelige tekstpagina nodig heeft.
-    // (missTolerance verhoogd tegen found/lost-geflikker.)
-    filterMinCF: 0.0001,
-    filterBeta: 0.001,
+    // GEVONDEN→verloren-cycli voorkomen: missTolerance 20 laat de laag
+    // korte detectie-dips overleven (geen verdwijnen, geen pose-reset-snap).
+    // Lichte OneEuro (0.002/100): direct volgen, rest-jitter ~gedempt.
+    filterMinCF: 0.002,
+    filterBeta: 100,
     warmupTolerance: 3,
-    missTolerance: 10,
+    missTolerance: 20,
 };
 
 // ---- Vaste cameraresolutie ----
@@ -340,6 +339,26 @@ async function bootAR() {
     overlay().style.display = 'none';
     buildScene(currentMindBlobUrl, [{ index: 0, layers: currentEssay.layers }]);
     preloadPrevious();
+    monitorStream();
+}
+
+// ---- Diagnostiek: frame-box + stream-resolutie ----
+
+if (window.ResizeObserver) {
+    new ResizeObserver(function (entries) {
+        for (const e of entries) {
+            console.log('[AR] frame-box: ' + Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height));
+        }
+    }).observe(document.getElementById('ar-scene'));
+}
+
+function monitorStream() {
+    let n = 0;
+    const timer = setInterval(function () {
+        const v = document.querySelector('#ar-scene video');
+        console.log('[AR] stream ' + (n * 2) + 's: ' + (v ? v.videoWidth + 'x' + v.videoHeight : 'geen video'));
+        if (++n >= 6) clearInterval(timer);
+    }, 2000);
 }
 
 // ---- Knop: wisselen tussen huidige en vorige essays ----
