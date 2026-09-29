@@ -31,20 +31,30 @@ const overlay = function () { return document.getElementById('start-overlay'); }
 const toggleBtn = function () { return document.getElementById('toggle-prev'); };
 
 const scriptPromises = {};
+let scriptChain = Promise.resolve();
 
+// Scripts strikt sequentieel laden: dynamisch ingevoegde script-tags draaien
+// normaal parallel, waardoor mindar-image-aframe (kleiner bestand) vóór
+// A-Frame kan uitvoeren → "Can't find variable: AFRAME" en een dode camera.
 function loadScript(src) {
     if (scriptPromises[src]) return scriptPromises[src];
-    scriptPromises[src] = new Promise(function (resolve, reject) {
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = function () { resolve(); };
-        s.onerror = function () {
-            delete scriptPromises[src];
-            reject(new Error('Script niet geladen: ' + src));
-        };
-        document.head.appendChild(s);
+
+    const p = scriptChain.then(function () {
+        return new Promise(function (resolve, reject) {
+            const s = document.createElement('script');
+            s.src = src;
+            s.async = false; // extra zekerheid: volgorde behouden
+            s.onload = function () { resolve(); };
+            s.onerror = function () {
+                reject(new Error('Script niet geladen: ' + src));
+            };
+            document.head.appendChild(s);
+        });
     });
-    return scriptPromises[src];
+
+    scriptPromises[src] = p.catch(function () {}); // geregistreerd blijven
+    scriptChain = scriptPromises[src];
+    return p;
 }
 
 function webglSupported() {
