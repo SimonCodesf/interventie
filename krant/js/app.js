@@ -11,10 +11,10 @@
 const AR_TUNING = {
     // Lichte demping: mediaan (kort bij beweging, lang in rust) + OneEuro.
     // warmup 2 + missTolerance 30: laag verschijnt snel, blijft door dips.
-    filterMinCF: 0.005,
-    filterBeta: 60,
+    filterMinCF: 0.002,
+    filterBeta: 20,
     warmupTolerance: 2,
-    missTolerance: 12,
+    missTolerance: 6,
 };
 
 // ---- Vaste cameraresolutie ----
@@ -143,7 +143,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=14');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=15');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -321,7 +321,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=14'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=15'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {

@@ -17,5 +17,6 @@ cp runtime-src/controller.js .runtime-src/image-target/controller.js
 cp runtime-src/crop-detector.js .runtime-src/image-target/crop-detector.js
 cp runtime-src/tracker.js .runtime-src/image-target/tracker/tracker.js
 cp runtime-src/matching.js .runtime-src/image-target/matching/matching.js
+cp runtime-src/matcher.js .runtime-src/image-target/matching/matcher.js
 
 echo "Runtime bronnen klaar in tools/.runtime-src"

@@ -342,7 +342,7 @@ class Controller {
 	      const angU = Math.acos(Math.min(1, Math.max(-1, dotU))) * 57.2958;
 
 	      // Bewegingsdetectie: bij beweging geen demping (instant volgen)
-	      moving = (dTrans > 0.02 || angR > 3 || angU > 3);
+	      moving = (dTrans > 0.035 || angR > 5 || angU > 5);
 
 	      if (dTrans > 0.12 || angR > 25 || angU > 25) {
 		trackingState.gateRejects += 1;
@@ -360,7 +360,7 @@ class Controller {
 	    // Altijd: mediaan (kort venster bij beweging, langer in rust) + lichte
 	    // OneEuro. Verwijdert pose-ruis zonder merkbare vertraging.
 	    const buf = trackingState.medianBuf;
-	    const windowSize = moving ? 3 : 5;
+	    const windowSize = moving ? 3 : 7;
 	    buf.push(worldMatrix);
 	    while (buf.length > windowSize) buf.shift();
 	    let filteredInput = worldMatrix;
