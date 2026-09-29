@@ -5,7 +5,8 @@ const AR2_DEFAULT_TS = 6;
 const AR2_DEFAULT_TS_GAP = 1;
 const AR2_SEARCH_SIZE = 10;
 const AR2_SEARCH_GAP = 1;
-const AR2_SIM_THRESH = 0.6; // was 0.8: te streng voor echte (tekst)beelden via camera
+const _qsim = (typeof location !== 'undefined') ? new URLSearchParams(location.search).get('sim') : null;
+const AR2_SIM_THRESH = _qsim !== null ? parseFloat(_qsim) : 0.6; // was 0.8: te streng voor echte (tekst)beelden via camera
 
 const TRACKING_KEYFRAME = 1; // 0: 256px, 1: 128px
 

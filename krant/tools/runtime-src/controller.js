@@ -13,9 +13,24 @@ const DEFAULT_FILTER_BETA = 1000;
 const DEFAULT_WARMUP_TOLERANCE = 5;
 const DEFAULT_MISS_TOLERANCE = 5;
 
+// Alle afstelknoppen via URL (?fmin=&fbeta=&warmup=&miss=&qfeats=&winStatic=&winMove=&movePos=&moveAng=)
+// zodat automatische test-sweeps honderden combinaties kunnen draaien.
+const _qp = (typeof location !== 'undefined') ? new URLSearchParams(location.search) : new URLSearchParams();
+const _qnum = (k, d) => { const v = _qp.get(k); return v === null ? d : parseFloat(v); };
+
 class Controller {
   constructor({inputWidth, inputHeight, onUpdate=null, debugMode=false, maxTrack=1, 
     warmupTolerance=null, missTolerance=null, filterMinCF=null, filterBeta=null}) {
+    // URL-overrides
+    if (_qp.has('fmin')) filterMinCF = _qnum('fmin', filterMinCF);
+    if (_qp.has('fbeta')) filterBeta = _qnum('fbeta', filterBeta);
+    if (_qp.has('warmup')) warmupTolerance = _qnum('warmup', warmupTolerance);
+    if (_qp.has('miss')) missTolerance = _qnum('miss', missTolerance);
+    this._maxQFeats = _qnum('qfeats', 160);
+    this._winStatic = _qnum('winStatic', 7);
+    this._winMove = _qnum('winMove', 3);
+    this._movePos = _qnum('movePos', 0.035);
+    this._moveAng = _qnum('moveAng', 5);
 
     this.inputWidth = inputWidth;
     this.inputHeight = inputHeight;
@@ -162,7 +177,7 @@ class Controller {
 
     // Cap het aantal query-features: de matching kost is (features x schalen);
     // een ruimtelijk gespreide subset van ~160 volstaat ruim.
-    const MAX_QFEATS = 160;
+    const MAX_QFEATS = this._maxQFeats;
     let qFeatures = featurePoints;
     if (featurePoints.length > MAX_QFEATS) {
       qFeatures = [];
@@ -218,6 +233,9 @@ class Controller {
       let detectMsSum = 0, detectMsCount = 0;
       let trackMsSum = 0, trackMsCount = 0;
       let loopMsSum = 0, loopMsCount = 0;
+      let jitterSum = 0, jitterCount = 0;
+      const _lockStart = performance.now();
+      let lockMs = -1;
       while (true) {
 	if (!this.processingVideo) break;
 
@@ -267,7 +285,9 @@ class Controller {
 	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
 	    ', showing ' + (st.showing ? 'Y' : 'n') + ', tracking ' + (st.isTracking ? 'Y' : 'n') +
 	    ', detect ' + dAvg + 'ms (crop ' + (this._dbgCropMs!==undefined?this._dbgCropMs.toFixed(0):'?') + 'ms, match ' + (this._dbgMatchMs!==undefined?this._dbgMatchMs.toFixed(0):'?') + 'ms, feats ' + (this._dbgFeatures!==undefined?this._dbgFeatures:'?') + '/' + (this._dbgQFeats!==undefined?this._dbgQFeats:'?') + ', scales ' + (this._dbgScales!==undefined?this._dbgScales:'?') + ')' +
-	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)');
+	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)' +
+	    ', jit ' + (jitterCount?(1000*jitterSum/jitterCount).toFixed(1):'-') +
+	    ', lock ' + (lockMs<0?'-':Math.round(lockMs)));
 	  if (tr) { tr._dbgMaxSim = 0; tr._dbgCalls = 0; }
 	  detectMsSum = 0; detectMsCount = 0; trackMsSum = 0; trackMsCount = 0; loopMsSum = 0; loopMsCount = 0;
 	}
@@ -342,7 +362,7 @@ class Controller {
 	      const angU = Math.acos(Math.min(1, Math.max(-1, dotU))) * 57.2958;
 
 	      // Bewegingsdetectie: bij beweging geen demping (instant volgen)
-	      moving = (dTrans > 0.035 || angR > 5 || angU > 5);
+	      moving = (dTrans > this._movePos || angR > this._moveAng || angU > this._moveAng);
 
 	      if (dTrans > 0.12 || angR > 25 || angU > 25) {
 		trackingState.gateRejects += 1;
@@ -360,7 +380,7 @@ class Controller {
 	    // Altijd: mediaan (kort venster bij beweging, langer in rust) + lichte
 	    // OneEuro. Verwijdert pose-ruis zonder merkbare vertraging.
 	    const buf = trackingState.medianBuf;
-	    const windowSize = moving ? 3 : 7;
+	    const windowSize = moving ? this._winMove : this._winStatic;
 	    buf.push(worldMatrix);
 	    while (buf.length > windowSize) buf.shift();
 	    let filteredInput = worldMatrix;
@@ -372,6 +392,17 @@ class Controller {
 	      }
 	    }
 	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), filteredInput);
+
+	    // jitter-meting: hoeveel beweegt de getoonde laag per frame (in % markerbreedte)
+	    const _em = trackingState.trackingMatrix;
+	    if (trackingState.lastEmitted) {
+	      const _p = trackingState.lastEmitted;
+	      const _jx = _em[12] - _p[12], _jy = _em[13] - _p[13], _jz = _em[14] - _p[14];
+	      jitterSum += Math.sqrt(_jx*_jx + _jy*_jy + _jz*_jz) / this.markerDimensions[i][0];
+	      jitterCount += 1;
+	      if (lockMs < 0) lockMs = performance.now() - _lockStart;
+	    }
+	    trackingState.lastEmitted = _em;
 
 	    let clone = [];
 	    for (let j = 0; j < trackingState.trackingMatrix.length; j++) {
