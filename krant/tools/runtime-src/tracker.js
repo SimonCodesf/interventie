@@ -1,12 +1,16 @@
 import * as tf from '@tensorflow/tfjs';
 import {buildModelViewProjectionTransform, computeScreenCoordiate} from '../estimation/utils.js';
 
-const AR2_DEFAULT_TS = 6;
+const AR2_DEFAULT_TS = _tuneNum('ts', 6);
 const AR2_DEFAULT_TS_GAP = 1;
-const AR2_SEARCH_SIZE = 10;
+const AR2_SEARCH_SIZE = _tuneNum('search', 14); // groter = volgt snellere beweging (was 10)
 const AR2_SEARCH_GAP = 1;
-const _qsim = (typeof location !== 'undefined') ? new URLSearchParams(location.search).get('sim') : null;
-const AR2_SIM_THRESH = _qsim !== null ? parseFloat(_qsim) : 0.6; // was 0.8: te streng voor echte (tekst)beelden via camera
+function _tuneNum(k, d) {
+  try { const v = new URLSearchParams(location.search).get(k); if (v !== null) return parseFloat(v); } catch (e) {}
+  try { const ls = JSON.parse(localStorage.getItem('AR_TUNE') || '{}'); if (ls[k] !== undefined) return parseFloat(ls[k]); } catch (e) {}
+  return d;
+}
+const AR2_SIM_THRESH = _tuneNum('sim', 0.6); // was 0.8: te streng voor echte (tekst)beelden via camera
 
 const TRACKING_KEYFRAME = 1; // 0: 256px, 1: 128px
 

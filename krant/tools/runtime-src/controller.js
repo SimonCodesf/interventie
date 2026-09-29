@@ -16,7 +16,15 @@ const DEFAULT_MISS_TOLERANCE = 5;
 // Alle afstelknoppen via URL (?fmin=&fbeta=&warmup=&miss=&qfeats=&winStatic=&winMove=&movePos=&moveAng=)
 // zodat automatische test-sweeps honderden combinaties kunnen draaien.
 const _qp = (typeof location !== 'undefined') ? new URLSearchParams(location.search) : new URLSearchParams();
-const _qnum = (k, d) => { const v = _qp.get(k); return v === null ? d : parseFloat(v); };
+let _ls = {};
+try { _ls = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('AR_TUNE')) || '{}') || {}; } catch (e) {}
+// URL heeft voorrang, dan localStorage (dev-paneel), dan de default
+const _qnum = (k, d) => {
+  const v = _qp.get(k);
+  if (v !== null) return parseFloat(v);
+  if (_ls[k] !== undefined) return parseFloat(_ls[k]);
+  return d;
+};
 
 class Controller {
   constructor({inputWidth, inputHeight, onUpdate=null, debugMode=false, maxTrack=1, 
@@ -288,6 +296,16 @@ class Controller {
 	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)' +
 	    ', jit ' + (jitterCount?(1000*jitterSum/jitterCount).toFixed(1):'-') +
 	    ', lock ' + (lockMs<0?'-':Math.round(lockMs)));
+	  if (typeof window !== 'undefined') {
+	    window.__AR_STATS = {
+	      jit: jitterCount ? (1000*jitterSum/jitterCount) : null,
+	      good: (tr._dbgGood !== undefined ? tr._dbgGood : null),
+	      fps: lAvg !== '-' ? +(1000/lAvg).toFixed(0) : null,
+	      lock: lockMs < 0 ? null : Math.round(lockMs),
+	      matches: matchCount, trackFails: trackFailCount,
+	      showing: !!st.showing, tracking: !!st.isTracking,
+	    };
+	  }
 	  if (tr) { tr._dbgMaxSim = 0; tr._dbgCalls = 0; }
 	  detectMsSum = 0; detectMsCount = 0; trackMsSum = 0; trackMsCount = 0; loopMsSum = 0; loopMsCount = 0;
 	}

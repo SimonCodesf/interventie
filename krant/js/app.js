@@ -143,7 +143,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=16');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=17');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -321,7 +321,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=16'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=17'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {
@@ -382,6 +382,110 @@ toggleBtn().addEventListener('click', function () {
         return { index: e.targetIndex, layers: e.layers };
     }));
 });
+
+
+// ---- Dev-paneel (?dev=1): schuifregelaars + presets + live-metrics ----
+(function initDevPanel() {
+    if (!new URLSearchParams(location.search).has('dev')) return;
+
+    const DEF = {
+        sim: 0.6, fmin: 0.002, fbeta: 20, winStatic: 7, winMove: 3,
+        movePos: 0.035, moveAng: 5, warmup: 2, miss: 6, qfeats: 160,
+        search: 14, ts: 6,
+    };
+    const FIELDS = [
+        ['sim', 0.3, 0.9, 0.02], ['fmin', 0.0005, 0.02, 0.0005], ['fbeta', 5, 200, 5],
+        ['winStatic', 3, 15, 1], ['winMove', 1, 7, 1], ['movePos', 0.005, 0.15, 0.005],
+        ['moveAng', 1, 15, 1], ['warmup', 0, 5, 1], ['miss', 2, 20, 1],
+        ['qfeats', 60, 300, 10], ['search', 6, 24, 1], ['ts', 4, 16, 1],
+    ];
+    const PRESETS = {
+        'STIL': { sim: 0.5, fmin: 0.001, fbeta: 15, winStatic: 11, movePos: 0.08, moveAng: 8 },
+        'SNEL': { sim: 0.65, fmin: 0.008, fbeta: 120, winStatic: 5, movePos: 0.015, moveAng: 2, search: 18 },
+        'BALANS': {},
+    };
+
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('AR_TUNE') || '{}') || {}; } catch (e) {}
+    const val = (k) => (saved[k] !== undefined ? saved[k] : (PRESETS.BALANS[k] !== undefined ? PRESETS.BALANS[k] : DEF[k]));
+
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:99999;background:rgba(10,10,10,.93);color:#ddd;font:11px/1.5 monospace;padding:8px;max-height:72vh;overflow:auto;width:236px;border:1px solid #555';
+
+    const head = document.createElement('div');
+    head.innerHTML = '<b style="color:#fff">DEV TUNING</b> <span style="color:#888">?dev=1</span>';
+    el.appendChild(head);
+
+    const stats = document.createElement('div');
+    stats.style.cssText = 'color:#0f0;margin:4px 0;white-space:pre';
+    stats.textContent = 'metrics…';
+    el.appendChild(stats);
+
+    const inputs = {};
+    FIELDS.forEach(function (f) {
+        const k = f[0];
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:4px';
+        const lab = document.createElement('span');
+        lab.style.cssText = 'width:66px;color:#9cf';
+        lab.textContent = k;
+        const rng = document.createElement('input');
+        rng.type = 'range'; rng.min = f[1]; rng.max = f[2]; rng.step = f[3]; rng.value = val(k);
+        rng.style.width = '110px';
+        const num = document.createElement('span');
+        num.style.cssText = 'width:44px;text-align:right';
+        num.textContent = rng.value;
+        rng.addEventListener('input', function () { num.textContent = rng.value; });
+        inputs[k] = rng;
+        row.append(lab, rng, num);
+        el.appendChild(row);
+    });
+
+    function collect() {
+        const o = {};
+        FIELDS.forEach(function (f) { o[f[0]] = parseFloat(inputs[f[0]].value); });
+        return o;
+    }
+    function apply(reload) {
+        try { localStorage.setItem('AR_TUNE', JSON.stringify(collect())); } catch (e) {}
+        if (reload) location.reload();
+    }
+
+    const btnWrap = document.createElement('div');
+    btnWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:6px';
+    function mkBtn(label, fn, accent) {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.style.cssText = 'font:11px monospace;padding:3px 6px;background:' + (accent ? '#264' : '#333') + ';color:#eee;border:1px solid #666;cursor:pointer';
+        b.addEventListener('click', fn);
+        btnWrap.appendChild(b);
+    }
+    mkBtn('APPLY+HERSTART', function () { apply(true); }, true);
+    mkBtn('RESET', function () { try { localStorage.removeItem('AR_TUNE'); } catch (e) {} location.reload(); });
+    Object.keys(PRESETS).forEach(function (name) {
+        mkBtn(name, function () {
+            FIELDS.forEach(function (f) {
+                const k = f[0];
+                const v = PRESETS[name][k] !== undefined ? PRESETS[name][k] : DEF[k];
+                inputs[k].value = v;
+                inputs[k].nextSibling.textContent = v;
+            });
+            apply(true);
+        });
+    });
+    el.appendChild(btnWrap);
+    document.body.appendChild(el);
+
+    setInterval(function () {
+        const s = window.__AR_STATS;
+        if (!s) return;
+        stats.textContent =
+            'jit  ' + (s.jit === null ? '-' : s.jit.toFixed(1)) + '   good ' + (s.good === null ? '-' : s.good) + '\n' +
+            'fps  ' + (s.fps === null ? '-' : s.fps) + '   lock ' + (s.lock === null ? '-' : s.lock) + 'ms\n' +
+            'trackFails ' + s.trackFails + '   matches ' + s.matches + '\n' +
+            'showing ' + (s.showing ? 'Y' : 'n') + '   tracking ' + (s.tracking ? 'Y' : 'n');
+    }, 1000);
+})();
 
 // ---- Boot: essentials eerst, preload erna, popup pas na de tap ----
 
