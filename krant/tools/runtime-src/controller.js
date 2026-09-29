@@ -110,6 +110,7 @@ class Controller {
     });
 
     this.markerDimensions = dimensions;
+    this._dbgScales = (matchingDataList[0] || []).length;
 
     return {dimensions: dimensions, matchingDataList, trackingDataList};
   }
@@ -158,7 +159,21 @@ class Controller {
     const _c0 = performance.now();
     const {featurePoints} = this.cropDetector.detectMoving(inputT);
     const _c1 = performance.now();
-    const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._workerMatch(featurePoints, targetIndexes);
+
+    // Cap het aantal query-features: de matching kost is (features x schalen);
+    // een ruimtelijk gespreide subset van ~160 volstaat ruim.
+    const MAX_QFEATS = 160;
+    let qFeatures = featurePoints;
+    if (featurePoints.length > MAX_QFEATS) {
+      qFeatures = [];
+      const step = featurePoints.length / MAX_QFEATS;
+      for (let i = 0; i < featurePoints.length; i += step) {
+	qFeatures.push(featurePoints[Math.floor(i)]);
+      }
+    }
+    this._dbgQFeats = qFeatures.length;
+
+    const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._workerMatch(qFeatures, targetIndexes);
     const _c2 = performance.now();
     this._dbgCropMs = _c1 - _c0;
     this._dbgMatchMs = _c2 - _c1;
@@ -251,7 +266,7 @@ class Controller {
 	    ', simMax ' + (tr._dbgMaxSim !== undefined ? tr._dbgMaxSim.toFixed(3) : '?') +
 	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
 	    ', showing ' + (st.showing ? 'Y' : 'n') + ', tracking ' + (st.isTracking ? 'Y' : 'n') +
-	    ', detect ' + dAvg + 'ms (crop ' + (this._dbgCropMs!==undefined?this._dbgCropMs.toFixed(0):'?') + 'ms, match ' + (this._dbgMatchMs!==undefined?this._dbgMatchMs.toFixed(0):'?') + 'ms, feats ' + (this._dbgFeatures!==undefined?this._dbgFeatures:'?') + ')' +
+	    ', detect ' + dAvg + 'ms (crop ' + (this._dbgCropMs!==undefined?this._dbgCropMs.toFixed(0):'?') + 'ms, match ' + (this._dbgMatchMs!==undefined?this._dbgMatchMs.toFixed(0):'?') + 'ms, feats ' + (this._dbgFeatures!==undefined?this._dbgFeatures:'?') + '/' + (this._dbgQFeats!==undefined?this._dbgQFeats:'?') + ', scales ' + (this._dbgScales!==undefined?this._dbgScales:'?') + ')' +
 	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)');
 	  if (tr) { tr._dbgMaxSim = 0; tr._dbgCalls = 0; }
 	  detectMsSum = 0; detectMsCount = 0; trackMsSum = 0; trackMsCount = 0; loopMsSum = 0; loopMsCount = 0;
