@@ -268,6 +268,7 @@ class Controller {
 	    // Weiger zulke sprongen; na 4 opeenvolgende weigeringen accepteren we
 	    // alsnog (dan is het echte, snelle beweging).
 	    const prevM = trackingState.lastAcceptedMatrix;
+	    let moving = false;
 	    if (prevM) {
 	      const mw = this.markerDimensions[i][0];
 	      const dtx = worldMatrix[12] - prevM[12];
@@ -278,6 +279,10 @@ class Controller {
 	      const dotU = worldMatrix[4] * prevM[4] + worldMatrix[5] * prevM[5] + worldMatrix[6] * prevM[6];
 	      const angR = Math.acos(Math.min(1, Math.max(-1, dotR))) * 57.2958;
 	      const angU = Math.acos(Math.min(1, Math.max(-1, dotU))) * 57.2958;
+
+	      // Bewegingsdetectie: bij beweging geen demping (instant volgen)
+	      moving = (dTrans > 0.02 || angR > 3 || angU > 3);
+
 	      if (dTrans > 0.12 || angR > 25 || angU > 25) {
 		trackingState.gateRejects += 1;
 		if (trackingState.gateRejects < 4) {
@@ -288,21 +293,26 @@ class Controller {
 	    trackingState.gateRejects = 0;
 	    trackingState.lastAcceptedMatrix = worldMatrix;
 
-	    // Mediaanfilter over de laatste 5 poses: verwijdert per-frame ruis en
-	    // uitschieters zonder de vertraging die exponentiële smoothing geeft.
+	    // Adaptieve filtering:
+	    //  - stilstand → mediaan over 5 poses (ruis weg, geen drift)
+	    //  - beweging  → ruwe pose direct doorgeven (instant volgen)
 	    const buf = trackingState.medianBuf;
-	    buf.push(worldMatrix);
-	    if (buf.length > 5) buf.shift();
-	    let medianMatrix = worldMatrix;
-	    if (buf.length >= 3) {
-	      medianMatrix = [];
-	      for (let j = 0; j < 16; j++) {
-		const vals = buf.map(function (m) { return m[j]; }).sort(function (a, b) { return a - b; });
-		medianMatrix[j] = vals[Math.floor(vals.length / 2)];
+	    let filteredInput = worldMatrix;
+	    if (moving) {
+	      buf.length = 0;
+	    } else {
+	      buf.push(worldMatrix);
+	      if (buf.length > 5) buf.shift();
+	      if (buf.length >= 3) {
+		filteredInput = [];
+		for (let j = 0; j < 16; j++) {
+		  const vals = buf.map(function (m) { return m[j]; }).sort(function (a, b) { return a - b; });
+		  filteredInput[j] = vals[Math.floor(vals.length / 2)];
+		}
 	      }
 	    }
 
-	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), medianMatrix);
+	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), filteredInput);
 
 	    let clone = [];
 	    for (let j = 0; j < trackingState.trackingMatrix.length; j++) {

@@ -52135,31 +52135,33 @@ class Ny {
           }
           if (i.showing || i.isTracking && (i.trackMiss = 0, i.trackCount += 1, i.trackCount > this.warmupTolerance && (i.showing = !0, i.trackingMatrix = null, i.filter.reset())), i.showing && (i.isTracking ? i.trackMiss = 0 : (i.trackCount = 0, i.trackMiss += 1, i.trackMiss > this.missTolerance && (i.showing = !1, i.trackingMatrix = null, i.lastAcceptedMatrix = null, i.medianBuf = [], this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: null })))), i.showing) {
             const a = this._glModelViewMatrix(i.currentModelViewTransform, r), l = i.lastAcceptedMatrix;
+            let c = !1;
             if (l) {
-              const f = this.markerDimensions[r][0], p = a[12] - l[12], m = a[13] - l[13], g = a[14] - l[14], x = Math.sqrt(p * p + m * m + g * g) / f, b = a[0] * l[0] + a[1] * l[1] + a[2] * l[2], y = a[4] * l[4] + a[5] * l[5] + a[6] * l[6], w = Math.acos(Math.min(1, Math.max(-1, b))) * 57.2958, v = Math.acos(Math.min(1, Math.max(-1, y))) * 57.2958;
-              if ((x > 0.12 || w > 25 || v > 25) && (i.gateRejects += 1, i.gateRejects < 4))
+              const p = this.markerDimensions[r][0], m = a[12] - l[12], g = a[13] - l[13], x = a[14] - l[14], b = Math.sqrt(m * m + g * g + x * x) / p, y = a[0] * l[0] + a[1] * l[1] + a[2] * l[2], w = a[4] * l[4] + a[5] * l[5] + a[6] * l[6], v = Math.acos(Math.min(1, Math.max(-1, y))) * 57.2958, k = Math.acos(Math.min(1, Math.max(-1, w))) * 57.2958;
+              if (c = b > 0.02 || v > 3 || k > 3, (b > 0.12 || v > 25 || k > 25) && (i.gateRejects += 1, i.gateRejects < 4))
                 continue;
             }
             i.gateRejects = 0, i.lastAcceptedMatrix = a;
-            const c = i.medianBuf;
-            c.push(a), c.length > 5 && c.shift();
-            let u = a;
-            if (c.length >= 3) {
-              u = [];
-              for (let f = 0; f < 16; f++) {
-                const p = c.map(function(m) {
-                  return m[f];
-                }).sort(function(m, g) {
-                  return m - g;
+            const u = i.medianBuf;
+            let h = a;
+            if (c)
+              u.length = 0;
+            else if (u.push(a), u.length > 5 && u.shift(), u.length >= 3) {
+              h = [];
+              for (let p = 0; p < 16; p++) {
+                const m = u.map(function(g) {
+                  return g[p];
+                }).sort(function(g, x) {
+                  return g - x;
                 });
-                u[f] = p[Math.floor(p.length / 2)];
+                h[p] = m[Math.floor(m.length / 2)];
               }
             }
-            i.trackingMatrix = i.filter.filter(Date.now(), u);
-            let h = [];
-            for (let f = 0; f < i.trackingMatrix.length; f++)
-              h[f] = i.trackingMatrix[f];
-            t.width === this.inputHeight && t.height === this.inputWidth && (h = this.getRotatedZ90Matrix(h)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: h });
+            i.trackingMatrix = i.filter.filter(Date.now(), h);
+            let d = [];
+            for (let p = 0; p < i.trackingMatrix.length; p++)
+              d[p] = i.trackingMatrix[p];
+            t.width === this.inputHeight && t.height === this.inputWidth && (d = this.getRotatedZ90Matrix(d)), this.onUpdate && this.onUpdate({ type: "updateMatrix", targetIndex: r, worldMatrix: d });
           }
         }
         s.dispose(), this.onUpdate && this.onUpdate({ type: "processDone" }), await yu.nextFrame();

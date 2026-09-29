@@ -9,13 +9,12 @@
 //   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
 
 const AR_TUNING = {
-    // Tegen found/lost-flikkeren op tekstpagina's: laag verschijnt bij de
-    // eerste match (warmup 0) en blijft ~1 seconde staan door tracking-dips
-    // (missTolerance 30) — geen verdwijnen, geen pose-reset-snap.
-    // Lichte OneEuro (0.003/30) voor de ergste micro-ruis.
+    // warmupTolerance 3: toon de laag pas na 3 tracking-frames — de eerste
+    // ruwe pose (die "mijlen af" kon staan) wordt zo overgeslagen.
+    // missTolerance 30 houdt de laag door dips heen.
     filterMinCF: 0.003,
     filterBeta: 30,
-    warmupTolerance: 0,
+    warmupTolerance: 3,
     missTolerance: 30,
 };
 
@@ -145,7 +144,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=3');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=4');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -323,7 +322,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=3'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=4'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {
