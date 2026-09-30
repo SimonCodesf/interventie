@@ -475,6 +475,46 @@ toggleBtn().addEventListener('click', function () {
     });
     el.appendChild(btnWrap);
 
+    // ---- Mind-test: andere marker testen zonder upload ----
+    const mt = document.createElement('div');
+    mt.style.cssText = 'margin-top:6px;border-top:1px solid #555;padding-top:6px';
+    const mtT = document.createElement('div');
+    mtT.textContent = 'MIND TEST';
+    mtT.style.cssText = 'color:#fc6';
+    mt.appendChild(mtT);
+    const mtInfo = document.createElement('div');
+    mtInfo.style.cssText = 'color:#888;font-size:10px';
+    mtInfo.textContent = 'Test een andere .mind (URL of lokaal bestand) op deze week.';
+    mt.appendChild(mtInfo);
+    const mtUrl = document.createElement('input');
+    mtUrl.type = 'text';
+    mtUrl.placeholder = 'uploads/essays/2026-41/target.mind';
+    mtUrl.style.cssText = 'width:170px;font:11px monospace;margin-top:4px;display:block';
+    mt.appendChild(mtUrl);
+    function mtLoad(url) {
+        try { url = new URL(url, location.href).href; } catch (e) { return; }
+        try {
+            if (typeof buildScene === 'function' && currentEssay) {
+                buildScene(url, [{ index: 0, layers: currentEssay.layers }]);
+                console.log('[AR-MINDTEST] geladen: ' + url);
+            }
+        } catch (e) { console.error('[AR-MINDTEST] mislukt:', e); }
+    }
+    const mtB = document.createElement('button');
+    mtB.textContent = 'LAAD MIND';
+    mtB.style.cssText = 'font:11px monospace;padding:3px 6px;margin:4px 3px 0 0;background:#264;color:#eee;border:1px solid #666;cursor:pointer';
+    mtB.addEventListener('click', function () { if (mtUrl.value) mtLoad(mtUrl.value); });
+    mt.appendChild(mtB);
+    const mtFile = document.createElement('input');
+    mtFile.type = 'file';
+    mtFile.accept = '.mind';
+    mtFile.style.cssText = 'font:11px monospace;margin-top:4px;display:block;max-width:190px';
+    mtFile.addEventListener('change', function () {
+        if (mtFile.files.length) mtLoad(URL.createObjectURL(mtFile.files[0]));
+    });
+    mt.appendChild(mtFile);
+    el.appendChild(mt);
+
     // ---- Feedback: ratings + vrije tekst -> console EN server ----
     const fb = document.createElement('div');
     fb.style.cssText = 'margin-top:6px;border-top:1px solid #555;padding-top:6px';

@@ -20,3 +20,6 @@ tools/.runtime-src/
 !uploads/
 !uploads/essays/
 !includes/config.php
+
+# Gegenereerde compiler-bronnen
+tools/.compiler-src/
