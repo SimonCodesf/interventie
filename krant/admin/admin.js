@@ -149,7 +149,7 @@ function addLayerRow(values) {
     const row = document.createElement('div');
     row.className = 'layer-row';
     row.innerHTML =
-        '<label>PNG<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg"></label>' +
+        '<label>Bestand (PNG/GIF)<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif"></label>' +
         '<label>Z (diepte)<input type="number" step="0.01" name="layer_z" value="' + v.z + '"></label>' +
         '<label>Breedte<input type="number" step="0.01" name="layer_w" value="' + v.w + '"></label>' +
         '<label>Hoogte<input type="number" step="0.01" name="layer_h" value="' + v.h + '"></label>' +

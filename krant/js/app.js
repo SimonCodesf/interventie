@@ -144,6 +144,7 @@ function ensureCurrentChunk() {
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
     loadScript('js/vendor/mindar-image-aframe.prod.js?v=21');
+    loadScript('js/vendor/gif-component.js?v=1');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -219,12 +220,15 @@ function buildScene(mindSrc, targets) {
 
         (t.layers || []).forEach(function (layer) {
             const plane = document.createElement('a-plane');
-            plane.setAttribute('src', layer.file);
+            const isGif = /\.gif(\?|$)/i.test(layer.file);
+            if (!isGif) plane.setAttribute('src', layer.file);
             plane.setAttribute('position', '0 0 ' + layer.z);
             plane.setAttribute('width', layer.w);
             plane.setAttribute('height', layer.h);
             plane.setAttribute('transparent', 'true');
             plane.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
+            // GIF-lagen: engine uit het vorige project (frame parsing + animatie)
+            if (isGif) plane.setAttribute('gif', 'src: ' + layer.file + '; transparent: true');
 
             const animDur = layer.anim_dur > 0 ? layer.anim_dur * 1000 : 0;
             if (animDur > 0) {
@@ -349,6 +353,7 @@ async function bootAR() {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
             loadScript('js/vendor/mindar-image-aframe.prod.js?v=21'),
+            loadScript('js/vendor/gif-component.js?v=1'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {
