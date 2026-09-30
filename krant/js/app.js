@@ -384,158 +384,80 @@ toggleBtn().addEventListener('click', function () {
 });
 
 
-// ---- Dev-paneel (?dev=1): schuifregelaars + presets + live-metrics ----
+// ---- Dev-paneel (?dev=1): testmatrix + live-metrics + feedback ----
 (function initDevPanel() {
     if (!new URLSearchParams(location.search).has('dev')) return;
 
-    const DEF = {
-        sim: 0.6, fmin: 0.002, fbeta: 20, winStatic: 7, winMove: 3,
-        movePos: 0.035, moveAng: 5, warmup: 2, miss: 6, qfeats: 160,
-        search: 14, ts: 6,
-    };
-    const FIELDS = [
-        ['sim', 0.3, 0.9, 0.02], ['fmin', 0.0005, 0.02, 0.0005], ['fbeta', 5, 200, 5],
-        ['winStatic', 3, 15, 1], ['winMove', 1, 7, 1], ['movePos', 0.005, 0.15, 0.005],
-        ['moveAng', 1, 15, 1], ['warmup', 0, 5, 1], ['miss', 2, 20, 1],
-        ['qfeats', 60, 300, 10], ['search', 6, 24, 1], ['ts', 4, 16, 1],
-    ];
-    const PRESETS = {
-        'STIL': { sim: 0.5, fmin: 0.001, fbeta: 15, winStatic: 11, movePos: 0.08, moveAng: 8 },
-        'SNEL': { sim: 0.65, fmin: 0.008, fbeta: 120, winStatic: 5, movePos: 0.015, moveAng: 2, search: 18 },
-        'BALANS': {},
-    };
+    // ~25 testposities: baseline + per as 2-3 waarden (e\u00e9n variabele per
+    // keer) + 2 combo's. Alles behalve de genoemde params = code-defaults.
+    const POS = [{ name: '0 BASELINE', p: {} }];
+    function ax(lab, k, vs) {
+        vs.forEach(function (v) {
+            const o = {};
+            o[k] = v;
+            POS.push({ name: POS.length + ' ' + lab + '=' + v, p: o });
+        });
+    }
+    ax('sim', 'sim', [0.4, 0.5, 0.7]);
+    ax('fmin', 'fmin', [0.001, 0.005, 0.01]);
+    ax('fbeta', 'fbeta', [10, 60, 120]);
+    ax('winStatic', 'winStatic', [5, 9, 11]);
+    ax('movePos', 'movePos', [0.02, 0.06, 0.1]);
+    ax('search', 'search', [10, 18, 22]);
+    ax('qfeats', 'qfeats', [100, 220]);
+    ax('miss', 'miss', [4, 10]);
+    POS.push({ name: POS.length + ' STIL-max', p: { sim: 0.5, fmin: 0.001, winStatic: 11, movePos: 0.08, moveAng: 8 } });
+    POS.push({ name: POS.length + ' SNEL-max', p: { sim: 0.65, fmin: 0.008, fbeta: 120, winStatic: 5, winMove: 2, movePos: 0.015, moveAng: 2, search: 18, miss: 4 } });
 
-    let saved = {};
-    try { saved = JSON.parse(localStorage.getItem('AR_TUNE') || '{}') || {}; } catch (e) {}
-    const val = (k) => (saved[k] !== undefined ? saved[k] : (PRESETS.BALANS[k] !== undefined ? PRESETS.BALANS[k] : DEF[k]));
+    function curPos() {
+        try { return JSON.parse(localStorage.getItem('AR_TEST_POS') ?? 'null'); } catch (e) { return null; }
+    }
+    function prevPos() {
+        try { return JSON.parse(localStorage.getItem('AR_TEST_PREV') ?? 'null'); } catch (e) { return null; }
+    }
+    function applyPos(idx) {
+        const prev = curPos();
+        try {
+            localStorage.setItem('AR_TEST_PREV', JSON.stringify(prev));
+            localStorage.setItem('AR_TEST_POS', JSON.stringify(idx));
+            localStorage.setItem('AR_TUNE', JSON.stringify(POS[idx].p));
+        } catch (e) {}
+        location.reload();
+    }
 
     const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:99999;background:rgba(10,10,10,.93);color:#ddd;font:11px/1.5 monospace;padding:8px;max-height:72vh;overflow:auto;width:236px;border:1px solid #555';
+    el.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:99999;background:rgba(10,10,10,.93);color:#ddd;font:11px/1.5 monospace;padding:8px;max-height:72vh;overflow:auto;width:248px;border:1px solid #555';
 
     const head = document.createElement('div');
-    head.innerHTML = '<b style="color:#fff">DEV TUNING</b> <span style="color:#888">?dev=1</span>';
+    head.innerHTML = '<b style="color:#fff">DEV TESTPOSITIES</b> <span style="color:#888">' + POS.length + ' stuks</span>';
     el.appendChild(head);
 
     const stats = document.createElement('div');
     stats.style.cssText = 'color:#0f0;margin:4px 0;white-space:pre';
-    stats.textContent = 'metrics…';
+    stats.textContent = 'metrics\u2026';
     el.appendChild(stats);
 
-    const inputs = {};
-    FIELDS.forEach(function (f) {
-        const k = f[0];
+    const active = curPos();
+    POS.forEach(function (pos, idx) {
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:4px';
+        row.style.cssText = 'display:flex;align-items:center;gap:3px;margin:1px 0' + (idx === active ? ';background:#1c2b1c' : '');
         const lab = document.createElement('span');
-        lab.style.cssText = 'width:66px;color:#9cf';
-        lab.textContent = k;
-        const rng = document.createElement('input');
-        rng.type = 'range'; rng.min = f[1]; rng.max = f[2]; rng.step = f[3]; rng.value = val(k);
-        rng.style.width = '110px';
-        const num = document.createElement('span');
-        num.style.cssText = 'width:44px;text-align:right';
-        num.textContent = rng.value;
-        rng.addEventListener('input', function () { num.textContent = rng.value; });
-        inputs[k] = rng;
-        row.append(lab, rng, num);
-        el.appendChild(row);
-    });
+        lab.style.cssText = 'flex:1;color:' + (idx === active ? '#0f0' : '#9cf') + ';font-size:10px';
+        lab.textContent = (idx === active ? '\u25cf ' : '') + pos.name;
+        row.appendChild(lab);
 
-    function collect() {
-        const o = {};
-        FIELDS.forEach(function (f) { o[f[0]] = parseFloat(inputs[f[0]].value); });
-        return o;
-    }
-    function apply(reload) {
-        try { localStorage.setItem('AR_TUNE', JSON.stringify(collect())); } catch (e) {}
-        if (reload) location.reload();
-    }
-
-    const btnWrap = document.createElement('div');
-    btnWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:6px';
-    function mkBtn(label, fn, accent) {
-        const b = document.createElement('button');
-        b.textContent = label;
-        b.style.cssText = 'font:11px monospace;padding:3px 6px;background:' + (accent ? '#264' : '#333') + ';color:#eee;border:1px solid #666;cursor:pointer';
-        b.addEventListener('click', fn);
-        btnWrap.appendChild(b);
-    }
-    mkBtn('APPLY+HERSTART', function () { apply(true); }, true);
-    mkBtn('RESET', function () { try { localStorage.removeItem('AR_TUNE'); } catch (e) {} location.reload(); });
-    Object.keys(PRESETS).forEach(function (name) {
-        mkBtn(name, function () {
-            FIELDS.forEach(function (f) {
-                const k = f[0];
-                const v = PRESETS[name][k] !== undefined ? PRESETS[name][k] : DEF[k];
-                inputs[k].value = v;
-                inputs[k].nextSibling.textContent = v;
-            });
-            apply(true);
-        });
-    });
-    el.appendChild(btnWrap);
-
-    // ---- Mind-test: andere marker testen zonder upload ----
-    const mt = document.createElement('div');
-    mt.style.cssText = 'margin-top:6px;border-top:1px solid #555;padding-top:6px';
-    const mtT = document.createElement('div');
-    mtT.textContent = 'MIND TEST';
-    mtT.style.cssText = 'color:#fc6';
-    mt.appendChild(mtT);
-    const mtInfo = document.createElement('div');
-    mtInfo.style.cssText = 'color:#888;font-size:10px';
-    mtInfo.textContent = 'Test een andere .mind (URL of lokaal bestand) op deze week.';
-    mt.appendChild(mtInfo);
-    const mtUrl = document.createElement('input');
-    mtUrl.type = 'text';
-    mtUrl.placeholder = 'uploads/essays/2026-41/target.mind';
-    mtUrl.style.cssText = 'width:170px;font:11px monospace;margin-top:4px;display:block';
-    mt.appendChild(mtUrl);
-    function mtLoad(url) {
-        try { url = new URL(url, location.href).href; } catch (e) { return; }
-        try {
-            if (typeof buildScene === 'function' && currentEssay) {
-                buildScene(url, [{ index: 0, layers: currentEssay.layers }]);
-                console.log('[AR-MINDTEST] geladen: ' + url);
-            }
-        } catch (e) { console.error('[AR-MINDTEST] mislukt:', e); }
-    }
-    const mtB = document.createElement('button');
-    mtB.textContent = 'LAAD MIND';
-    mtB.style.cssText = 'font:11px monospace;padding:3px 6px;margin:4px 3px 0 0;background:#264;color:#eee;border:1px solid #666;cursor:pointer';
-    mtB.addEventListener('click', function () { if (mtUrl.value) mtLoad(mtUrl.value); });
-    mt.appendChild(mtB);
-    const mtList = document.createElement('div');
-    mtList.style.cssText = 'margin-top:4px';
-    mt.appendChild(mtList);
-    function mtRefreshList() {
-        mtList.innerHTML = '';
-        function addBtn(label, url) {
+        const mk = function (label, bg, fn) {
             const b = document.createElement('button');
             b.textContent = label;
-            b.style.cssText = 'font:11px monospace;padding:3px 6px;margin:2px 3px 0 0;background:#333;color:#eee;border:1px solid #666;cursor:pointer';
-            b.addEventListener('click', function () { mtLoad(url); });
-            mtList.appendChild(b);
-        }
-        fetch('api.php/essays/current').then(function (r) { return r.ok ? r.json() : null; }).then(function (e) {
-            if (e && e.mind) addBtn(e.week + ' (nu)', e.mind);
-            return fetch('api.php/essays/previous');
-        }).then(function (r) { return r && r.ok ? r.json() : null; }).then(function (b) {
-            (b && b.essays || []).forEach(function (e) {
-                addBtn(e.week, 'uploads/essays/' + encodeURIComponent(e.week) + '/target.mind');
-            });
-        }).catch(function () {});
-    }
-    mtRefreshList();
-    const mtFile = document.createElement('input');
-    mtFile.type = 'file';
-    mtFile.accept = '.mind';
-    mtFile.style.cssText = 'font:11px monospace;margin-top:4px;display:block;max-width:190px';
-    mtFile.addEventListener('change', function () {
-        if (mtFile.files.length) mtLoad(URL.createObjectURL(mtFile.files[0]));
+            b.style.cssText = 'font:10px monospace;padding:2px 4px;background:' + bg + ';color:#eee;border:1px solid #666;cursor:pointer;flex-shrink:0';
+            b.addEventListener('click', fn);
+            row.appendChild(b);
+        };
+        mk('TEST', '#264', function () { applyPos(idx); });
+        mk('BETER', '#431', function () { sendFeedback('', '', { pos: idx, vote: 'better', vsPos: prevPos() }); });
+        mk('SLECHTER', '#431', function () { sendFeedback('', '', { pos: idx, vote: 'worse', vsPos: prevPos() }); });
+        el.appendChild(row);
     });
-    mt.appendChild(mtFile);
-    el.appendChild(mt);
 
     // ---- Feedback: ratings + vrije tekst -> console EN server ----
     const fb = document.createElement('div');
@@ -546,10 +468,13 @@ toggleBtn().addEventListener('click', function () {
     fb.appendChild(fbT);
     const fbStatus = document.createElement('div');
     fbStatus.style.cssText = 'color:#0f0;min-height:14px';
-    function sendFeedback(rating, text) {
+    function sendFeedback(rating, text, extra) {
         const payload = {
             rating: rating || '',
             text: text || '',
+            pos: (extra && extra.pos !== undefined) ? extra.pos : curPos(),
+            vote: (extra && extra.vote) || '',
+            vsPos: (extra && extra.vsPos !== undefined) ? extra.vsPos : null,
             settings: (function () { try { return JSON.parse(localStorage.getItem('AR_TUNE') || '{}'); } catch (e) { return {}; } })(),
             stats: window.__AR_STATS || null,
         };
