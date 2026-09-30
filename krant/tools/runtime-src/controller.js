@@ -39,7 +39,7 @@ class Controller {
     if (_qp.has('warmup')) warmupTolerance = _qnum('warmup', warmupTolerance);
     if (_qp.has('miss')) missTolerance = _qnum('miss', missTolerance);
     this._maxQFeats = _qnum('qfeats', 100);
-    this._winStatic = _qnum('winStatic', 7);
+    this._winStatic = _qnum('winStatic', 9);
     this._winMove = _qnum('winMove', 3);
     this._movePos = _qnum('movePos', 0.02);
     this._moveAng = _qnum('moveAng', 3);

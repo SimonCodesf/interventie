@@ -11,7 +11,7 @@
 const AR_TUNING = {
     // Lichte demping: mediaan (kort bij beweging, lang in rust) + OneEuro.
     // warmup 2 + missTolerance 30: laag verschijnt snel, blijft door dips.
-    filterMinCF: 0.002,
+    filterMinCF: 0.001,
     filterBeta: 20,
     warmupTolerance: 2,
     missTolerance: 6,
@@ -143,7 +143,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=20');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=21');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -180,6 +180,8 @@ function buildScene(mindSrc, targets) {
         URL.revokeObjectURL(activeBlobUrl);
         activeBlobUrl = null;
     }
+
+    sceneBox().classList.remove('feed-ready');
 
     const scene = document.createElement('a-scene');
     scene.setAttribute('mindar-image',
@@ -245,6 +247,8 @@ function buildScene(mindSrc, targets) {
 
     scene.addEventListener('arReady', function () {
         console.log('[AR] marker GELADEN (arReady)');
+        // Pas tonen als de feed de juiste maat heeft (geen zichtbare herschaling)
+        sceneBox().classList.add('feed-ready');
         // MindAR vertrouwt op autoplay; bij een overgedragen stream kan het
         // video-element op iOS gepauzeerd blijven — expliciet afspelen.
         const v = sceneBox().querySelector('video');
@@ -321,7 +325,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=20'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=21'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {
