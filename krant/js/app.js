@@ -143,7 +143,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=17');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=18');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
         .catch(function () {});
@@ -321,7 +321,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=17'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=18'),
             ensureCurrentChunk(),
         ]);
     } catch (e) {
@@ -388,24 +388,29 @@ toggleBtn().addEventListener('click', function () {
 (function initDevPanel() {
     if (!new URLSearchParams(location.search).has('dev')) return;
 
-    // ~25 testposities: baseline + per as 2-3 waarden (e\u00e9n variabele per
-    // keer) + 2 combo's. Alles behalve de genoemde params = code-defaults.
+    // Matrix v2: extremen staan naast elkaar (duidelijk A/B-verschil bij
+    // opeenvolgende taps) + nieuwe assen: crop (detectievenster),
+    // sstep (schaalstap matcher), detEvery (detectiefrequentie).
     const POS = [{ name: '0 BASELINE', p: {} }];
-    function ax(lab, k, vs) {
-        vs.forEach(function (v) {
-            const o = {};
-            o[k] = v;
-            POS.push({ name: POS.length + ' ' + lab + '=' + v, p: o });
-        });
+    function pair(lab, k, lo, hi) {
+        const ol = {};
+        ol[k] = lo;
+        const oh = {};
+        oh[k] = hi;
+        POS.push({ name: POS.length + ' ' + lab + '=' + lo, p: ol });
+        POS.push({ name: POS.length + ' ' + lab + '=' + hi, p: oh });
     }
-    ax('sim', 'sim', [0.4, 0.5, 0.7]);
-    ax('fmin', 'fmin', [0.001, 0.005, 0.01]);
-    ax('fbeta', 'fbeta', [10, 60, 120]);
-    ax('winStatic', 'winStatic', [5, 9, 11]);
-    ax('movePos', 'movePos', [0.02, 0.06, 0.1]);
-    ax('search', 'search', [10, 18, 22]);
-    ax('qfeats', 'qfeats', [100, 220]);
-    ax('miss', 'miss', [4, 10]);
+    pair('sim', 'sim', 0.35, 0.85);
+    pair('fmin', 'fmin', 0.0005, 0.02);
+    pair('fbeta', 'fbeta', 5, 200);
+    pair('winStatic', 'winStatic', 3, 15);
+    pair('movePos', 'movePos', 0.01, 0.12);
+    pair('miss', 'miss', 2, 14);
+    pair('qfeats', 'qfeats', 60, 300);
+    pair('search', 'search', 6, 24);
+    pair('crop', 'crop', 0.5, 1.5);
+    pair('sstep', 'sstep', 1, 3);
+    pair('detEvery', 'detEvery', 1, 4);
     POS.push({ name: POS.length + ' STIL-max', p: { sim: 0.5, fmin: 0.001, winStatic: 11, movePos: 0.08, moveAng: 8 } });
     POS.push({ name: POS.length + ' SNEL-max', p: { sim: 0.65, fmin: 0.008, fbeta: 120, winStatic: 5, winMove: 2, movePos: 0.015, moveAng: 2, search: 18, miss: 4 } });
 

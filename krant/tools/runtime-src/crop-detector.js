@@ -3,7 +3,7 @@ import {Detector} from './detector/detector.js';
 import {buildModelViewProjectionTransform, computeScreenCoordiate} from './estimation/utils.js';
 
 class CropDetector {
-  constructor(width, height, debugMode=false) {
+  constructor(width, height, debugMode=false, cropMult=1) {
     this.debugMode = debugMode;
     this.width = width;
     this.height = height;
@@ -14,7 +14,7 @@ class CropDetector {
     // alleen losse glyphs — veel stabielere lock op tekstpagina's.
     let minDimension = Math.min(width, height);
     let cropSize = Math.pow( 2, Math.round( Math.log( minDimension ) / Math.log( 2 ) ) );
-    cropSize = Math.min(cropSize, width, height);
+    cropSize = Math.floor(Math.min(cropSize * cropMult, width, height));
     this.cropSize = cropSize;
 
     this.detector = new Detector(cropSize, cropSize, debugMode);

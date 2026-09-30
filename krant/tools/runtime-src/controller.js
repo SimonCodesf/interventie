@@ -13,7 +13,7 @@ const DEFAULT_FILTER_BETA = 1000;
 const DEFAULT_WARMUP_TOLERANCE = 5;
 const DEFAULT_MISS_TOLERANCE = 5;
 
-// Alle afstelknoppen via URL (?fmin=&fbeta=&warmup=&miss=&qfeats=&winStatic=&winMove=&movePos=&moveAng=)
+// Alle afstelknoppen via URL (?fmin=&fbeta=&warmup=&miss=&qfeats=&winStatic=&winMove=&movePos=&moveAng=&crop=&detEvery=&sstep=)
 // zodat automatische test-sweeps honderden combinaties kunnen draaien.
 const _qp = (typeof location !== 'undefined') ? new URLSearchParams(location.search) : new URLSearchParams();
 let _ls = {};
@@ -39,6 +39,9 @@ class Controller {
     this._winMove = _qnum('winMove', 3);
     this._movePos = _qnum('movePos', 0.035);
     this._moveAng = _qnum('moveAng', 5);
+    this._cropMult = Math.min(2, Math.max(0.25, _qnum('crop', 1)));
+    this._detectEvery = Math.max(1, Math.round(_qnum('detEvery', 2)));
+    this._scaleStep = Math.max(1, Math.round(_qnum('sstep', 2)));
 
     this.inputWidth = inputWidth;
     this.inputHeight = inputHeight;
@@ -47,7 +50,7 @@ class Controller {
     this.filterBeta = filterBeta === null? DEFAULT_FILTER_BETA: filterBeta;
     this.warmupTolerance = warmupTolerance === null? DEFAULT_WARMUP_TOLERANCE: warmupTolerance;
     this.missTolerance = missTolerance === null? DEFAULT_MISS_TOLERANCE: missTolerance;
-    this.cropDetector = new CropDetector(this.inputWidth, this.inputHeight, debugMode);
+    this.cropDetector = new CropDetector(this.inputWidth, this.inputHeight, debugMode, this._cropMult);
     console.log('[AR] runtime cropSize:', this.cropDetector.cropSize);
     this.inputLoader = new InputLoader(this.inputWidth, this.inputHeight);
     this.markerDimensions = null;
@@ -129,6 +132,7 @@ class Controller {
       inputHeight: this.inputHeight,
       projectionTransform: this.projectionTransform,
       debugMode: this.debugMode,
+      scaleStep: this._scaleStep,
       matchingDataList,
     });
 
@@ -237,7 +241,7 @@ class Controller {
       let trackFailCount = 0;
       // dev-diagnostiek: timing + detectie-throttle (duur: 512-crop detectie
       // elke frame laat de loop naar ~10fps zakken zodra er geen track is)
-      const detectEvery = 2;
+
       let detectMsSum = 0, detectMsCount = 0;
       let trackMsSum = 0, trackMsCount = 0;
       let loopMsSum = 0, loopMsCount = 0;
@@ -257,7 +261,7 @@ class Controller {
 
 	// detect and match only if less then maxTrack (max om de 2 frames:
 	// de 512px-detectie is duur en remt anders de hele loop af)
-	if (nTracking < this.maxTrack && (frameCount % detectEvery === 0 || this._forceDetect)) {
+	if (nTracking < this.maxTrack && (frameCount % this._detectEvery === 0 || this._forceDetect)) {
 	  this._forceDetect = false;
 
 	  const matchingIndexes = [];

@@ -1,19 +1,20 @@
 import {match} from './matching.js';
 
 class Matcher {
-  constructor(queryWidth, queryHeight, debugMode = false) {
+  constructor(queryWidth, queryHeight, debugMode = false, scaleStep = 2) {
     this.queryWidth = queryWidth;
     this.queryHeight = queryHeight;
     this.debugMode = debugMode;
+    this.scaleStep = Math.max(1, scaleStep | 0);
   }
 
   matchDetection(keyframes, featurePoints) {
     let debugExtra = {frames: []};
 
     let bestResult = null;
-    // Dev-tuning: elke 2e schaal volstaat (de schaalbanden per keyframe zijn
-    // ruim) — halveert de matchtijd, grootste multiplier in de detectie.
-    const scaleStep = 2;
+    // Dev-tuning via sstep: elke N-de schaal volstaat meestal (de schaalbanden
+    // per keyframe zijn ruim) — minder schalen = snellere match.
+    const scaleStep = this.scaleStep;
     for (let i = 0; i < keyframes.length; i += scaleStep) {
       const {H, matches, debugExtra: frameDebugExtra} = match({keyframe: keyframes[i], querypoints: featurePoints, querywidth: this.queryWidth, queryheight: this.queryHeight, debugMode: this.debugMode});
       debugExtra.frames.push(frameDebugExtra);
