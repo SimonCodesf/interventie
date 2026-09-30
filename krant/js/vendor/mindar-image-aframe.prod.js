@@ -49646,15 +49646,16 @@ const sj = (n, t) => [
 }, rj = (n, t, e, s) => {
   const { x: o, y: r, z: i } = oj(n, t, e);
   return { x: o / i, y: r / i };
-}, ij = Kf("ts", 6), aj = 1, lj = Kf("search", 20), cj = 1, uj = (() => {
+}, ij = Kf("ts", 6), aj = 1, lj = Kf("search", 20), cj = 1;
+function uj() {
   try {
     return new URLSearchParams(location.search).has("dev");
   } catch {
     return !1;
   }
-})();
+}
 function Kf(n, t) {
-  if (!uj) return t;
+  if (!uj()) return t;
   try {
     const e = new URLSearchParams(location.search).get(n);
     if (e !== null) return parseFloat(e);
@@ -52031,14 +52032,20 @@ class z6 {
     return this.xPrev = u, this.dxPrev = c, this.tPrev = t, u;
   }
 }
-const ka = { memory: Lu, nextFrame: xc }, B6 = 1e-3, V6 = 1e3, U6 = 5, W6 = 5, Ma = typeof location != "undefined" && new URLSearchParams(location.search).has("dev"), Ir = typeof location != "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
+const ka = { memory: Lu, nextFrame: xc }, B6 = 1e-3, V6 = 1e3, U6 = 5, W6 = 5, Ma = () => {
+  try {
+    return new URLSearchParams(location.search).has("dev");
+  } catch {
+    return !1;
+  }
+}, Ir = typeof location != "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
 let hh = {};
 try {
   hh = JSON.parse(typeof localStorage != "undefined" && localStorage.getItem("AR_TUNE") || "{}") || {};
 } catch {
 }
 const rn = (n, t) => {
-  if (!Ma) return t;
+  if (!Ma()) return t;
   const e = Ir.get(n);
   return e !== null ? parseFloat(e) : hh[n] !== void 0 ? parseFloat(hh[n]) : t;
 };
@@ -52054,7 +52061,7 @@ class My {
     filterMinCF: l = null,
     filterBeta: c = null
   }) {
-    Ir.has("fmin") && (l = rn("fmin", l)), Ir.has("fbeta") && (c = rn("fbeta", c)), Ir.has("warmup") && (i = rn("warmup", i)), Ir.has("miss") && (a = rn("miss", a)), this._maxQFeats = rn("qfeats", 100), this._winStatic = rn("winStatic", 7), this._winMove = rn("winMove", 3), this._movePos = rn("movePos", 0.02), this._moveAng = rn("moveAng", 3), this._cropMult = Math.min(2, Math.max(0.25, rn("crop", 1))), this._detectEvery = Math.max(1, Math.round(rn("detEvery", 1))), this._scaleStep = Math.max(1, Math.round(rn("sstep", 2))), this.inputWidth = t, this.inputHeight = e, this.maxTrack = r, this.filterMinCF = l === null ? B6 : l, this.filterBeta = c === null ? V6 : c, this.warmupTolerance = i === null ? U6 : i, this.missTolerance = a === null ? W6 : a, this.cropDetector = new t6(this.inputWidth, this.inputHeight, o, this._cropMult), Ma && console.log("[AR] runtime cropSize:", this.cropDetector.cropSize), this.inputLoader = new L6(this.inputWidth, this.inputHeight), this.markerDimensions = null, this.onUpdate = s, this.debugMode = o, this.processingVideo = !1, this.interestedTargetIndex = -1, this.trackingStates = [];
+    Ir.has("fmin") && (l = rn("fmin", l)), Ir.has("fbeta") && (c = rn("fbeta", c)), Ir.has("warmup") && (i = rn("warmup", i)), Ir.has("miss") && (a = rn("miss", a)), this._maxQFeats = rn("qfeats", 100), this._winStatic = rn("winStatic", 7), this._winMove = rn("winMove", 3), this._movePos = rn("movePos", 0.02), this._moveAng = rn("moveAng", 3), this._cropMult = Math.min(2, Math.max(0.25, rn("crop", 1))), this._detectEvery = Math.max(1, Math.round(rn("detEvery", 1))), this._scaleStep = Math.max(1, Math.round(rn("sstep", 2))), this.inputWidth = t, this.inputHeight = e, this.maxTrack = r, this.filterMinCF = l === null ? B6 : l, this.filterBeta = c === null ? V6 : c, this.warmupTolerance = i === null ? U6 : i, this.missTolerance = a === null ? W6 : a, this.cropDetector = new t6(this.inputWidth, this.inputHeight, o, this._cropMult), Ma() && console.log("[AR] runtime cropSize:", this.cropDetector.cropSize), this.inputLoader = new L6(this.inputWidth, this.inputHeight), this.markerDimensions = null, this.onUpdate = s, this.debugMode = o, this.processingVideo = !1, this.interestedTargetIndex = -1, this.trackingStates = [];
     const u = 10, h = 1e5, d = 45 * Math.PI / 180, f = this.inputHeight / 2 / Math.tan(d / 2);
     this.projectionTransform = [
       [f, 0, this.inputWidth / 2],
@@ -52178,7 +52185,7 @@ class My {
           }
           if (s += 1, u += performance.now() - g, h += 1, s % 90 === 0) {
             const y = this.tracker || {}, w = this.trackingStates[0] || {}, v = a ? (i / a).toFixed(0) : "-", k = c ? (l / c).toFixed(0) : "-", N = h ? (u / h).toFixed(0) : "-";
-            Ma && console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r + ", simMax " + (y._dbgMaxSim !== void 0 ? y._dbgMaxSim.toFixed(3) : "?") + ", good " + (y._dbgGood !== void 0 ? y._dbgGood : "?") + ", showing " + (w.showing ? "Y" : "n") + ", tracking " + (w.isTracking ? "Y" : "n") + ", detect " + v + "ms (crop " + (this._dbgCropMs !== void 0 ? this._dbgCropMs.toFixed(0) : "?") + "ms, match " + (this._dbgMatchMs !== void 0 ? this._dbgMatchMs.toFixed(0) : "?") + "ms, feats " + (this._dbgFeatures !== void 0 ? this._dbgFeatures : "?") + "/" + (this._dbgQFeats !== void 0 ? this._dbgQFeats : "?") + ", scales " + (this._dbgScales !== void 0 ? this._dbgScales : "?") + "), track " + k + "ms, loop " + N + "ms (" + (N !== "-" ? (1e3 / N).toFixed(0) : "?") + "fps), jit " + (f ? (1e3 * d / f).toFixed(1) : "-") + ", lock " + (m < 0 ? "-" : Math.round(m))), Ma && typeof window != "undefined" && (window.__AR_STATS = {
+            Ma() && console.log("[AR] frames " + s + ", matches " + o + ", trackFails " + r + ", simMax " + (y._dbgMaxSim !== void 0 ? y._dbgMaxSim.toFixed(3) : "?") + ", good " + (y._dbgGood !== void 0 ? y._dbgGood : "?") + ", showing " + (w.showing ? "Y" : "n") + ", tracking " + (w.isTracking ? "Y" : "n") + ", detect " + v + "ms (crop " + (this._dbgCropMs !== void 0 ? this._dbgCropMs.toFixed(0) : "?") + "ms, match " + (this._dbgMatchMs !== void 0 ? this._dbgMatchMs.toFixed(0) : "?") + "ms, feats " + (this._dbgFeatures !== void 0 ? this._dbgFeatures : "?") + "/" + (this._dbgQFeats !== void 0 ? this._dbgQFeats : "?") + ", scales " + (this._dbgScales !== void 0 ? this._dbgScales : "?") + "), track " + k + "ms, loop " + N + "ms (" + (N !== "-" ? (1e3 / N).toFixed(0) : "?") + "fps), jit " + (f ? (1e3 * d / f).toFixed(1) : "-") + ", lock " + (m < 0 ? "-" : Math.round(m))), Ma() && typeof window != "undefined" && (window.__AR_STATS = {
               jit: f ? 1e3 * d / f : null,
               good: y._dbgGood !== void 0 ? y._dbgGood : null,
               fps: N !== "-" ? +(1e3 / N).toFixed(0) : null,

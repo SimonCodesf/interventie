@@ -5,9 +5,9 @@ const AR2_DEFAULT_TS = _tuneNum('ts', 6);
 const AR2_DEFAULT_TS_GAP = 1;
 const AR2_SEARCH_SIZE = _tuneNum('search', 20); // groter = volgt snellere beweging (was 10)
 const AR2_SEARCH_GAP = 1;
-const _DEV_T = (() => { try { return new URLSearchParams(location.search).has('dev'); } catch (e) { return false; } })();
+function _isDevT() { try { return new URLSearchParams(location.search).has('dev'); } catch (e) { return false; } }
 function _tuneNum(k, d) {
-  if (!_DEV_T) return d;
+  if (!_isDevT()) return d;
   try { const v = new URLSearchParams(location.search).get(k); if (v !== null) return parseFloat(v); } catch (e) {}
   try { const ls = JSON.parse(localStorage.getItem('AR_TUNE') || '{}'); if (ls[k] !== undefined) return parseFloat(ls[k]); } catch (e) {}
   return d;

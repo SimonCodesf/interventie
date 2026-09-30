@@ -15,13 +15,15 @@ const DEFAULT_MISS_TOLERANCE = 5;
 
 // Alle afstelknoppen via URL/localStorage — ALLEEN in dev-modus (?dev=1).
 // Productie draait altijd op de gebakken defaults hieronder.
-const _DEV = (typeof location !== 'undefined') && new URLSearchParams(location.search).has('dev');
+// Lui uitlezen (functie i.p.v. module-const): bundlers mogen module-consts
+// herschikken, wat een TDZ-fout gaf ("Cannot access ... before initialization").
+const _isDev = () => { try { return new URLSearchParams(location.search).has('dev'); } catch (e) { return false; } };
 const _qp = (typeof location !== 'undefined') ? new URLSearchParams(location.search) : new URLSearchParams();
 let _ls = {};
 try { _ls = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('AR_TUNE')) || '{}') || {}; } catch (e) {}
 // URL heeft voorrang, dan localStorage (dev-paneel), dan de default
 const _qnum = (k, d) => {
-  if (!_DEV) return d;
+  if (!_isDev()) return d;
   const v = _qp.get(k);
   if (v !== null) return parseFloat(v);
   if (_ls[k] !== undefined) return parseFloat(_ls[k]);
@@ -53,7 +55,7 @@ class Controller {
     this.warmupTolerance = warmupTolerance === null? DEFAULT_WARMUP_TOLERANCE: warmupTolerance;
     this.missTolerance = missTolerance === null? DEFAULT_MISS_TOLERANCE: missTolerance;
     this.cropDetector = new CropDetector(this.inputWidth, this.inputHeight, debugMode, this._cropMult);
-    if (_DEV) console.log('[AR] runtime cropSize:', this.cropDetector.cropSize);
+    if (_isDev()) console.log('[AR] runtime cropSize:', this.cropDetector.cropSize);
     this.inputLoader = new InputLoader(this.inputWidth, this.inputHeight);
     this.markerDimensions = null;
     this.onUpdate = onUpdate;
@@ -294,7 +296,7 @@ class Controller {
 	  const dAvg = detectMsCount ? (detectMsSum / detectMsCount).toFixed(0) : '-';
 	  const tAvg = trackMsCount ? (trackMsSum / trackMsCount).toFixed(0) : '-';
 	  const lAvg = loopMsCount ? (loopMsSum / loopMsCount).toFixed(0) : '-';
-	  if (_DEV) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount +
+	  if (_isDev()) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount +
 	    ', simMax ' + (tr._dbgMaxSim !== undefined ? tr._dbgMaxSim.toFixed(3) : '?') +
 	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
 	    ', showing ' + (st.showing ? 'Y' : 'n') + ', tracking ' + (st.isTracking ? 'Y' : 'n') +
@@ -302,7 +304,7 @@ class Controller {
 	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)' +
 	    ', jit ' + (jitterCount?(1000*jitterSum/jitterCount).toFixed(1):'-') +
 	    ', lock ' + (lockMs<0?'-':Math.round(lockMs)));
-	  if (_DEV && typeof window !== 'undefined') {
+	  if (_isDev() && typeof window !== 'undefined') {
 	    window.__AR_STATS = {
 	      jit: jitterCount ? (1000*jitterSum/jitterCount) : null,
 	      good: (tr._dbgGood !== undefined ? tr._dbgGood : null),
