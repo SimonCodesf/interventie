@@ -92,8 +92,11 @@ if ($method === 'GET' && $path === '/essays/previous') {
                     'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
                     'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
                     'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.414,
+                    'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
                     'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
-                    'anim_dist' => isset($layer['anim_dist']) ? (float)$layer['anim_dist'] : 0,
+                    'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
+                    'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,
+                    'anim_z'    => isset($layer['anim_z']) ? (float)$layer['anim_z'] : (isset($layer['z']) ? (float)$layer['z'] : 0.01),
                 ];
             }
         }
@@ -215,7 +218,7 @@ if ($method === 'POST' && $path === '/admin/essays') {
     }
 
     $title = trim((string)$_POST['title']);
-    $text = (string)($_POST['text'] ?? '');
+    $text = ''; // essay-tekst wordt niet meer gebruikt: de pagina-afbeelding IS de tekst
     $published = isset($_POST['published']) && $_POST['published'] === '1' ? 1 : 0;
 
     // Bestaande rij ophalen (upsert)
@@ -271,8 +274,11 @@ if ($method === 'POST' && $path === '/admin/essays') {
                 'z'         => (float)($_POST['layer_z'][$i] ?? 0.01 + $i * 0.01),
                 'w'         => (float)($_POST['layer_w'][$i] ?? 1.0),
                 'h'         => (float)($_POST['layer_h'][$i] ?? 1.414),
+                'opacity'   => min(1.0, max(0.0, (float)($_POST['layer_opacity'][$i] ?? 1.0))),
                 'anim_dur'  => (float)($_POST['layer_anim_dur'][$i] ?? 0),
-                'anim_dist' => (float)($_POST['layer_anim_dist'][$i] ?? 0),
+                'anim_x'    => (float)($_POST['layer_anim_x'][$i] ?? 0),
+                'anim_y'    => (float)($_POST['layer_anim_y'][$i] ?? 0),
+                'anim_z'    => (float)($_POST['layer_anim_z'][$i] ?? 0),
             ];
         }
     }
@@ -324,6 +330,31 @@ if ($method === 'DELETE' && preg_match('#^/admin/essays/([^/]+)$#', $path, $m)) 
     }
 
     jsonResponse(['ok' => true]);
+}
+
+// Alles wissen (frisse start): alle essays + alle bestanden
+if ($method === 'DELETE' && $path === '/admin/essays') {
+    requireAuth();
+
+    $db->exec("DELETE FROM essays");
+
+    foreach ([ESSAYS_DIR, BUNDLE_DIR] as $dir) {
+        if (!file_exists($dir)) continue;
+        $entries = glob($dir . '/*');
+        foreach ($entries as $entry) {
+            if (is_dir($entry)) {
+                $files = glob($entry . '/*');
+                foreach ($files as $file) {
+                    if (is_file($file)) unlink($file);
+                }
+                @rmdir($entry);
+            } elseif (is_file($entry)) {
+                unlink($entry);
+            }
+        }
+    }
+
+    jsonResponse(['ok' => true, 'wiped' => true]);
 }
 
 // Bronnen voor de vorige-bundel: alle gepubliceerde essays behalve de huidige

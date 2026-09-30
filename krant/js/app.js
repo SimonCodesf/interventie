@@ -224,14 +224,15 @@ function buildScene(mindSrc, targets) {
             plane.setAttribute('width', layer.w);
             plane.setAttribute('height', layer.h);
             plane.setAttribute('transparent', 'true');
-            plane.setAttribute('opacity', '1');
+            plane.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
 
-            if (layer.anim_dur > 0) {
+            const animDur = layer.anim_dur > 0 ? layer.anim_dur * 1000 : 0;
+            if (animDur > 0) {
                 plane.setAttribute('animation',
                     'property: position;' +
                     'from: 0 0 ' + layer.z + ';' +
-                    'to: 0 0 ' + (layer.z + layer.anim_dist) + ';' +
-                    'dur: ' + layer.anim_dur + ';' +
+                    'to: ' + (layer.anim_x || 0) + ' ' + (layer.anim_y || 0) + ' ' + (layer.anim_z !== undefined ? layer.anim_z : layer.z) + ';' +
+                    'dur: ' + animDur + ';' +
                     'dir: alternate; loop: true; easing: easeInOutSine');
             }
             target.appendChild(plane);

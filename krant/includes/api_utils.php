@@ -79,7 +79,6 @@ function essayToApi($row) {
     $essay = [
         'week'       => $row['week'],
         'title'      => $row['title'],
-        'text'       => $row['text'],
         'page_image' => $row['page_image'] ? $base . rawurlencode($row['page_image']) . $v : '',
         'mind'       => $row['mind_file'] ? $base . rawurlencode($row['mind_file']) . $v : '',
         'layers'     => [],
@@ -95,8 +94,11 @@ function essayToApi($row) {
                 'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
                 'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
                 'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.414,
+                'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
                 'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
-                'anim_dist' => isset($layer['anim_dist']) ? (float)$layer['anim_dist'] : 0,
+                'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
+                'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,
+                'anim_z'    => isset($layer['anim_z']) ? (float)$layer['anim_z'] : (isset($layer['z']) ? (float)$layer['z'] : 0.01),
             ];
         }
     }

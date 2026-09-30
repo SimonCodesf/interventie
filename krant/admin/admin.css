@@ -159,22 +159,31 @@ fieldset legend {
 
 .layer-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+    grid-template-columns: 2fr repeat(4, 1fr) auto;
     gap: 0.5rem;
     align-items: end;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--line);
 }
 
 .layer-row label { margin-bottom: 0; }
 .layer-row input { min-width: 0; }
 
+/* Animatie-velden op de tweede rij */
+.layer-row label:nth-of-type(n+7) {
+    grid-row: 2;
+}
+
 .layer-row .remove-layer {
+    grid-row: 1 / span 2;
     background: transparent;
     color: var(--accent);
     border: none;
     font-size: 1.1rem;
     padding: 0.5rem;
     cursor: pointer;
+    align-self: center;
 }
 
 /* .mind generatie */
@@ -255,4 +264,6 @@ td.actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 @media (max-width: 700px) {
     .row.two-col { grid-template-columns: 1fr; }
     .layer-row { grid-template-columns: 1fr 1fr; }
+    .layer-row label:nth-of-type(n+7) { grid-row: auto; }
+    .layer-row .remove-layer { grid-row: auto; }
 }

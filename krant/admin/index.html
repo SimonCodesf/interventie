@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Krant AR — Admin</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23f2eee2'/%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='56'%20fill='none'%20stroke='%23141414'%20stroke-width='2'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='36'%20text-anchor='middle'%20fill='%23141414'%3EI%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="admin.css?v=2">
+    <link rel="stylesheet" href="admin.css?v=3">
 </head>
 <body>
 
@@ -63,23 +63,12 @@
                     </label>
 
                     <label>
-                        Essay-tekst (lege regel = nieuwe alinea, **vet**, *cursief*)
-                        <textarea id="f-text" rows="14"></textarea>
+                        Pagina-afbeelding (jpg/png/webp — dit IS ook de essay-tekst)
+                        <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
                     </label>
 
-                    <div class="row two-col">
-                        <label>
-                            Pagina-afbeelding (jpg/png/webp)
-                            <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
-                        </label>
-                        <label>
-                            OF upload een bestaand .mind bestand
-                            <input type="file" id="f-mind" accept=".mind">
-                        </label>
-                    </div>
-
                     <div id="compile-box" class="compile-box" style="display:none;">
-                        <p>Je pagina-afbeelding wordt automatisch omgezet naar een AR marker (.mind) — dat gebeurt in jouw browser, er is geen extra software nodig. Duurt meestal 30–60 seconden.</p>
+                        <p>Genereren van de AR marker (.mind) uit de pagina — gebeurt in jouw browser, duurt meestal 30–60 seconden. Vereist voor opslaan.</p>
                         <div class="compile-row">
                             <button type="button" id="compile-button">GENEREER .MIND</button>
                             <span id="compile-progress"></span>
@@ -111,6 +100,9 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                <div class="form-actions" style="margin-top:1rem">
+                    <button type="button" id="wipe-all" class="danger">WIS ALLE ESSAYS</button>
+                </div>
             </section>
 
             <!-- Vorige-bundel -->
@@ -150,6 +142,6 @@
         </main>
     </div>
 
-    <script type="module" src="admin.js?v=6"></script>
+    <script type="module" src="admin.js?v=7"></script>
 </body>
 </html>

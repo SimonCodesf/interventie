@@ -138,7 +138,7 @@ document.getElementById('logout-button').addEventListener('click', async functio
 // ---- Layer rijen ----
 
 function layerDefaults(index) {
-    return { z: (0.01 + index * 0.01).toFixed(2), w: '1', h: '1.414', anim_dur: '0', anim_dist: '0' };
+    return { z: (0.01 + index * 0.01).toFixed(2), w: '1', h: '1.414', opacity: '1', anim_dur: '0', anim_x: '0', anim_y: '0', anim_z: '0' };
 }
 
 function addLayerRow(values) {
@@ -153,8 +153,11 @@ function addLayerRow(values) {
         '<label>Z (diepte)<input type="number" step="0.01" name="layer_z" value="' + v.z + '"></label>' +
         '<label>Breedte<input type="number" step="0.01" name="layer_w" value="' + v.w + '"></label>' +
         '<label>Hoogte<input type="number" step="0.01" name="layer_h" value="' + v.h + '"></label>' +
+        '<label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="' + v.opacity + '"></label>' +
         '<label>Anim duur (s)<input type="number" step="0.1" min="0" name="layer_anim_dur" value="' + v.anim_dur + '"></label>' +
-        '<label>Anim afstand<input type="number" step="0.01" name="layer_anim_dist" value="' + v.anim_dist + '"></label>' +
+        '<label>Anim naar X<input type="number" step="0.01" name="layer_anim_x" value="' + v.anim_x + '"></label>' +
+        '<label>Anim naar Y<input type="number" step="0.01" name="layer_anim_y" value="' + v.anim_y + '"></label>' +
+        '<label>Anim naar Z<input type="number" step="0.01" name="layer_anim_z" value="' + v.anim_z + '"></label>' +
         '<button type="button" class="remove-layer" title="Verwijder laag">×</button>';
 
     row.querySelector('.remove-layer').addEventListener('click', function () {
@@ -254,30 +257,21 @@ document.getElementById('essay-form').addEventListener('submit', async function 
     const fd = new FormData();
     fd.append('week', document.getElementById('f-week').value.trim());
     fd.append('title', document.getElementById('f-title').value.trim());
-    fd.append('text', document.getElementById('f-text').value);
     fd.append('published', document.getElementById('f-published').checked ? '1' : '0');
 
     const pageFile = document.getElementById('f-page').files[0];
     if (pageFile) fd.append('page_image', pageFile);
 
-    // Bewaak dat de marker overeenkomt met de (nieuwe) pagina
-    const manualMindFile = document.getElementById('f-mind').files[0];
-    if (pageFile && !compiledMind && !compiledMindMatchesPage && !manualMindFile) {
-        const doorgaan = confirm(
-            'Je hebt een (nieuwe) pagina-afbeelding gekozen, maar er is geen .mind-marker ' +
-            'voor gegenereerd. Zonder bijpassende marker kan de AR de pagina niet herkennen. ' +
-            'Klik "ANNULEREN" en gebruik eerst "GENEREER .MIND", of "OK" om toch op te slaan.'
-        );
-        if (!doorgaan) {
-            btn.disabled = false;
-            return;
-        }
+    // Marker: bij een nieuwe pagina-afbeelding is een vers gecompileerde
+    // .mind verplicht (geen manuele uploads meer)
+    if (pageFile && !compiledMind) {
+        errorEl.textContent = 'Genereer eerst de marker met GENEREER .MIND en sla daarna op.';
+        btn.disabled = false;
+        return;
     }
 
     if (compiledMind) {
         fd.append('mind_file', compiledMind.blob, 'target.mind');
-    } else if (manualMindFile) {
-        fd.append('mind_file', manualMindFile);
     }
 
     // Enkel rijen met een bestand meesturen (compact, index-consistent)
@@ -289,8 +283,11 @@ document.getElementById('essay-form').addEventListener('submit', async function 
         fd.append('layer_z[]', row.querySelector('input[name="layer_z"]').value || '0.01');
         fd.append('layer_w[]', row.querySelector('input[name="layer_w"]').value || '1');
         fd.append('layer_h[]', row.querySelector('input[name="layer_h"]').value || '1.414');
+        fd.append('layer_opacity[]', row.querySelector('input[name="layer_opacity"]').value || '1');
         fd.append('layer_anim_dur[]', row.querySelector('input[name="layer_anim_dur"]').value || '0');
-        fd.append('layer_anim_dist[]', row.querySelector('input[name="layer_anim_dist"]').value || '0');
+        fd.append('layer_anim_x[]', row.querySelector('input[name="layer_anim_x"]').value || '0');
+        fd.append('layer_anim_y[]', row.querySelector('input[name="layer_anim_y"]').value || '0');
+        fd.append('layer_anim_z[]', row.querySelector('input[name="layer_anim_z"]').value || '0');
         layerIndex++;
     });
 
@@ -421,6 +418,17 @@ async function deleteEssay(week) {
     rebuildBundle();
 }
 
+async function wipeAll() {
+    if (!confirm('ALLE essays + bestanden definitief verwijderen? Dit kan niet ongedaan worden.')) return;
+    if (!confirm('Zeker weten? Alles wordt gewist.')) return;
+    await fetch(API + '/admin/essays', { method: 'DELETE' });
+    resetForm();
+    loadEssays();
+    rebuildBundle();
+}
+
+document.getElementById('wipe-all').addEventListener('click', wipeAll);
+
 // ---- Vorige-bundel (chunk 2) ----
 
 const bundleStatus = document.getElementById('bundle-status');
@@ -495,7 +503,6 @@ async function loadIntoForm(week) {
         document.getElementById('form-heading').textContent = 'Bewerken: ' + week;
         document.getElementById('f-week').value = essay.week;
         document.getElementById('f-title').value = essay.title;
-        document.getElementById('f-text').value = essay.text;
         document.getElementById('f-published').checked = true;
 
         // Layers tonen (bestanden zelf kunnen niet herladen worden — die blijven staan als je geen nieuw bestand kiest)
@@ -503,8 +510,8 @@ async function loadIntoForm(week) {
         rows.innerHTML = '';
         essay.layers.forEach(function (layer) {
             addLayerRow({
-                z: layer.z, w: layer.w, h: layer.h,
-                anim_dur: layer.anim_dur, anim_dist: layer.anim_dist,
+                z: layer.z, w: layer.w, h: layer.h, opacity: layer.opacity,
+                anim_dur: layer.anim_dur, anim_x: layer.anim_x, anim_y: layer.anim_y, anim_z: layer.anim_z,
             });
         });
         if (essay.layers.length === 0) addLayerRow();
@@ -525,9 +532,7 @@ function resetForm(keepWeek) {
     document.getElementById('form-heading').textContent = 'Nieuw essay';
     document.getElementById('f-week').value = keepWeek || isoWeek();
     document.getElementById('f-title').value = '';
-    document.getElementById('f-text').value = '';
     document.getElementById('f-page').value = '';
-    document.getElementById('f-mind').value = '';
     document.getElementById('f-published').checked = true;
     document.getElementById('layers-rows').innerHTML = '';
     addLayerRow();
