@@ -247,8 +247,30 @@ function buildScene(mindSrc, targets) {
 
     scene.addEventListener('arReady', function () {
         console.log('[AR] marker GELADEN (arReady)');
-        // Pas tonen als de feed de juiste maat heeft (geen zichtbare herschaling)
-        sceneBox().classList.add('feed-ready');
+        // De feed pas tonen als stream-maat én box een volle seconde stabiel
+        // zijn (max ~3s wachten) — zo is er nooit een zichtbare herschaling.
+        const v0 = sceneBox().querySelector('video');
+        let stable = 0, guard = 0, lastW = 0, lastH = 0, lastBw = 0, lastBh = 0;
+        const tick = function () {
+            guard++;
+            const box = sceneBox().getBoundingClientRect();
+            const vw = v0 ? v0.videoWidth : 0, vh = v0 ? v0.videoHeight : 0;
+            console.log('[AR] startup t+' + (guard * 200) + 'ms stream ' + vw + 'x' + vh +
+                ' box ' + box.width.toFixed(1) + 'x' + box.height.toFixed(1));
+            if (vw > 0 && vw === lastW && vh === lastH &&
+                Math.abs(box.width - lastBw) < 0.5 && Math.abs(box.height - lastBh) < 0.5) {
+                stable++;
+            } else {
+                stable = 0;
+            }
+            lastW = vw; lastH = vh; lastBw = box.width; lastBh = box.height;
+            if (stable >= 5 || guard >= 15) {
+                sceneBox().classList.add('feed-ready');
+            } else {
+                setTimeout(tick, 200);
+            }
+        };
+        setTimeout(tick, 200);
         // MindAR vertrouwt op autoplay; bij een overgedragen stream kan het
         // video-element op iOS gepauzeerd blijven — expliciet afspelen.
         const v = sceneBox().querySelector('video');
