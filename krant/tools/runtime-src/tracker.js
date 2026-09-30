@@ -3,14 +3,16 @@ import {buildModelViewProjectionTransform, computeScreenCoordiate} from '../esti
 
 const AR2_DEFAULT_TS = _tuneNum('ts', 6);
 const AR2_DEFAULT_TS_GAP = 1;
-const AR2_SEARCH_SIZE = _tuneNum('search', 14); // groter = volgt snellere beweging (was 10)
+const AR2_SEARCH_SIZE = _tuneNum('search', 20); // groter = volgt snellere beweging (was 10)
 const AR2_SEARCH_GAP = 1;
+const _DEV_T = (() => { try { return new URLSearchParams(location.search).has('dev'); } catch (e) { return false; } })();
 function _tuneNum(k, d) {
+  if (!_DEV_T) return d;
   try { const v = new URLSearchParams(location.search).get(k); if (v !== null) return parseFloat(v); } catch (e) {}
   try { const ls = JSON.parse(localStorage.getItem('AR_TUNE') || '{}'); if (ls[k] !== undefined) return parseFloat(ls[k]); } catch (e) {}
   return d;
 }
-const AR2_SIM_THRESH = _tuneNum('sim', 0.6); // was 0.8: te streng voor echte (tekst)beelden via camera
+const AR2_SIM_THRESH = _tuneNum('sim', 0.7); // was 0.8: te streng voor echte (tekst)beelden via camera
 
 const TRACKING_KEYFRAME = 1; // 0: 256px, 1: 128px
 

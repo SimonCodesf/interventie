@@ -30,6 +30,14 @@
 
     </div>
 
-    <script src="js/app.js?v=41"></script>
+    <script src="js/app.js?v=42"></script>
+    <script>
+    // Dev-paneel (testmatrix, metrics, mind-test, feedback) alleen in dev-modus
+    if (new URLSearchParams(location.search).has('dev')) {
+        var devScript = document.createElement('script');
+        devScript.src = 'js/dev.js?v=1';
+        document.head.appendChild(devScript);
+    }
+    </script>
 </body>
 </html>
