@@ -228,7 +228,7 @@ function buildScene(mindSrc, targets) {
             plane.setAttribute('transparent', 'true');
             plane.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
             // GIF-lagen: engine uit het vorige project (frame parsing + animatie)
-            if (isGif) plane.setAttribute('gif', 'src: ' + layer.file + '; transparent: true');
+            if (isGif) plane.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
 
             const animDur = layer.anim_dur > 0 ? layer.anim_dur * 1000 : 0;
             if (animDur > 0) {
