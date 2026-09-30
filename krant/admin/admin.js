@@ -1,6 +1,6 @@
 // Krant AR — Admin logica
 
-import { Compiler, msgpack } from './vendor/mindar-compiler.bundle.js?v=3';
+import { Compiler, msgpack } from './vendor/mindar-compiler.bundle.js?v=4';
 
 const API = '../api.php';
 

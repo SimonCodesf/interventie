@@ -8,7 +8,7 @@ const TEMPLATE_SIZE = 6;
 const TEMPLATE_SD_THRESH = 5.0;
 const MAX_SIM_THRESH = 0.95;
 
-const MAX_THRESH = 0.9;
+const MAX_THRESH = 0.97; // was 0.9: accepteer meer (iets ambiguere) punten -> meer tracking-punten
 //const MIN_THRESH = 0.55;
 const MIN_THRESH = 0.2;
 const SD_THRESH = 5.0; // was 8.0: meer (subtielere) tracking-punten op tekstpagina's

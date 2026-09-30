@@ -505,6 +505,28 @@ toggleBtn().addEventListener('click', function () {
     mtB.style.cssText = 'font:11px monospace;padding:3px 6px;margin:4px 3px 0 0;background:#264;color:#eee;border:1px solid #666;cursor:pointer';
     mtB.addEventListener('click', function () { if (mtUrl.value) mtLoad(mtUrl.value); });
     mt.appendChild(mtB);
+    const mtList = document.createElement('div');
+    mtList.style.cssText = 'margin-top:4px';
+    mt.appendChild(mtList);
+    function mtRefreshList() {
+        mtList.innerHTML = '';
+        function addBtn(label, url) {
+            const b = document.createElement('button');
+            b.textContent = label;
+            b.style.cssText = 'font:11px monospace;padding:3px 6px;margin:2px 3px 0 0;background:#333;color:#eee;border:1px solid #666;cursor:pointer';
+            b.addEventListener('click', function () { mtLoad(url); });
+            mtList.appendChild(b);
+        }
+        fetch('api.php/essays/current').then(function (r) { return r.ok ? r.json() : null; }).then(function (e) {
+            if (e && e.mind) addBtn(e.week + ' (nu)', e.mind);
+            return fetch('api.php/essays/previous');
+        }).then(function (r) { return r && r.ok ? r.json() : null; }).then(function (b) {
+            (b && b.essays || []).forEach(function (e) {
+                addBtn(e.week, 'uploads/essays/' + encodeURIComponent(e.week) + '/target.mind');
+            });
+        }).catch(function () {});
+    }
+    mtRefreshList();
     const mtFile = document.createElement('input');
     mtFile.type = 'file';
     mtFile.accept = '.mind';
