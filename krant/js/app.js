@@ -437,27 +437,49 @@ toggleBtn().addEventListener('click', function () {
     stats.textContent = 'metrics\u2026';
     el.appendChild(stats);
 
-    const active = curPos();
-    POS.forEach(function (pos, idx) {
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:3px;margin:1px 0' + (idx === active ? ';background:#1c2b1c' : '');
-        const lab = document.createElement('span');
-        lab.style.cssText = 'flex:1;color:' + (idx === active ? '#0f0' : '#9cf') + ';font-size:10px';
-        lab.textContent = (idx === active ? '\u25cf ' : '') + pos.name;
-        row.appendChild(lab);
+    // ---- Compacte navigator: met pijltjes door de posities ----
+    const nav = document.createElement('div');
+    nav.style.cssText = 'margin-top:4px;border-top:1px solid #555;padding-top:6px';
+    const navTitle = document.createElement('div');
+    navTitle.style.cssText = 'color:#fc6;font-size:12px';
+    nav.appendChild(navTitle);
 
-        const mk = function (label, bg, fn) {
-            const b = document.createElement('button');
-            b.textContent = label;
-            b.style.cssText = 'font:10px monospace;padding:2px 4px;background:' + bg + ';color:#eee;border:1px solid #666;cursor:pointer;flex-shrink:0';
-            b.addEventListener('click', fn);
-            row.appendChild(b);
-        };
-        mk('TEST', '#264', function () { applyPos(idx); });
-        mk('BETER', '#431', function () { sendFeedback('', '', { pos: idx, vote: 'better', vsPos: prevPos() }); });
-        mk('SLECHTER', '#431', function () { sendFeedback('', '', { pos: idx, vote: 'worse', vsPos: prevPos() }); });
-        el.appendChild(row);
-    });
+    function showPos(idx) {
+        navTitle.textContent = (idx === null || idx === undefined)
+            ? '\u25c0 \u25b6 = positie kiezen'
+            : ((idx + 1) + '/' + POS.length + ' \u00b7 ' + POS[idx].name);
+    }
+    showPos(curPos());
+
+    function stepPos(dir) {
+        let cur = curPos();
+        if (cur === null || cur === undefined) cur = (dir > 0 ? -1 : 1);
+        let nxt = cur + dir;
+        if (nxt < 0) nxt = 0;
+        if (nxt >= POS.length) nxt = POS.length - 1;
+        applyPos(nxt);
+    }
+    function votePos(vote) {
+        sendFeedback('', '', { pos: curPos(), vote: vote, vsPos: prevPos() });
+    }
+
+    const navRow = document.createElement('div');
+    navRow.style.cssText = 'display:flex;gap:4px;margin-top:4px;flex-wrap:wrap';
+    function nbtn(label, bg, fn) {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.style.cssText = 'font:12px monospace;padding:6px 10px;background:' + bg + ';color:#eee;border:1px solid #666;cursor:pointer';
+        b.addEventListener('click', fn);
+        navRow.appendChild(b);
+    }
+    nbtn('\u25c0', '#333', function () { stepPos(-1); });
+    nbtn('\u25b6', '#333', function () { stepPos(1); });
+    nbtn('BETER', '#431', function () { votePos('better'); });
+    nbtn('SLECHTER', '#431', function () { votePos('worse'); });
+    nbtn('NEUTRAAL', '#333', function () { votePos('neutral'); });
+    nav.appendChild(navRow);
+    el.appendChild(nav);
+
 
     // ---- Feedback: ratings + vrije tekst -> console EN server ----
     const fb = document.createElement('div');
