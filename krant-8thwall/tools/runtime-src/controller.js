@@ -1,0 +1,584 @@
+import {memory,nextFrame} from '@tensorflow/tfjs';
+
+const tf = {memory,nextFrame};
+import ControllerWorker  from "./controller.worker.js?worker&inline";
+import {Tracker} from './tracker/tracker.js';
+import {CropDetector} from './crop-detector.js';
+import * as msgpack from '@msgpack/msgpack';
+import {InputLoader} from './input-loader.js';
+import {OneEuroFilter} from '../libs/one-euro-filter.js';
+
+const DEFAULT_FILTER_CUTOFF = 0.001; // 1Hz. time period in milliseconds
+const DEFAULT_FILTER_BETA = 1000;
+const DEFAULT_WARMUP_TOLERANCE = 5;
+const DEFAULT_MISS_TOLERANCE = 5;
+
+// Alle afstelknoppen via URL/localStorage — ALLEEN in dev-modus (?dev=1).
+// Productie draait altijd op de gebakken defaults hieronder.
+// Lui uitlezen (functie i.p.v. module-const): bundlers mogen module-consts
+// herschikken, wat een TDZ-fout gaf ("Cannot access ... before initialization").
+const _isDev = () => { try { return new URLSearchParams(location.search).has('dev'); } catch (e) { return false; } };
+const _qp = (typeof location !== 'undefined') ? new URLSearchParams(location.search) : new URLSearchParams();
+let _ls = {};
+try { _ls = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('AR_TUNE')) || '{}') || {}; } catch (e) {}
+// URL heeft voorrang, dan localStorage (dev-paneel), dan de default
+const _qnum = (k, d) => {
+  if (!_isDev()) return d;
+  const v = _qp.get(k);
+  if (v !== null) return parseFloat(v);
+  if (_ls[k] !== undefined) return parseFloat(_ls[k]);
+  return d;
+};
+
+class Controller {
+  constructor({inputWidth, inputHeight, onUpdate=null, debugMode=false, maxTrack=1, 
+    warmupTolerance=null, missTolerance=null, filterMinCF=null, filterBeta=null}) {
+    // URL-overrides
+    if (_qp.has('fmin')) filterMinCF = _qnum('fmin', filterMinCF);
+    if (_qp.has('fbeta')) filterBeta = _qnum('fbeta', filterBeta);
+    if (_qp.has('warmup')) warmupTolerance = _qnum('warmup', warmupTolerance);
+    if (_qp.has('miss')) missTolerance = _qnum('miss', missTolerance);
+    this._maxQFeats = _qnum('qfeats', 100);
+    this._winStatic = _qnum('winStatic', 9);
+    this._winMove = _qnum('winMove', 3);
+    this._movePos = _qnum('movePos', 0.02);
+    this._moveAng = _qnum('moveAng', 3);
+    this._cropMult = Math.min(2, Math.max(0.25, _qnum('crop', 1)));
+    this._detectEvery = Math.max(1, Math.round(_qnum('detEvery', 1)));
+    this._scaleStep = Math.max(1, Math.round(_qnum('sstep', 2)));
+
+    this.inputWidth = inputWidth;
+    this.inputHeight = inputHeight;
+    this.maxTrack = maxTrack;
+    this.filterMinCF = filterMinCF === null? DEFAULT_FILTER_CUTOFF: filterMinCF;
+    this.filterBeta = filterBeta === null? DEFAULT_FILTER_BETA: filterBeta;
+    this.warmupTolerance = warmupTolerance === null? DEFAULT_WARMUP_TOLERANCE: warmupTolerance;
+    this.missTolerance = missTolerance === null? DEFAULT_MISS_TOLERANCE: missTolerance;
+    this.cropDetector = new CropDetector(this.inputWidth, this.inputHeight, debugMode, this._cropMult);
+    console.log('[AR] runtime v23 (cropfix), input ' + this.inputWidth + 'x' + this.inputHeight + ', crop ' + this.cropDetector.cropSize);
+    if (_isDev()) console.log('[AR] runtime cropSize:', this.cropDetector.cropSize);
+    this.inputLoader = new InputLoader(this.inputWidth, this.inputHeight);
+    this.markerDimensions = null;
+    this.onUpdate = onUpdate;
+    this.debugMode = debugMode;
+    this.processingVideo = false;
+    this.interestedTargetIndex = -1;
+    this.trackingStates = [];
+
+    const near = 10;
+    const far = 100000;
+    const fovy = 45.0 * Math.PI / 180; // 45 in radian. field of view vertical
+    const f = (this.inputHeight/2) / Math.tan(fovy/2);
+    //     [fx  s cx]
+    // K = [ 0 fx cy]
+    //     [ 0  0  1]
+    this.projectionTransform = [
+      [f, 0, this.inputWidth / 2],
+      [0, f, this.inputHeight / 2],
+      [0, 0, 1]
+    ];
+
+    this.projectionMatrix = this._glProjectionMatrix({
+      projectionTransform: this.projectionTransform,
+      width: this.inputWidth,
+      height: this.inputHeight,
+      near: near,
+      far: far,
+    });
+
+    this.worker = new ControllerWorker()//new Worker(new URL('./controller.worker.js', import.meta.url));
+    this.workerMatchDone = null;
+    this.workerTrackDone = null;
+    this.worker.onmessage = (e) => {
+      if (e.data.type === 'matchDone' && this.workerMatchDone !== null) {
+        this.workerMatchDone(e.data);
+      }
+      if (e.data.type === 'trackUpdateDone' && this.workerTrackDone !== null) {
+        this.workerTrackDone(e.data);
+      }
+    }
+  }
+
+  showTFStats() {
+    console.log(tf.memory().numTensors);
+    console.table(tf.memory());
+  }
+
+  addImageTargets(fileURL) {
+    return new Promise(async (resolve, reject) => {
+      const content = await fetch(fileURL);
+      const buffer = await content.arrayBuffer();
+      const result = this.addImageTargetsFromBuffer(buffer);
+      resolve(result);
+    });
+  }
+
+  addImageTargetsFromBuffer(buffer) {
+    // Slimme .mind importer: enkel msgpack-decode i.p.v. de volledige Compiler
+    // (scheelt de detector/mathjs-stack in de runtime bundle)
+    const content = msgpack.decode(new Uint8Array(buffer));
+    const dataList = (content && content.v === 2 && content.dataList) ? content.dataList : [];
+
+    const trackingDataList = [];
+    const matchingDataList = [];
+    const imageListList = [];
+    const dimensions = [];
+    for (let i = 0; i < dataList.length; i++) {
+      matchingDataList.push(dataList[i].matchingData);
+      trackingDataList.push(dataList[i].trackingData);
+      dimensions.push([dataList[i].targetImage.width, dataList[i].targetImage.height]);
+    }
+
+    this.tracker = new Tracker(dimensions, trackingDataList, this.projectionTransform, this.inputWidth, this.inputHeight, this.debugMode);
+
+    this.worker.postMessage({
+      type: 'setup',
+      inputWidth: this.inputWidth,
+      inputHeight: this.inputHeight,
+      projectionTransform: this.projectionTransform,
+      debugMode: this.debugMode,
+      scaleStep: this._scaleStep,
+      matchingDataList,
+    });
+
+    this.markerDimensions = dimensions;
+    this._dbgScales = (matchingDataList[0] || []).length;
+
+    return {dimensions: dimensions, matchingDataList, trackingDataList};
+  }
+
+  dispose() {
+    this.stopProcessVideo();
+    this.worker.postMessage({
+      type: "dispose"
+    });
+  }
+
+  // warm up gpu - build kernels is slow
+  dummyRun(input) {
+    const inputT = this.inputLoader.loadInput(input);
+    this.cropDetector.detect(inputT);
+    this.tracker.dummyRun(inputT);
+    inputT.dispose();
+  }
+
+  getProjectionMatrix() {
+    return this.projectionMatrix;
+  }
+
+  getRotatedZ90Matrix(m) { // rotate 90 degree along z-axis
+    // rotation matrix
+    // |  0  -1  0  0 |
+    // |  1   0  0  0 |
+    // |  0   0  1  0 |
+    // |  0   0  0  1 |
+    const rotatedMatrix = [
+      -m[1], m[0], m[2], m[3],
+      -m[5], m[4], m[6], m[7],
+      -m[9], m[8], m[10], m[11],
+      -m[13], m[12], m[14], m[15]
+    ];
+    return rotatedMatrix;
+  }
+
+  getWorldMatrix(modelViewTransform, targetIndex) {
+    return this._glModelViewMatrix(modelViewTransform, targetIndex);
+  }
+
+  async _detectAndMatch(inputT, targetIndexes) {
+    // dev-diagnostiek: splits de detectiekost op in feature-extractie (crop)
+    // vs. worker-matching (tegen de matchingData-schalen van de marker)
+    const _c0 = performance.now();
+    const {featurePoints} = this.cropDetector.detectMoving(inputT);
+    const _c1 = performance.now();
+
+    // Cap het aantal query-features: de matching kost is (features x schalen);
+    // een ruimtelijk gespreide subset van ~160 volstaat ruim.
+    const MAX_QFEATS = this._maxQFeats;
+    let qFeatures = featurePoints;
+    if (featurePoints.length > MAX_QFEATS) {
+      qFeatures = [];
+      const step = featurePoints.length / MAX_QFEATS;
+      for (let i = 0; i < featurePoints.length; i += step) {
+	qFeatures.push(featurePoints[Math.floor(i)]);
+      }
+    }
+    this._dbgQFeats = qFeatures.length;
+
+    const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._workerMatch(qFeatures, targetIndexes);
+    const _c2 = performance.now();
+    this._dbgCropMs = _c1 - _c0;
+    this._dbgMatchMs = _c2 - _c1;
+    this._dbgFeatures = featurePoints.length;
+    return {targetIndex: matchedTargetIndex, modelViewTransform}
+  }
+  async _trackAndUpdate(inputT, lastModelViewTransform, targetIndex) {
+    const {worldCoords, screenCoords} = this.tracker.track(inputT, lastModelViewTransform, targetIndex);
+    if (worldCoords.length < 4) return null;
+    const modelViewTransform = await this._workerTrackUpdate(lastModelViewTransform, {worldCoords, screenCoords});
+    return modelViewTransform;
+  }
+
+  processVideo(input) {
+    if (this.processingVideo) return;
+
+    this.processingVideo = true;
+
+    this.trackingStates = [];
+    for (let i = 0; i < this.markerDimensions.length; i++) {
+      this.trackingStates.push({
+	showing: false,
+	isTracking: false,
+	currentModelViewTransform: null,
+	trackCount: 0,
+	trackMiss: 0,
+	gateRejects: 0,
+	lastAcceptedMatrix: null,
+	medianBuf: [],
+	filter: new OneEuroFilter({minCutOff: this.filterMinCF, beta: this.filterBeta})
+      });
+      //console.log("filterMinCF", this.filterMinCF, this.filterBeta);
+    }
+
+    const startProcessing = async() => {
+      let frameCount = 0;
+      let matchCount = 0;
+      let trackFailCount = 0;
+      // dev-diagnostiek: timing + detectie-throttle (duur: 512-crop detectie
+      // elke frame laat de loop naar ~10fps zakken zodra er geen track is)
+
+      let detectMsSum = 0, detectMsCount = 0;
+      let trackMsSum = 0, trackMsCount = 0;
+      let loopMsSum = 0, loopMsCount = 0;
+      let jitterSum = 0, jitterCount = 0;
+      const _lockStart = performance.now();
+      let lockMs = -1;
+      while (true) {
+	if (!this.processingVideo) break;
+
+	try {
+	const loopStart = performance.now();
+	let inputT = null;
+	try {
+	inputT = this.inputLoader.loadInput(input);
+
+	const nTracking = this.trackingStates.reduce((acc, s) => {
+	  return acc + (!!s.isTracking? 1: 0);
+	}, 0);
+
+	// detect and match only if less then maxTrack (max om de 2 frames:
+	// de 512px-detectie is duur en remt anders de hele loop af)
+	if (nTracking < this.maxTrack && (frameCount % this._detectEvery === 0 || this._forceDetect)) {
+	  this._forceDetect = false;
+
+	  const matchingIndexes = [];
+	  for (let i = 0; i < this.trackingStates.length; i++) {
+	    const trackingState = this.trackingStates[i];
+	    if (trackingState.isTracking === true) continue;
+	    if (this.interestedTargetIndex !== -1 && this.interestedTargetIndex !== i) continue;
+
+	    matchingIndexes.push(i);
+	  }
+
+	  const _d0 = performance.now();
+	  const {targetIndex: matchedTargetIndex, modelViewTransform} = await this._detectAndMatch(inputT, matchingIndexes);
+	  detectMsSum += performance.now() - _d0; detectMsCount += 1;
+
+	  if (matchedTargetIndex !== -1) {
+	    matchCount += 1;
+	    this.trackingStates[matchedTargetIndex].isTracking = true;
+	    this.trackingStates[matchedTargetIndex].currentModelViewTransform = modelViewTransform;
+	  }
+	}
+
+	frameCount += 1;
+	loopMsSum += performance.now() - loopStart; loopMsCount += 1;
+	if (frameCount % 90 === 0) {
+	  const tr = this.tracker || {};
+	  const st = this.trackingStates[0] || {};
+	  const dAvg = detectMsCount ? (detectMsSum / detectMsCount).toFixed(0) : '-';
+	  const tAvg = trackMsCount ? (trackMsSum / trackMsCount).toFixed(0) : '-';
+	  const lAvg = loopMsCount ? (loopMsSum / loopMsCount).toFixed(0) : '-';
+	  if (_isDev()) console.log('[AR] frames ' + frameCount + ', matches ' + matchCount + ', trackFails ' + trackFailCount +
+	    ', simMax ' + (tr._dbgMaxSim !== undefined ? tr._dbgMaxSim.toFixed(3) : '?') +
+	    ', good ' + (tr._dbgGood !== undefined ? tr._dbgGood : '?') +
+	    ', showing ' + (st.showing ? 'Y' : 'n') + ', tracking ' + (st.isTracking ? 'Y' : 'n') +
+	    ', detect ' + dAvg + 'ms (crop ' + (this._dbgCropMs!==undefined?this._dbgCropMs.toFixed(0):'?') + 'ms, match ' + (this._dbgMatchMs!==undefined?this._dbgMatchMs.toFixed(0):'?') + 'ms, feats ' + (this._dbgFeatures!==undefined?this._dbgFeatures:'?') + '/' + (this._dbgQFeats!==undefined?this._dbgQFeats:'?') + ', scales ' + (this._dbgScales!==undefined?this._dbgScales:'?') + ')' +
+	    ', track ' + tAvg + 'ms, loop ' + lAvg + 'ms (' + (lAvg!=='-'?(1000/lAvg).toFixed(0):'?') + 'fps)' +
+	    ', jit ' + (jitterCount?(1000*jitterSum/jitterCount).toFixed(1):'-') +
+	    ', lock ' + (lockMs<0?'-':Math.round(lockMs)));
+	  if (_isDev() && typeof window !== 'undefined') {
+	    window.__AR_STATS = {
+	      jit: jitterCount ? (1000*jitterSum/jitterCount) : null,
+	      good: (tr._dbgGood !== undefined ? tr._dbgGood : null),
+	      fps: lAvg !== '-' ? +(1000/lAvg).toFixed(0) : null,
+	      lock: lockMs < 0 ? null : Math.round(lockMs),
+	      matches: matchCount, trackFails: trackFailCount,
+	      showing: !!st.showing, tracking: !!st.isTracking,
+	    };
+	  }
+	  if (tr) { tr._dbgMaxSim = 0; tr._dbgCalls = 0; }
+	  detectMsSum = 0; detectMsCount = 0; trackMsSum = 0; trackMsCount = 0; loopMsSum = 0; loopMsCount = 0;
+	}
+
+	// tracking update
+	for (let i = 0; i < this.trackingStates.length; i++) {
+	  const trackingState = this.trackingStates[i];
+
+	  if (trackingState.isTracking) {
+	    const _t0 = performance.now();
+	    let modelViewTransform = await this._trackAndUpdate(inputT, trackingState.currentModelViewTransform, i);
+	    trackMsSum += performance.now() - _t0; trackMsCount += 1;
+	    if (modelViewTransform === null) {
+	      trackFailCount += 1;
+	      trackingState.isTracking = false;
+	    } else {
+	      trackingState.currentModelViewTransform = modelViewTransform;
+	    }
+	  }
+
+	  
+	  // toon de laag zodra de track warmupTolerance frames vasthoudt
+	  if (!trackingState.showing) {
+	    if (trackingState.isTracking) {
+	      trackingState.trackMiss = 0;
+	      trackingState.trackCount += 1;
+	      if (trackingState.trackCount > this.warmupTolerance) {
+		trackingState.showing = true;
+		trackingState.trackingMatrix = null;
+		trackingState.filter.reset();
+	      }
+	    }
+	  }
+
+	  // if showing, then count miss, and hide it when reaches tolerance
+	  if (trackingState.showing) {
+	    if (!trackingState.isTracking) {
+	      trackingState.trackCount = 0;
+	      trackingState.trackMiss += 1;
+
+	      if (trackingState.trackMiss > this.missTolerance) {
+		trackingState.showing = false;
+		trackingState.trackingMatrix = null;
+		trackingState.lastAcceptedMatrix = null;
+		trackingState.medianBuf = [];
+		this.onUpdate && this.onUpdate({type: 'updateMatrix', targetIndex: i, worldMatrix: null});
+	      }
+	    } else {
+	      trackingState.trackMiss = 0;
+	    }
+	  }
+	  
+	  // if showing, then call onUpdate, with world matrix
+	  if (trackingState.showing) {
+	    const worldMatrix = this._glModelViewMatrix(trackingState.currentModelViewTransform, i);
+
+	    // Glitch-gate: op tekstpagina's levert de matcher soms een foutieve
+	    // correspondentie → de pose "springt" naar een verkeerde oplossing.
+	    // Weiger zulke sprongen; na 4 opeenvolgende weigeringen accepteren we
+	    // alsnog (dan is het echte, snelle beweging).
+	    const prevM = trackingState.lastAcceptedMatrix;
+	    let moving = false;
+	    if (prevM) {
+	      const mw = this.markerDimensions[i][0];
+	      const dtx = worldMatrix[12] - prevM[12];
+	      const dty = worldMatrix[13] - prevM[13];
+	      const dtz = worldMatrix[14] - prevM[14];
+	      const dTrans = Math.sqrt(dtx * dtx + dty * dty + dtz * dtz) / mw;
+	      const dotR = worldMatrix[0] * prevM[0] + worldMatrix[1] * prevM[1] + worldMatrix[2] * prevM[2];
+	      const dotU = worldMatrix[4] * prevM[4] + worldMatrix[5] * prevM[5] + worldMatrix[6] * prevM[6];
+	      const angR = Math.acos(Math.min(1, Math.max(-1, dotR))) * 57.2958;
+	      const angU = Math.acos(Math.min(1, Math.max(-1, dotU))) * 57.2958;
+
+	      // Bewegingsdetectie: bij beweging geen demping (instant volgen)
+	      moving = (dTrans > this._movePos || angR > this._moveAng || angU > this._moveAng);
+
+	      if (dTrans > 0.12 || angR > 25 || angU > 25) {
+		trackingState.gateRejects += 1;
+		if (trackingState.gateRejects < 4) {
+		  continue; // bevries: houd de vorige pose vast
+		}
+	      }
+	    }
+	    trackingState.gateRejects = 0;
+	    trackingState.lastAcceptedMatrix = worldMatrix;
+
+	    // Adaptieve filtering:
+	    //  - stilstand → mediaan over 5 poses (ruis weg, geen drift)
+	    //  - beweging  → ruwe pose direct doorgeven (instant volgen)
+	    // Altijd: mediaan (kort venster bij beweging, langer in rust) + lichte
+	    // OneEuro. Verwijdert pose-ruis zonder merkbare vertraging.
+	    const buf = trackingState.medianBuf;
+	    const windowSize = moving ? this._winMove : this._winStatic;
+	    buf.push(worldMatrix);
+	    while (buf.length > windowSize) buf.shift();
+	    let filteredInput = worldMatrix;
+	    if (buf.length >= 3) {
+	      filteredInput = [];
+	      for (let j = 0; j < 16; j++) {
+		const vals = buf.map(function (m) { return m[j]; }).sort(function (a, b) { return a - b; });
+		filteredInput[j] = vals[Math.floor(vals.length / 2)];
+	      }
+	    }
+	    trackingState.trackingMatrix = trackingState.filter.filter(Date.now(), filteredInput);
+
+	    // jitter-meting: hoeveel beweegt de getoonde laag per frame (in % markerbreedte)
+	    const _em = trackingState.trackingMatrix;
+	    if (trackingState.lastEmitted) {
+	      const _p = trackingState.lastEmitted;
+	      const _jx = _em[12] - _p[12], _jy = _em[13] - _p[13], _jz = _em[14] - _p[14];
+	      jitterSum += Math.sqrt(_jx*_jx + _jy*_jy + _jz*_jz) / this.markerDimensions[i][0];
+	      jitterCount += 1;
+	      if (lockMs < 0) lockMs = performance.now() - _lockStart;
+	    }
+	    trackingState.lastEmitted = _em;
+
+	    let clone = [];
+	    for (let j = 0; j < trackingState.trackingMatrix.length; j++) {
+	      clone[j] = trackingState.trackingMatrix[j];
+	    }
+
+      const isInputRotated = input.width === this.inputHeight && input.height === this.inputWidth;
+      if (isInputRotated) {
+        clone = this.getRotatedZ90Matrix(clone);
+      }
+
+	    this.onUpdate && this.onUpdate({type: 'updateMatrix', targetIndex: i, worldMatrix: clone});
+	  }
+	}
+
+	inputT.dispose();
+        this.onUpdate && this.onUpdate({type: 'processDone'});
+	await tf.nextFrame();
+	} finally {
+	  // Altijd opruimen, ook als _detectAndMatch/track gooit (bv. slice-fout):
+	  // anders loopt de GPU vol (honderden MB's) -> zwart beeld.
+	  try { if (typeof inputT !== 'undefined' && inputT) inputT.dispose(); } catch (_) {}
+	}
+	await tf.nextFrame();
+	} catch (e) {
+	  console.error('[AR] tracking fout:', e && e.message);
+	  await tf.nextFrame();
+	}
+      }
+    }
+    startProcessing();
+  }
+
+  stopProcessVideo() {
+    this.processingVideo = false;
+  }
+
+  async detect(input) {
+    const inputT = this.inputLoader.loadInput(input);
+    const {featurePoints, debugExtra} = await this.cropDetector.detect(inputT);
+    inputT.dispose();
+    return {featurePoints, debugExtra};
+  }
+
+  async match(featurePoints, targetIndex) {
+    const {modelViewTransform, debugExtra} = await this._workerMatch(featurePoints, [targetIndex]);
+    return {modelViewTransform, debugExtra};
+  }
+
+  async track(input, modelViewTransform, targetIndex) {
+    const inputT = this.inputLoader.loadInput(input);
+    const result = this.tracker.track(inputT, modelViewTransform, targetIndex);
+    inputT.dispose();
+    return result;
+  }
+
+  async trackUpdate(modelViewTransform, trackFeatures) {
+    if (trackFeatures.worldCoords.length < 4 ) return null;
+    const modelViewTransform2 = await this._workerTrackUpdate(modelViewTransform, trackFeatures);
+    return modelViewTransform2;
+  }
+
+  _workerMatch(featurePoints, targetIndexes) {
+    return new Promise(async (resolve, reject) => {
+      this.workerMatchDone = (data) => {
+        resolve({targetIndex: data.targetIndex, modelViewTransform: data.modelViewTransform, debugExtra: data.debugExtra});
+      }
+      this.worker.postMessage({type: 'match', featurePoints: featurePoints, targetIndexes});
+    });
+  }
+
+  _workerTrackUpdate(modelViewTransform, trackingFeatures) {
+    return new Promise(async (resolve, reject) => {
+      this.workerTrackDone = (data) => {
+        resolve(data.modelViewTransform);
+      }
+      const {worldCoords, screenCoords} = trackingFeatures;
+      this.worker.postMessage({type: 'trackUpdate', modelViewTransform, worldCoords, screenCoords});
+    });
+  }
+
+  _glModelViewMatrix(modelViewTransform, targetIndex) {
+    const height = this.markerDimensions[targetIndex][1];
+
+    // Question: can someone verify this interpreation is correct? 
+    // I'm not very convinced, but more like trial and error and works......
+    //
+    // First, opengl has y coordinate system go from bottom to top, while the marker corrdinate goes from top to bottom,
+    //    since the modelViewTransform is estimated in marker coordinate, we need to apply this transform before modelViewTransform
+    //    I can see why y = h - y*, but why z = z* ? should we intepret it as rotate 90 deg along x-axis and then translate y by h?
+    //
+    //    [1  0  0  0]
+    //    [0 -1  0  h]
+    //    [0  0 -1  0]
+    //    [0  0  0  1]
+    //    
+    //    This is tested that if we reverse marker coordinate from bottom to top and estimate the modelViewTransform,
+    //    then the above matrix is not necessary.
+    //
+    // Second, in opengl, positive z is away from camera, so we rotate 90 deg along x-axis after transform to fix the axis mismatch
+    //    [1  1  0  0]
+    //    [0 -1  0  0]
+    //    [0  0 -1  0]
+    //    [0  0  0  1]
+    //
+    // all together, the combined matrix is
+    //
+    //    [1  1  0  0]   [m00, m01, m02, m03]   [1  0  0  0]
+    //    [0 -1  0  0]   [m10, m11, m12, m13]   [0 -1  0  h]
+    //    [0  0 -1  0]   [m20, m21, m22, m23]   [0  0 -1  0]
+    //    [0  0  0  1]   [  0    0    0    1]   [0  0  0  1]
+    //
+    //    [ m00,  -m01,  -m02,  (m01 * h + m03) ]
+    //    [-m10,   m11,   m12, -(m11 * h + m13) ]
+    //  = [-m20,   m21,   m22, -(m21 * h + m23) ]
+    //    [   0,     0,     0,                1 ]
+    //
+    //
+    // Finally, in threejs, matrix is represented in col by row, so we transpose it, and get below:
+    const openGLWorldMatrix = [
+      modelViewTransform[0][0], -modelViewTransform[1][0], -modelViewTransform[2][0], 0,
+      -modelViewTransform[0][1], modelViewTransform[1][1], modelViewTransform[2][1], 0,
+      -modelViewTransform[0][2], modelViewTransform[1][2], modelViewTransform[2][2], 0,
+      modelViewTransform[0][1] * height + modelViewTransform[0][3], -(modelViewTransform[1][1] * height + modelViewTransform[1][3]), -(modelViewTransform[2][1] * height + modelViewTransform[2][3]), 1
+    ];
+    return openGLWorldMatrix;
+  }
+
+  // build openGL projection matrix
+  // ref: https://strawlab.org/2011/11/05/augmented-reality-with-OpenGL/
+  _glProjectionMatrix({projectionTransform, width, height, near, far}) {
+    const proj = [
+      [2 * projectionTransform[0][0] / width, 0, -(2 * projectionTransform[0][2] / width - 1), 0],
+      [0, 2 * projectionTransform[1][1] / height, -(2 * projectionTransform[1][2] / height - 1), 0],
+      [0, 0, -(far + near) / (far - near), -2 * far * near / (far - near)],
+      [0, 0, -1, 0]
+    ];
+    const projMatrix = [];
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+	projMatrix.push(proj[j][i]);
+      }
+    }
+    return projMatrix;
+  }
+}
+
+export {
+ Controller
+}

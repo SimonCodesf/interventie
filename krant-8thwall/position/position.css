@@ -1,0 +1,187 @@
+/* Interventie — Positioneer-tool (smartphone) */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+    background-color: #f2eee2;
+}
+
+body {
+    background: transparent;
+    color: #141414;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+#pos-auth {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+#pos-top {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.6rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f2eee2;
+    border-bottom: 1px solid #141414;
+}
+
+#pos-top select {
+    flex: 1;
+    font: inherit;
+    padding: 0.5rem;
+    background: transparent;
+    border: 1px solid #141414;
+    min-width: 0;
+}
+
+#pos-top button, #pos-start-btn {
+    font: inherit;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 0.9rem;
+    background: #141414;
+    color: #f2eee2;
+    border: 1px solid #141414;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#pos-layers {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    overflow-x: auto;
+    border-bottom: 1px solid #141414;
+}
+
+#pos-layers button {
+    font: inherit;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.7rem;
+    background: transparent;
+    color: #141414;
+    border: 1px solid #141414;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#pos-layers button.active {
+    background: #141414;
+    color: #f2eee2;
+}
+
+#pos-ar {
+    position: relative;
+    height: 46vh;
+    min-height: 280px;
+    /* GEEN achtergrond hier: MindAR plakt de camerafeed als <video> met
+       z-index -2 in #ar-scene. Elke ondoorzichtige achtergrond op body,
+       #pos-ar of #ar-scene bedekt die feed -> zwart beeld. */
+    background: transparent;
+    border-bottom: 1px solid #141414;
+    overflow: hidden;
+    z-index: 0; /* eigen stacking-context: video blijft binnen deze box */
+}
+
+#ar-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    z-index: 0;
+}
+
+#ar-scene a-scene {
+    width: 100%;
+    height: 100%;
+}
+
+#ar-scene canvas {
+    background: transparent !important;
+}
+
+#ar-scene video {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
+#pos-start {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+}
+
+#pos-controls {
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.ctl { display: flex; align-items: center; gap: 0.5rem; }
+.ctl label { width: 5.5rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+.ctl input[type="range"] { flex: 1; min-width: 0; accent-color: #141414; }
+.ctl input[type="number"] {
+    width: 4.4rem;
+    flex-shrink: 0;
+    font: inherit;
+    font-size: 0.72rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    padding: 0.2rem 0.25rem;
+    background: transparent;
+    border: 1px solid #141414;
+    color: #141414;
+    border-radius: 0;
+}
+
+.ctl-group {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #666;
+    margin-top: 0.3rem;
+}
+
+#pos-controls .wide-btn {
+    font: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    padding: 0.55rem;
+    background: transparent;
+    color: #141414;
+    border: 1px solid #141414;
+    cursor: pointer;
+    width: 100%;
+}
+
+#pos-controls .wide-btn.active {
+    background: #141414;
+    color: #f2eee2;
+}
+
+#pos-status {
+    text-align: center;
+    font-size: 0.75rem;
+    min-height: 1.4em;
+    padding: 0 0.6rem 1rem;
+}
+
+#pos-status.ok { color: #1a7f37; }
+#pos-status.err { color: #b22222; }

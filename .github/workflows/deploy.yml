@@ -30,6 +30,7 @@ jobs:
             **/uploads/**
             data/**
             krant/**
+            krant-8thwall/**
             admin/database.db
             .gitignore
             README.md

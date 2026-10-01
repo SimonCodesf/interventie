@@ -1,0 +1,25 @@
+# System files
+.DS_Store
+Thumbs.db
+*.log
+
+# Runtime data & uploads (worden op de server aangemaakt)
+data/*
+!data/.gitkeep
+uploads/essays/*
+!uploads/essays/.gitkeep
+
+# Node
+node_modules/
+tools/node_modules/
+
+# Gegenereerde runtime-bronnen (via tools/prepare_runtime.sh)
+tools/.runtime-src/
+
+# Het bovenliggende interventie-repo negeert deze paden ook — expliciet terug insluiten
+!uploads/
+!uploads/essays/
+!includes/config.php
+
+# Gegenereerde compiler-bronnen
+tools/.compiler-src/

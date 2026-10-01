@@ -1,0 +1,458 @@
+// Interventie — AR krant (A-Frame + MindAR)
+//
+// Boot-flow:
+//   1. Pagina laadt enkel de essentials (laadbalk van de browser is snel klaar).
+//   2. Meteen daarna (window load) downloaden de bibliotheken, de .mind van
+//      deze week én alle AR-lagen op de achtergrond.
+//   3. Tap op START CAMERA → camera-permissie-popup (nooit vanzelf);
+//      alles staat al in het geheugen, dus de scan start warm en instant.
+//   4. De vorige-bundel laadt daarna stilletjes op de achtergrond.
+
+const AR_TUNING = {
+    // Lichte demping: mediaan (kort bij beweging, lang in rust) + OneEuro.
+    // warmup 2 + missTolerance 30: laag verschijnt snel, blijft door dips.
+    filterMinCF: 0.001,
+    filterBeta: 20,
+    warmupTolerance: 2,
+    missTolerance: 6,
+};
+
+// ---- Vaste cameraresolutie ----
+// iOS levert standaard maar 480x640 en past de stream-resolutie in de eerste
+// seconde nog aan (de zichtbare "herschaling" bij het starten). Een vaste
+// 1280x720 vanaf het begin voorkomt die sprong én geeft de tracker meer
+// detail → stabielere pose en minder found/lost-geflikker op tekstpagina's.
+const realGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+navigator.mediaDevices.getUserMedia = function (constraints) {
+    if (constraints && constraints.video && constraints.video.facingMode) {
+        constraints.video.width = { ideal: 1280 };
+        constraints.video.height = { ideal: 720 };
+    }
+    return realGetUserMedia(constraints);
+};
+
+let currentEssay = null;
+let currentMindBlobUrl = null;
+let previousBundle = null;
+let previousBuffer = null;    // ArrayBuffer van previous.mind
+let mode = 'current';
+let bootStarted = false;
+let activeBlobUrl = null;
+
+const sceneBox = function () { return document.getElementById('ar-scene'); };
+const overlay = function () { return document.getElementById('start-overlay'); };
+const toggleBtn = function () { return document.getElementById('toggle-prev'); };
+
+const scriptPromises = {};
+let scriptChain = Promise.resolve();
+
+// Scripts strikt sequentieel laden: dynamisch ingevoegde script-tags draaien
+// normaal parallel, waardoor mindar-image-aframe (kleiner bestand) vóór
+// A-Frame kan uitvoeren → "Can't find variable: AFRAME" en een dode camera.
+function loadScript(src) {
+    if (scriptPromises[src]) return scriptPromises[src];
+
+    const p = scriptChain.then(function () {
+        return new Promise(function (resolve, reject) {
+            const s = document.createElement('script');
+            s.src = src;
+            s.async = false; // extra zekerheid: volgorde behouden
+            s.onload = function () { resolve(); };
+            s.onerror = function () {
+                reject(new Error('Script niet geladen: ' + src));
+            };
+            document.head.appendChild(s);
+        });
+    });
+
+    scriptPromises[src] = p.catch(function () {}); // geregistreerd blijven
+    scriptChain = scriptPromises[src];
+    return p;
+}
+
+function webglSupported() {
+    try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext &&
+            (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+    } catch (e) {
+        return false;
+    }
+}
+
+function fatalError(msg) {
+    const btn = document.getElementById('start-btn');
+    btn.textContent = msg;
+    btn.disabled = true;
+    overlay().style.display = 'flex';
+}
+
+function retryOverlay() {
+    bootStarted = false;
+    const btn = document.getElementById('start-btn');
+    btn.textContent = 'OPNIEUW PROBEREN';
+    btn.disabled = false;
+    overlay().style.display = 'flex';
+}
+
+async function fetchBlobUrl(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' voor ' + url);
+    return URL.createObjectURL(await res.blob());
+}
+
+// ---- Camera-handover ----
+// De camera wordt door MindAR zelf opgevraagd in de tap-gesture (één enkele
+// aanvraag, geen stream-handover — het meest robuuste pad, net als het
+// originele Interventie-project).
+
+// ---- Chunk van deze week + lagen downloaden (na de tap) ----
+
+async function loadCurrentChunk() {
+    const res = await fetch('api.php/essays/current');
+    if (!res.ok) throw new Error('Huidig essay niet gevonden');
+    currentEssay = await res.json();
+
+    if (!currentEssay.mind) throw new Error('Geen AR marker voor huidig essay');
+    currentMindBlobUrl = await fetchBlobUrl(currentEssay.mind);
+
+    if (currentEssay.layers && currentEssay.layers.length) {
+        await Promise.all(currentEssay.layers.map(async function (layer) {
+            try {
+                const r = await fetch(layer.file);
+                if (r.ok) await r.arrayBuffer();
+            } catch (e) {
+                console.error(e);
+            }
+        }));
+    }
+}
+
+// ---- Chunk van deze week + lagen downloaden (één keer, gedeeld) ----
+
+let currentChunkPromise = null;
+
+function ensureCurrentChunk() {
+    if (!currentChunkPromise) {
+        currentChunkPromise = loadCurrentChunk();
+    }
+    return currentChunkPromise;
+}
+
+// ---- Preload: direct ná de pagina-essentials (laadbalk compleet) ----
+
+function preloadAll() {
+    loadScript('js/vendor/aframe.min.js');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=23');
+    loadScript('js/vendor/gif-component.js?v=1');
+    ensureCurrentChunk()
+        .then(function () { preloadPrevious(); })
+        .catch(function () {});
+}
+
+async function preloadPrevious() {
+    try {
+        const res = await fetch('api.php/essays/previous');
+        if (!res.ok) return;
+        previousBundle = await res.json();
+        if (!previousBundle.mind || !previousBundle.essays || !previousBundle.essays.length) return;
+
+        const mindRes = await fetch(previousBundle.mind);
+        previousBuffer = await mindRes.arrayBuffer();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// ---- Scene bouwen (A-Frame + MindAR) ----
+
+function buildScene(mindSrc, targets) {
+    const oldScene = sceneBox().querySelector('a-scene');
+    if (oldScene) {
+        try {
+            // Let op: mindar-image-system is een SYSTEM (geen component).
+            if (oldScene.systems && oldScene.systems['mindar-image-system']) {
+                oldScene.systems['mindar-image-system'].stop();
+            }
+        } catch (e) { /* scene was al afgebroken */ }
+        oldScene.remove();
+    }
+
+    if (activeBlobUrl) {
+        URL.revokeObjectURL(activeBlobUrl);
+        activeBlobUrl = null;
+    }
+
+    sceneBox().classList.remove('feed-ready');
+
+    const scene = document.createElement('a-scene');
+    scene.setAttribute('mindar-image',
+        'imageTargetSrc: ' + mindSrc +
+        '; filterMinCF: ' + AR_TUNING.filterMinCF +
+        '; filterBeta: ' + AR_TUNING.filterBeta +
+        '; warmupTolerance: ' + AR_TUNING.warmupTolerance +
+        '; missTolerance: ' + AR_TUNING.missTolerance +
+        '; uiLoading: no; uiScanning: no; uiError: no');
+    scene.setAttribute('color-space', 'sRGB');
+    scene.setAttribute('renderer', 'colorManagement: true; antialias: false');
+    scene.setAttribute('vr-mode-ui', 'enabled: false');
+    scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
+    scene.setAttribute('embedded', '');
+
+    // Geen pixelRatio-verlaging: A-Frame cap'ed zelf al op 2, en verlagen naar 1
+    // maakte tekstlagen op retina-schermen wazig én veroorzaakte een zichtbare
+    // herschaling van het beeld vlak na het laden.
+
+    const camera = document.createElement('a-camera');
+    camera.setAttribute('position', '0 0 0');
+    camera.setAttribute('look-controls', 'enabled: false');
+    scene.appendChild(camera);
+
+    const ambient = document.createElement('a-light');
+    ambient.setAttribute('type', 'ambient');
+    ambient.setAttribute('color', '#FFF');
+    ambient.setAttribute('intensity', '1.2');
+    scene.appendChild(ambient);
+
+    const directional = document.createElement('a-light');
+    directional.setAttribute('type', 'directional');
+    directional.setAttribute('color', '#FFF');
+    directional.setAttribute('intensity', '0.8');
+    directional.setAttribute('position', '-0.5 1 1');
+    scene.appendChild(directional);
+
+    targets.forEach(function (t) {
+        const target = document.createElement('a-entity');
+        target.setAttribute('mindar-image-target', 'targetIndex: ' + t.index);
+
+        target.addEventListener('targetFound', function () {
+            console.log('[AR] target ' + t.index + ' GEVONDEN');
+        });
+        target.addEventListener('targetLost', function () {
+            console.log('[AR] target ' + t.index + ' verloren');
+        });
+
+        (t.layers || []).forEach(function (layer) {
+            const lx = layer.x || 0, ly = layer.y || 0, lz = layer.z;
+            const rx = layer.rx || 0, ry = layer.ry || 0, rz = layer.rz || 0;
+            const sc = layer.scale > 0 ? layer.scale : 1;
+            const isModel = /\.glb(\?|$)/i.test(layer.file);
+            const isGif = /\.gif(\?|$)/i.test(layer.file);
+
+            let obj;
+            if (isModel) {
+                // 3D-model (zoals het vorige project)
+                obj = document.createElement('a-entity');
+                obj.setAttribute('gltf-model', layer.file);
+                obj.setAttribute('scale', sc + ' ' + sc + ' ' + sc);
+            } else {
+                obj = document.createElement('a-plane');
+                if (!isGif) obj.setAttribute('src', layer.file);
+                obj.setAttribute('width', layer.w);
+                obj.setAttribute('height', layer.h);
+                obj.setAttribute('transparent', 'true');
+                obj.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
+                obj.setAttribute('scale', sc + ' ' + sc + ' ' + sc);
+                // GIF-lagen: engine uit het vorige project (frame parsing + animatie)
+                if (isGif) obj.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
+            }
+
+            obj.setAttribute('position', lx + ' ' + ly + ' ' + lz);
+            obj.setAttribute('rotation', rx + ' ' + ry + ' ' + rz);
+
+            const animDur = layer.anim_dur > 0 ? layer.anim_dur * 1000 : 0;
+            if (animDur > 0) {
+                obj.setAttribute('animation',
+                    'property: position;' +
+                    'from: ' + lx + ' ' + ly + ' ' + lz + ';' +
+                    'to: ' + (layer.anim_x || 0) + ' ' + (layer.anim_y || 0) + ' ' + (layer.anim_z !== undefined ? layer.anim_z : lz) + ';' +
+                    'dur: ' + animDur + ';' +
+                    'dir: alternate; loop: true; easing: easeInOutSine');
+            }
+            target.appendChild(obj);
+        });
+
+        scene.appendChild(target);
+    });
+
+    scene.addEventListener('arError', function () {
+        console.error('[AR] camera-fout');
+        retryOverlay();
+    });
+
+    scene.addEventListener('arReady', function () {
+        console.log('[AR] marker GELADEN (arReady)');
+        // De feed pas tonen als stream-maat én box een volle seconde stabiel
+        // zijn (max ~3s wachten) — zo is er nooit een zichtbare herschaling.
+        const v0 = sceneBox().querySelector('video');
+        let stable = 0, guard = 0, lastW = 0, lastH = 0, lastBw = 0, lastBh = 0;
+        const tick = function () {
+            guard++;
+            const box = sceneBox().getBoundingClientRect();
+            const vw = v0 ? v0.videoWidth : 0, vh = v0 ? v0.videoHeight : 0;
+            console.log('[AR] startup t+' + (guard * 200) + 'ms stream ' + vw + 'x' + vh +
+                ' box ' + box.width.toFixed(1) + 'x' + box.height.toFixed(1));
+            if (vw > 0 && vw === lastW && vh === lastH &&
+                Math.abs(box.width - lastBw) < 0.5 && Math.abs(box.height - lastBh) < 0.5) {
+                stable++;
+            } else {
+                stable = 0;
+            }
+            lastW = vw; lastH = vh; lastBw = box.width; lastBh = box.height;
+            if (stable >= 5 || guard >= 15) {
+                sceneBox().classList.add('feed-ready');
+            } else {
+                setTimeout(tick, 200);
+            }
+        };
+        setTimeout(tick, 200);
+        // MindAR vertrouwt op autoplay; bij een overgedragen stream kan het
+        // video-element op iOS gepauzeerd blijven — expliciet afspelen.
+        const v = sceneBox().querySelector('video');
+        console.log('[AR] video: ' + (v
+            ? 'readyState=' + v.readyState + ' paused=' + v.paused + ' ' + v.videoWidth + 'x' + v.videoHeight
+            : 'GEEN video-element'));
+        if (v && v.paused) {
+            v.play().then(function () {
+                console.log('[AR] video.play() gelukt');
+            }).catch(function (e) {
+                console.error('[AR] video.play() mislukt:', e);
+            });
+        }
+        // Diagnose voor de "herschaling": log elke wijziging van de feed-box
+        if (v && window.ResizeObserver) {
+            new ResizeObserver(function (entries) {
+                for (const e of entries) {
+                    console.log('[AR] feed-box veranderd naar ' +
+                        Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height));
+                }
+            }).observe(v);
+        }
+    });
+
+    console.log('[AR] scene gebouwd, targets: ' + targets.length);
+
+    sceneBox().appendChild(scene);
+
+    lastScene = { mindSrc: mindSrc, targets: targets };
+    armWatchdog();
+}
+
+// ---- Watchdog: stille auto-retry als de feed op Safari dood blijft ----
+
+let lastScene = null;
+let watchdogTimer = null;
+let watchdogRetried = false;
+
+function armWatchdog() {
+    clearTimeout(watchdogTimer);
+    watchdogTimer = setTimeout(function () {
+        const video = sceneBox().querySelector('video');
+        const live = video && video.videoWidth > 0 && video.readyState >= 2;
+        if (live) return; // feed leeft
+
+        console.warn('[AR] watchdog: feed lijkt dood (' + (video
+            ? 'readyState=' + video.readyState + ' paused=' + video.paused + ' w=' + video.videoWidth
+            : 'geen video') + ')');
+
+        if (!watchdogRetried && lastScene) {
+            watchdogRetried = true;
+            buildScene(lastScene.mindSrc, lastScene.targets);
+            armWatchdog();
+        }
+    }, 6000);
+}
+
+// ---- Start na de tap ----
+
+async function bootAR() {
+    if (bootStarted) return;
+    bootStarted = true;
+    watchdogRetried = false;
+
+    if (!webglSupported()) {
+        fatalError('NIET BESCHIKBAAR');
+        return;
+    }
+
+    const btn = document.getElementById('start-btn');
+    btn.textContent = 'LADEN…';
+    btn.disabled = true;
+
+    try {
+        await Promise.all([
+            loadScript('js/vendor/aframe.min.js'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=23'),
+            loadScript('js/vendor/gif-component.js?v=1'),
+            ensureCurrentChunk(),
+        ]);
+    } catch (e) {
+        console.error(e);
+        fatalError('NIET BESCHIKBAAR');
+        return;
+    }
+
+    if (!currentEssay || !currentMindBlobUrl) {
+        fatalError('NIET BESCHIKBAAR');
+        return;
+    }
+
+    overlay().style.display = 'none';
+    buildScene(currentMindBlobUrl, [{ index: 0, layers: currentEssay.layers }]);
+    preloadPrevious();
+    monitorStream();
+}
+
+// ---- Diagnostiek: frame-box + stream-resolutie ----
+
+if (window.ResizeObserver) {
+    new ResizeObserver(function (entries) {
+        for (const e of entries) {
+            console.log('[AR] frame-box: ' + Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height));
+        }
+    }).observe(document.getElementById('ar-scene'));
+}
+
+function monitorStream() {
+    let n = 0;
+    const timer = setInterval(function () {
+        const v = document.querySelector('#ar-scene video');
+        console.log('[AR] stream ' + (n * 2) + 's: ' + (v ? v.videoWidth + 'x' + v.videoHeight : 'geen video'));
+        if (++n >= 6) clearInterval(timer);
+    }, 2000);
+}
+
+// ---- Knop: wisselen tussen huidige en vorige essays ----
+
+toggleBtn().addEventListener('click', function () {
+    if (mode === 'previous') {
+        if (!currentEssay || !currentMindBlobUrl) return;
+        mode = 'current';
+        this.textContent = 'SCAN VORIGE ESSAYS';
+        buildScene(currentMindBlobUrl, [{ index: 0, layers: currentEssay.layers }]);
+        return;
+    }
+
+    if (!previousBuffer || !previousBundle) return;
+
+    const blob = new Blob([previousBuffer], { type: 'application/octet-stream' });
+    activeBlobUrl = URL.createObjectURL(blob);
+
+    mode = 'previous';
+    this.textContent = 'SCAN HUIDIG ESSAY';
+    buildScene(activeBlobUrl, previousBundle.essays.map(function (e) {
+        return { index: e.targetIndex, layers: e.layers };
+    }));
+});
+
+
+// ---- Dev-paneel (?dev=1): testmatrix + live-metrics + feedback ----
+// ---- Boot: essentials eerst, preload erna, popup pas na de tap ----
+
+if (document.readyState === 'complete') {
+    preloadAll();
+} else {
+    window.addEventListener('load', preloadAll);
+}
+
+document.getElementById('start-btn').addEventListener('click', bootAR);

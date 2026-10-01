@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f2eee2">
+    <title>Interventie</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23f2eee2'/%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='56'%20fill='none'%20stroke='%23141414'%20stroke-width='2'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='36'%20text-anchor='middle'%20fill='%23141414'%3EI%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="css/style.css?v=17">
+</head>
+<body>
+
+    <div id="ar-view">
+
+        <header id="masthead">
+            <h1>Interventie</h1>
+        </header>
+
+        <div id="ar-scene">
+            <div id="feed-loader" aria-hidden="true"><span></span><span></span><span></span></div>
+        </div>
+
+        <button id="toggle-prev">SCAN VORIGE ESSAYS</button>
+
+        <div id="start-overlay">
+            <button id="start-btn">START CAMERA</button>
+        </div>
+
+    </div>
+
+    <script src="js/app.js?v=53"></script>
+    <script>
+    // Dev-paneel (testmatrix, metrics, mind-test, feedback) alleen in dev-modus
+    if (new URLSearchParams(location.search).has('dev')) {
+        var devScript = document.createElement('script');
+        devScript.src = 'js/dev.js?v=1';
+        document.head.appendChild(devScript);
+    }
+    </script>
+</body>
+</html>

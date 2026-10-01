@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krant AR — Admin</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23f2eee2'/%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='56'%20fill='none'%20stroke='%23141414'%20stroke-width='2'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='36'%20text-anchor='middle'%20fill='%23141414'%3EI%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="admin.css?v=4">
+</head>
+<body>
+
+    <!-- First-run setup -->
+    <div id="setup-view" style="display:none;">
+        <form id="setup-form" autocomplete="off">
+            <h1>KRANT AR</h1>
+            <p class="sub">Eerste keer? Kies een admin wachtwoord</p>
+            <input type="password" id="setup-password" autocomplete="new-password" placeholder="Nieuw wachtwoord (min. 8 tekens)" required>
+            <input type="password" id="setup-password2" autocomplete="new-password" placeholder="Herhaal wachtwoord" required>
+            <button type="submit">OPSLAAN</button>
+            <p id="setup-error" class="error"></p>
+        </form>
+    </div>
+
+    <!-- Login -->
+    <div id="login-view" style="display:none;">
+        <form id="login-form" autocomplete="off">
+            <h1>KRANT AR</h1>
+            <p class="sub">Admin — log in</p>
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="Wachtwoord" required>
+            <button type="submit">INLOGGEN</button>
+            <p id="login-error" class="error"></p>
+        </form>
+    </div>
+
+    <!-- Panel -->
+    <div id="panel-view" style="display:none;">
+        <header>
+            <h1>KRANT AR — Admin</h1>
+            <button id="logout-button" class="ghost">UITLOGGEN</button>
+        </header>
+
+        <main>
+            <!-- Nieuw essay -->
+            <section class="card">
+                <h2 id="form-heading">Nieuw essay</h2>
+                <form id="essay-form">
+
+                    <div class="row two-col">
+                        <label>
+                            Week
+                            <input type="text" id="f-week" placeholder="2026-41" autocomplete="off" required>
+                            <span id="week-hint" class="hint"></span>
+                        </label>
+                        <label class="check">
+                            <input type="checkbox" id="f-published" checked>
+                            Publiceer onmiddellijk
+                        </label>
+                    </div>
+
+                    <label>
+                        Titel
+                        <input type="text" id="f-title" autocomplete="off" required>
+                    </label>
+
+                    <label>
+                        Pagina-afbeelding (jpg/png/webp — dit IS ook de essay-tekst)
+                        <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
+                    </label>
+
+                    <div id="compile-box" class="compile-box" style="display:none;">
+                        <p>Genereren van de AR marker (.mind) uit de pagina — gebeurt in jouw browser, duurt meestal 30–60 seconden. Vereist voor opslaan.</p>
+                        <div class="compile-row">
+                            <button type="button" id="compile-button">GENEREER .MIND</button>
+                            <span id="compile-progress"></span>
+                        </div>
+                    </div>
+
+                    <fieldset>
+                        <legend>AR-lagen (PNG's en GIF's boven de pagina)</legend>
+                        <div id="layers-rows"></div>
+                        <button type="button" id="add-layer" class="ghost">+ Laag toevoegen</button>
+                    </fieldset>
+
+                    <p id="form-error" class="error"></p>
+                    <p id="form-ok" class="ok"></p>
+
+                    <div class="form-actions">
+                        <button type="submit" id="save-button">OPSLAAN</button>
+                        <button type="button" id="reset-form" class="ghost">Nieuw formulier</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Overzicht -->
+            <section class="card">
+                <h2>Essays</h2>
+                <table id="essays-table">
+                    <thead>
+                        <tr><th>Week</th><th>Titel</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="form-actions" style="margin-top:1rem">
+                    <button type="button" id="wipe-all" class="danger">WIS ALLE ESSAYS</button>
+                </div>
+            </section>
+
+            <!-- Vorige-bundel -->
+            <section class="card">
+                <h2>Vorige-bundel (chunk 2)</h2>
+                <p class="bundle-info">
+                    De app scant de huidige week instant. Alle vorige essays zitten samen in één bundel
+                    die je met de knop op de gsm ophaalt. Deze bundel wordt hier opgebouwd uit de losse
+                    markers (samengevoegd in je browser) en gebeurt automatisch na elke wijziging.
+                </p>
+                <p class="bundle-info">Status: <span id="bundle-status">…</span></p>
+                <div class="compile-row">
+                    <button type="button" id="bundle-button" class="ghost">BUNDEL OPBOUWEN</button>
+                    <span id="bundle-progress"></span>
+                </div>
+            </section>
+
+            <!-- Wachtwoord wijzigen -->
+            <section class="card">
+                <h2>Wachtwoord wijzigen</h2>
+                <form id="password-form" autocomplete="off">
+                    <div class="row two-col">
+                        <label>
+                            Huidig wachtwoord
+                            <input type="password" id="pw-current" autocomplete="current-password" required>
+                        </label>
+                        <label>
+                            Nieuw wachtwoord (min. 8 tekens)
+                            <input type="password" id="pw-new" autocomplete="new-password" required>
+                        </label>
+                    </div>
+                    <p id="pw-error" class="error"></p>
+                    <p id="pw-ok" class="ok"></p>
+                    <button type="submit">WIJZIGEN</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="admin.js?v=9"></script>
+</body>
+</html>
