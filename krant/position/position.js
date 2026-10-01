@@ -213,6 +213,16 @@ function buildScene() {
         if (kind === '3d') {
             obj = document.createElement('a-entity');
             obj.setAttribute('gltf-model', absUrl(layer.file));
+            // Diagnose: 3D laadt asynchroon — log succes/fout per laag.
+            (function (idx, url) {
+                obj.addEventListener('model-loaded', function () {
+                    console.log('[pos] 3D geladen, laag ' + idx + ': ' + url);
+                });
+                obj.addEventListener('model-error', function (e) {
+                    console.error('[pos] 3D FOUT, laag ' + idx + ': ' + url, e && e.detail);
+                    status('3D-model laag ' + (idx + 1) + ' laadt niet', 'err');
+                });
+            })(i, absUrl(layer.file));
         } else {
             obj = document.createElement('a-plane');
             if (kind !== 'gif') obj.setAttribute('src', absUrl(layer.file));
@@ -335,10 +345,14 @@ function renderControls() {
     }
     const layer = layers[selected];
     const kind = layerKind(layer);
-    const obj = entities[selected];
 
+    // Belangrijk: entities[selected] pas OP HET MOMENT van schuiven opzoeken.
+    // renderControls() draait al vóór START CAMERA (entities dan nog leeg) en
+    // buildScene() vervangt de array — een vastgelegde referentie wordt dan
+    // oud en de schuiven lijken niets te doen.
     function live() {
-        if (obj) applyTransform(obj, layer, kind);
+        const o = entities[selected];
+        if (o) applyTransform(o, layer, kind);
     }
 
     groupTitle(wrap, 'Positie');
@@ -357,7 +371,7 @@ function renderControls() {
     slider(wrap, 'Rot X', -180, 180, 1, function () { return layer.rx; }, function (v) { layer.rx = v; live(); });
     slider(wrap, 'Rot Y', -180, 180, 1, function () { return layer.ry; }, function (v) { layer.ry = v; live(); });
     slider(wrap, 'Rot Z', -180, 180, 1, function () { return layer.rz; }, function (v) { layer.rz = v; live(); });
-    slider(wrap, 'Schaal', 0.1, 5, 0.05, function () { return layer.scale; }, function (v) { layer.scale = v; live(); });
+    slider(wrap, 'Schaal', 0.01, 5, 0.01, function () { return layer.scale; }, function (v) { layer.scale = v; live(); });
 }
 
 // ---- Opslaan ----
