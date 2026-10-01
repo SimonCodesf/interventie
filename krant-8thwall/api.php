@@ -253,6 +253,12 @@ if ($method === 'POST' && $path === '/admin/essays') {
         }
         $pageImage = 'page.' . $ext;
         move_uploaded_file($_FILES['page_image']['tmp_name'], $weekDir . '/' . $pageImage);
+
+        // 8th Wall target automatisch genereren (zoals vroeger: enkel JPG nodig)
+        if (autogenerateTarget8w($weekDir, $week, $pageImage)) {
+            $target8wJson = 'target8w.json';
+            $target8wImage = 'target8w.jpg';
+        }
     }
 
     // Gecompileerd .mind marker bestand

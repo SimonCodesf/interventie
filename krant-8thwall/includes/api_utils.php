@@ -96,6 +96,59 @@ function target8wToApi($row, $base, $v) {
     return $data;
 }
 
+// 8th Wall target automatisch genereren uit de pagina-afbeelding:
+// grijswaarde-versie (max 640px, zoals de CLI-luminance) + metadata-JSON.
+// Dezelfde eenvoud als vroeger: enkel een JPG uploaden volstaat.
+// Handmatige uploads (target8w_json/target8w_image) overschrijven dit nadien.
+function autogenerateTarget8w($weekDir, $week, $pageFilename) {
+    if (!function_exists('imagecreatefromjpeg')) return false;
+    $srcPath = $weekDir . '/' . basename((string)$pageFilename);
+    if (!is_file($srcPath)) return false;
+
+    $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
+    if ($ext === 'jpg' || $ext === 'jpeg') $src = @imagecreatefromjpeg($srcPath);
+    elseif ($ext === 'png') $src = @imagecreatefrompng($srcPath);
+    elseif ($ext === 'webp' && function_exists('imagecreatefromwebp')) $src = @imagecreatefromwebp($srcPath);
+    else $src = false;
+    if (!$src) return false;
+
+    $w = imagesx($src); $h = imagesy($src);
+    if ($w < 10 || $h < 10) { imagedestroy($src); return false; }
+
+    $scale = min(1.0, 640 / max($w, $h));
+    $tw = (int)max(1, round($w * $scale));
+    $th = (int)max(1, round($h * $scale));
+    $dst = imagecreatetruecolor($tw, $th);
+    // Transparantie afvlakken op wit (zoals de pagina op papier staat)
+    $white = imagecolorallocate($dst, 255, 255, 255);
+    imagefill($dst, 0, 0, $white);
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $tw, $th, $w, $h);
+    imagedestroy($src);
+    imagefilter($dst, IMG_FILTER_GRAYSCALE);
+    if (!@imagejpeg($dst, $weekDir . '/target8w.jpg', 85)) { imagedestroy($dst); return false; }
+    imagedestroy($dst);
+
+    $now = (int)(microtime(true) * 1000);
+    $json = [
+        'imagePath' => 'target8w.jpg',
+        'metadata' => null,
+        'name' => $week,
+        'type' => 'PLANAR',
+        'properties' => [
+            'left' => 0, 'top' => 0, 'width' => $w, 'height' => $h,
+            'isRotated' => false, 'originalWidth' => $w, 'originalHeight' => $h,
+        ],
+        'resources' => [
+            'originalImage' => basename((string)$pageFilename),
+            'luminanceImage' => 'target8w.jpg',
+        ],
+        'created' => $now,
+        'updated' => $now,
+    ];
+    if (!@file_put_contents($weekDir . '/target8w.json', json_encode($json, JSON_UNESCAPED_UNICODE))) return false;
+    return true;
+}
+
 // Essay-rij omzetten naar API-antwoord met cache-veilige URLs
 function essayToApi($row) {
     $v = '?v=' . urlencode((string)$row['updated_at']);
