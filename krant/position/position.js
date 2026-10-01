@@ -314,7 +314,16 @@ function selectLayer(i) {
     renderControls();
 }
 
-function slider(parent, label, min, max, step, get, set) {
+// Schuif + typbaar getalveld. get()/set() werken op de laag; set() roept
+// zelf live() aan waar nodig. hard = [hardMin, hardMax]: typen mag verder
+// dan de schuif (bv. schaal), de schuif zelf blijft binnen [min, max].
+function slider(parent, label, min, max, step, get, set, hard) {
+    const decimals = (String(step).split('.')[1] || '').length;
+    function fmt(v) { return Number(v).toFixed(decimals); }
+    const hardMin = hard ? hard[0] : min;
+    const hardMax = hard ? hard[1] : max;
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
     const row = document.createElement('div');
     row.className = 'ctl';
     const lab = document.createElement('label');
@@ -322,16 +331,33 @@ function slider(parent, label, min, max, step, get, set) {
     const inp = document.createElement('input');
     inp.type = 'range';
     inp.min = min; inp.max = max; inp.step = step;
-    inp.value = get();
-    const out = document.createElement('output');
-    out.textContent = get();
+    const num = document.createElement('input');
+    num.type = 'number';
+    num.min = hardMin; num.max = hardMax; num.step = step;
+    num.setAttribute('inputmode', 'decimal');
+    num.setAttribute('aria-label', label + ' (typ waarde)');
+
+    function paint(v) {
+        inp.value = clamp(v, min, max);
+        num.value = fmt(clamp(v, hardMin, hardMax));
+    }
+    paint(get());
+
     inp.addEventListener('input', function () {
-        set(parseFloat(inp.value));
-        out.textContent = inp.value;
+        const v = parseFloat(inp.value);
+        set(v);
+        paint(v);
+    });
+    num.addEventListener('change', function () {
+        let v = parseFloat(num.value);
+        if (isNaN(v)) { paint(get()); return; }
+        v = clamp(v, hardMin, hardMax);
+        set(v);
+        paint(v);
     });
     row.appendChild(lab);
     row.appendChild(inp);
-    row.appendChild(out);
+    row.appendChild(num);
     parent.appendChild(row);
 }
 
@@ -377,7 +403,10 @@ function renderControls() {
     slider(wrap, 'Rot X', -180, 180, 1, function () { return layer.rx; }, function (v) { layer.rx = v; live(); });
     slider(wrap, 'Rot Y', -180, 180, 1, function () { return layer.ry; }, function (v) { layer.ry = v; live(); });
     slider(wrap, 'Rot Z', -180, 180, 1, function () { return layer.rz; }, function (v) { layer.rz = v; live(); });
-    slider(wrap, 'Schaal', 0.01, 5, 0.01, function () { return layer.scale; }, function (v) { layer.scale = v; live(); });
+    // Schaal-schuif bewust smal (0.01–2, fijne stap): lineair 0–5 geeft geen
+    // enkele precisie bij kleine modellen. Groter/kleiner kan via het
+    // getalveld (toegestaan 0.001–100, zoals de API).
+    slider(wrap, 'Schaal', 0.01, 2, 0.005, function () { return layer.scale; }, function (v) { layer.scale = v; live(); }, [0.001, 100]);
 
     groupTitle(wrap, 'Animatie (wordt opgeslagen)');
     slider(wrap, 'Duur (s)', 0, 10, 0.1, function () { return layer.anim_dur; }, function (v) { layer.anim_dur = v; });

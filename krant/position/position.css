@@ -137,7 +137,19 @@ body {
 .ctl { display: flex; align-items: center; gap: 0.5rem; }
 .ctl label { width: 5.5rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
 .ctl input[type="range"] { flex: 1; min-width: 0; accent-color: #141414; }
-.ctl output { width: 3.4rem; font-size: 0.72rem; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.ctl input[type="number"] {
+    width: 4.4rem;
+    flex-shrink: 0;
+    font: inherit;
+    font-size: 0.72rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    padding: 0.2rem 0.25rem;
+    background: transparent;
+    border: 1px solid #141414;
+    color: #141414;
+    border-radius: 0;
+}
 
 .ctl-group {
     font-size: 0.68rem;
