@@ -94,6 +94,26 @@ async function cameraBlocked() {
     return false;
 }
 
+// De toestemmingsvraag actief stellen. Geeft true als we een stream konden
+// openen (daarna meteen weer vrijgegeven — XR8 neemt de camera over).
+// Bij een harde blokkade weigert Chrome direct zonder vraag (false).
+async function ensureCameraPermission() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' } },
+            audio: false,
+        });
+        stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Na een blokkade eerst opnieuw toestemming proberen bij de volgende tap.
+let permissionRetry = false;
+
 function webglSupported() {
     try {
         const canvas = document.createElement('canvas');
@@ -383,11 +403,30 @@ async function bootAR() {
     btn.disabled = true;
 
     if (await cameraBlocked()) {
-        btn.textContent = 'CAMERA GEBLOKKEERD';
-        bootStatus('Chrome blokkeert de camera voor deze site. Tik op het slotje/icoon in de adresbalk → Machtigingen → Camera toestaan, en herlaad.');
+        // Site staat op blokkeren: Chrome toont uit zichzelf geen vraag meer.
+        // De knop stelt de vraag alsnog — bij een zachte blokkade komt de
+        // prompt terug en start alles direct. Bij een harde blokkade volgt
+        // de handleiding voor het slotje in de adresbalk.
+        btn.textContent = 'CAMERA TOESTAAN';
+        bootStatus('Chrome blokkeert de camera voor deze site. Tik op CAMERA TOESTAAN om de vraag opnieuw te stellen.');
         bootStarted = false;
         btn.disabled = false;
+        permissionRetry = true;
         return;
+    }
+
+    if (permissionRetry) {
+        permissionRetry = false;
+        bootStatus('Camera toestemming vragen…');
+        if (!(await ensureCameraPermission())) {
+            btn.textContent = 'CAMERA TOESTAAN';
+            bootStatus('Nog steeds geblokkeerd. Sta toe via het slotje in de adresbalk → Machtigingen → Camera, en herlaad daarna de pagina.');
+            bootStarted = false;
+            btn.disabled = false;
+            permissionRetry = true;
+            return;
+        }
+        bootStatus('');
     }
 
     let XR8, XrController;
