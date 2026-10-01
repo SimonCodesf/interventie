@@ -28,11 +28,20 @@ const toggleBtn = function () { return document.getElementById('toggle-prev'); }
 
 const scriptPromises = {};
 let scriptChain = Promise.resolve();
+// Max per script: op een trage mobiele verbinding kan ~6MB aan engine
+// lang onderweg zijn — maar oneindig wachten (eeuwig LADEN) mag nooit.
+const SCRIPT_TIMEOUT_MS = 45000;
 
 // Strikt sequentieel laden: xrextras heeft AFRAME nodig, de app heeft alles nodig.
+// Fouten worden DOORGEGEVEN aan de aanroeper (geen stil wegslikken); de keten
+// zelf gaat wel altijd verder zodat latere loads niet blokkeren.
 function loadScript(src, attrs) {
     const key = src + JSON.stringify(attrs || {});
-    if (scriptPromises[key]) return scriptPromises[key];
+    if (scriptPromises[key]) return scriptPromises[key].raw;
+
+    let resolveRaw, rejectRaw;
+    const raw = new Promise(function (resolve, reject) { resolveRaw = resolve; rejectRaw = reject; });
+    scriptPromises[key] = { raw: raw };
 
     const p = scriptChain.then(function () {
         return new Promise(function (resolve, reject) {
@@ -42,17 +51,47 @@ function loadScript(src, attrs) {
             if (attrs) {
                 Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
             }
-            s.onload = function () { resolve(); };
+            const to = setTimeout(function () {
+                reject(new Error('Timeout bij het laden van ' + src.split('/').pop()));
+            }, SCRIPT_TIMEOUT_MS);
+            s.onload = function () { clearTimeout(to); resolve(); };
             s.onerror = function () {
-                reject(new Error('Script niet geladen: ' + src));
+                clearTimeout(to);
+                reject(new Error('Script niet geladen: ' + src.split('/').pop()));
             };
             document.head.appendChild(s);
         });
     });
 
-    scriptPromises[key] = p.catch(function () {}); // geregistreerd blijven
-    scriptChain = scriptPromises[key];
-    return p;
+    p.then(resolveRaw, rejectRaw);
+    scriptChain = p.catch(function () {}); // keten altijd voortzetten
+    return raw;
+}
+
+function fetchTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const to = setTimeout(function () { ctrl.abort(); }, ms || 15000);
+    return fetch(url, { signal: ctrl.signal }).then(
+        function (res) { clearTimeout(to); return res; },
+        function (err) { clearTimeout(to); throw err; }
+    );
+}
+
+function bootStatus(msg) {
+    const el = document.getElementById('boot-status');
+    if (el) el.textContent = msg || '';
+}
+
+// Zonder bijwerking checken of de camera geblokkeerd is (eerder geweigerd).
+// Dan heeft starten geen zin — eerst toestemming herstellen in Chrome.
+async function cameraBlocked() {
+    try {
+        if (navigator.permissions && navigator.permissions.query) {
+            const st = await navigator.permissions.query({ name: 'camera' });
+            return st.state === 'denied';
+        }
+    } catch (e) { /* Permissions API niet beschikbaar */ }
+    return false;
 }
 
 function webglSupported() {
@@ -74,6 +113,7 @@ function fatalError(msg) {
 
 function retryOverlay() {
     bootStarted = false;
+    bootStatus('');
     const btn = document.getElementById('start-btn');
     btn.textContent = 'OPNIEUW PROBEREN';
     btn.disabled = false;
@@ -200,6 +240,23 @@ function buildScene(entries) {
     camera.setAttribute('look-controls', 'enabled: false');
     scene.appendChild(camera);
 
+    // Engine-fouten (bv. camera start niet, toestel/browser niet ondersteund)
+    // zijn anders onzichtbaar. Alleen escaleren als er nog nooit beeld was —
+    // midden in een sessie zou de overlay storend oppoppen.
+    scene.addEventListener('realityerror', function (e) {
+        const d = (e && e.detail) || {};
+        console.error('[AR] realityerror', d);
+        if (firstFoundAt) return;
+        const reason = (d.error && d.error.message) ||
+            (d.isDeviceBrowserSupported === false ? 'deze browser of dit toestel wordt niet ondersteund' : 'de camera kon niet gestart worden');
+        overlay().style.display = 'flex';
+        const btn = document.getElementById('start-btn');
+        btn.textContent = 'OPNIEUW PROBEREN';
+        btn.disabled = false;
+        bootStatus('Fout: ' + reason + '. Bij een geblokkeerde camera: slotje in de adresbalk → Camera toestaan.');
+        bootStarted = false;
+    });
+
     const ambient = document.createElement('a-light');
     ambient.setAttribute('type', 'ambient');
     ambient.setAttribute('color', '#FFF');
@@ -325,22 +382,40 @@ async function bootAR() {
     btn.textContent = 'LADEN…';
     btn.disabled = true;
 
+    if (await cameraBlocked()) {
+        btn.textContent = 'CAMERA GEBLOKKEERD';
+        bootStatus('Chrome blokkeert de camera voor deze site. Tik op het slotje/icoon in de adresbalk → Machtigingen → Camera toestaan, en herlaad.');
+        bootStarted = false;
+        btn.disabled = false;
+        return;
+    }
+
     let XR8, XrController;
     const entries = [];
     try {
+        bootStatus('Bibliotheken laden…');
+        let loadedCount = 0;
+        const counted = function (p) {
+            return p.then(function () {
+                loadedCount++;
+                bootStatus('Bibliotheken laden… ' + loadedCount + '/4');
+            });
+        };
         await Promise.all([
-            loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' }),
-            loadScript('js/vendor/xrextras.js?v=1'),
-            loadScript('js/vendor/gif-component.js?v=1'),
+            counted(loadScript('js/vendor/aframe.min.js')),
+            counted(loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' })),
+            counted(loadScript('js/vendor/xrextras.js?v=1')),
+            counted(loadScript('js/vendor/gif-component.js?v=1')),
         ]);
+        bootStatus('Engine starten…');
         XR8 = await xrReady();
         XrController = await xrControllerReady(XR8, 20000);
         console.log('[AR] XR8 + XrController klaar');
 
+        bootStatus('Essays ophalen…');
         const [curRes, prevRes] = await Promise.all([
-            fetch('api.php/essays/current'),
-            fetch('api.php/essays/previous'),
+            fetchTimeout('api.php/essays/current'),
+            fetchTimeout('api.php/essays/previous'),
         ]);
         if (curRes.ok) currentEssay = await curRes.json();
         let prevEssays = [];
@@ -378,13 +453,18 @@ async function bootAR() {
 
         XrController.configure({ imageTargetData: entries.map(function (e) { return e.targetData; }) });
         console.log('[AR] XR8 geconfigureerd met ' + entries.length + ' target(s)');
+        bootStatus('Camera starten…');
     } catch (e) {
         console.error(e);
-        fatalError('NIET BESCHIKBAAR');
+        btn.textContent = 'OPNIEUW PROBEREN';
+        bootStatus('Starten mislukt: ' + (e && e.message ? e.message : e) + '. Controleer je verbinding en probeer opnieuw.');
+        bootStarted = false;
+        btn.disabled = false;
         return;
     }
 
     overlay().style.display = 'none';
+    bootStatus('');
     buildScene(entries);
 }
 

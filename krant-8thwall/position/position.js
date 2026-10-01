@@ -15,12 +15,17 @@ let animPreviewOn = false; // test-animatie actief op de live laag
 
 const scriptPromises = {};
 let scriptChain = Promise.resolve();
+const SCRIPT_TIMEOUT_MS = 45000;
 
 // Strikt sequentieel: xrextras heeft AFRAME nodig, de app heeft alles nodig.
 // Zo kan een component nooit vóór zijn afhankelijkheid uitvoeren (-> zwart beeld).
+// Fouten worden doorgegeven (geen stil wegslikken); de keten gaat wel verder.
 function loadScript(src, attrs) {
     const key = src + JSON.stringify(attrs || {});
-    if (scriptPromises[key]) return scriptPromises[key];
+    if (scriptPromises[key]) return scriptPromises[key].raw;
+    let resolveRaw, rejectRaw;
+    const raw = new Promise(function (resolve, reject) { resolveRaw = resolve; rejectRaw = reject; });
+    scriptPromises[key] = { raw: raw };
     const p = scriptChain.then(function () {
         return new Promise(function (resolve, reject) {
             const s = document.createElement('script');
@@ -29,14 +34,17 @@ function loadScript(src, attrs) {
             if (attrs) {
                 Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
             }
-            s.onload = function () { resolve(); };
-            s.onerror = function () { reject(new Error(src)); };
+            const to = setTimeout(function () {
+                reject(new Error('Timeout bij het laden van ' + src.split('/').pop()));
+            }, SCRIPT_TIMEOUT_MS);
+            s.onload = function () { clearTimeout(to); resolve(); };
+            s.onerror = function () { clearTimeout(to); reject(new Error(src)); };
             document.head.appendChild(s);
         });
     });
-    scriptPromises[key] = p.catch(function () {});
-    scriptChain = scriptPromises[key];
-    return p;
+    p.then(resolveRaw, rejectRaw);
+    scriptChain = p.catch(function () {});
+    return raw;
 }
 
 // Asset-URL's uit de API zijn relatief t.o.v. /krant/ — vanaf /krant/position/
@@ -568,7 +576,7 @@ document.getElementById('pos-start-btn').addEventListener('click', async functio
         console.log('[pos] XR8 geconfigureerd met target: ' + essay.target8w.name);
     } catch (e) {
         console.error(e);
-        status('AR-bibliotheken konden niet laden', 'err');
+        status('AR-bibliotheken konden niet laden (' + (e && e.message ? e.message : 'netwerkfout') + ')', 'err');
         document.getElementById('pos-start').style.display = 'flex';
         return;
     }
