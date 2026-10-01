@@ -2,8 +2,12 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html, body {
+html {
     background-color: #f2eee2;
+}
+
+body {
+    background: transparent;
     color: #141414;
     font-family: Helvetica, Arial, sans-serif;
     font-size: 14px;
@@ -76,16 +80,35 @@ html, body {
     position: relative;
     height: 46vh;
     min-height: 280px;
-    background: #000;
+    /* GEEN achtergrond hier: MindAR plakt de camerafeed als <video> met
+       z-index -2 in #ar-scene. Elke ondoorzichtige achtergrond op body,
+       #pos-ar of #ar-scene bedekt die feed -> zwart beeld. */
+    background: transparent;
     border-bottom: 1px solid #141414;
+    overflow: hidden;
+    z-index: 0; /* eigen stacking-context: video blijft binnen deze box */
 }
 
-#ar-scene, #ar-scene a-scene {
+#ar-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    z-index: 0;
+}
+
+#ar-scene a-scene {
     width: 100%;
     height: 100%;
 }
 
+#ar-scene canvas {
+    background: transparent !important;
+}
+
 #ar-scene video {
+    position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;

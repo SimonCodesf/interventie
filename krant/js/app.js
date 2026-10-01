@@ -143,7 +143,7 @@ function ensureCurrentChunk() {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/mindar-image-aframe.prod.js?v=21');
+    loadScript('js/vendor/mindar-image-aframe.prod.js?v=23');
     loadScript('js/vendor/gif-component.js?v=1');
     ensureCurrentChunk()
         .then(function () { preloadPrevious(); })
@@ -381,7 +381,7 @@ async function bootAR() {
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/mindar-image-aframe.prod.js?v=21'),
+            loadScript('js/vendor/mindar-image-aframe.prod.js?v=23'),
             loadScript('js/vendor/gif-component.js?v=1'),
             ensureCurrentChunk(),
         ]);

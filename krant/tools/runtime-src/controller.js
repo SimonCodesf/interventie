@@ -55,6 +55,7 @@ class Controller {
     this.warmupTolerance = warmupTolerance === null? DEFAULT_WARMUP_TOLERANCE: warmupTolerance;
     this.missTolerance = missTolerance === null? DEFAULT_MISS_TOLERANCE: missTolerance;
     this.cropDetector = new CropDetector(this.inputWidth, this.inputHeight, debugMode, this._cropMult);
+    console.log('[AR] runtime v23 (cropfix), input ' + this.inputWidth + 'x' + this.inputHeight + ', crop ' + this.cropDetector.cropSize);
     if (_isDev()) console.log('[AR] runtime cropSize:', this.cropDetector.cropSize);
     this.inputLoader = new InputLoader(this.inputWidth, this.inputHeight);
     this.markerDimensions = null;
@@ -257,7 +258,9 @@ class Controller {
 
 	try {
 	const loopStart = performance.now();
-	const inputT = this.inputLoader.loadInput(input);
+	let inputT = null;
+	try {
+	inputT = this.inputLoader.loadInput(input);
 
 	const nTracking = this.trackingStates.reduce((acc, s) => {
 	  return acc + (!!s.isTracking? 1: 0);
@@ -446,6 +449,12 @@ class Controller {
 
 	inputT.dispose();
         this.onUpdate && this.onUpdate({type: 'processDone'});
+	await tf.nextFrame();
+	} finally {
+	  // Altijd opruimen, ook als _detectAndMatch/track gooit (bv. slice-fout):
+	  // anders loopt de GPU vol (honderden MB's) -> zwart beeld.
+	  try { if (typeof inputT !== 'undefined' && inputT) inputT.dispose(); } catch (_) {}
+	}
 	await tf.nextFrame();
 	} catch (e) {
 	  console.error('[AR] tracking fout:', e && e.message);

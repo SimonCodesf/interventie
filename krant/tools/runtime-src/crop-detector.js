@@ -41,10 +41,16 @@ class CropDetector {
     let startY = Math.floor(this.height / 2 - this.cropSize + dy * this.cropSize / 2);
     let startX = Math.floor(this.width / 2 - this.cropSize + dx * this.cropSize / 2);
 
+    // Klemmen binnen het frame. Let op: als cropSize == width/height is
+    // maxX/maxY == 0 (nooit -1), anders geeft tf.slice() met een negatieve
+    // start "slice() does not support negative begin indexing" en faalt
+    // elke detectie (bv. bij 640x480 met crop 480).
+    const maxX = Math.max(0, this.width - this.cropSize);
+    const maxY = Math.max(0, this.height - this.cropSize);
     if (startX < 0) startX = 0;
     if (startY < 0) startY = 0;
-    if (startX >= this.width - this.cropSize) startX = this.width - this.cropSize - 1;
-    if (startY >= this.height - this.cropSize) startY = this.height - this.cropSize - 1;
+    if (startX > maxX) startX = maxX;
+    if (startY > maxY) startY = maxY;
 
     this.lastRandomIndex = (this.lastRandomIndex + 1) % 9;
 
@@ -53,6 +59,8 @@ class CropDetector {
   }
 
   _detect(inputImageT, startX, startY) {
+    startX = Math.max(0, Math.min(Math.floor(startX), Math.max(0, this.width - this.cropSize)));
+    startY = Math.max(0, Math.min(Math.floor(startY), Math.max(0, this.height - this.cropSize)));
     const cropInputImageT = inputImageT.slice([startY, startX], [this.cropSize, this.cropSize]);
     const {featurePoints, debugExtra} = this.detector.detect(cropInputImageT);
     featurePoints.forEach((p) => {

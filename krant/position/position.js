@@ -4,6 +4,20 @@
 
 const API = '../api.php';
 
+// Vaste cameraresolutie (zelfde als hoofdpagina): voorkomt de iOS-480p
+// start en geeft de tracker meer detail -> stabielere pose, zelfde crop.
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !navigator.mediaDevices.__posPatched) {
+    navigator.mediaDevices.__posPatched = true;
+    const realGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = function (constraints) {
+        if (constraints && constraints.video && constraints.video.facingMode) {
+            constraints.video.width = { ideal: 1280 };
+            constraints.video.height = { ideal: 720 };
+        }
+        return realGUM(constraints);
+    };
+}
+
 let week = null;
 let essay = null;          // volledige essay-JSON (met URL's)
 let layers = [];           // werk-kopie (file = volledige URL voor de scene)
@@ -184,6 +198,7 @@ function buildScene() {
             if (kind !== 'gif') obj.setAttribute('src', absUrl(layer.file));
             obj.setAttribute('width', layer.w);
             obj.setAttribute('height', layer.h);
+            obj.setAttribute('transparent', 'true');
             if (kind === 'gif') obj.setAttribute('gif', 'src: ' + absUrl(layer.file) + '; transparent: false');
         }
         applyTransform(obj, layer, kind);
@@ -191,8 +206,18 @@ function buildScene() {
         entities[i] = obj;
     });
 
-    scene.addEventListener('arError', function () {
+    scene.addEventListener('arError', function (e) {
+        console.error('[pos] arError', e);
         status('Camera niet beschikbaar', 'err');
+    });
+
+    scene.addEventListener('arReady', function () {
+        status('Camera live — richt op de pagina.');
+        // iOS kan het MindAR-video-element gepauzeerd laten staan -> expliciet afspelen.
+        const v = box.querySelector('video');
+        if (v && v.paused) {
+            v.play().catch(function (err) { console.error('[pos] video.play() mislukt:', err); });
+        }
     });
 
     box.appendChild(scene);
@@ -326,7 +351,7 @@ document.getElementById('pos-start-btn').addEventListener('click', async functio
     document.getElementById('pos-start').style.display = 'none';
     try {
         await loadScript('../js/vendor/aframe.min.js');
-        await loadScript('../js/vendor/mindar-image-aframe.prod.js');
+        await loadScript('../js/vendor/mindar-image-aframe.prod.js?v=23');
         await loadScript('../js/vendor/gif-component.js');
     } catch (e) {
         status('AR-bibliotheken konden niet laden', 'err');
