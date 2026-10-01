@@ -291,11 +291,8 @@ document.getElementById('essay-form').addEventListener('submit', async function 
         fd.append('mind_file', compiledMind.blob, 'target.mind');
     }
 
-    // 8th Wall target-bestanden (optioneel; blijven staan als je niets kiest)
-    const targetJsonFile = document.getElementById('f-target8w-json').files[0];
-    if (targetJsonFile) fd.append('target8w_json', targetJsonFile);
-    const targetImageFile = document.getElementById('f-target8w-image').files[0];
-    if (targetImageFile) fd.append('target8w_image', targetImageFile);
+    // 8th Wall target wordt automatisch gegenereerd bij page_image-upload (zie api.php);
+    // handmatige CLI-bestanden kunnen nog steeds via de API overschrijven indien nodig.
 
     // Enkel rijen met een bestand meesturen (compact, index-consistent)
     let layerIndex = 0;
@@ -328,7 +325,7 @@ document.getElementById('essay-form').addEventListener('submit', async function 
         const res = await fetch(API + '/admin/essays', { method: 'POST', body: fd });
         const data = await res.json();
         if (res.ok) {
-            okEl.textContent = 'Opgeslagen: ' + data.essay.week + ' — ' + (data.essay.mind ? 'AR marker aanwezig' : 'LET OP: nog geen AR marker (.mind)');
+            okEl.textContent = 'Opgeslagen: ' + data.essay.week + ' — ' + (data.essay.mind ? 'AR marker aanwezig' : 'LET OP: nog geen AR marker (.mind)') + (data.essay.target8w ? '' : ' — LET OP: geen 8th Wall target aangemaakt');
             resetForm(data.essay.week);
             loadEssays();
             rebuildBundle();
@@ -570,8 +567,6 @@ function resetForm(keepWeek) {
     document.getElementById('f-week').value = keepWeek || isoWeek();
     document.getElementById('f-title').value = '';
     document.getElementById('f-page').value = '';
-    document.getElementById('f-target8w-json').value = '';
-    document.getElementById('f-target8w-image').value = '';
     document.getElementById('target8w-status').textContent = '';
     document.getElementById('f-published').checked = true;
     document.getElementById('layers-rows').innerHTML = '';
