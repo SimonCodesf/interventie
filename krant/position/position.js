@@ -141,6 +141,19 @@ function buildScene() {
     camera.setAttribute('look-controls', 'enabled: false');
     scene.appendChild(camera);
 
+    const ambient = document.createElement('a-light');
+    ambient.setAttribute('type', 'ambient');
+    ambient.setAttribute('color', '#FFF');
+    ambient.setAttribute('intensity', '1.2');
+    scene.appendChild(ambient);
+
+    const directional = document.createElement('a-light');
+    directional.setAttribute('type', 'directional');
+    directional.setAttribute('color', '#FFF');
+    directional.setAttribute('intensity', '0.8');
+    directional.setAttribute('position', '-0.5 1 1');
+    scene.appendChild(directional);
+
     const target = document.createElement('a-entity');
     target.setAttribute('mindar-image-target', 'targetIndex: 0');
 
