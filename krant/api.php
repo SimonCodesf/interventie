@@ -213,6 +213,8 @@ if ($method === 'POST' && $path === '/admin/essays') {
     $existing = $stmt->fetch();
 
     $pageImage = $existing ? $existing['page_image'] : '';
+    // mind_file-kolom blijft bestaan (oude data), maar er kan niets meer
+    // geüpload worden — AR draait volledig op 8th Wall targets.
     $mindFile  = $existing ? $existing['mind_file'] : '';
     $target8wJson = $existing ? ($existing['target8w_json'] ?? '') : '';
     $target8wImage = $existing ? ($existing['target8w_image'] ?? '') : '';
@@ -238,16 +240,6 @@ if ($method === 'POST' && $path === '/admin/essays') {
             $target8wJson = 'target8w.json';
             $target8wImage = 'target8w.jpg';
         }
-    }
-
-    // Gecompileerd .mind marker bestand
-    if (!empty($_FILES['mind_file']['name'])) {
-        $ext = fileExt($_FILES['mind_file']['name']);
-        if (!in_array($ext, ALLOWED_MIND_EXT, true)) {
-            jsonResponse(['message' => 'Marker moet een .mind bestand zijn'], 400);
-        }
-        $mindFile = 'target.mind';
-        move_uploaded_file($_FILES['mind_file']['tmp_name'], $weekDir . '/' . $mindFile);
     }
 
     // 8th Wall target (JSON + luminantie-afbeelding, gegenereerd met image-target-cli)
@@ -447,7 +439,7 @@ if ($method === 'DELETE' && $path === '/admin/essays') {
 
     $db->exec("DELETE FROM essays");
 
-    foreach ([ESSAYS_DIR, BUNDLE_DIR] as $dir) {
+    foreach ([ESSAYS_DIR] as $dir) {
         if (!file_exists($dir)) continue;
         $entries = glob($dir . '/*');
         foreach ($entries as $entry) {

@@ -411,7 +411,7 @@ async function loadIntoForm(week) {
         document.getElementById('form-heading').textContent = 'Bewerken: ' + week;
         document.getElementById('f-week').value = essay.week;
         document.getElementById('f-title').value = essay.title;
-        document.getElementById('f-published').checked = true;
+        document.getElementById('f-published').checked = !!essay.published;
 
         // Layers tonen met behoud van bestaande bestanden (file-inputs kunnen
         // niet vooringevuld worden — de bestandsnaam staat in de rij en het

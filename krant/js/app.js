@@ -1,16 +1,13 @@
-// Interventie — AR krant (A-Frame + 8th Wall, spike)
-// Zelfde UX als de MindAR-versie: preload, START CAMERA tap, current essay
-// direct zichtbaar, vorige essays via de knop. Verschil: ALLE targets staan
-// tegelijk geregistreerd (geen chunk-wissel meer nodig); de knop schakelt
-// alleen de zichtbaarheid van oudere essays.
+// Interventie — AR krant (A-Frame + 8th Wall)
+// Alle targets staan tegelijk geregistreerd; elk essay toont zijn lagen
+// zodra de eigen pagina in beeld is (geen knop of chunk-wissel nodig).
 //
 // This product includes the XR Engine software developed by Niantic Spatial, Inc.
 // Copyright © 2026 Niantic Spatial, Inc. All rights reserved.
 // License: https://github.com/8thwall/engine/blob/main/LICENSE
 
 let currentEssay = null;      // {week, title, target8w, layers}
-let previousEssays = [];      // [{week, title, target8w, layers}]
-let prevVisible = false;
+let previousEssays = [];      // [{week, title, target8w, layers}] — altijd zichtbaar bij hun marker
 let bootStarted = false;
 let bootTime = 0;
 
@@ -24,7 +21,6 @@ const anchorState = {};       // name -> {visible, lastPos: {x,y,z}, hideTimer}
 
 const sceneBox = function () { return document.getElementById('ar-scene'); };
 const overlay = function () { return document.getElementById('start-overlay'); };
-const toggleBtn = function () { return document.getElementById('toggle-prev'); };
 
 const scriptPromises = {};
 let scriptChain = Promise.resolve();
@@ -319,7 +315,6 @@ function buildScene(entries) {
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
             document.getElementById('feed-loader').style.display = 'none';
-            applyPrevVisibility();
         });
         anchor.addEventListener('xrextraslost', function () {
             const st = anchorState[entry.name];
@@ -343,7 +338,6 @@ function buildScene(entries) {
 
     sceneBox().appendChild(scene);
     console.log('[AR] scene gebouwd, targets: ' + entries.length);
-    applyPrevVisibility();
 
     // Watchdog: zonder draaiende pipeline na 15s -> retry aanbieden
     setTimeout(function () {
@@ -356,13 +350,6 @@ function buildScene(entries) {
     }, 15000);
 
     startJitterLoop();
-}
-
-function applyPrevVisibility() {
-    document.querySelectorAll('#ar-scene .essay-content').forEach(function (el) {
-        const isCurrent = el.getAttribute('data-week') === (currentEssay && currentEssay.week);
-        el.setAttribute('visible', isCurrent || prevVisible);
-    });
 }
 
 // Jitter-meting: translatie-delta per 100ms van zichtbare anchors
@@ -487,23 +474,7 @@ async function bootAR() {
             else console.warn('[AR] essay zonder 8th Wall target overgeslagen: ' + e.week);
         });
         if (!entries.length) {
-            // Fallback voor de spike: statische test-targets (echte krantenpagina)
-            // zodat er zonder admin-setup toch gemeten kan worden.
-            // krant-test = via image-target-cli; krant-direct = direct naar de
-            // pagina-afbeelding (test of de CLI-stap overgeslagen kan worden).
-            console.log('[AR] geen essays met targets — statische test-targets gebruiken');
-            const tRes = await fetch('targets/krant-test.json');
-            if (!tRes.ok) throw new Error('Geen 8th Wall targets beschikbaar');
-            const tData = await tRes.json();
-            entries.push({ name: 'krant-test', week: 'krant-test', targetData: tData, layers: [], isPrev: false });
-            try {
-                const dRes = await fetch('targets/krant-direct.json');
-                if (dRes.ok) {
-                    const dData = await dRes.json();
-                    entries.push({ name: 'krant-direct', week: 'krant-direct', targetData: dData, layers: [], isPrev: false });
-                    console.log('[AR] direct-image test-target toegevoegd');
-                }
-            } catch (e) { console.warn('[AR] direct-image target overgeslagen:', e.message); }
+            throw new Error('Nog geen essays met AR-targets — publiceer eerst een essay in de admin.');
         }
 
         XrController.configure({ imageTargetData: entries.map(function (e) { return e.targetData; }) });
@@ -532,15 +503,6 @@ if (window.ResizeObserver) {
         }
     }).observe(document.getElementById('ar-scene'));
 }
-
-// ---- Knop: vorige essays tonen/verbergen ----
-
-toggleBtn().addEventListener('click', function () {
-    prevVisible = !prevVisible;
-    this.textContent = prevVisible ? 'SCAN HUIDIG ESSAY' : 'SCAN VORIGE ESSAYS';
-    applyPrevVisibility();
-    console.log('[AR] vorige essays ' + (prevVisible ? 'zichtbaar' : 'verborgen'));
-});
 
 // ---- Boot: essentials eerst, preload erna, popup pas na de tap ----
 

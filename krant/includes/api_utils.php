@@ -199,8 +199,8 @@ function essayToApi($row) {
     $essay = [
         'week'       => $row['week'],
         'title'      => $row['title'],
+        'published'  => !empty($row['published']) ? 1 : 0,
         'page_image' => $row['page_image'] ? $base . rawurlencode($row['page_image']) . $v : '',
-        'mind'       => $row['mind_file'] ? $base . rawurlencode($row['mind_file']) . $v : '',
         'target8w'   => target8wToApi($row, $base, $v),
         'layers'     => [],
         'updated_at' => $row['updated_at'],

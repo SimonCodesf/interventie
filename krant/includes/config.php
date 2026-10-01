@@ -7,10 +7,9 @@ define('DB_FILE', dirname(__DIR__) . '/data/essays.db');
 
 define('UPLOADS_DIR', dirname(__DIR__) . '/uploads');
 define('ESSAYS_DIR', UPLOADS_DIR . '/essays');
-define('BUNDLE_DIR', UPLOADS_DIR . '/bundle');
 
 // Maak directories aan als ze niet bestaan (ook op de server na eerste deploy)
-foreach ([dirname(DB_FILE), ESSAYS_DIR, BUNDLE_DIR] as $dir) {
+foreach ([dirname(DB_FILE), ESSAYS_DIR] as $dir) {
     if (!file_exists($dir)) {
         @mkdir($dir, 0755, true);
     }
@@ -21,4 +20,3 @@ define('ALLOWED_PAGE_EXT', ['jpg', 'jpeg', 'png', 'webp']);
 define('ALLOWED_LAYER_EXT', ['png', 'webp', 'jpg', 'jpeg', 'gif', 'glb']);
 // Max. grootte 3D-modellen (10MB, zoals het originele project)
 define('MAX_GLB_SIZE', 10 * 1024 * 1024);
-define('ALLOWED_MIND_EXT', ['mind']);
