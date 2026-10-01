@@ -119,19 +119,27 @@ async function loadWeek(w) {
     }
     const data = await res.json();
     essay = data.essay;
-    // Werk-kopie (animatie-velden blijven behouden bij opslaan)
+    // Werk-kopie (animatie-velden blijven behouden bij opslaan).
+    // Veilige defaults zoals de API: zonder w/h/z wordt een plane onzichtbaar.
     layers = (essay.layers || []).map(function (l) {
         return {
-            file: l.file, x: l.x || 0, y: l.y || 0, z: l.z, w: l.w, h: l.h,
+            file: l.file, x: l.x || 0, y: l.y || 0,
+            z: (l.z !== undefined && l.z !== null) ? l.z : 0.01,
+            w: (l.w > 0) ? l.w : 1, h: (l.h > 0) ? l.h : 1.414,
             opacity: l.opacity !== undefined ? l.opacity : 1,
             rx: l.rx || 0, ry: l.ry || 0, rz: l.rz || 0, scale: l.scale || 1,
             anim_dur: l.anim_dur || 0, anim_x: l.anim_x || 0,
             anim_y: l.anim_y || 0, anim_z: l.anim_z !== undefined ? l.anim_z : l.z,
         };
     });
+    console.log('[pos] week ' + w + ': mind=' + essay.mind + ', lagen=' + layers.length);
+    layers.forEach(function (l, i) {
+        console.log('[pos] laag ' + i + ': ' + l.file + ' x=' + l.x + ' y=' + l.y + ' z=' + l.z + ' w=' + l.w + ' h=' + l.h + ' op=' + l.opacity);
+    });
 
     renderLayerButtons();
     if (sceneStarted) buildScene();
+    else if (!layers.length) status('Geen lagen voor deze week — voeg eerst lagen toe in de admin.');
     else status('Tik START CAMERA en richt op de pagina.');
 }
 
@@ -186,6 +194,14 @@ function buildScene() {
 
     const target = document.createElement('a-entity');
     target.setAttribute('mindar-image-target', 'targetIndex: 0');
+    target.addEventListener('targetFound', function () {
+        console.log('[pos] marker GEVONDEN');
+        status('Marker gevonden ✓ — ' + layers.length + ' laag/lagen zichtbaar.', 'ok');
+    });
+    target.addEventListener('targetLost', function () {
+        console.log('[pos] marker verloren');
+        status('Marker kwijt — richt op de pagina.');
+    });
 
     layers.forEach(function (layer, i) {
         const kind = layerKind(layer);
@@ -221,6 +237,27 @@ function buildScene() {
     });
 
     box.appendChild(scene);
+
+    // Diagnose: ontbrekende bestanden (404) leveren onzichtbare lagen.
+    // Blokkeert de scene niet; meldt alleen.
+    checkAssets();
+}
+
+// Bestaan .mind + laagbestanden echt? (relatief t.o.v. /krant/position/)
+async function checkAssets() {
+    if (!essay) return;
+    try {
+        const mindRes = await fetch(absUrl(essay.mind), { method: 'HEAD' });
+        console.log('[pos] mind ' + mindRes.status + ' ' + absUrl(essay.mind));
+        if (!mindRes.ok) status('Markerbestand niet gevonden (' + mindRes.status + ')', 'err');
+    } catch (e) { console.error('[pos] mind-check mislukt:', e); }
+    for (let i = 0; i < layers.length; i++) {
+        try {
+            const r = await fetch(absUrl(layers[i].file), { method: 'HEAD' });
+            console.log('[pos] laag ' + i + ' ' + r.status + ' ' + absUrl(layers[i].file));
+            if (!r.ok) status('Laag ' + (i + 1) + ' niet gevonden (' + r.status + '): ' + baseName(layers[i].file), 'err');
+        } catch (e) { console.error('[pos] laag-check ' + i + ' mislukt:', e); }
+    }
 }
 
 function applyTransform(obj, layer, kind) {
