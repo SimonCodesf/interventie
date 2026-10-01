@@ -283,6 +283,7 @@ async function bootAR() {
     btn.disabled = true;
 
     let XR8, XrController;
+    const entries = [];
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
@@ -305,7 +306,6 @@ async function bootAR() {
             prevEssays = prevData.essays || [];
         }
 
-        const entries = [];
         if (currentEssay && currentEssay.target8w) {
             entries.push({ name: currentEssay.week, week: currentEssay.week, targetData: currentEssay.target8w, layers: currentEssay.layers || [], isPrev: false });
         }
@@ -314,13 +314,23 @@ async function bootAR() {
             else console.warn('[AR] essay zonder 8th Wall target overgeslagen: ' + e.week);
         });
         if (!entries.length) {
-            // Fallback voor de spike: statisch test-target (echte krantenpagina)
+            // Fallback voor de spike: statische test-targets (echte krantenpagina)
             // zodat er zonder admin-setup toch gemeten kan worden.
-            console.log('[AR] geen essays met targets — statische test-target gebruiken');
+            // krant-test = via image-target-cli; krant-direct = direct naar de
+            // pagina-afbeelding (test of de CLI-stap overgeslagen kan worden).
+            console.log('[AR] geen essays met targets — statische test-targets gebruiken');
             const tRes = await fetch('targets/krant-test.json');
             if (!tRes.ok) throw new Error('Geen 8th Wall targets beschikbaar');
             const tData = await tRes.json();
             entries.push({ name: 'krant-test', week: 'krant-test', targetData: tData, layers: [], isPrev: false });
+            try {
+                const dRes = await fetch('targets/krant-direct.json');
+                if (dRes.ok) {
+                    const dData = await dRes.json();
+                    entries.push({ name: 'krant-direct', week: 'krant-direct', targetData: dData, layers: [], isPrev: false });
+                    console.log('[AR] direct-image test-target toegevoegd');
+                }
+            } catch (e) { console.warn('[AR] direct-image target overgeslagen:', e.message); }
         }
 
         XrController.configure({ imageTargetData: entries.map(function (e) { return e.targetData; }) });
