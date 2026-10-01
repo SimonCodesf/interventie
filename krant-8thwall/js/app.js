@@ -27,14 +27,18 @@ const scriptPromises = {};
 let scriptChain = Promise.resolve();
 
 // Strikt sequentieel laden: xrextras heeft AFRAME nodig, de app heeft alles nodig.
-function loadScript(src) {
-    if (scriptPromises[src]) return scriptPromises[src];
+function loadScript(src, attrs) {
+    const key = src + JSON.stringify(attrs || {});
+    if (scriptPromises[key]) return scriptPromises[key];
 
     const p = scriptChain.then(function () {
         return new Promise(function (resolve, reject) {
             const s = document.createElement('script');
             s.src = src;
             s.async = false; // extra zekerheid: volgorde behouden
+            if (attrs) {
+                Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
+            }
             s.onload = function () { resolve(); };
             s.onerror = function () {
                 reject(new Error('Script niet geladen: ' + src));
@@ -43,8 +47,8 @@ function loadScript(src) {
         });
     });
 
-    scriptPromises[src] = p.catch(function () {}); // geregistreerd blijven
-    scriptChain = scriptPromises[src];
+    scriptPromises[key] = p.catch(function () {}); // geregistreerd blijven
+    scriptChain = scriptPromises[key];
     return p;
 }
 
@@ -84,6 +88,22 @@ function xrReady() {
             clearTimeout(to);
             resolve(window.XR8);
         });
+    });
+}
+
+// Wacht tot de XrController-module (xr-tracking.js chunk) geladen is.
+// Zonder deze chunk is XR8.XrController null en faalt configure().
+function xrControllerReady(XR8, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+        const start = Date.now();
+        (function poll() {
+            if (XR8.XrController) return resolve(XR8.XrController);
+            if (Date.now() - start > timeoutMs) {
+                reject(new Error('XrController niet beschikbaar (timeout)'));
+                return;
+            }
+            setTimeout(poll, 200);
+        })();
     });
 }
 
@@ -262,15 +282,17 @@ async function bootAR() {
     btn.textContent = 'LADEN…';
     btn.disabled = true;
 
-    let XR8;
+    let XR8, XrController;
     try {
         await Promise.all([
             loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/xr.js?v=1'),
+            loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' }),
             loadScript('js/vendor/xrextras.js?v=1'),
             loadScript('js/vendor/gif-component.js?v=1'),
         ]);
         XR8 = await xrReady();
+        XrController = await xrControllerReady(XR8, 20000);
+        console.log('[AR] XR8 + XrController klaar');
 
         const [curRes, prevRes] = await Promise.all([
             fetch('api.php/essays/current'),
@@ -301,7 +323,7 @@ async function bootAR() {
             entries.push({ name: 'krant-test', week: 'krant-test', targetData: tData, layers: [], isPrev: false });
         }
 
-        XR8.XrController.configure({ imageTargetData: entries.map(function (e) { return e.targetData; }) });
+        XrController.configure({ imageTargetData: entries.map(function (e) { return e.targetData; }) });
         console.log('[AR] XR8 geconfigureerd met ' + entries.length + ' target(s)');
     } catch (e) {
         console.error(e);
@@ -342,7 +364,7 @@ if (document.readyState === 'complete') {
 
 function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/xr.js?v=1');
+    loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' });
     loadScript('js/vendor/xrextras.js?v=1');
     loadScript('js/vendor/gif-component.js?v=1');
 }

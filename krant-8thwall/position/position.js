@@ -18,20 +18,24 @@ let scriptChain = Promise.resolve();
 
 // Strikt sequentieel: xrextras heeft AFRAME nodig, de app heeft alles nodig.
 // Zo kan een component nooit vóór zijn afhankelijkheid uitvoeren (-> zwart beeld).
-function loadScript(src) {
-    if (scriptPromises[src]) return scriptPromises[src];
+function loadScript(src, attrs) {
+    const key = src + JSON.stringify(attrs || {});
+    if (scriptPromises[key]) return scriptPromises[key];
     const p = scriptChain.then(function () {
         return new Promise(function (resolve, reject) {
             const s = document.createElement('script');
             s.src = src;
             s.async = false;
+            if (attrs) {
+                Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
+            }
             s.onload = function () { resolve(); };
             s.onerror = function () { reject(new Error(src)); };
             document.head.appendChild(s);
         });
     });
-    scriptPromises[src] = p.catch(function () {});
-    scriptChain = scriptPromises[src];
+    scriptPromises[key] = p.catch(function () {});
+    scriptChain = scriptPromises[key];
     return p;
 }
 
@@ -472,20 +476,35 @@ function xrReady() {
     });
 }
 
+function xrControllerReady(XR8, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+        const start = Date.now();
+        (function poll() {
+            if (XR8.XrController) return resolve(XR8.XrController);
+            if (Date.now() - start > timeoutMs) {
+                reject(new Error('XrController niet beschikbaar (timeout)'));
+                return;
+            }
+            setTimeout(poll, 200);
+        })();
+    });
+}
+
 document.getElementById('pos-start-btn').addEventListener('click', async function () {
     document.getElementById('pos-start').style.display = 'none';
     try {
         await loadScript('../js/vendor/aframe.min.js');
-        await loadScript('../js/vendor/xr.js?v=1');
+        await loadScript('../js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' });
         await loadScript('../js/vendor/xrextras.js?v=1');
         await loadScript('../js/vendor/gif-component.js');
         const XR8 = await xrReady();
+        const XrController = await xrControllerReady(XR8, 20000);
         if (!essay || !essay.target8w) {
             status('Geen 8th Wall target voor dit essay (upload in admin)', 'err');
             document.getElementById('pos-start').style.display = 'flex';
             return;
         }
-        XR8.XrController.configure({ imageTargetData: [essay.target8w] });
+        XrController.configure({ imageTargetData: [essay.target8w] });
         console.log('[pos] XR8 geconfigureerd met target: ' + essay.target8w.name);
     } catch (e) {
         console.error(e);
