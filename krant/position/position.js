@@ -10,6 +10,7 @@ let layers = [];           // werk-kopie (file = volledige URL voor de scene)
 let entities = [];         // a-entity referenties per laag
 let selected = -1;
 let sceneStarted = false;
+let xrController = null; // 8th Wall controller (na START CAMERA beschikbaar)
 let hiddenLayers = {};     // index -> true: verborgen in preview (wordt NIET opgeslagen)
 let animPreviewOn = false; // test-animatie actief op de live laag
 
@@ -53,6 +54,19 @@ function absUrl(u) {
     u = String(u || '');
     if (/^(https?:)?\/\//.test(u) || u.charAt(0) === '/') return u;
     return '../' + u;
+}
+
+// Target-data voor de engine: de API levert imagePath relatief t.o.v.
+// /krant/, maar de engine laadt de afbeelding relatief t.o.v. deze pagina
+// (/krant/position/). Zonder '../' krijgt de engine een 404-pagina i.p.v.
+// de target-afbeelding, registreert het target nooit en blijven alle
+// AR-lagen onzichtbaar (de hoofdpagina /krant/ heeft hier geen last van).
+function engineTarget() {
+    if (!essay || !essay.target8w) return null;
+    const t = {};
+    Object.keys(essay.target8w).forEach(function (k) { t[k] = essay.target8w[k]; });
+    t.imagePath = absUrl(essay.target8w.imagePath);
+    return t;
 }
 
 function status(msg, cls) {
@@ -164,7 +178,16 @@ async function loadWeek(w) {
     });
 
     renderLayerButtons();
-    if (sceneStarted) buildScene();
+    if (sceneStarted) {
+        // Week wissel ná START CAMERA: engine moet het nieuwe target kennen,
+        // anders blijft hij op het oude target tracken en tonen de nieuwe
+        // lagen nooit.
+        if (xrController) {
+            const t = engineTarget();
+            if (t) xrController.configure({ imageTargetData: [t] });
+        }
+        buildScene();
+    }
     else if (!layers.length) status('Geen lagen voor deze week — voeg eerst lagen toe in de admin.');
     else status('Tik START CAMERA en richt op de pagina.');
 }
@@ -566,14 +589,15 @@ document.getElementById('pos-start-btn').addEventListener('click', async functio
         await loadScript('../js/vendor/xrextras.js?v=1');
         await loadScript('../js/vendor/gif-component.js');
         const XR8 = await xrReady();
-        const XrController = await xrControllerReady(XR8, 20000);
+        xrController = await xrControllerReady(XR8, 20000);
         if (!essay || !essay.target8w) {
             status('Geen 8th Wall target voor dit essay (upload in admin)', 'err');
             document.getElementById('pos-start').style.display = 'flex';
             return;
         }
-        XrController.configure({ imageTargetData: [essay.target8w] });
-        console.log('[pos] XR8 geconfigureerd met target: ' + essay.target8w.name);
+        const targetData = engineTarget();
+        xrController.configure({ imageTargetData: [targetData] });
+        console.log('[pos] XR8 geconfigureerd met target: ' + targetData.name + ' (' + targetData.imagePath + ')');
     } catch (e) {
         console.error(e);
         status('AR-bibliotheken konden niet laden (' + (e && e.message ? e.message : 'netwerkfout') + ')', 'err');
