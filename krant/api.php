@@ -89,10 +89,16 @@ if ($method === 'GET' && $path === '/essays/previous') {
                 if (empty($layer['file'])) continue;
                 $layerList[] = [
                     'file'      => 'uploads/essays/' . rawurlencode($row['week']) . '/' . rawurlencode($layer['file']) . '?v=' . urlencode((string)$row['updated_at']),
+                    'x'         => isset($layer['x']) ? (float)$layer['x'] : 0,
+                    'y'         => isset($layer['y']) ? (float)$layer['y'] : 0,
                     'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
                     'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
                     'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.414,
                     'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
+                    'rx'        => isset($layer['rx']) ? (float)$layer['rx'] : 0,
+                    'ry'        => isset($layer['ry']) ? (float)$layer['ry'] : 0,
+                    'rz'        => isset($layer['rz']) ? (float)$layer['rz'] : 0,
+                    'scale'     => isset($layer['scale']) && (float)$layer['scale'] > 0 ? (float)$layer['scale'] : 1.0,
                     'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
                     'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
                     'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,
@@ -266,15 +272,24 @@ if ($method === 'POST' && $path === '/admin/essays') {
             if (!in_array($ext, ALLOWED_LAYER_EXT, true)) {
                 jsonResponse(['message' => 'Ongeldig type voor layer ' . ($i + 1)], 400);
             }
+            if ($ext === 'glb' && $_FILES['layers']['size'][$i] > MAX_GLB_SIZE) {
+                jsonResponse(['message' => '3D-model (laag ' . ($i + 1) . ') mag max. 10MB zijn'], 400);
+            }
             $filename = 'layer_' . $i . '.' . $ext;
             move_uploaded_file($_FILES['layers']['tmp_name'][$i], $weekDir . '/' . $filename);
 
             $layers[] = [
                 'file'      => $filename,
+                'x'         => (float)($_POST['layer_x'][$i] ?? 0),
+                'y'         => (float)($_POST['layer_y'][$i] ?? 0),
                 'z'         => (float)($_POST['layer_z'][$i] ?? 0.01 + $i * 0.01),
                 'w'         => (float)($_POST['layer_w'][$i] ?? 1.0),
                 'h'         => (float)($_POST['layer_h'][$i] ?? 1.414),
                 'opacity'   => min(1.0, max(0.0, (float)($_POST['layer_opacity'][$i] ?? 1.0))),
+                'rx'        => (float)($_POST['layer_rx'][$i] ?? 0),
+                'ry'        => (float)($_POST['layer_ry'][$i] ?? 0),
+                'rz'        => (float)($_POST['layer_rz'][$i] ?? 0),
+                'scale'     => max(0.001, (float)($_POST['layer_scale'][$i] ?? 1.0)),
                 'anim_dur'  => (float)($_POST['layer_anim_dur'][$i] ?? 0),
                 'anim_x'    => (float)($_POST['layer_anim_x'][$i] ?? 0),
                 'anim_y'    => (float)($_POST['layer_anim_y'][$i] ?? 0),
@@ -298,8 +313,65 @@ if ($method === 'POST' && $path === '/admin/essays') {
     jsonResponse(['ok' => true, 'essay' => essayToApi($stmt->fetch())]);
 }
 
-if ($method === 'POST' && preg_match('#^/admin/essays/([^/]+)/publish$#', $path, $m)) {
+// Alleen de laag-instellingen opslaan (positioneer-tool; geen bestandsupload)
+if ($method === 'POST' && preg_match('#^/admin/essays/([^/]+)/layers$#', $path, $m)) {
     requireAuth();
+    $week = sanitizeWeek($m[1]);
+
+    $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");
+    $stmt->execute([$week]);
+    $existing = $stmt->fetch();
+    if (!$existing) {
+        jsonResponse(['message' => 'Essay niet gevonden'], 404);
+    }
+
+    $input = getJsonInput();
+    $inLayers = isset($input['layers']) && is_array($input['layers']) ? $input['layers'] : [];
+    $weekDir = ESSAYS_DIR . '/' . $week;
+
+    $layers = [];
+    foreach ($inLayers as $in) {
+        if (!is_array($in) || empty($in['file'])) continue;
+        // Alleen bestaande bestanden in de eigen week-map (geen paden)
+        $file = basename((string)$in['file']);
+        if ($file !== (string)$in['file'] || !file_exists($weekDir . '/' . $file)) continue;
+
+        $num = function ($v, $def, $min = null, $max = null) {
+            $f = is_numeric($v) ? (float)$v : (float)$def;
+            if ($min !== null) $f = max($min, $f);
+            if ($max !== null) $f = min($max, $f);
+            return $f;
+        };
+
+        $layers[] = [
+            'file'      => $file,
+            'x'         => $num($in['x'] ?? null, 0),
+            'y'         => $num($in['y'] ?? null, 0),
+            'z'         => $num($in['z'] ?? null, 0.01, -10, 10),
+            'w'         => $num($in['w'] ?? null, 1.0, 0.01, 10),
+            'h'         => $num($in['h'] ?? null, 1.414, 0.01, 10),
+            'opacity'   => $num($in['opacity'] ?? null, 1.0, 0, 1),
+            'rx'        => $num($in['rx'] ?? null, 0, -360, 360),
+            'ry'        => $num($in['ry'] ?? null, 0, -360, 360),
+            'rz'        => $num($in['rz'] ?? null, 0, -360, 360),
+            'scale'     => $num($in['scale'] ?? null, 1.0, 0.001, 100),
+            'anim_dur'  => $num($in['anim_dur'] ?? null, 0, 0, 600),
+            'anim_x'    => $num($in['anim_x'] ?? null, 0, -10, 10),
+            'anim_y'    => $num($in['anim_y'] ?? null, 0, -10, 10),
+            'anim_z'    => $num($in['anim_z'] ?? null, 0, -10, 10),
+        ];
+    }
+
+    $layersJson = json_encode($layers, JSON_UNESCAPED_UNICODE);
+    $db->prepare("UPDATE essays SET layers = ?, updated_at = CURRENT_TIMESTAMP WHERE week = ?")
+       ->execute([$layersJson, $week]);
+
+    $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");
+    $stmt->execute([$week]);
+    jsonResponse(['ok' => true, 'essay' => essayToApi($stmt->fetch())]);
+}
+
+if ($method === 'POST' && preg_match('#^/admin/essays/([^/]+)/publish$#', $path, $m)) {    requireAuth();
     $week = sanitizeWeek($m[1]);
     $input = getJsonInput();
     $published = !empty($input['published']) ? 1 : 0;

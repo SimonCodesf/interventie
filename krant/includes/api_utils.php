@@ -91,10 +91,16 @@ function essayToApi($row) {
             if (empty($layer['file'])) continue;
             $essay['layers'][] = [
                 'file'      => $base . rawurlencode($layer['file']) . $v,
+                'x'         => isset($layer['x']) ? (float)$layer['x'] : 0,
+                'y'         => isset($layer['y']) ? (float)$layer['y'] : 0,
                 'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
                 'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
                 'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.414,
                 'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
+                'rx'        => isset($layer['rx']) ? (float)$layer['rx'] : 0,
+                'ry'        => isset($layer['ry']) ? (float)$layer['ry'] : 0,
+                'rz'        => isset($layer['rz']) ? (float)$layer['rz'] : 0,
+                'scale'     => isset($layer['scale']) && (float)$layer['scale'] > 0 ? (float)$layer['scale'] : 1.0,
                 'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
                 'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
                 'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,

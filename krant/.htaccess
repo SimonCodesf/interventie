@@ -16,10 +16,13 @@ RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
     Deny from all
 </FilesMatch>
 
+# Correct MIME-type voor 3D-modellen
+AddType model/gltf-binary .glb
+
 # CORS voor AR resources (MindAR laadt .mind + layers via XHR/WebGL)
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
-    <FilesMatch "\.(jpg|jpeg|png|webp|gif|svg|mind)$">
+    <FilesMatch "\.(jpg|jpeg|png|webp|gif|svg|mind|glb)$">
         Header set Access-Control-Allow-Origin "*"
         Header set Cross-Origin-Resource-Policy "cross-origin"
     </FilesMatch>
@@ -30,13 +33,14 @@ RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
     </FilesMatch>
 
     # Static assets: lang cachen (URLs krijgen ?v= bij wijziging)
-    <FilesMatch "\.(css|js|jpg|jpeg|png|webp|gif|svg|mind)$">
+    <FilesMatch "\.(css|js|jpg|jpeg|png|webp|gif|svg|mind|glb)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </IfModule>
 
-# Geen gzip voor binaire .mind files (corruptie-gevoelig)
+# Geen gzip voor binaire .mind/.glb files (corruptie-gevoelig)
 <IfModule mod_deflate.c>
     SetEnvIfNoCase Request_URI "\.mind$" no-gzip=1
+    SetEnvIfNoCase Request_URI "\.glb$" no-gzip=1
     AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
 </IfModule>

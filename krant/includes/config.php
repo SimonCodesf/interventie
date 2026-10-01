@@ -18,5 +18,7 @@ foreach ([dirname(DB_FILE), ESSAYS_DIR, BUNDLE_DIR] as $dir) {
 
 // Toegestane bestandstypes
 define('ALLOWED_PAGE_EXT', ['jpg', 'jpeg', 'png', 'webp']);
-define('ALLOWED_LAYER_EXT', ['png', 'webp', 'jpg', 'jpeg', 'gif']);
+define('ALLOWED_LAYER_EXT', ['png', 'webp', 'jpg', 'jpeg', 'gif', 'glb']);
+// Max. grootte 3D-modellen (10MB, zoals het originele project)
+define('MAX_GLB_SIZE', 10 * 1024 * 1024);
 define('ALLOWED_MIND_EXT', ['mind']);

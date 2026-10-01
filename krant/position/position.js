@@ -1,0 +1,311 @@
+// Interventie — Positioneer-tool (smartphone)
+// Laad een essay, bekijk de lagen live in AR en schuif ze op hun plek.
+// Vereist admin-login (zelfde sessie als /krant/admin/).
+
+const API = '../api.php';
+
+let week = null;
+let essay = null;          // volledige essay-JSON (met URL's)
+let layers = [];           // werk-kopie (file = volledige URL voor de scene)
+let entities = [];         // a-entity referenties per laag
+let selected = -1;
+let sceneStarted = false;
+
+const scriptPromises = {};
+
+function loadScript(src) {
+    if (scriptPromises[src]) return scriptPromises[src];
+    scriptPromises[src] = new Promise(function (resolve, reject) {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = function () { resolve(); };
+        s.onerror = function () { reject(new Error(src)); };
+        document.head.appendChild(s);
+    });
+    return scriptPromises[src];
+}
+
+function status(msg, cls) {
+    const el = document.getElementById('pos-status');
+    el.textContent = msg;
+    el.className = cls || '';
+}
+
+function layerKind(layer) {
+    const f = (layer.file || '').toLowerCase();
+    if (/\.glb(\?|$)/.test(f)) return '3d';
+    if (/\.gif(\?|$)/.test(f)) return 'gif';
+    return 'img';
+}
+
+function baseName(url) {
+    return String(url).split('/').pop().split('?')[0];
+}
+
+// ---- Auth + essay kiezen ----
+
+async function init() {
+    try {
+        const res = await fetch(API + '/admin/status');
+        const data = await res.json();
+        if (!data.logged_in) {
+            document.getElementById('pos-auth').style.display = 'block';
+            return;
+        }
+    } catch (e) {
+        document.getElementById('pos-auth').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('pos-app').style.display = 'block';
+
+    const listRes = await fetch(API + '/admin/essays');
+    const listData = await listRes.json();
+    const sel = document.getElementById('pos-week');
+    (listData.essays || []).forEach(function (e) {
+        const opt = document.createElement('option');
+        opt.value = e.week;
+        opt.textContent = e.week + ' — ' + e.title + (e.published ? '' : ' (draft)');
+        sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function () { loadWeek(sel.value); });
+
+    if (sel.options.length) loadWeek(sel.value);
+    else status('Nog geen essays. Maak er eerst een in de admin.', 'err');
+}
+
+async function loadWeek(w) {
+    week = w;
+    selected = -1;
+    entities = [];
+    layers = [];
+    document.getElementById('pos-layers').innerHTML = '';
+    document.getElementById('pos-controls').innerHTML = '';
+
+    const res = await fetch(API + '/admin/essays/' + encodeURIComponent(w));
+    if (!res.ok) {
+        status('Essay niet gevonden', 'err');
+        return;
+    }
+    const data = await res.json();
+    essay = data.essay;
+    // Werk-kopie (animatie-velden blijven behouden bij opslaan)
+    layers = (essay.layers || []).map(function (l) {
+        return {
+            file: l.file, x: l.x || 0, y: l.y || 0, z: l.z, w: l.w, h: l.h,
+            opacity: l.opacity !== undefined ? l.opacity : 1,
+            rx: l.rx || 0, ry: l.ry || 0, rz: l.rz || 0, scale: l.scale || 1,
+            anim_dur: l.anim_dur || 0, anim_x: l.anim_x || 0,
+            anim_y: l.anim_y || 0, anim_z: l.anim_z !== undefined ? l.anim_z : l.z,
+        };
+    });
+
+    renderLayerButtons();
+    if (sceneStarted) buildScene();
+    else status('Tik START CAMERA en richt op de pagina.');
+}
+
+// ---- Scene (zonder animatie, zodat positioneren stabiel is) ----
+
+function buildScene() {
+    const box = document.getElementById('ar-scene');
+    const old = box.querySelector('a-scene');
+    if (old) {
+        try {
+            if (old.components && old.components['mindar-image-system']) {
+                old.components['mindar-image-system'].stop();
+            }
+        } catch (e) {}
+        old.remove();
+    }
+    entities = [];
+    if (!essay || !essay.mind) {
+        status('Geen AR marker voor dit essay', 'err');
+        return;
+    }
+
+    const scene = document.createElement('a-scene');
+    scene.setAttribute('mindar-image',
+        'imageTargetSrc: ' + essay.mind +
+        '; filterMinCF: 0.0015; filterBeta: 0.008' +
+        '; warmupTolerance: 0; missTolerance: 5' +
+        '; uiLoading: no; uiScanning: no; uiError: no');
+    scene.setAttribute('color-space', 'sRGB');
+    scene.setAttribute('renderer', 'colorManagement: true');
+    scene.setAttribute('vr-mode-ui', 'enabled: false');
+    scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
+    scene.setAttribute('embedded', '');
+
+    const camera = document.createElement('a-camera');
+    camera.setAttribute('position', '0 0 0');
+    camera.setAttribute('look-controls', 'enabled: false');
+    scene.appendChild(camera);
+
+    const target = document.createElement('a-entity');
+    target.setAttribute('mindar-image-target', 'targetIndex: 0');
+
+    layers.forEach(function (layer, i) {
+        const kind = layerKind(layer);
+        let obj;
+        if (kind === '3d') {
+            obj = document.createElement('a-entity');
+            obj.setAttribute('gltf-model', layer.file);
+        } else {
+            obj = document.createElement('a-plane');
+            if (kind !== 'gif') obj.setAttribute('src', layer.file);
+            obj.setAttribute('width', layer.w);
+            obj.setAttribute('height', layer.h);
+            if (kind === 'gif') obj.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
+        }
+        applyTransform(obj, layer, kind);
+        target.appendChild(obj);
+        entities[i] = obj;
+    });
+
+    scene.addEventListener('arError', function () {
+        status('Camera niet beschikbaar', 'err');
+    });
+
+    box.appendChild(scene);
+}
+
+function applyTransform(obj, layer, kind) {
+    const sc = layer.scale > 0 ? layer.scale : 1;
+    obj.setAttribute('position', layer.x + ' ' + layer.y + ' ' + layer.z);
+    obj.setAttribute('rotation', layer.rx + ' ' + layer.ry + ' ' + layer.rz);
+    obj.setAttribute('scale', sc + ' ' + sc + ' ' + sc);
+    if (kind !== '3d') {
+        obj.setAttribute('opacity', layer.opacity);
+        obj.setAttribute('width', layer.w);
+        obj.setAttribute('height', layer.h);
+    }
+}
+
+// ---- Laag kiezen + sliders ----
+
+function renderLayerButtons() {
+    const wrap = document.getElementById('pos-layers');
+    wrap.innerHTML = '';
+    layers.forEach(function (layer, i) {
+        const b = document.createElement('button');
+        b.textContent = (i + 1) + ' · ' + layerKind(layer).toUpperCase() + ' · ' + baseName(layer.file);
+        if (i === selected) b.className = 'active';
+        b.addEventListener('click', function () { selectLayer(i); });
+        wrap.appendChild(b);
+    });
+    if (layers.length && selected < 0) selectLayer(0);
+}
+
+function selectLayer(i) {
+    selected = i;
+    renderLayerButtons();
+    renderControls();
+}
+
+function slider(parent, label, min, max, step, get, set) {
+    const row = document.createElement('div');
+    row.className = 'ctl';
+    const lab = document.createElement('label');
+    lab.textContent = label;
+    const inp = document.createElement('input');
+    inp.type = 'range';
+    inp.min = min; inp.max = max; inp.step = step;
+    inp.value = get();
+    const out = document.createElement('output');
+    out.textContent = get();
+    inp.addEventListener('input', function () {
+        set(parseFloat(inp.value));
+        out.textContent = inp.value;
+    });
+    row.appendChild(lab);
+    row.appendChild(inp);
+    row.appendChild(out);
+    parent.appendChild(row);
+}
+
+function groupTitle(parent, text) {
+    const t = document.createElement('div');
+    t.className = 'ctl-group';
+    t.textContent = text;
+    parent.appendChild(t);
+}
+
+function renderControls() {
+    const wrap = document.getElementById('pos-controls');
+    wrap.innerHTML = '';
+    if (selected < 0 || !layers[selected]) {
+        wrap.textContent = 'Kies een laag hierboven.';
+        return;
+    }
+    const layer = layers[selected];
+    const kind = layerKind(layer);
+    const obj = entities[selected];
+
+    function live() {
+        if (obj) applyTransform(obj, layer, kind);
+    }
+
+    groupTitle(wrap, 'Positie');
+    slider(wrap, 'X', -1, 1, 0.005, function () { return layer.x; }, function (v) { layer.x = v; live(); });
+    slider(wrap, 'Y', -1, 1, 0.005, function () { return layer.y; }, function (v) { layer.y = v; live(); });
+    slider(wrap, 'Z', 0, 0.5, 0.005, function () { return layer.z; }, function (v) { layer.z = v; live(); });
+
+    if (kind !== '3d') {
+        groupTitle(wrap, 'Formaat');
+        slider(wrap, 'Breedte', 0.1, 3, 0.01, function () { return layer.w; }, function (v) { layer.w = v; live(); });
+        slider(wrap, 'Hoogte', 0.1, 3, 0.01, function () { return layer.h; }, function (v) { layer.h = v; live(); });
+        slider(wrap, 'Dekking', 0, 1, 0.05, function () { return layer.opacity; }, function (v) { layer.opacity = v; live(); });
+    }
+
+    groupTitle(wrap, 'Rotatie + schaal');
+    slider(wrap, 'Rot X', -180, 180, 1, function () { return layer.rx; }, function (v) { layer.rx = v; live(); });
+    slider(wrap, 'Rot Y', -180, 180, 1, function () { return layer.ry; }, function (v) { layer.ry = v; live(); });
+    slider(wrap, 'Rot Z', -180, 180, 1, function () { return layer.rz; }, function (v) { layer.rz = v; live(); });
+    slider(wrap, 'Schaal', 0.1, 5, 0.05, function () { return layer.scale; }, function (v) { layer.scale = v; live(); });
+}
+
+// ---- Opslaan ----
+
+document.getElementById('pos-save').addEventListener('click', async function () {
+    if (!week) return;
+    status('Opslaan…');
+    const payload = layers.map(function (l) {
+        return {
+            file: baseName(l.file),
+            x: l.x, y: l.y, z: l.z, w: l.w, h: l.h, opacity: l.opacity,
+            rx: l.rx, ry: l.ry, rz: l.rz, scale: l.scale,
+            anim_dur: l.anim_dur, anim_x: l.anim_x, anim_y: l.anim_y, anim_z: l.anim_z,
+        };
+    });
+    try {
+        const res = await fetch(API + '/admin/essays/' + encodeURIComponent(week) + '/layers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ layers: payload }),
+        });
+        const data = await res.json();
+        if (res.ok) status('Opgeslagen ✓', 'ok');
+        else status(data.message || 'Opslaan mislukt', 'err');
+    } catch (e) {
+        status('Geen verbinding', 'err');
+    }
+});
+
+// ---- Start ----
+
+document.getElementById('pos-start-btn').addEventListener('click', async function () {
+    document.getElementById('pos-start').style.display = 'none';
+    try {
+        await loadScript('../js/vendor/aframe.min.js');
+        await loadScript('../js/vendor/mindar-image-aframe.prod.js');
+        await loadScript('../js/vendor/gif-component.js');
+    } catch (e) {
+        status('AR-bibliotheken konden niet laden', 'err');
+        document.getElementById('pos-start').style.display = 'flex';
+        return;
+    }
+    sceneStarted = true;
+    if (essay) buildScene();
+});
+
+init();

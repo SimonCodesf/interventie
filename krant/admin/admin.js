@@ -138,27 +138,44 @@ document.getElementById('logout-button').addEventListener('click', async functio
 // ---- Layer rijen ----
 
 function layerDefaults(index) {
-    return { z: (0.01 + index * 0.01).toFixed(2), w: '1', h: '1.414', opacity: '1', anim_dur: '0', anim_x: '0', anim_y: '0', anim_z: '0' };
+    return {
+        x: '0', y: '0', z: (0.01 + index * 0.01).toFixed(2),
+        w: '1', h: '1.414', opacity: '1',
+        rx: '0', ry: '0', rz: '0', scale: '1',
+        anim_dur: '0', anim_x: '0', anim_y: '0', anim_z: '0',
+    };
+}
+
+function numField(name, label, value, extra) {
+    return '<label>' + label + '<input type="number" step="0.01" name="' + name + '" value="' + value + '"' + (extra || '') + '></label>';
 }
 
 function addLayerRow(values) {
     const rows = document.getElementById('layers-rows');
-    const index = rows.children.length;
-    const v = values || layerDefaults(index);
+    const v = values || layerDefaults(rows.children.length);
 
     const row = document.createElement('div');
     row.className = 'layer-row';
     row.innerHTML =
-        '<label>Bestand (PNG/GIF)<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif"></label>' +
-        '<label>Z (diepte)<input type="number" step="0.01" name="layer_z" value="' + v.z + '"></label>' +
-        '<label>Breedte<input type="number" step="0.01" name="layer_w" value="' + v.w + '"></label>' +
-        '<label>Hoogte<input type="number" step="0.01" name="layer_h" value="' + v.h + '"></label>' +
-        '<label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="' + v.opacity + '"></label>' +
-        '<label>Anim duur (s)<input type="number" step="0.1" min="0" name="layer_anim_dur" value="' + v.anim_dur + '"></label>' +
-        '<label>Anim naar X<input type="number" step="0.01" name="layer_anim_x" value="' + v.anim_x + '"></label>' +
-        '<label>Anim naar Y<input type="number" step="0.01" name="layer_anim_y" value="' + v.anim_y + '"></label>' +
-        '<label>Anim naar Z<input type="number" step="0.01" name="layer_anim_z" value="' + v.anim_z + '"></label>' +
-        '<button type="button" class="remove-layer" title="Verwijder laag">×</button>';
+        '<div class="layer-top">' +
+            '<label class="grow">Bestand (PNG/GIF/GLB)<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb"></label>' +
+            '<button type="button" class="remove-layer" title="Verwijder laag">×</button>' +
+        '</div>' +
+        '<div class="layer-group"><span class="group-title">Positie</span>' +
+            numField('layer_x', 'X', v.x) + numField('layer_y', 'Y', v.y) + numField('layer_z', 'Z', v.z) +
+        '</div>' +
+        '<div class="layer-group"><span class="group-title">Formaat</span>' +
+            numField('layer_w', 'Breedte', v.w) + numField('layer_h', 'Hoogte', v.h) +
+            '<label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="' + v.opacity + '"></label>' +
+            numField('layer_scale', 'Schaal', v.scale, ' min="0.01"') +
+        '</div>' +
+        '<div class="layer-group"><span class="group-title">Rotatie (°)</span>' +
+            numField('layer_rx', 'X', v.rx) + numField('layer_ry', 'Y', v.ry) + numField('layer_rz', 'Z', v.rz) +
+        '</div>' +
+        '<div class="layer-group"><span class="group-title">Animatie (heen-en-weer)</span>' +
+            '<label>Duur (s)<input type="number" step="0.1" min="0" name="layer_anim_dur" value="' + v.anim_dur + '"></label>' +
+            numField('layer_anim_x', 'Naar X', v.anim_x) + numField('layer_anim_y', 'Naar Y', v.anim_y) + numField('layer_anim_z', 'Naar Z', v.anim_z) +
+        '</div>';
 
     row.querySelector('.remove-layer').addEventListener('click', function () {
         row.remove();
@@ -276,18 +293,28 @@ document.getElementById('essay-form').addEventListener('submit', async function 
 
     // Enkel rijen met een bestand meesturen (compact, index-consistent)
     let layerIndex = 0;
+    const getNum = function (row, name, def) {
+        const el = row.querySelector('input[name="' + name + '"]');
+        return (el && el.value !== '') ? el.value : def;
+    };
     document.querySelectorAll('#layers-rows .layer-row').forEach(function (row) {
         const file = row.querySelector('input[name="layer_file"]').files[0];
         if (!file) return;
         fd.append('layers[]', file);
-        fd.append('layer_z[]', row.querySelector('input[name="layer_z"]').value || '0.01');
-        fd.append('layer_w[]', row.querySelector('input[name="layer_w"]').value || '1');
-        fd.append('layer_h[]', row.querySelector('input[name="layer_h"]').value || '1.414');
-        fd.append('layer_opacity[]', row.querySelector('input[name="layer_opacity"]').value || '1');
-        fd.append('layer_anim_dur[]', row.querySelector('input[name="layer_anim_dur"]').value || '0');
-        fd.append('layer_anim_x[]', row.querySelector('input[name="layer_anim_x"]').value || '0');
-        fd.append('layer_anim_y[]', row.querySelector('input[name="layer_anim_y"]').value || '0');
-        fd.append('layer_anim_z[]', row.querySelector('input[name="layer_anim_z"]').value || '0');
+        fd.append('layer_x[]', getNum(row, 'layer_x', '0'));
+        fd.append('layer_y[]', getNum(row, 'layer_y', '0'));
+        fd.append('layer_z[]', getNum(row, 'layer_z', '0.01'));
+        fd.append('layer_w[]', getNum(row, 'layer_w', '1'));
+        fd.append('layer_h[]', getNum(row, 'layer_h', '1.414'));
+        fd.append('layer_opacity[]', getNum(row, 'layer_opacity', '1'));
+        fd.append('layer_rx[]', getNum(row, 'layer_rx', '0'));
+        fd.append('layer_ry[]', getNum(row, 'layer_ry', '0'));
+        fd.append('layer_rz[]', getNum(row, 'layer_rz', '0'));
+        fd.append('layer_scale[]', getNum(row, 'layer_scale', '1'));
+        fd.append('layer_anim_dur[]', getNum(row, 'layer_anim_dur', '0'));
+        fd.append('layer_anim_x[]', getNum(row, 'layer_anim_x', '0'));
+        fd.append('layer_anim_y[]', getNum(row, 'layer_anim_y', '0'));
+        fd.append('layer_anim_z[]', getNum(row, 'layer_anim_z', '0'));
         layerIndex++;
     });
 
@@ -510,7 +537,9 @@ async function loadIntoForm(week) {
         rows.innerHTML = '';
         essay.layers.forEach(function (layer) {
             addLayerRow({
-                z: layer.z, w: layer.w, h: layer.h, opacity: layer.opacity,
+                x: layer.x || 0, y: layer.y || 0, z: layer.z,
+                w: layer.w, h: layer.h, opacity: layer.opacity,
+                rx: layer.rx || 0, ry: layer.ry || 0, rz: layer.rz || 0, scale: layer.scale || 1,
                 anim_dur: layer.anim_dur, anim_x: layer.anim_x, anim_y: layer.anim_y, anim_z: layer.anim_z,
             });
         });

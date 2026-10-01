@@ -158,32 +158,54 @@ fieldset legend {
 }
 
 .layer-row {
-    display: grid;
-    grid-template-columns: 2fr repeat(4, 1fr) auto;
-    gap: 0.5rem;
-    align-items: end;
     margin-bottom: 0.75rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px dashed var(--line);
+    padding: 0.75rem;
+    border: 1px solid var(--line);
+    background: #fdfdfb;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .layer-row label { margin-bottom: 0; }
 .layer-row input { min-width: 0; }
 
-/* Animatie-velden op de tweede rij */
-.layer-row label:nth-of-type(n+7) {
-    grid-row: 2;
+.layer-top {
+    display: flex;
+    gap: 0.5rem;
+    align-items: end;
+}
+
+.layer-top .grow { flex: 1; }
+
+.layer-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.layer-group .group-title {
+    width: 100%;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+}
+
+.layer-group label {
+    flex: 1;
+    min-width: 4.5rem;
 }
 
 .layer-row .remove-layer {
-    grid-row: 1 / span 2;
     background: transparent;
     color: var(--accent);
     border: none;
     font-size: 1.1rem;
     padding: 0.5rem;
     cursor: pointer;
-    align-self: center;
+    flex-shrink: 0;
 }
 
 /* .mind generatie */
@@ -263,7 +285,4 @@ td.actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 
 @media (max-width: 700px) {
     .row.two-col { grid-template-columns: 1fr; }
-    .layer-row { grid-template-columns: 1fr 1fr; }
-    .layer-row label:nth-of-type(n+7) { grid-row: auto; }
-    .layer-row .remove-layer { grid-row: auto; }
 }

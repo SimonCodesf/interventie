@@ -219,27 +219,43 @@ function buildScene(mindSrc, targets) {
         });
 
         (t.layers || []).forEach(function (layer) {
-            const plane = document.createElement('a-plane');
+            const lx = layer.x || 0, ly = layer.y || 0, lz = layer.z;
+            const rx = layer.rx || 0, ry = layer.ry || 0, rz = layer.rz || 0;
+            const sc = layer.scale > 0 ? layer.scale : 1;
+            const isModel = /\.glb(\?|$)/i.test(layer.file);
             const isGif = /\.gif(\?|$)/i.test(layer.file);
-            if (!isGif) plane.setAttribute('src', layer.file);
-            plane.setAttribute('position', '0 0 ' + layer.z);
-            plane.setAttribute('width', layer.w);
-            plane.setAttribute('height', layer.h);
-            plane.setAttribute('transparent', 'true');
-            plane.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
-            // GIF-lagen: engine uit het vorige project (frame parsing + animatie)
-            if (isGif) plane.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
+
+            let obj;
+            if (isModel) {
+                // 3D-model (zoals het vorige project)
+                obj = document.createElement('a-entity');
+                obj.setAttribute('gltf-model', layer.file);
+                obj.setAttribute('scale', sc + ' ' + sc + ' ' + sc);
+            } else {
+                obj = document.createElement('a-plane');
+                if (!isGif) obj.setAttribute('src', layer.file);
+                obj.setAttribute('width', layer.w);
+                obj.setAttribute('height', layer.h);
+                obj.setAttribute('transparent', 'true');
+                obj.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
+                obj.setAttribute('scale', sc + ' ' + sc + ' ' + sc);
+                // GIF-lagen: engine uit het vorige project (frame parsing + animatie)
+                if (isGif) obj.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
+            }
+
+            obj.setAttribute('position', lx + ' ' + ly + ' ' + lz);
+            obj.setAttribute('rotation', rx + ' ' + ry + ' ' + rz);
 
             const animDur = layer.anim_dur > 0 ? layer.anim_dur * 1000 : 0;
             if (animDur > 0) {
-                plane.setAttribute('animation',
+                obj.setAttribute('animation',
                     'property: position;' +
-                    'from: 0 0 ' + layer.z + ';' +
-                    'to: ' + (layer.anim_x || 0) + ' ' + (layer.anim_y || 0) + ' ' + (layer.anim_z !== undefined ? layer.anim_z : layer.z) + ';' +
+                    'from: ' + lx + ' ' + ly + ' ' + lz + ';' +
+                    'to: ' + (layer.anim_x || 0) + ' ' + (layer.anim_y || 0) + ' ' + (layer.anim_z !== undefined ? layer.anim_z : lz) + ';' +
                     'dur: ' + animDur + ';' +
                     'dir: alternate; loop: true; easing: easeInOutSine');
             }
-            target.appendChild(plane);
+            target.appendChild(obj);
         });
 
         scene.appendChild(target);

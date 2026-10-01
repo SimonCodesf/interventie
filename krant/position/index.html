@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f2eee2">
+    <title>Interventie — Positioneren</title>
+    <link rel="stylesheet" href="position.css?v=1">
+</head>
+<body>
+
+    <div id="pos-auth" style="display:none;">
+        <p>Log eerst in via de <a href="../admin/">admin</a>, kom daarna hier terug.</p>
+    </div>
+
+    <div id="pos-app" style="display:none;">
+        <header id="pos-top">
+            <select id="pos-week"></select>
+            <button id="pos-save">OPSLAAN</button>
+        </header>
+
+        <div id="pos-layers"></div>
+
+        <div id="pos-ar">
+            <div id="ar-scene"></div>
+            <div id="pos-start">
+                <button id="pos-start-btn">START CAMERA</button>
+            </div>
+        </div>
+
+        <div id="pos-controls"></div>
+        <p id="pos-status"></p>
+    </div>
+
+    <script src="position.js?v=1"></script>
+</body>
+</html>
