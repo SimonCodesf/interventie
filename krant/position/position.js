@@ -240,6 +240,25 @@ function buildScene() {
 
     box.appendChild(scene);
 
+    // Tijdelijke diagnose (?dev=1): waar breekt tonen? anchors geregistreerd?
+    // setupMarker gedaan? object3D ooit visible?
+    if (new URLSearchParams(location.search).has('dev')) {
+        setInterval(function () {
+            try {
+                const scenes = document.querySelectorAll('#ar-scene a-scene').length;
+                const sc = document.querySelector('#ar-scene a-scene');
+                const sys = sc && sc.systems ? sc.systems['mindar-image-system'] : null;
+                const anchors = sys ? sys.anchorEntities.map(function (a) {
+                    return a.targetIndex + ':' + (a.el && a.el.postMatrix ? 'setup' : 'NO-SETUP');
+                }).join(',') : 'geen-sys';
+                const vis = entities.map(function (e, i) {
+                    return i + ':' + (e && e.object3D ? (e.object3D.visible ? 'VIS' : 'hid') : '?');
+                }).join(',');
+                console.log('[pos] dbg scenes=' + scenes + ' anchors=[' + anchors + '] lagen={' + vis + '}');
+            } catch (err) { console.log('[pos] dbg mislukt: ' + err); }
+        }, 2000);
+    }
+
     // Diagnose: ontbrekende bestanden (404) leveren onzichtbare lagen.
     // Blokkeert de scene niet; meldt alleen.
     checkAssets();
