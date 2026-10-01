@@ -36,6 +36,12 @@ AddType model/gltf-binary .glb
     <FilesMatch "\.(css|js|jpg|jpeg|png|webp|gif|svg|mind|glb)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
+
+    # AR heeft camera nodig: de server stuurt standaard camera=() mee
+    # (blokkeert elke cameravraag zonder popup). Hier overschrijven.
+    Header unset Permissions-Policy
+    Header always unset Permissions-Policy
+    Header set Permissions-Policy "camera=(self), microphone=(), geolocation=(), fullscreen=(self), autoplay=(self)"
 </IfModule>
 
 # Geen gzip voor binaire .mind/.glb files (corruptie-gevoelig)
