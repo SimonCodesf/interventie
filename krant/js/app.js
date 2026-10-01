@@ -94,21 +94,30 @@ async function cameraBlocked() {
     return false;
 }
 
-// De toestemmingsvraag actief stellen. Geeft true als we een stream konden
-// openen (daarna meteen weer vrijgegeven — XR8 neemt de camera over).
-// Bij een harde blokkade weigert Chrome direct zonder vraag (false).
+// De toestemmingsvraag actief stellen. Geeft {ok, reason} terug — reason is
+// de DOMException-naam (NotAllowedError = geblokkeerd, NotReadableError =
+// camera bezet/defect, …). Stream wordt meteen weer vrijgegeven, XR8 neemt
+// de camera daarna over. Bij een harde blokkade weigert Chrome direct (false).
 async function ensureCameraPermission() {
-    try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'environment' } },
-            audio: false,
-        });
-        stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
-        return true;
-    } catch (e) {
-        return false;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return { ok: false, reason: 'unsupported' };
     }
+    const attempts = [
+        { video: { facingMode: { ideal: 'environment' } }, audio: false },
+        { video: true, audio: false }, // zonder wensen, voor aparte toestellen
+    ];
+    let lastErr = null;
+    for (let i = 0; i < attempts.length; i++) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(attempts[i]);
+            stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+            return { ok: true };
+        } catch (e) {
+            lastErr = e;
+            if (!e || e.name !== 'OverconstrainedError') break;
+        }
+    }
+    return { ok: false, reason: (lastErr && lastErr.name) || 'error' };
 }
 
 // Na een blokkade eerst opnieuw toestemming proberen bij de volgende tap.
@@ -418,9 +427,16 @@ async function bootAR() {
     if (permissionRetry) {
         permissionRetry = false;
         bootStatus('Camera toestemming vragen…');
-        if (!(await ensureCameraPermission())) {
+        const perm = await ensureCameraPermission();
+        if (!perm.ok) {
             btn.textContent = 'CAMERA TOESTAAN';
-            bootStatus('Nog steeds geblokkeerd. Twee plekken: 1) Android-Instellingen → Apps → Chrome → Machtigingen → Camera → Toestaan. 2) Slotje in de adresbalk → Machtigingen → Camera → Toestaan. Daarna pagina herladen.');
+            if (perm.reason === 'NotReadableError' || perm.reason === 'NotFoundError') {
+                bootStatus('Camera is bezet of niet gevonden (' + perm.reason + '). Sluit andere camera-apps en probeer opnieuw.');
+            } else if (perm.reason === 'unsupported') {
+                bootStatus('Deze browser ondersteunt geen camera-toegang. Update Chrome en probeer opnieuw.');
+            } else {
+                bootStatus('Geblokkeerd (' + perm.reason + '). Tik op het tune-icoon links van het adres → Machtigingen → Camera → Toestaan. Of: Chrome-menu → Instellingen → Site-instellingen → Camera → Geblokkeerd → interventie.org → Toestaan. Daarna herladen.');
+            }
             bootStarted = false;
             btn.disabled = false;
             permissionRetry = true;
