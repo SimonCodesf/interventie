@@ -25,13 +25,13 @@ html {
 }
 
 /* Camerafeed in papier kader met een dun zwart randje
-   (boven- en onderrand breed genoeg voor titel en knop) */
+   (bovenrand breed genoeg voor de titel; onder even smal als links/rechts) */
 #ar-scene {
     position: absolute;
     top: calc(3.2rem + env(safe-area-inset-top, 0px));
     left: 0.8rem;
     right: 0.8rem;
-    bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
     border: 1px solid #141414;
     overflow: hidden;
 }
