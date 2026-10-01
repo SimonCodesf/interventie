@@ -150,8 +150,10 @@ function buildScene() {
     const old = box.querySelector('a-scene');
     if (old) {
         try {
-            if (old.components && old.components['mindar-image-system']) {
-                old.components['mindar-image-system'].stop();
+            // Let op: mindar-image-system is een SYSTEM (geen component):
+            // via systems, anders wordt de oude camera/loop nooit gestopt.
+            if (old.systems && old.systems['mindar-image-system']) {
+                old.systems['mindar-image-system'].stop();
             }
         } catch (e) {}
         old.remove();
@@ -223,6 +225,7 @@ function buildScene() {
         target.appendChild(obj);
         entities[i] = obj;
     });
+    scene.appendChild(target);
 
     scene.addEventListener('arError', function (e) {
         console.error('[pos] arError', e);
@@ -239,25 +242,6 @@ function buildScene() {
     });
 
     box.appendChild(scene);
-
-    // Tijdelijke diagnose (?dev=1): waar breekt tonen? anchors geregistreerd?
-    // setupMarker gedaan? object3D ooit visible?
-    if (new URLSearchParams(location.search).has('dev')) {
-        setInterval(function () {
-            try {
-                const scenes = document.querySelectorAll('#ar-scene a-scene').length;
-                const sc = document.querySelector('#ar-scene a-scene');
-                const sys = sc && sc.systems ? sc.systems['mindar-image-system'] : null;
-                const anchors = sys ? sys.anchorEntities.map(function (a) {
-                    return a.targetIndex + ':' + (a.el && a.el.postMatrix ? 'setup' : 'NO-SETUP');
-                }).join(',') : 'geen-sys';
-                const vis = entities.map(function (e, i) {
-                    return i + ':' + (e && e.object3D ? (e.object3D.visible ? 'VIS' : 'hid') : '?');
-                }).join(',');
-                console.log('[pos] dbg scenes=' + scenes + ' anchors=[' + anchors + '] lagen={' + vis + '}');
-            } catch (err) { console.log('[pos] dbg mislukt: ' + err); }
-        }, 2000);
-    }
 
     // Diagnose: ontbrekende bestanden (404) leveren onzichtbare lagen.
     // Blokkeert de scene niet; meldt alleen.

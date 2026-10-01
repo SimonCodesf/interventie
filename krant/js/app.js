@@ -170,8 +170,9 @@ function buildScene(mindSrc, targets) {
     const oldScene = sceneBox().querySelector('a-scene');
     if (oldScene) {
         try {
-            if (oldScene.components && oldScene.components['mindar-image-system']) {
-                oldScene.components['mindar-image-system'].stop();
+            // Let op: mindar-image-system is een SYSTEM (geen component).
+            if (oldScene.systems && oldScene.systems['mindar-image-system']) {
+                oldScene.systems['mindar-image-system'].stop();
             }
         } catch (e) { /* scene was al afgebroken */ }
         oldScene.remove();
