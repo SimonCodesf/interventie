@@ -24,6 +24,8 @@ let layers = [];           // werk-kopie (file = volledige URL voor de scene)
 let entities = [];         // a-entity referenties per laag
 let selected = -1;
 let sceneStarted = false;
+let hiddenLayers = {};     // index -> true: verborgen in preview (wordt NIET opgeslagen)
+let animPreviewOn = false; // test-animatie actief op de live laag
 
 const scriptPromises = {};
 let scriptChain = Promise.resolve();
@@ -109,6 +111,8 @@ async function loadWeek(w) {
     selected = -1;
     entities = [];
     layers = [];
+    hiddenLayers = {};
+    animPreviewOn = false;
     document.getElementById('pos-layers').innerHTML = '';
     document.getElementById('pos-controls').innerHTML = '';
 
@@ -234,7 +238,9 @@ function buildScene() {
         applyTransform(obj, layer, kind);
         target.appendChild(obj);
         entities[i] = obj;
+        if (hiddenLayers[i]) obj.setAttribute('visible', false);
     });
+    animPreviewOn = false; // nieuwe objecten: test-animatie altijd uit
     scene.appendChild(target);
 
     scene.addEventListener('arError', function (e) {
@@ -356,9 +362,9 @@ function renderControls() {
     }
 
     groupTitle(wrap, 'Positie');
-    slider(wrap, 'X', -1, 1, 0.005, function () { return layer.x; }, function (v) { layer.x = v; live(); });
-    slider(wrap, 'Y', -1, 1, 0.005, function () { return layer.y; }, function (v) { layer.y = v; live(); });
-    slider(wrap, 'Z', 0, 0.5, 0.005, function () { return layer.z; }, function (v) { layer.z = v; live(); });
+    slider(wrap, 'X', -2, 2, 0.005, function () { return layer.x; }, function (v) { layer.x = v; live(); });
+    slider(wrap, 'Y', -2, 2, 0.005, function () { return layer.y; }, function (v) { layer.y = v; live(); });
+    slider(wrap, 'Z', -0.5, 1, 0.005, function () { return layer.z; }, function (v) { layer.z = v; live(); });
 
     if (kind !== '3d') {
         groupTitle(wrap, 'Formaat');
@@ -372,6 +378,63 @@ function renderControls() {
     slider(wrap, 'Rot Y', -180, 180, 1, function () { return layer.ry; }, function (v) { layer.ry = v; live(); });
     slider(wrap, 'Rot Z', -180, 180, 1, function () { return layer.rz; }, function (v) { layer.rz = v; live(); });
     slider(wrap, 'Schaal', 0.01, 5, 0.01, function () { return layer.scale; }, function (v) { layer.scale = v; live(); });
+
+    groupTitle(wrap, 'Animatie (wordt opgeslagen)');
+    slider(wrap, 'Duur (s)', 0, 10, 0.1, function () { return layer.anim_dur; }, function (v) { layer.anim_dur = v; });
+    slider(wrap, 'Eind X', -2, 2, 0.005, function () { return layer.anim_x; }, function (v) { layer.anim_x = v; });
+    slider(wrap, 'Eind Y', -2, 2, 0.005, function () { return layer.anim_y; }, function (v) { layer.anim_y = v; });
+    slider(wrap, 'Eind Z', -0.5, 1, 0.005, function () { return layer.anim_z; }, function (v) { layer.anim_z = v; });
+    animPreviewOn = false;
+    const animBtn = document.createElement('button');
+    animBtn.className = 'wide-btn';
+    function paintAnimBtn() {
+        animBtn.textContent = animPreviewOn ? 'STOP TEST-ANIMATIE' : 'TEST ANIMATIE';
+        if (animPreviewOn) animBtn.classList.add('active');
+        else animBtn.classList.remove('active');
+    }
+    paintAnimBtn();
+    animBtn.addEventListener('click', function () {
+        const o = entities[selected];
+        if (!animPreviewOn && o && layer.anim_dur > 0) {
+            animPreviewOn = true;
+            o.setAttribute('animation',
+                'property: position;' +
+                'from: ' + layer.x + ' ' + layer.y + ' ' + layer.z + ';' +
+                'to: ' + layer.anim_x + ' ' + layer.anim_y + ' ' + layer.anim_z + ';' +
+                'dur: ' + Math.round(layer.anim_dur * 1000) + ';' +
+                'dir: alternate; loop: true; easing: easeInOutSine');
+        } else {
+            animPreviewOn = false;
+            if (!o) status('Start eerst de camera', 'err');
+            else if (!(layer.anim_dur > 0)) status('Zet eerst een duur > 0', 'err');
+            if (o) { o.removeAttribute('animation'); applyTransform(o, layer, kind); }
+        }
+        paintAnimBtn();
+    });
+    wrap.appendChild(animBtn);
+
+    groupTitle(wrap, 'Weergave (alleen preview)');
+    const visBtn = document.createElement('button');
+    visBtn.className = 'wide-btn';
+    function paintVisBtn() {
+        const hidden = !!hiddenLayers[selected];
+        visBtn.textContent = hidden ? 'TOON LAAG IN PREVIEW' : 'VERBERG LAAG IN PREVIEW';
+        if (hidden) visBtn.classList.add('active');
+        else visBtn.classList.remove('active');
+    }
+    paintVisBtn();
+    visBtn.addEventListener('click', function () {
+        const o = entities[selected];
+        if (hiddenLayers[selected]) {
+            delete hiddenLayers[selected];
+            if (o) o.setAttribute('visible', true);
+        } else {
+            hiddenLayers[selected] = true;
+            if (o) o.setAttribute('visible', false);
+        }
+        paintVisBtn();
+    });
+    wrap.appendChild(visBtn);
 }
 
 // ---- Opslaan ----

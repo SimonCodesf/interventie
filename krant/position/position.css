@@ -147,6 +147,23 @@ body {
     margin-top: 0.3rem;
 }
 
+#pos-controls .wide-btn {
+    font: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    padding: 0.55rem;
+    background: transparent;
+    color: #141414;
+    border: 1px solid #141414;
+    cursor: pointer;
+    width: 100%;
+}
+
+#pos-controls .wide-btn.active {
+    background: #141414;
+    color: #f2eee2;
+}
+
 #pos-status {
     text-align: center;
     font-size: 0.75rem;
