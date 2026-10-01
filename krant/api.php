@@ -84,8 +84,9 @@ if ($method === 'GET' && $path === '/essays/previous') {
         $layers = json_decode((string)$row['layers'], true);
         $layerList = [];
         if (is_array($layers)) {
+            $weekDir = ESSAYS_DIR . '/' . $row['week'];
             foreach ($layers as $layer) {
-                $entry = layerToApi($layer, $base, $v);
+                $entry = layerToApi($layer, $base, $v, $weekDir);
                 if ($entry) $layerList[] = $entry;
             }
         }
@@ -292,6 +293,13 @@ if ($method === 'POST' && $path === '/admin/essays') {
                 }
                 $filename = 'layer_' . $i . '.' . $ext;
                 move_uploaded_file($upTmps[$fi], $weekDir . '/' . $filename);
+                // Snelheid > pixels: grote lagen direct verkleinen (foto's
+                // max 1600px, GIF's max 800px met behoud van animatie).
+                if (in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)) {
+                    downscaleLayerImage($weekDir . '/' . $filename, 1600);
+                } elseif ($ext === 'gif') {
+                    downscaleLayerGif($weekDir . '/' . $filename, 800);
+                }
                 $fi++;
                 // Oud bestand met andere extensie opruimen
                 $prevKept = basename((string)$p('layer_existing', ''));

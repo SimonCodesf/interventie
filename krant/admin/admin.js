@@ -165,6 +165,13 @@ function baseName(url) {
     return String(url || '').split('/').pop().split('?')[0];
 }
 
+function fmtBytes(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
 function layerDefaults(index) {
     const fit = fittedSize();
     return {
@@ -190,6 +197,7 @@ function addLayerRow(values) {
     row.innerHTML =
         '<div class="layer-top">' +
             '<label class="grow">' + fileLabel + '<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb"></label>' +
+            '<span class="layer-size">' + (v.existingFile ? escapeHtml(fmtBytes(v.existingSize)) : '') + '</span>' +
             '<input type="hidden" name="layer_existing" value="' + escapeHtml(v.existingFile || '') + '">' +
             '<button type="button" class="remove-layer" title="Verwijder laag">×</button>' +
         '</div>' +
@@ -212,6 +220,14 @@ function addLayerRow(values) {
 
     row.querySelector('.remove-layer').addEventListener('click', function () {
         row.remove();
+    });
+
+    // Toon direct hoe groot het gekozen bestand is (waarschuwing bij zware).
+    const sizeEl = row.querySelector('.layer-size');
+    const existingSize = v.existingFile ? fmtBytes(v.existingSize) : '';
+    row.querySelector('input[name="layer_file"]').addEventListener('change', function () {
+        const f = this.files[0];
+        sizeEl.textContent = f ? fmtBytes(f.size) : existingSize;
     });
 
     rows.appendChild(row);
@@ -427,6 +443,7 @@ async function loadIntoForm(week) {
                 lit: layer.lit ? 1 : 0,
                 anim_dur: layer.anim_dur, anim_x: layer.anim_x, anim_y: layer.anim_y, anim_z: layer.anim_z,
                 existingFile: baseName(layer.file),
+                existingSize: layer.bytes || 0,
             });
         });
         if (essay.layers.length === 0) addLayerRow();

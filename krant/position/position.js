@@ -86,6 +86,13 @@ function baseName(url) {
     return String(url).split('/').pop().split('?')[0];
 }
 
+function fmtBytes(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
 // Passend formaat binnen een 1×1-box uit de target-verhouding (zelfde
 // ruimte als de hoofdpagina: staand = aspect-breed × 1 hoog).
 function fitSize(targetData) {
@@ -162,7 +169,7 @@ async function loadWeek(w) {
     const fit = fitSize(essay.target8w);
     layers = (essay.layers || []).map(function (l) {
         return {
-            file: l.file, x: l.x || 0, y: l.y || 0,
+            file: l.file, bytes: l.bytes || 0, x: l.x || 0, y: l.y || 0,
             z: (l.z !== undefined && l.z !== null) ? l.z : 0.01,
             w: (l.w > 0) ? l.w : fit.w, h: (l.h > 0) ? l.h : fit.h,
             opacity: l.opacity !== undefined ? l.opacity : 1,
@@ -333,7 +340,8 @@ function renderLayerButtons() {
     wrap.innerHTML = '';
     layers.forEach(function (layer, i) {
         const b = document.createElement('button');
-        b.textContent = (i + 1) + ' · ' + layerKind(layer).toUpperCase() + ' · ' + baseName(layer.file);
+        b.textContent = (i + 1) + ' · ' + layerKind(layer).toUpperCase() + ' · ' + baseName(layer.file) +
+            (layer.bytes > 0 ? ' · ' + fmtBytes(layer.bytes) : '');
         if (i === selected) b.className = 'active';
         b.addEventListener('click', function () { selectLayer(i); });
         wrap.appendChild(b);

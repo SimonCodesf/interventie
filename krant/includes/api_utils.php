@@ -149,6 +149,58 @@ function autogenerateTarget8w($weekDir, $week, $pageFilename) {
     return true;
 }
 
+// Laag-afbeelding verkleinen tot max-zijde (snelheid > pixels: op een
+// telefoonscherm is 1600px ruim scherp). Transparantie blijft behouden.
+// Alleen als groter; returnt true als er niets hoefde of het lukte.
+function downscaleLayerImage($path, $maxSide) {
+    if (!function_exists('imagecreatefromstring')) return false;
+    $info = @getimagesize($path);
+    if (!$info) return false;
+    [$w, $h, $type] = $info;
+    if ($w < 1 || $h < 1 || max($w, $h) <= $maxSide) return true;
+    $src = @imagecreatefromstring((string)@file_get_contents($path));
+    if (!$src) return false;
+    $scale = $maxSide / max($w, $h);
+    $tw = (int)max(1, round($w * $scale));
+    $th = (int)max(1, round($h * $scale));
+    $dst = imagecreatetruecolor($tw, $th);
+    if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+    } else {
+        imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255));
+    }
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $tw, $th, $w, $h);
+    imagedestroy($src);
+    $ok = false;
+    if ($type === IMAGETYPE_PNG) $ok = @imagepng($dst, $path, 6);
+    elseif ($type === IMAGETYPE_JPEG) $ok = @imagejpeg($dst, $path, 85);
+    elseif ($type === IMAGETYPE_WEBP && function_exists('imagewebp')) $ok = @imagewebp($dst, $path, 85);
+    imagedestroy($dst);
+    return (bool)$ok;
+}
+
+// GIF verkleinen met behoud van animatie (alleen als Imagick aanwezig is;
+// anders blijft het origineel staan).
+function downscaleLayerGif($path, $maxSide) {
+    if (!class_exists('Imagick')) return false;
+    try {
+        $im = new Imagick($path);
+        if (max($im->getImageWidth(), $im->getImageHeight()) <= $maxSide) { $im->clear(); return true; }
+        $im = $im->coalesceImages();
+        foreach ($im as $frame) {
+            $frame->thumbnailImage($maxSide, $maxSide, true);
+        }
+        $im = $im->deconstructImages();
+        $ok = $im->writeImages($path, true);
+        $im->clear();
+        return (bool)$ok;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 // Lazy migratie: essay zonder 8th Wall target (bv. van vóór de overstap)
 // krijgt er automatisch een uit de pagina-afbeelding, zodat bestaande
 // weken na deploy direct blijven werken. Geeft de verse rij terug.
@@ -171,10 +223,17 @@ function ensureTarget8w($db, $row) {
 
 // Eén laag normaliseren voor de API. `lit` = 1 geeft licht/schaduw
 // (standaard-materiaal), 0 = vlak/unlit (als print). Default 0.
-function layerToApi($layer, $base, $v) {
+// `bytes` = bestandsgrootte (helpt zware lagen opsporen).
+function layerToApi($layer, $base, $v, $weekDir = '') {
     if (empty($layer['file'])) return null;
+    $bytes = 0;
+    if ($weekDir !== '') {
+        $p = $weekDir . '/' . basename((string)$layer['file']);
+        if (is_file($p)) $bytes = (int)@filesize($p);
+    }
     return [
         'file'      => $base . rawurlencode($layer['file']) . $v,
+        'bytes'     => $bytes,
         'x'         => isset($layer['x']) ? (float)$layer['x'] : 0,
         'y'         => isset($layer['y']) ? (float)$layer['y'] : 0,
         'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
@@ -208,8 +267,9 @@ function essayToApi($row) {
 
     $layers = json_decode((string)$row['layers'], true);
     if (is_array($layers)) {
+        $weekDir = dirname(__DIR__) . '/uploads/essays/' . $row['week'];
         foreach ($layers as $layer) {
-            $entry = layerToApi($layer, $base, $v);
+            $entry = layerToApi($layer, $base, $v, $weekDir);
             if ($entry) $essay['layers'][] = $entry;
         }
     }
