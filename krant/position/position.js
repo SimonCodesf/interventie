@@ -12,17 +12,33 @@ let selected = -1;
 let sceneStarted = false;
 
 const scriptPromises = {};
+let scriptChain = Promise.resolve();
 
+// Strikt sequentieel (zie hoofdpagina): mindar-image-aframe mag nooit
+// vóór A-Frame uitvoeren, anders registreert het component niet -> zwart beeld.
 function loadScript(src) {
     if (scriptPromises[src]) return scriptPromises[src];
-    scriptPromises[src] = new Promise(function (resolve, reject) {
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = function () { resolve(); };
-        s.onerror = function () { reject(new Error(src)); };
-        document.head.appendChild(s);
+    const p = scriptChain.then(function () {
+        return new Promise(function (resolve, reject) {
+            const s = document.createElement('script');
+            s.src = src;
+            s.async = false;
+            s.onload = function () { resolve(); };
+            s.onerror = function () { reject(new Error(src)); };
+            document.head.appendChild(s);
+        });
     });
-    return scriptPromises[src];
+    scriptPromises[src] = p.catch(function () {});
+    scriptChain = scriptPromises[src];
+    return p;
+}
+
+// Asset-URL's uit de API zijn relatief t.o.v. /krant/ — vanaf /krant/position/
+// moeten ze één niveau omhoog.
+function absUrl(u) {
+    u = String(u || '');
+    if (/^(https?:)?\/\//.test(u) || u.charAt(0) === '/') return u;
+    return '../' + u;
 }
 
 function status(msg, cls) {
@@ -126,7 +142,7 @@ function buildScene() {
 
     const scene = document.createElement('a-scene');
     scene.setAttribute('mindar-image',
-        'imageTargetSrc: ' + essay.mind +
+        'imageTargetSrc: ' + absUrl(essay.mind) +
         '; filterMinCF: 0.0015; filterBeta: 0.008' +
         '; warmupTolerance: 0; missTolerance: 5' +
         '; uiLoading: no; uiScanning: no; uiError: no');
@@ -162,13 +178,13 @@ function buildScene() {
         let obj;
         if (kind === '3d') {
             obj = document.createElement('a-entity');
-            obj.setAttribute('gltf-model', layer.file);
+            obj.setAttribute('gltf-model', absUrl(layer.file));
         } else {
             obj = document.createElement('a-plane');
-            if (kind !== 'gif') obj.setAttribute('src', layer.file);
+            if (kind !== 'gif') obj.setAttribute('src', absUrl(layer.file));
             obj.setAttribute('width', layer.w);
             obj.setAttribute('height', layer.h);
-            if (kind === 'gif') obj.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
+            if (kind === 'gif') obj.setAttribute('gif', 'src: ' + absUrl(layer.file) + '; transparent: false');
         }
         applyTransform(obj, layer, kind);
         target.appendChild(obj);
