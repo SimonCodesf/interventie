@@ -4,20 +4,6 @@
 
 const API = '../api.php';
 
-// Vaste cameraresolutie (zelfde als hoofdpagina): voorkomt de iOS-480p
-// start en geeft de tracker meer detail -> stabielere pose, zelfde crop.
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !navigator.mediaDevices.__posPatched) {
-    navigator.mediaDevices.__posPatched = true;
-    const realGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia = function (constraints) {
-        if (constraints && constraints.video && constraints.video.facingMode) {
-            constraints.video.width = { ideal: 1280 };
-            constraints.video.height = { ideal: 720 };
-        }
-        return realGUM(constraints);
-    };
-}
-
 let week = null;
 let essay = null;          // volledige essay-JSON (met URL's)
 let layers = [];           // werk-kopie (file = volledige URL voor de scene)
@@ -30,8 +16,8 @@ let animPreviewOn = false; // test-animatie actief op de live laag
 const scriptPromises = {};
 let scriptChain = Promise.resolve();
 
-// Strikt sequentieel (zie hoofdpagina): mindar-image-aframe mag nooit
-// vóór A-Frame uitvoeren, anders registreert het component niet -> zwart beeld.
+// Strikt sequentieel: xrextras heeft AFRAME nodig, de app heeft alles nodig.
+// Zo kan een component nooit vóór zijn afhankelijkheid uitvoeren (-> zwart beeld).
 function loadScript(src) {
     if (scriptPromises[src]) return scriptPromises[src];
     const p = scriptChain.then(function () {
@@ -152,30 +138,15 @@ async function loadWeek(w) {
 function buildScene() {
     const box = document.getElementById('ar-scene');
     const old = box.querySelector('a-scene');
-    if (old) {
-        try {
-            // Let op: mindar-image-system is een SYSTEM (geen component):
-            // via systems, anders wordt de oude camera/loop nooit gestopt.
-            if (old.systems && old.systems['mindar-image-system']) {
-                old.systems['mindar-image-system'].stop();
-            }
-        } catch (e) {}
-        old.remove();
-    }
+    if (old) old.remove();
     entities = [];
-    if (!essay || !essay.mind) {
-        status('Geen AR marker voor dit essay', 'err');
+    if (!essay || !essay.target8w) {
+        status(essay ? 'Geen 8th Wall target voor dit essay (upload in admin)' : 'Geen essay geladen', 'err');
         return;
     }
 
     const scene = document.createElement('a-scene');
-    scene.setAttribute('mindar-image',
-        'imageTargetSrc: ' + absUrl(essay.mind) +
-        // Zelfde afstelling als de hoofdpagina (app.js AR_TUNING):
-        // warmup 2 + miss 6: laag verschijnt snel, blijft door dips.
-        '; filterMinCF: 0.001; filterBeta: 20' +
-        '; warmupTolerance: 2; missTolerance: 6' +
-        '; uiLoading: no; uiScanning: no; uiError: no');
+    scene.setAttribute('xrweb', 'disableWorldTracking: true');
     scene.setAttribute('color-space', 'sRGB');
     scene.setAttribute('renderer', 'colorManagement: true');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
@@ -201,12 +172,12 @@ function buildScene() {
     scene.appendChild(directional);
 
     const target = document.createElement('a-entity');
-    target.setAttribute('mindar-image-target', 'targetIndex: 0');
-    target.addEventListener('targetFound', function () {
+    target.setAttribute('xrextras-named-image-target', 'name: ' + week);
+    target.addEventListener('xrextrasfound', function () {
         console.log('[pos] marker GEVONDEN');
         status('Marker gevonden ✓ — ' + layers.length + ' laag/lagen zichtbaar.', 'ok');
     });
-    target.addEventListener('targetLost', function () {
+    target.addEventListener('xrextraslost', function () {
         console.log('[pos] marker verloren');
         status('Marker kwijt — richt op de pagina.');
     });
@@ -243,19 +214,7 @@ function buildScene() {
     animPreviewOn = false; // nieuwe objecten: test-animatie altijd uit
     scene.appendChild(target);
 
-    scene.addEventListener('arError', function (e) {
-        console.error('[pos] arError', e);
-        status('Camera niet beschikbaar', 'err');
-    });
-
-    scene.addEventListener('arReady', function () {
-        status('Camera live — richt op de pagina.');
-        // iOS kan het MindAR-video-element gepauzeerd laten staan -> expliciet afspelen.
-        const v = box.querySelector('video');
-        if (v && v.paused) {
-            v.play().catch(function (err) { console.error('[pos] video.play() mislukt:', err); });
-        }
-    });
+    console.log('[pos] scene gebouwd voor week ' + week);
 
     box.appendChild(scene);
 
@@ -264,14 +223,18 @@ function buildScene() {
     checkAssets();
 }
 
-// Bestaan .mind + laagbestanden echt? (relatief t.o.v. /krant/position/)
+// Bestaan target + laagbestanden echt? (relatief t.o.v. /krant/position/)
 async function checkAssets() {
     if (!essay) return;
-    try {
-        const mindRes = await fetch(absUrl(essay.mind), { method: 'HEAD' });
-        console.log('[pos] mind ' + mindRes.status + ' ' + absUrl(essay.mind));
-        if (!mindRes.ok) status('Markerbestand niet gevonden (' + mindRes.status + ')', 'err');
-    } catch (e) { console.error('[pos] mind-check mislukt:', e); }
+    if (essay.target8w) {
+        try {
+            const tRes = await fetch(absUrl(essay.target8w.imagePath), { method: 'HEAD' });
+            console.log('[pos] target-beeld ' + tRes.status + ' ' + absUrl(essay.target8w.imagePath));
+            if (!tRes.ok) status('Target-afbeelding niet gevonden (' + tRes.status + ')', 'err');
+        } catch (e) { console.error('[pos] target-check mislukt:', e); }
+    } else {
+        status('Geen 8th Wall target voor dit essay (upload in admin)', 'err');
+    }
     for (let i = 0; i < layers.length; i++) {
         try {
             const r = await fetch(absUrl(layers[i].file), { method: 'HEAD' });
@@ -495,13 +458,37 @@ document.getElementById('pos-save').addEventListener('click', async function () 
 
 // ---- Start ----
 
+function xrReady() {
+    return new Promise(function (resolve, reject) {
+        if (window.XR8) return resolve(window.XR8);
+        const to = setTimeout(function () {
+            reject(new Error('XR8 niet geladen (timeout)'));
+        }, 20000);
+        window.addEventListener('xrloaded', function onXr() {
+            window.removeEventListener('xrloaded', onXr);
+            clearTimeout(to);
+            resolve(window.XR8);
+        });
+    });
+}
+
 document.getElementById('pos-start-btn').addEventListener('click', async function () {
     document.getElementById('pos-start').style.display = 'none';
     try {
         await loadScript('../js/vendor/aframe.min.js');
-        await loadScript('../js/vendor/mindar-image-aframe.prod.js?v=23');
+        await loadScript('../js/vendor/xr.js?v=1');
+        await loadScript('../js/vendor/xrextras.js?v=1');
         await loadScript('../js/vendor/gif-component.js');
+        const XR8 = await xrReady();
+        if (!essay || !essay.target8w) {
+            status('Geen 8th Wall target voor dit essay (upload in admin)', 'err');
+            document.getElementById('pos-start').style.display = 'flex';
+            return;
+        }
+        XR8.XrController.configure({ imageTargetData: [essay.target8w] });
+        console.log('[pos] XR8 geconfigureerd met target: ' + essay.target8w.name);
     } catch (e) {
+        console.error(e);
         status('AR-bibliotheken konden niet laden', 'err');
         document.getElementById('pos-start').style.display = 'flex';
         return;

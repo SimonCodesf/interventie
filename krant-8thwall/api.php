@@ -111,6 +111,7 @@ if ($method === 'GET' && $path === '/essays/previous') {
             'week'        => $row['week'],
             'title'       => $row['title'],
             'targetIndex' => $i,
+            'target8w'    => target8wToApi($row, 'uploads/essays/' . rawurlencode($row['week']) . '/', '?v=' . urlencode((string)$row['updated_at'])),
             'layers'      => $layerList,
         ];
     }
@@ -234,6 +235,8 @@ if ($method === 'POST' && $path === '/admin/essays') {
 
     $pageImage = $existing ? $existing['page_image'] : '';
     $mindFile  = $existing ? $existing['mind_file'] : '';
+    $target8wJson = $existing ? ($existing['target8w_json'] ?? '') : '';
+    $target8wImage = $existing ? ($existing['target8w_image'] ?? '') : '';
     $layers    = $existing ? json_decode((string)$existing['layers'], true) : [];
     if (!is_array($layers)) $layers = [];
 
@@ -260,6 +263,24 @@ if ($method === 'POST' && $path === '/admin/essays') {
         }
         $mindFile = 'target.mind';
         move_uploaded_file($_FILES['mind_file']['tmp_name'], $weekDir . '/' . $mindFile);
+    }
+
+    // 8th Wall target (JSON + luminantie-afbeelding, gegenereerd met image-target-cli)
+    if (!empty($_FILES['target8w_json']['name'])) {
+        $ext = fileExt($_FILES['target8w_json']['name']);
+        if ($ext !== 'json') {
+            jsonResponse(['message' => 'Target moet een .json bestand zijn'], 400);
+        }
+        $target8wJson = 'target8w.json';
+        move_uploaded_file($_FILES['target8w_json']['tmp_name'], $weekDir . '/' . $target8wJson);
+    }
+    if (!empty($_FILES['target8w_image']['name'])) {
+        $ext = fileExt($_FILES['target8w_image']['name']);
+        if (!in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
+            jsonResponse(['message' => 'Target-afbeelding moet jpg of png zijn'], 400);
+        }
+        $target8wImage = 'target8w.' . $ext;
+        move_uploaded_file($_FILES['target8w_image']['tmp_name'], $weekDir . '/' . $target8wImage);
     }
 
     // AR-layers (transparante PNG's boven de pagina)
@@ -301,11 +322,11 @@ if ($method === 'POST' && $path === '/admin/essays') {
     $layersJson = json_encode($layers, JSON_UNESCAPED_UNICODE);
 
     if ($existing) {
-        $db->prepare("UPDATE essays SET title = ?, text = ?, page_image = ?, mind_file = ?, layers = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE week = ?")
-           ->execute([$title, $text, $pageImage, $mindFile, $layersJson, $published, $week]);
+        $db->prepare("UPDATE essays SET title = ?, text = ?, page_image = ?, mind_file = ?, target8w_json = ?, target8w_image = ?, layers = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE week = ?")
+           ->execute([$title, $text, $pageImage, $mindFile, $target8wJson, $target8wImage, $layersJson, $published, $week]);
     } else {
-        $db->prepare("INSERT INTO essays (week, title, text, page_image, mind_file, layers, published) VALUES (?, ?, ?, ?, ?, ?, ?)")
-           ->execute([$week, $title, $text, $pageImage, $mindFile, $layersJson, $published]);
+        $db->prepare("INSERT INTO essays (week, title, text, page_image, mind_file, target8w_json, target8w_image, layers, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+           ->execute([$week, $title, $text, $pageImage, $mindFile, $target8wJson, $target8wImage, $layersJson, $published]);
     }
 
     $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");

@@ -81,6 +81,22 @@
                         <button type="button" id="add-layer" class="ghost">+ Laag toevoegen</button>
                     </fieldset>
 
+                    <fieldset>
+                        <legend>8th Wall target (voor de nieuwe AR-engine)</legend>
+                        <p class="bundle-info">Genereer lokaal met <code>image-target-cli</code> en upload hier het <code>.json</code>-bestand + de luminantie-afbeelding. Zonder deze bestanden gebruikt de 8th Wall-pagina deze essay niet als marker.</p>
+                        <div class="row two-col">
+                            <label>
+                                Target JSON
+                                <input type="file" id="f-target8w-json" accept=".json,application/json">
+                            </label>
+                            <label>
+                                Target-afbeelding (luminance jpg/png)
+                                <input type="file" id="f-target8w-image" accept=".jpg,.jpeg,.png">
+                            </label>
+                        </div>
+                        <p id="target8w-status" class="bundle-info"></p>
+                    </fieldset>
+
                     <p id="form-error" class="error"></p>
                     <p id="form-ok" class="ok"></p>
 

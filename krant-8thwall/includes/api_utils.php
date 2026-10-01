@@ -27,6 +27,16 @@ function initDatabase() {
         )
     ");
 
+    // Migratie: 8th Wall target-kolommen (bestandsnamen, inhoud via API)
+    $cols = [];
+    foreach ($db->query("PRAGMA table_info(essays)") as $c) { $cols[] = $c['name']; }
+    if (!in_array('target8w_json', $cols, true)) {
+        $db->exec("ALTER TABLE essays ADD COLUMN target8w_json TEXT DEFAULT ''");
+    }
+    if (!in_array('target8w_image', $cols, true)) {
+        $db->exec("ALTER TABLE essays ADD COLUMN target8w_image TEXT DEFAULT ''");
+    }
+
     return $db;
 }
 
@@ -71,6 +81,21 @@ function fileExt($filename) {
     return strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 }
 
+// 8th Wall target inline uitleveren: JSON parsen + imagePath absoluut maken
+function target8wToApi($row, $base, $v) {
+    if (empty($row['target8w_json']) || empty($row['target8w_image'])) return null;
+    $weekDir = dirname(__DIR__) . '/uploads/essays/' . $row['week'] . '/';
+    $jsonPath = $weekDir . basename((string)$row['target8w_json']);
+    if (!is_file($jsonPath)) return null;
+    $data = json_decode((string)file_get_contents($jsonPath), true);
+    if (!is_array($data) || empty($data['name'])) return null;
+    $data['imagePath'] = $base . rawurlencode(basename((string)$row['target8w_image'])) . $v;
+    // Anchor-naam = week-slug (ongeacht de naam uit de CLI), zodat de
+    // frontend altijd 1-op-1 kan matchen.
+    $data['name'] = $row['week'];
+    return $data;
+}
+
 // Essay-rij omzetten naar API-antwoord met cache-veilige URLs
 function essayToApi($row) {
     $v = '?v=' . urlencode((string)$row['updated_at']);
@@ -81,6 +106,7 @@ function essayToApi($row) {
         'title'      => $row['title'],
         'page_image' => $row['page_image'] ? $base . rawurlencode($row['page_image']) . $v : '',
         'mind'       => $row['mind_file'] ? $base . rawurlencode($row['mind_file']) . $v : '',
+        'target8w'   => target8wToApi($row, $base, $v),
         'layers'     => [],
         'updated_at' => $row['updated_at'],
     ];

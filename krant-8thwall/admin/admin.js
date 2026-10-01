@@ -291,6 +291,12 @@ document.getElementById('essay-form').addEventListener('submit', async function 
         fd.append('mind_file', compiledMind.blob, 'target.mind');
     }
 
+    // 8th Wall target-bestanden (optioneel; blijven staan als je niets kiest)
+    const targetJsonFile = document.getElementById('f-target8w-json').files[0];
+    if (targetJsonFile) fd.append('target8w_json', targetJsonFile);
+    const targetImageFile = document.getElementById('f-target8w-image').files[0];
+    if (targetImageFile) fd.append('target8w_image', targetImageFile);
+
     // Enkel rijen met een bestand meesturen (compact, index-consistent)
     let layerIndex = 0;
     const getNum = function (row, name, def) {
@@ -544,6 +550,8 @@ async function loadIntoForm(week) {
             });
         });
         if (essay.layers.length === 0) addLayerRow();
+        document.getElementById('target8w-status').textContent =
+            essay.target8w ? ('8th Wall target aanwezig: ' + essay.target8w.name) : 'Nog geen 8th Wall target voor dit essay.';
         document.getElementById('form-error').textContent = '';
         document.getElementById('form-ok').textContent =
             'Bestaande bestanden (pagina/marker/layers) blijven behouden als je geen nieuw bestand kiest.';
@@ -562,6 +570,9 @@ function resetForm(keepWeek) {
     document.getElementById('f-week').value = keepWeek || isoWeek();
     document.getElementById('f-title').value = '';
     document.getElementById('f-page').value = '';
+    document.getElementById('f-target8w-json').value = '';
+    document.getElementById('f-target8w-image').value = '';
+    document.getElementById('target8w-status').textContent = '';
     document.getElementById('f-published').checked = true;
     document.getElementById('layers-rows').innerHTML = '';
     addLayerRow();
