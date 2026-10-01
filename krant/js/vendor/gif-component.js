@@ -278,18 +278,22 @@
                     this.lastFrameTime = performance.now();
                 }
                 
-                // Pas aspect ratio van de a-plane aan op basis van echte GIF dimensies
+                // Behoud de ingestelde laag-grootte (w/h uit admin/position):
+                // pas alleen de verhouding aan zodat de GIF niet uitrekt,
+                // maar blijf altijd binnen de ingestelde box. (Vroeger werd
+                // de plane hier vast op max 1,4 hoog gezet en werd de
+                // poster-instelling genegeerd.)
                 const gifW = this.gifData.width;
                 const gifH = this.gifData.height;
                 if (gifW > 0 && gifH > 0) {
-                    const customScale = parseFloat(this.el.getAttribute('data-custom-scale')) || 1.0;
-                    const maxHeight = 1.4 * customScale;
+                    let boxW = parseFloat(this.el.getAttribute('width'));
+                    let boxH = parseFloat(this.el.getAttribute('height'));
+                    if (!(boxW > 0)) boxW = 1;
+                    if (!(boxH > 0)) boxH = 1;
                     const ratio = gifW / gifH;
-                    let planeW = maxHeight * ratio;
-                    let planeH = maxHeight;
-                    // Maximale breedte begrenzen
-                    const maxW = 2.0 * customScale;
-                    if (planeW > maxW) { planeW = maxW; planeH = maxW / ratio; }
+                    let planeW, planeH;
+                    if (ratio > boxW / boxH) { planeW = boxW; planeH = boxW / ratio; }
+                    else { planeH = boxH; planeW = boxH * ratio; }
                     this.el.setAttribute('width', planeW.toFixed(3));
                     this.el.setAttribute('height', planeH.toFixed(3));
                 }

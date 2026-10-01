@@ -595,7 +595,7 @@ document.getElementById('pos-start-btn').addEventListener('click', async functio
         await loadScript('../js/vendor/aframe.min.js');
         await loadScript('../js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' });
         await loadScript('../js/vendor/xrextras.js?v=1');
-        await loadScript('../js/vendor/gif-component.js');
+        await loadScript('../js/vendor/gif-component.js?v=2');
         const XR8 = await xrReady();
         xrController = await xrControllerReady(XR8, 20000);
         if (!essay || !essay.target8w) {

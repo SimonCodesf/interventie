@@ -447,7 +447,7 @@ async function bootAR() {
             counted(loadScript('js/vendor/aframe.min.js')),
             counted(loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' })),
             counted(loadScript('js/vendor/xrextras.js?v=1')),
-            counted(loadScript('js/vendor/gif-component.js?v=1')),
+            counted(loadScript('js/vendor/gif-component.js?v=2')),
         ]);
         bootStatus('Engine starten…');
         XR8 = await xrReady();
@@ -516,7 +516,7 @@ function preloadAll() {
     loadScript('js/vendor/aframe.min.js');
     loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' });
     loadScript('js/vendor/xrextras.js?v=1');
-    loadScript('js/vendor/gif-component.js?v=1');
+    loadScript('js/vendor/gif-component.js?v=2');
 }
 
 document.getElementById('start-btn').addEventListener('click', bootAR);
