@@ -64,23 +64,18 @@ if ($method === 'GET' && $path === '/essays/current') {
     jsonResponse(essayToApi($row));
 }
 
-// Vorige essays als één gecombineerde .mind bundle (chunk 1)
+// Vorige essays: alle gepubliceerde essays behalve de nieuwste (huidige).
+// Met 8th Wall staan alle targets tegelijk geregistreerd; er is geen
+// gecombineerde .mind-bundel meer nodig.
 if ($method === 'GET' && $path === '/essays/previous') {
-    $manifestFile = BUNDLE_DIR . '/manifest.json';
-    $manifest = file_exists($manifestFile)
-        ? json_decode((string)file_get_contents($manifestFile), true)
-        : null;
+    $cur = $db->query("SELECT week FROM essays WHERE published = 1 ORDER BY updated_at DESC LIMIT 1")->fetch();
+    $currentWeek = $cur ? $cur['week'] : null;
 
-    if (!$manifest || empty($manifest['weeks']) || !file_exists(BUNDLE_DIR . '/previous.mind')) {
-        jsonResponse(['mind' => '', 'essays' => []]);
-    }
+    $rows = $db->query("SELECT * FROM essays WHERE published = 1 ORDER BY updated_at DESC")->fetchAll();
 
     $essays = [];
-    foreach ($manifest['weeks'] as $i => $week) {
-        $stmt = $db->prepare("SELECT * FROM essays WHERE week = ? AND published = 1");
-        $stmt->execute([$week]);
-        $row = $stmt->fetch();
-        if (!$row) continue;
+    foreach ($rows as $row) {
+        if ($currentWeek !== null && $row['week'] === $currentWeek) continue;
 
         $layers = json_decode((string)$row['layers'], true);
         $layerList = [];
@@ -110,16 +105,12 @@ if ($method === 'GET' && $path === '/essays/previous') {
         $essays[] = [
             'week'        => $row['week'],
             'title'       => $row['title'],
-            'targetIndex' => $i,
             'target8w'    => target8wToApi($row, 'uploads/essays/' . rawurlencode($row['week']) . '/', '?v=' . urlencode((string)$row['updated_at'])),
             'layers'      => $layerList,
         ];
     }
 
-    jsonResponse([
-        'mind' => 'uploads/bundle/previous.mind?v=' . urlencode((string)($manifest['generatedAt'] ?? '1')),
-        'essays' => $essays,
-    ]);
+    jsonResponse(['essays' => $essays]);
 }
 
 // ---- Admin: login/logout/status ----
@@ -454,75 +445,6 @@ if ($method === 'DELETE' && $path === '/admin/essays') {
     }
 
     jsonResponse(['ok' => true, 'wiped' => true]);
-}
-
-// Bronnen voor de vorige-bundel: alle gepubliceerde essays behalve de huidige
-if ($method === 'GET' && $path === '/admin/bundle-sources') {
-    requireAuth();
-    // Huidige essay = gepubliceerd essay met de hoogste week
-    $stmt = $db->query("SELECT week FROM essays WHERE published = 1 ORDER BY week DESC, updated_at DESC LIMIT 1");
-    $current = $stmt->fetch();
-    $currentWeek = $current ? $current['week'] : null;
-
-    $stmt = $db->query("SELECT * FROM essays WHERE published = 1 ORDER BY week ASC");
-    $rows = $stmt->fetchAll();
-
-    $essays = [];
-    foreach ($rows as $row) {
-        if ($currentWeek !== null && $row['week'] === $currentWeek) continue;
-        $essays[] = [
-            'week'  => $row['week'],
-            'title' => $row['title'],
-            'mind'  => $row['mind_file'] ? 'uploads/essays/' . rawurlencode($row['week']) . '/' . rawurlencode($row['mind_file']) . '?v=' . urlencode((string)$row['updated_at']) : '',
-        ];
-    }
-
-    $published = $db->query("SELECT COUNT(*) FROM essays WHERE published = 1")->fetchColumn();
-
-    jsonResponse([
-        'essays'    => $essays,
-        'published' => (int)$published,
-        'current'   => $currentWeek,
-    ]);
-}
-
-// Vorige-bundel uploaden (samengevoegde .mind + volgorde)
-if ($method === 'POST' && $path === '/admin/bundle') {
-    requireAuth();
-
-    $weeksInput = (string)($_POST['weeks'] ?? '');
-    $weeks = json_decode($weeksInput, true);
-    if (!is_array($weeks)) {
-        jsonResponse(['message' => 'Ongeldige weeks data'], 400);
-    }
-    $weeks = array_values(array_filter($weeks, function ($w) {
-        return preg_match('/^[a-z0-9][a-z0-9_-]{0,30}$/', strtolower((string)$w));
-    }));
-
-    if (count($weeks) === 0) {
-        // Geen vorige essays: bundel verwijderen
-        @unlink(BUNDLE_DIR . '/previous.mind');
-        @unlink(BUNDLE_DIR . '/manifest.json');
-        jsonResponse(['ok' => true, 'weeks' => []]);
-    }
-
-    if (empty($_FILES['bundle_file']['name'])) {
-        jsonResponse(['message' => 'Geen .mind bundel meegestuurd'], 400);
-    }
-    if (fileExt($_FILES['bundle_file']['name']) !== 'mind') {
-        jsonResponse(['message' => 'Bundel moet een .mind bestand zijn'], 400);
-    }
-
-    if (!file_exists(BUNDLE_DIR)) {
-        mkdir(BUNDLE_DIR, 0755, true);
-    }
-    move_uploaded_file($_FILES['bundle_file']['tmp_name'], BUNDLE_DIR . '/previous.mind');
-    file_put_contents(BUNDLE_DIR . '/manifest.json', json_encode([
-        'generatedAt' => date('Y-m-d H:i:s'),
-        'weeks'       => $weeks,
-    ], JSON_UNESCAPED_UNICODE));
-
-    jsonResponse(['ok' => true, 'weeks' => $weeks]);
 }
 
 // ---- Dev-feedback (van het dev-paneel; geen auth, klein en gelimiteerd) ----

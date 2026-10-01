@@ -126,7 +126,7 @@ async function loadWeek(w) {
             anim_y: l.anim_y || 0, anim_z: l.anim_z !== undefined ? l.anim_z : l.z,
         };
     });
-    console.log('[pos] week ' + w + ': mind=' + essay.mind + ', lagen=' + layers.length);
+    console.log('[pos] week ' + w + ': target8w=' + (essay.target8w ? essay.target8w.name : 'geen') + ', lagen=' + layers.length);
     layers.forEach(function (l, i) {
         console.log('[pos] laag ' + i + ': ' + l.file + ' x=' + l.x + ' y=' + l.y + ' z=' + l.z + ' w=' + l.w + ' h=' + l.h + ' op=' + l.opacity);
     });
