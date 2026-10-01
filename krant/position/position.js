@@ -165,8 +165,10 @@ function buildScene() {
     const scene = document.createElement('a-scene');
     scene.setAttribute('mindar-image',
         'imageTargetSrc: ' + absUrl(essay.mind) +
-        '; filterMinCF: 0.0015; filterBeta: 0.008' +
-        '; warmupTolerance: 0; missTolerance: 5' +
+        // Zelfde afstelling als de hoofdpagina (app.js AR_TUNING):
+        // warmup 2 + miss 6: laag verschijnt snel, blijft door dips.
+        '; filterMinCF: 0.001; filterBeta: 20' +
+        '; warmupTolerance: 2; missTolerance: 6' +
         '; uiLoading: no; uiScanning: no; uiError: no');
     scene.setAttribute('color-space', 'sRGB');
     scene.setAttribute('renderer', 'colorManagement: true');
