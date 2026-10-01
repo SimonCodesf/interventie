@@ -408,7 +408,7 @@ async function bootAR() {
         // prompt terug en start alles direct. Bij een harde blokkade volgt
         // de handleiding voor het slotje in de adresbalk.
         btn.textContent = 'CAMERA TOESTAAN';
-        bootStatus('Chrome blokkeert de camera voor deze site. Tik op CAMERA TOESTAAN om de vraag opnieuw te stellen.');
+        bootStatus('Geen cameratoegang. Check eerst Android zelf: Instellingen → Apps → Chrome → Machtigingen → Camera → Toestaan. Daarna hier op CAMERA TOESTAAN tikken.');
         bootStarted = false;
         btn.disabled = false;
         permissionRetry = true;
@@ -420,7 +420,7 @@ async function bootAR() {
         bootStatus('Camera toestemming vragen…');
         if (!(await ensureCameraPermission())) {
             btn.textContent = 'CAMERA TOESTAAN';
-            bootStatus('Nog steeds geblokkeerd. Sta toe via het slotje in de adresbalk → Machtigingen → Camera, en herlaad daarna de pagina.');
+            bootStatus('Nog steeds geblokkeerd. Twee plekken: 1) Android-Instellingen → Apps → Chrome → Machtigingen → Camera → Toestaan. 2) Slotje in de adresbalk → Machtigingen → Camera → Toestaan. Daarna pagina herladen.');
             bootStarted = false;
             btn.disabled = false;
             permissionRetry = true;
