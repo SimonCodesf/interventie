@@ -149,7 +149,49 @@ function autogenerateTarget8w($weekDir, $week, $pageFilename) {
     return true;
 }
 
-// Essay-rij omzetten naar API-antwoord met cache-veilige URLs
+// Lazy migratie: essay zonder 8th Wall target (bv. van vóór de overstap)
+// krijgt er automatisch een uit de pagina-afbeelding, zodat bestaande
+// weken na deploy direct blijven werken. Geeft de verse rij terug.
+function ensureTarget8w($db, $row) {
+    if (!is_array($row) || empty($row['week'])) return $row;
+    $weekDir = dirname(__DIR__) . '/uploads/essays/' . $row['week'] . '/';
+    $jsonFile = basename((string)($row['target8w_json'] ?? ''));
+    if ($jsonFile !== '' && is_file($weekDir . $jsonFile)) return $row; // al compleet
+    if (empty($row['page_image']) || !is_dir($weekDir)) return $row;
+    if (autogenerateTarget8w($weekDir, $row['week'], $row['page_image'])) {
+        $db->prepare("UPDATE essays SET target8w_json = 'target8w.json', target8w_image = 'target8w.jpg', updated_at = CURRENT_TIMESTAMP WHERE week = ?")
+           ->execute([$row['week']]);
+        $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");
+        $stmt->execute([$row['week']]);
+        $fresh = $stmt->fetch();
+        if ($fresh) return $fresh;
+    }
+    return $row;
+}
+
+// Eén laag normaliseren voor de API. `lit` = 1 geeft licht/schaduw
+// (standaard-materiaal), 0 = vlak/unlit (als print). Default 0.
+function layerToApi($layer, $base, $v) {
+    if (empty($layer['file'])) return null;
+    return [
+        'file'      => $base . rawurlencode($layer['file']) . $v,
+        'x'         => isset($layer['x']) ? (float)$layer['x'] : 0,
+        'y'         => isset($layer['y']) ? (float)$layer['y'] : 0,
+        'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
+        'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
+        'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.0,
+        'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
+        'rx'        => isset($layer['rx']) ? (float)$layer['rx'] : 0,
+        'ry'        => isset($layer['ry']) ? (float)$layer['ry'] : 0,
+        'rz'        => isset($layer['rz']) ? (float)$layer['rz'] : 0,
+        'scale'     => isset($layer['scale']) && (float)$layer['scale'] > 0 ? (float)$layer['scale'] : 1.0,
+        'lit'       => !empty($layer['lit']) ? 1 : 0,
+        'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
+        'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
+        'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,
+        'anim_z'    => isset($layer['anim_z']) ? (float)$layer['anim_z'] : (isset($layer['z']) ? (float)$layer['z'] : 0.01),
+    ];
+}
 function essayToApi($row) {
     $v = '?v=' . urlencode((string)$row['updated_at']);
     $base = 'uploads/essays/' . rawurlencode($row['week']) . '/';
@@ -167,24 +209,8 @@ function essayToApi($row) {
     $layers = json_decode((string)$row['layers'], true);
     if (is_array($layers)) {
         foreach ($layers as $layer) {
-            if (empty($layer['file'])) continue;
-            $essay['layers'][] = [
-                'file'      => $base . rawurlencode($layer['file']) . $v,
-                'x'         => isset($layer['x']) ? (float)$layer['x'] : 0,
-                'y'         => isset($layer['y']) ? (float)$layer['y'] : 0,
-                'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
-                'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
-                'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.414,
-                'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
-                'rx'        => isset($layer['rx']) ? (float)$layer['rx'] : 0,
-                'ry'        => isset($layer['ry']) ? (float)$layer['ry'] : 0,
-                'rz'        => isset($layer['rz']) ? (float)$layer['rz'] : 0,
-                'scale'     => isset($layer['scale']) && (float)$layer['scale'] > 0 ? (float)$layer['scale'] : 1.0,
-                'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
-                'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
-                'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,
-                'anim_z'    => isset($layer['anim_z']) ? (float)$layer['anim_z'] : (isset($layer['z']) ? (float)$layer['z'] : 0.01),
-            ];
+            $entry = layerToApi($layer, $base, $v);
+            if ($entry) $essay['layers'][] = $entry;
         }
     }
 

@@ -133,12 +133,46 @@ document.getElementById('logout-button').addEventListener('click', async functio
 
 // ---- Layer rijen ----
 
+// Beeldverhouding (b/h) van de pagina — voor passende laag-defaults.
+// 0 = onbekend (dan vierkant 1×1).
+let pageAspect = 0;
+
+function fittedSize() {
+    if (pageAspect > 0) {
+        if (pageAspect <= 1) return { w: pageAspect.toFixed(3), h: '1' };
+        return { w: '1', h: (1 / pageAspect).toFixed(3) };
+    }
+    return { w: '1', h: '1' };
+}
+
+function refreshPageAspect(url, revoke) {
+    const img = new Image();
+    img.onload = function () {
+        if (img.width > 0 && img.height > 0) pageAspect = img.width / img.height;
+        if (revoke) URL.revokeObjectURL(url);
+    };
+    img.onerror = function () { if (revoke) URL.revokeObjectURL(url); };
+    img.src = url;
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+function baseName(url) {
+    return String(url || '').split('/').pop().split('?')[0];
+}
+
 function layerDefaults(index) {
+    const fit = fittedSize();
     return {
         x: '0', y: '0', z: (0.01 + index * 0.01).toFixed(2),
-        w: '1', h: '1.414', opacity: '1',
-        rx: '0', ry: '0', rz: '0', scale: '1',
+        w: fit.w, h: fit.h, opacity: '1',
+        rx: '0', ry: '0', rz: '0', scale: '1', lit: 0,
         anim_dur: '0', anim_x: '0', anim_y: '0', anim_z: '0',
+        existingFile: '',
     };
 }
 
@@ -152,9 +186,11 @@ function addLayerRow(values) {
 
     const row = document.createElement('div');
     row.className = 'layer-row';
+    const fileLabel = v.existingFile ? 'Nieuw bestand (leeg = behoud ' + escapeHtml(v.existingFile) + ')' : 'Bestand (PNG/GIF/GLB)';
     row.innerHTML =
         '<div class="layer-top">' +
-            '<label class="grow">Bestand (PNG/GIF/GLB)<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb"></label>' +
+            '<label class="grow">' + fileLabel + '<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb"></label>' +
+            '<input type="hidden" name="layer_existing" value="' + escapeHtml(v.existingFile || '') + '">' +
             '<button type="button" class="remove-layer" title="Verwijder laag">×</button>' +
         '</div>' +
         '<div class="layer-group"><span class="group-title">Positie</span>' +
@@ -164,6 +200,7 @@ function addLayerRow(values) {
             numField('layer_w', 'Breedte', v.w) + numField('layer_h', 'Hoogte', v.h) +
             '<label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="' + v.opacity + '"></label>' +
             numField('layer_scale', 'Schaal', v.scale, ' min="0.01"') +
+            '<label><input type="checkbox" name="layer_lit" value="1"' + (v.lit ? ' checked' : '') + '> Licht/schaduw</label>' +
         '</div>' +
         '<div class="layer-group"><span class="group-title">Rotatie (°)</span>' +
             numField('layer_rx', 'X', v.rx) + numField('layer_ry', 'Y', v.ry) + numField('layer_rz', 'Z', v.rz) +
@@ -182,6 +219,12 @@ function addLayerRow(values) {
 
 document.getElementById('add-layer').addEventListener('click', function () {
     addLayerRow();
+});
+
+// Beeldverhouding bijhouden voor passende laag-defaults
+document.getElementById('f-page').addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) refreshPageAspect(URL.createObjectURL(file), true);
 });
 
 // ---- Essay opslaan ----
@@ -205,31 +248,39 @@ document.getElementById('essay-form').addEventListener('submit', async function 
 
     // 8th Wall target wordt automatisch gegenereerd bij page_image-upload (zie api.php).
 
-    // Enkel rijen met een bestand meesturen (compact, index-consistent)
-    let layerIndex = 0;
+    // Alle rijen meesturen: met nieuw bestand (has_file=1) of behoud
+    // bestaand bestand (has_file=0 + layer_existing). Rijen zonder beide
+    // worden overgeslagen. De server houdt de rij-volgorde aan.
     const getNum = function (row, name, def) {
         const el = row.querySelector('input[name="' + name + '"]');
         return (el && el.value !== '') ? el.value : def;
     };
     document.querySelectorAll('#layers-rows .layer-row').forEach(function (row) {
         const file = row.querySelector('input[name="layer_file"]').files[0];
-        if (!file) return;
-        fd.append('layers[]', file);
+        const existing = row.querySelector('input[name="layer_existing"]').value;
+        if (!file && !existing) return;
+        if (file) {
+            fd.append('layers[]', file);
+            fd.append('layer_has_file[]', '1');
+        } else {
+            fd.append('layer_has_file[]', '0');
+        }
+        fd.append('layer_existing[]', existing);
         fd.append('layer_x[]', getNum(row, 'layer_x', '0'));
         fd.append('layer_y[]', getNum(row, 'layer_y', '0'));
         fd.append('layer_z[]', getNum(row, 'layer_z', '0.01'));
         fd.append('layer_w[]', getNum(row, 'layer_w', '1'));
-        fd.append('layer_h[]', getNum(row, 'layer_h', '1.414'));
+        fd.append('layer_h[]', getNum(row, 'layer_h', '1'));
         fd.append('layer_opacity[]', getNum(row, 'layer_opacity', '1'));
         fd.append('layer_rx[]', getNum(row, 'layer_rx', '0'));
         fd.append('layer_ry[]', getNum(row, 'layer_ry', '0'));
         fd.append('layer_rz[]', getNum(row, 'layer_rz', '0'));
         fd.append('layer_scale[]', getNum(row, 'layer_scale', '1'));
+        fd.append('layer_lit[]', row.querySelector('input[name="layer_lit"]').checked ? '1' : '0');
         fd.append('layer_anim_dur[]', getNum(row, 'layer_anim_dur', '0'));
         fd.append('layer_anim_x[]', getNum(row, 'layer_anim_x', '0'));
         fd.append('layer_anim_y[]', getNum(row, 'layer_anim_y', '0'));
         fd.append('layer_anim_z[]', getNum(row, 'layer_anim_z', '0'));
-        layerIndex++;
     });
 
     try {
@@ -362,7 +413,10 @@ async function loadIntoForm(week) {
         document.getElementById('f-title').value = essay.title;
         document.getElementById('f-published').checked = true;
 
-        // Layers tonen (bestanden zelf kunnen niet herladen worden — die blijven staan als je geen nieuw bestand kiest)
+        // Layers tonen met behoud van bestaande bestanden (file-inputs kunnen
+        // niet vooringevuld worden — de bestandsnaam staat in de rij en het
+        // bestand blijft staan als je geen nieuw bestand kiest)
+        if (essay.page_image) refreshPageAspect(essay.page_image, false);
         const rows = document.getElementById('layers-rows');
         rows.innerHTML = '';
         essay.layers.forEach(function (layer) {
@@ -370,7 +424,9 @@ async function loadIntoForm(week) {
                 x: layer.x || 0, y: layer.y || 0, z: layer.z,
                 w: layer.w, h: layer.h, opacity: layer.opacity,
                 rx: layer.rx || 0, ry: layer.ry || 0, rz: layer.rz || 0, scale: layer.scale || 1,
+                lit: layer.lit ? 1 : 0,
                 anim_dur: layer.anim_dur, anim_x: layer.anim_x, anim_y: layer.anim_y, anim_z: layer.anim_z,
+                existingFile: baseName(layer.file),
             });
         });
         if (essay.layers.length === 0) addLayerRow();

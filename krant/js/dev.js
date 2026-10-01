@@ -1,5 +1,5 @@
 // Dev-paneel: alleen geladen met ?dev=1 (zie index.html loader).
-// Bevat: testmatrix, live-metrics, mind-test, feedback.
+// Bevat: testmatrix, live-metrics, target-test, feedback.
 (function initDevPanel() {
     if (!new URLSearchParams(location.search).has('dev')) return;
 

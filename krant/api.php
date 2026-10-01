@@ -61,64 +61,44 @@ if ($method === 'GET' && $path === '/essays/current') {
     if (!$row) {
         jsonResponse(['message' => 'Nog geen essay gepubliceerd'], 404);
     }
+    $row = ensureTarget8w($db, $row);
     jsonResponse(essayToApi($row));
 }
 
-// Vorige essays als één gecombineerde .mind bundle (chunk 1)
+// Vorige essays: alle gepubliceerde essays behalve de nieuwste (huidige).
+// Met 8th Wall staan alle targets tegelijk geregistreerd; er is geen
+// gecombineerde .mind-bundel meer nodig.
 if ($method === 'GET' && $path === '/essays/previous') {
-    $manifestFile = BUNDLE_DIR . '/manifest.json';
-    $manifest = file_exists($manifestFile)
-        ? json_decode((string)file_get_contents($manifestFile), true)
-        : null;
+    $cur = $db->query("SELECT week FROM essays WHERE published = 1 ORDER BY updated_at DESC LIMIT 1")->fetch();
+    $currentWeek = $cur ? $cur['week'] : null;
 
-    if (!$manifest || empty($manifest['weeks']) || !file_exists(BUNDLE_DIR . '/previous.mind')) {
-        jsonResponse(['mind' => '', 'essays' => []]);
-    }
+    $rows = $db->query("SELECT * FROM essays WHERE published = 1 ORDER BY updated_at DESC")->fetchAll();
 
     $essays = [];
-    foreach ($manifest['weeks'] as $i => $week) {
-        $stmt = $db->prepare("SELECT * FROM essays WHERE week = ? AND published = 1");
-        $stmt->execute([$week]);
-        $row = $stmt->fetch();
-        if (!$row) continue;
+    foreach ($rows as $row) {
+        if ($currentWeek !== null && $row['week'] === $currentWeek) continue;
+        $row = ensureTarget8w($db, $row);
 
+        $base = 'uploads/essays/' . rawurlencode($row['week']) . '/';
+        $v = '?v=' . urlencode((string)$row['updated_at']);
         $layers = json_decode((string)$row['layers'], true);
         $layerList = [];
         if (is_array($layers)) {
             foreach ($layers as $layer) {
-                if (empty($layer['file'])) continue;
-                $layerList[] = [
-                    'file'      => 'uploads/essays/' . rawurlencode($row['week']) . '/' . rawurlencode($layer['file']) . '?v=' . urlencode((string)$row['updated_at']),
-                    'x'         => isset($layer['x']) ? (float)$layer['x'] : 0,
-                    'y'         => isset($layer['y']) ? (float)$layer['y'] : 0,
-                    'z'         => isset($layer['z']) ? (float)$layer['z'] : 0.01,
-                    'w'         => isset($layer['w']) ? (float)$layer['w'] : 1.0,
-                    'h'         => isset($layer['h']) ? (float)$layer['h'] : 1.414,
-                    'opacity'   => isset($layer['opacity']) ? min(1.0, max(0.0, (float)$layer['opacity'])) : 1.0,
-                    'rx'        => isset($layer['rx']) ? (float)$layer['rx'] : 0,
-                    'ry'        => isset($layer['ry']) ? (float)$layer['ry'] : 0,
-                    'rz'        => isset($layer['rz']) ? (float)$layer['rz'] : 0,
-                    'scale'     => isset($layer['scale']) && (float)$layer['scale'] > 0 ? (float)$layer['scale'] : 1.0,
-                    'anim_dur'  => isset($layer['anim_dur']) ? (float)$layer['anim_dur'] : 0,
-                    'anim_x'    => isset($layer['anim_x']) ? (float)$layer['anim_x'] : 0,
-                    'anim_y'    => isset($layer['anim_y']) ? (float)$layer['anim_y'] : 0,
-                    'anim_z'    => isset($layer['anim_z']) ? (float)$layer['anim_z'] : (isset($layer['z']) ? (float)$layer['z'] : 0.01),
-                ];
+                $entry = layerToApi($layer, $base, $v);
+                if ($entry) $layerList[] = $entry;
             }
         }
 
         $essays[] = [
             'week'        => $row['week'],
             'title'       => $row['title'],
-            'targetIndex' => $i,
+            'target8w'    => target8wToApi($row, 'uploads/essays/' . rawurlencode($row['week']) . '/', '?v=' . urlencode((string)$row['updated_at'])),
             'layers'      => $layerList,
         ];
     }
 
-    jsonResponse([
-        'mind' => 'uploads/bundle/previous.mind?v=' . urlencode((string)($manifest['generatedAt'] ?? '1')),
-        'essays' => $essays,
-    ]);
+    jsonResponse(['essays' => $essays]);
 }
 
 // ---- Admin: login/logout/status ----
@@ -234,6 +214,8 @@ if ($method === 'POST' && $path === '/admin/essays') {
 
     $pageImage = $existing ? $existing['page_image'] : '';
     $mindFile  = $existing ? $existing['mind_file'] : '';
+    $target8wJson = $existing ? ($existing['target8w_json'] ?? '') : '';
+    $target8wImage = $existing ? ($existing['target8w_image'] ?? '') : '';
     $layers    = $existing ? json_decode((string)$existing['layers'], true) : [];
     if (!is_array($layers)) $layers = [];
 
@@ -250,6 +232,12 @@ if ($method === 'POST' && $path === '/admin/essays') {
         }
         $pageImage = 'page.' . $ext;
         move_uploaded_file($_FILES['page_image']['tmp_name'], $weekDir . '/' . $pageImage);
+
+        // 8th Wall target automatisch genereren (zoals vroeger: enkel JPG nodig)
+        if (autogenerateTarget8w($weekDir, $week, $pageImage)) {
+            $target8wJson = 'target8w.json';
+            $target8wImage = 'target8w.jpg';
+        }
     }
 
     // Gecompileerd .mind marker bestand
@@ -262,38 +250,86 @@ if ($method === 'POST' && $path === '/admin/essays') {
         move_uploaded_file($_FILES['mind_file']['tmp_name'], $weekDir . '/' . $mindFile);
     }
 
-    // AR-layers (transparante PNG's boven de pagina)
-    $layerFiles = isset($_FILES['layers']) && is_array($_FILES['layers']['name']) ? $_FILES['layers']['name'] : [];
-    if (!empty($layerFiles[0])) {
+    // 8th Wall target (JSON + luminantie-afbeelding, gegenereerd met image-target-cli)
+    if (!empty($_FILES['target8w_json']['name'])) {
+        $ext = fileExt($_FILES['target8w_json']['name']);
+        if ($ext !== 'json') {
+            jsonResponse(['message' => 'Target moet een .json bestand zijn'], 400);
+        }
+        $target8wJson = 'target8w.json';
+        move_uploaded_file($_FILES['target8w_json']['tmp_name'], $weekDir . '/' . $target8wJson);
+    }
+    if (!empty($_FILES['target8w_image']['name'])) {
+        $ext = fileExt($_FILES['target8w_image']['name']);
+        if (!in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
+            jsonResponse(['message' => 'Target-afbeelding moet jpg of png zijn'], 400);
+        }
+        $target8wImage = 'target8w.' . $ext;
+        move_uploaded_file($_FILES['target8w_image']['tmp_name'], $weekDir . '/' . $target8wImage);
+    }
+
+    // AR-layers: elke rij stuurt zijn params mee; alleen bij een nieuw
+    // bestand zit er een upload bij (layer_has_file=1). Zonder nieuw
+    // bestand blijft de bestaande laag behouden met de nieuwe params —
+    // opslaan wist dus nooit meer stilletjes je lagen.
+    $rowXs = isset($_POST['layer_x']) && is_array($_POST['layer_x']) ? $_POST['layer_x'] : null;
+    if (is_array($rowXs)) {
+        $upNames = isset($_FILES['layers']) && is_array($_FILES['layers']['name']) ? $_FILES['layers']['name'] : [];
+        $upTmps  = isset($_FILES['layers']) && is_array($_FILES['layers']['tmp_name']) ? $_FILES['layers']['tmp_name'] : [];
+        $upSizes = isset($_FILES['layers']) && is_array($_FILES['layers']['size']) ? $_FILES['layers']['size'] : [];
+        $fi = 0;
+        $oldByFile = [];
+        foreach ($layers as $old) {
+            if (!empty($old['file'])) $oldByFile[$old['file']] = $old;
+        }
         $layers = [];
-        foreach ($layerFiles as $i => $name) {
-            if (!$name) continue;
-            $ext = fileExt($name);
-            if (!in_array($ext, ALLOWED_LAYER_EXT, true)) {
-                jsonResponse(['message' => 'Ongeldig type voor layer ' . ($i + 1)], 400);
+        $nRows = count($rowXs);
+        for ($i = 0; $i < $nRows; $i++) {
+            $p = function ($k, $def = 0) use ($i) {
+                return isset($_POST[$k]) && is_array($_POST[$k]) && isset($_POST[$k][$i]) ? $_POST[$k][$i] : $def;
+            };
+            $hasFile = (($p('layer_has_file', '0') === '1') && isset($upNames[$fi]) && $upNames[$fi]) ? true : false;
+
+            if ($hasFile) {
+                $ext = fileExt($upNames[$fi]);
+                if (!in_array($ext, ALLOWED_LAYER_EXT, true)) {
+                    jsonResponse(['message' => 'Ongeldig type voor layer ' . ($i + 1)], 400);
+                }
+                if ($ext === 'glb' && ($upSizes[$fi] ?? 0) > MAX_GLB_SIZE) {
+                    jsonResponse(['message' => '3D-model (laag ' . ($i + 1) . ') mag max. 10MB zijn'], 400);
+                }
+                $filename = 'layer_' . $i . '.' . $ext;
+                move_uploaded_file($upTmps[$fi], $weekDir . '/' . $filename);
+                $fi++;
+                // Oud bestand met andere extensie opruimen
+                $prevKept = basename((string)$p('layer_existing', ''));
+                if ($prevKept !== '' && $prevKept !== $filename && strpos($prevKept, 'layer_') === 0) {
+                    @unlink($weekDir . '/' . $prevKept);
+                }
+            } else {
+                $filename = basename((string)$p('layer_existing', ''));
+                if ($filename === '' || !isset($oldByFile[$filename]) || !file_exists($weekDir . '/' . $filename)) {
+                    continue; // geen nieuw bestand én geen behoudenswaardige laag
+                }
             }
-            if ($ext === 'glb' && $_FILES['layers']['size'][$i] > MAX_GLB_SIZE) {
-                jsonResponse(['message' => '3D-model (laag ' . ($i + 1) . ') mag max. 10MB zijn'], 400);
-            }
-            $filename = 'layer_' . $i . '.' . $ext;
-            move_uploaded_file($_FILES['layers']['tmp_name'][$i], $weekDir . '/' . $filename);
 
             $layers[] = [
                 'file'      => $filename,
-                'x'         => (float)($_POST['layer_x'][$i] ?? 0),
-                'y'         => (float)($_POST['layer_y'][$i] ?? 0),
-                'z'         => (float)($_POST['layer_z'][$i] ?? 0.01 + $i * 0.01),
-                'w'         => (float)($_POST['layer_w'][$i] ?? 1.0),
-                'h'         => (float)($_POST['layer_h'][$i] ?? 1.414),
-                'opacity'   => min(1.0, max(0.0, (float)($_POST['layer_opacity'][$i] ?? 1.0))),
-                'rx'        => (float)($_POST['layer_rx'][$i] ?? 0),
-                'ry'        => (float)($_POST['layer_ry'][$i] ?? 0),
-                'rz'        => (float)($_POST['layer_rz'][$i] ?? 0),
-                'scale'     => max(0.001, (float)($_POST['layer_scale'][$i] ?? 1.0)),
-                'anim_dur'  => (float)($_POST['layer_anim_dur'][$i] ?? 0),
-                'anim_x'    => (float)($_POST['layer_anim_x'][$i] ?? 0),
-                'anim_y'    => (float)($_POST['layer_anim_y'][$i] ?? 0),
-                'anim_z'    => (float)($_POST['layer_anim_z'][$i] ?? 0),
+                'x'         => (float)$p('layer_x', 0),
+                'y'         => (float)$p('layer_y', 0),
+                'z'         => (float)$p('layer_z', 0.01 + $i * 0.01),
+                'w'         => (float)$p('layer_w', 1.0),
+                'h'         => (float)$p('layer_h', 1.0),
+                'opacity'   => min(1.0, max(0.0, (float)$p('layer_opacity', 1.0))),
+                'rx'        => (float)$p('layer_rx', 0),
+                'ry'        => (float)$p('layer_ry', 0),
+                'rz'        => (float)$p('layer_rz', 0),
+                'scale'     => max(0.001, (float)$p('layer_scale', 1.0)),
+                'lit'       => ($p('layer_lit', '0') === '1') ? 1 : 0,
+                'anim_dur'  => (float)$p('layer_anim_dur', 0),
+                'anim_x'    => (float)$p('layer_anim_x', 0),
+                'anim_y'    => (float)$p('layer_anim_y', 0),
+                'anim_z'    => (float)$p('layer_anim_z', 0),
             ];
         }
     }
@@ -301,11 +337,11 @@ if ($method === 'POST' && $path === '/admin/essays') {
     $layersJson = json_encode($layers, JSON_UNESCAPED_UNICODE);
 
     if ($existing) {
-        $db->prepare("UPDATE essays SET title = ?, text = ?, page_image = ?, mind_file = ?, layers = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE week = ?")
-           ->execute([$title, $text, $pageImage, $mindFile, $layersJson, $published, $week]);
+        $db->prepare("UPDATE essays SET title = ?, text = ?, page_image = ?, mind_file = ?, target8w_json = ?, target8w_image = ?, layers = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE week = ?")
+           ->execute([$title, $text, $pageImage, $mindFile, $target8wJson, $target8wImage, $layersJson, $published, $week]);
     } else {
-        $db->prepare("INSERT INTO essays (week, title, text, page_image, mind_file, layers, published) VALUES (?, ?, ?, ?, ?, ?, ?)")
-           ->execute([$week, $title, $text, $pageImage, $mindFile, $layersJson, $published]);
+        $db->prepare("INSERT INTO essays (week, title, text, page_image, mind_file, target8w_json, target8w_image, layers, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+           ->execute([$week, $title, $text, $pageImage, $mindFile, $target8wJson, $target8wImage, $layersJson, $published]);
     }
 
     $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");
@@ -355,6 +391,7 @@ if ($method === 'POST' && preg_match('#^/admin/essays/([^/]+)/layers$#', $path, 
             'ry'        => $num($in['ry'] ?? null, 0, -360, 360),
             'rz'        => $num($in['rz'] ?? null, 0, -360, 360),
             'scale'     => $num($in['scale'] ?? null, 1.0, 0.001, 100),
+            'lit'       => !empty($in['lit']) ? 1 : 0,
             'anim_dur'  => $num($in['anim_dur'] ?? null, 0, 0, 600),
             'anim_x'    => $num($in['anim_x'] ?? null, 0, -10, 10),
             'anim_y'    => $num($in['anim_y'] ?? null, 0, -10, 10),
@@ -427,75 +464,6 @@ if ($method === 'DELETE' && $path === '/admin/essays') {
     }
 
     jsonResponse(['ok' => true, 'wiped' => true]);
-}
-
-// Bronnen voor de vorige-bundel: alle gepubliceerde essays behalve de huidige
-if ($method === 'GET' && $path === '/admin/bundle-sources') {
-    requireAuth();
-    // Huidige essay = gepubliceerd essay met de hoogste week
-    $stmt = $db->query("SELECT week FROM essays WHERE published = 1 ORDER BY week DESC, updated_at DESC LIMIT 1");
-    $current = $stmt->fetch();
-    $currentWeek = $current ? $current['week'] : null;
-
-    $stmt = $db->query("SELECT * FROM essays WHERE published = 1 ORDER BY week ASC");
-    $rows = $stmt->fetchAll();
-
-    $essays = [];
-    foreach ($rows as $row) {
-        if ($currentWeek !== null && $row['week'] === $currentWeek) continue;
-        $essays[] = [
-            'week'  => $row['week'],
-            'title' => $row['title'],
-            'mind'  => $row['mind_file'] ? 'uploads/essays/' . rawurlencode($row['week']) . '/' . rawurlencode($row['mind_file']) . '?v=' . urlencode((string)$row['updated_at']) : '',
-        ];
-    }
-
-    $published = $db->query("SELECT COUNT(*) FROM essays WHERE published = 1")->fetchColumn();
-
-    jsonResponse([
-        'essays'    => $essays,
-        'published' => (int)$published,
-        'current'   => $currentWeek,
-    ]);
-}
-
-// Vorige-bundel uploaden (samengevoegde .mind + volgorde)
-if ($method === 'POST' && $path === '/admin/bundle') {
-    requireAuth();
-
-    $weeksInput = (string)($_POST['weeks'] ?? '');
-    $weeks = json_decode($weeksInput, true);
-    if (!is_array($weeks)) {
-        jsonResponse(['message' => 'Ongeldige weeks data'], 400);
-    }
-    $weeks = array_values(array_filter($weeks, function ($w) {
-        return preg_match('/^[a-z0-9][a-z0-9_-]{0,30}$/', strtolower((string)$w));
-    }));
-
-    if (count($weeks) === 0) {
-        // Geen vorige essays: bundel verwijderen
-        @unlink(BUNDLE_DIR . '/previous.mind');
-        @unlink(BUNDLE_DIR . '/manifest.json');
-        jsonResponse(['ok' => true, 'weeks' => []]);
-    }
-
-    if (empty($_FILES['bundle_file']['name'])) {
-        jsonResponse(['message' => 'Geen .mind bundel meegestuurd'], 400);
-    }
-    if (fileExt($_FILES['bundle_file']['name']) !== 'mind') {
-        jsonResponse(['message' => 'Bundel moet een .mind bestand zijn'], 400);
-    }
-
-    if (!file_exists(BUNDLE_DIR)) {
-        mkdir(BUNDLE_DIR, 0755, true);
-    }
-    move_uploaded_file($_FILES['bundle_file']['tmp_name'], BUNDLE_DIR . '/previous.mind');
-    file_put_contents(BUNDLE_DIR . '/manifest.json', json_encode([
-        'generatedAt' => date('Y-m-d H:i:s'),
-        'weeks'       => $weeks,
-    ], JSON_UNESCAPED_UNICODE));
-
-    jsonResponse(['ok' => true, 'weeks' => $weeks]);
 }
 
 // ---- Dev-feedback (van het dev-paneel; geen auth, klein en gelimiteerd) ----

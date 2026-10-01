@@ -17,7 +17,10 @@ let bootTime = 0;
 // Metingen (vergelijkbaar met de MindAR-spike)
 let foundCount = 0, lostCount = 0, firstFoundAt = 0;
 let jitterSum = 0, jitterCount = 0, frameCount = 0;
-const anchorState = {};       // name -> {visible, lastPos: {x,y,z}}
+// Grace na 'lost': houd de laatste pose nog even zichtbaar i.p.v. direct
+// verbergen — voorkomt knipperen bij korte haperingen.
+const LOST_GRACE_MS = 1200;
+const anchorState = {};       // name -> {visible, lastPos: {x,y,z}, hideTimer}
 
 const sceneBox = function () { return document.getElementById('ar-scene'); };
 const overlay = function () { return document.getElementById('start-overlay'); };
@@ -109,11 +112,37 @@ function xrControllerReady(XR8, timeoutMs) {
 
 // ---- Laag-bouwer (zelfde model als MindAR-versie: planes/gif/gltf/anim) ----
 
-function buildLayers(target, layers) {
-    (layers || []).forEach(function (layer) {
+// Passend formaat binnen een 1×1-box uit de target-verhouding. In de
+// anchor-ruimte is een staande pagina aspect-breed × 1 hoog (zie engine:
+// scaledWidth = w/h, scaledHeight = 1); een w=1-plane is dus breder dan
+// de marker. Zonder expliciete w/h vullen we dit in.
+function fitSize(targetData) {
+    let w = 1, h = 1;
+    const p = targetData && targetData.properties;
+    const ow = parseFloat(p && (p.originalWidth || p.width));
+    const oh = parseFloat(p && (p.originalHeight || p.height));
+    if (ow > 0 && oh > 0) {
+        const a = ow / oh;
+        if (a <= 1) { w = a; h = 1; } else { w = 1; h = 1 / a; }
+    }
+    return { w: Math.round(w * 1000) / 1000, h: Math.round(h * 1000) / 1000 };
+}
+
+// Licht per laag: lit=1 = standaard (met schaduw), anders vlak/unlit
+// (als print). GLB-modellen hebben eigen materialen en blijven altijd lit.
+function applyLit(obj, layer, isModel) {
+    if (isModel) return;
+    obj.setAttribute('material', 'shader', layer.lit ? 'standard' : 'flat');
+}
+
+function buildLayers(target, entry) {
+    const fit = fitSize(entry && entry.targetData);
+    ((entry && entry.layers) || []).forEach(function (layer) {
         const lx = layer.x || 0, ly = layer.y || 0, lz = layer.z;
         const rx = layer.rx || 0, ry = layer.ry || 0, rz = layer.rz || 0;
         const sc = layer.scale > 0 ? layer.scale : 1;
+        const lw = layer.w > 0 ? layer.w : fit.w;
+        const lh = layer.h > 0 ? layer.h : fit.h;
         const isModel = /\.glb(\?|$)/i.test(layer.file);
         const isGif = /\.gif(\?|$)/i.test(layer.file);
 
@@ -125,12 +154,13 @@ function buildLayers(target, layers) {
         } else {
             obj = document.createElement('a-plane');
             if (!isGif) obj.setAttribute('src', layer.file);
-            obj.setAttribute('width', layer.w);
-            obj.setAttribute('height', layer.h);
+            obj.setAttribute('width', lw);
+            obj.setAttribute('height', lh);
             obj.setAttribute('transparent', 'true');
             obj.setAttribute('opacity', layer.opacity !== undefined ? layer.opacity : 1);
             obj.setAttribute('scale', sc + ' ' + sc + ' ' + sc);
             if (isGif) obj.setAttribute('gif', 'src: ' + layer.file + '; transparent: false');
+            applyLit(obj, layer, false);
         }
 
         obj.setAttribute('position', lx + ' ' + ly + ' ' + lz);
@@ -190,23 +220,36 @@ function buildScene(entries) {
         const content = document.createElement('a-entity');
         content.setAttribute('class', 'essay-content');
         content.setAttribute('data-week', entry.week);
-        buildLayers(content, entry.layers);
+        buildLayers(content, entry);
         anchor.appendChild(content);
 
-        anchorState[entry.name] = { visible: false, lastPos: null };
+        anchorState[entry.name] = { visible: false, lastPos: null, hideTimer: 0 };
 
         anchor.addEventListener('xrextrasfound', function () {
+            const st = anchorState[entry.name];
+            if (st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
             foundCount++;
             if (!firstFoundAt) firstFoundAt = performance.now();
-            anchorState[entry.name].visible = true;
+            st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
             document.getElementById('feed-loader').style.display = 'none';
             applyPrevVisibility();
         });
         anchor.addEventListener('xrextraslost', function () {
+            const st = anchorState[entry.name];
             lostCount++;
-            anchorState[entry.name].visible = false;
-            console.log('[AR] target ' + entry.name + ' verloren');
+            st.visible = false;
+            console.log('[AR] target ' + entry.name + ' verloren (grace ' + LOST_GRACE_MS + 'ms)');
+            // De engine verbergt de anchor direct; wij houden de laatste pose
+            // nog even zichtbaar zodat het beeld niet bij elke hapering
+            // wegvalt (ook als de marker nog grotendeels in beeld is).
+            const anchorObj = anchor.object3D;
+            if (anchorObj) anchorObj.visible = true;
+            if (st.hideTimer) clearTimeout(st.hideTimer);
+            st.hideTimer = setTimeout(function () {
+                st.hideTimer = 0;
+                if (anchorObj && !anchorState[entry.name].visible) anchorObj.visible = false;
+            }, LOST_GRACE_MS);
         });
 
         scene.appendChild(anchor);

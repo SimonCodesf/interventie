@@ -64,6 +64,27 @@ function baseName(url) {
     return String(url).split('/').pop().split('?')[0];
 }
 
+// Passend formaat binnen een 1×1-box uit de target-verhouding (zelfde
+// ruimte als de hoofdpagina: staand = aspect-breed × 1 hoog).
+function fitSize(targetData) {
+    let w = 1, h = 1;
+    const p = targetData && targetData.properties;
+    const ow = parseFloat(p && (p.originalWidth || p.width));
+    const oh = parseFloat(p && (p.originalHeight || p.height));
+    if (ow > 0 && oh > 0) {
+        const a = ow / oh;
+        if (a <= 1) { w = a; h = 1; } else { w = 1; h = 1 / a; }
+    }
+    return { w: Math.round(w * 1000) / 1000, h: Math.round(h * 1000) / 1000 };
+}
+
+// Licht per laag: lit=1 = standaard (met schaduw), anders vlak/unlit.
+// GLB-modellen hebben eigen materialen en blijven altijd lit.
+function applyLit(obj, layer, kind) {
+    if (kind === '3d' || !obj) return;
+    obj.setAttribute('material', 'shader', layer.lit ? 'standard' : 'flat');
+}
+
 // ---- Auth + essay kiezen ----
 
 async function init() {
@@ -114,14 +135,17 @@ async function loadWeek(w) {
     const data = await res.json();
     essay = data.essay;
     // Werk-kopie (animatie-velden blijven behouden bij opslaan).
-    // Veilige defaults zoals de API: zonder w/h/z wordt een plane onzichtbaar.
+    // Zonder w/h/z wordt een plane onzichtbaar — zonder expliciete maat
+    // vullen we passend op de marker in (zelfde als de hoofdpagina).
+    const fit = fitSize(essay.target8w);
     layers = (essay.layers || []).map(function (l) {
         return {
             file: l.file, x: l.x || 0, y: l.y || 0,
             z: (l.z !== undefined && l.z !== null) ? l.z : 0.01,
-            w: (l.w > 0) ? l.w : 1, h: (l.h > 0) ? l.h : 1.414,
+            w: (l.w > 0) ? l.w : fit.w, h: (l.h > 0) ? l.h : fit.h,
             opacity: l.opacity !== undefined ? l.opacity : 1,
             rx: l.rx || 0, ry: l.ry || 0, rz: l.rz || 0, scale: l.scale || 1,
+            lit: l.lit ? 1 : 0,
             anim_dur: l.anim_dur || 0, anim_x: l.anim_x || 0,
             anim_y: l.anim_y || 0, anim_z: l.anim_z !== undefined ? l.anim_z : l.z,
         };
@@ -177,13 +201,23 @@ function buildScene() {
 
     const target = document.createElement('a-entity');
     target.setAttribute('xrextras-named-image-target', 'name: ' + week);
+    let posHideTimer = 0;
     target.addEventListener('xrextrasfound', function () {
+        if (posHideTimer) { clearTimeout(posHideTimer); posHideTimer = 0; }
         console.log('[pos] marker GEVONDEN');
         status('Marker gevonden ✓ — ' + layers.length + ' laag/lagen zichtbaar.', 'ok');
     });
     target.addEventListener('xrextraslost', function () {
-        console.log('[pos] marker verloren');
-        status('Marker kwijt — richt op de pagina.');
+        console.log('[pos] marker verloren (grace)');
+        // Houd de laatste pose nog even vast (zelfde als hoofdpagina).
+        const targetObj = target.object3D;
+        if (targetObj) targetObj.visible = true;
+        if (posHideTimer) clearTimeout(posHideTimer);
+        posHideTimer = setTimeout(function () {
+            posHideTimer = 0;
+            if (targetObj) targetObj.visible = false;
+            status('Marker kwijt — richt op de pagina.');
+        }, 1200);
     });
 
     layers.forEach(function (layer, i) {
@@ -211,6 +245,7 @@ function buildScene() {
             if (kind === 'gif') obj.setAttribute('gif', 'src: ' + absUrl(layer.file) + '; transparent: false');
         }
         applyTransform(obj, layer, kind);
+        applyLit(obj, layer, kind);
         target.appendChild(obj);
         entities[i] = obj;
         if (hiddenLayers[i]) obj.setAttribute('visible', false);
@@ -351,7 +386,7 @@ function renderControls() {
     // oud en de schuiven lijken niets te doen.
     function live() {
         const o = entities[selected];
-        if (o) applyTransform(o, layer, kind);
+        if (o) { applyTransform(o, layer, kind); applyLit(o, layer, kind); }
     }
 
     groupTitle(wrap, 'Positie');
@@ -364,6 +399,31 @@ function renderControls() {
         slider(wrap, 'Breedte', 0.1, 3, 0.01, function () { return layer.w; }, function (v) { layer.w = v; live(); });
         slider(wrap, 'Hoogte', 0.1, 3, 0.01, function () { return layer.h; }, function (v) { layer.h = v; live(); });
         slider(wrap, 'Dekking', 0, 1, 0.05, function () { return layer.opacity; }, function (v) { layer.opacity = v; live(); });
+
+        const fitBtn = document.createElement('button');
+        fitBtn.className = 'wide-btn';
+        fitBtn.textContent = 'PASSEND OP MARKER';
+        fitBtn.addEventListener('click', function () {
+            const fit = fitSize(essay && essay.target8w);
+            layer.w = fit.w; layer.h = fit.h;
+            live(); renderControls();
+            status('Laag passend gemaakt (' + fit.w + ' × ' + fit.h + ') — vergeet niet op te slaan.');
+        });
+        wrap.appendChild(fitBtn);
+
+        const litBtn = document.createElement('button');
+        litBtn.className = 'wide-btn';
+        function paintLitBtn() {
+            litBtn.textContent = layer.lit ? 'LICHT: AAN (met schaduw)' : 'LICHT: UIT (vlak als print)';
+            if (layer.lit) litBtn.classList.add('active');
+            else litBtn.classList.remove('active');
+        }
+        paintLitBtn();
+        litBtn.addEventListener('click', function () {
+            layer.lit = layer.lit ? 0 : 1;
+            live(); paintLitBtn();
+        });
+        wrap.appendChild(litBtn);
     }
 
     groupTitle(wrap, 'Rotatie + schaal');
@@ -442,7 +502,7 @@ document.getElementById('pos-save').addEventListener('click', async function () 
         return {
             file: baseName(l.file),
             x: l.x, y: l.y, z: l.z, w: l.w, h: l.h, opacity: l.opacity,
-            rx: l.rx, ry: l.ry, rz: l.rz, scale: l.scale,
+            rx: l.rx, ry: l.ry, rz: l.rz, scale: l.scale, lit: l.lit ? 1 : 0,
             anim_dur: l.anim_dur, anim_x: l.anim_x, anim_y: l.anim_y, anim_z: l.anim_z,
         };
     });

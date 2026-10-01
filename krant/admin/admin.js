@@ -1,12 +1,8 @@
 // Krant AR — Admin logica
 
-import { Compiler, msgpack } from './vendor/mindar-compiler.bundle.js?v=4';
-
 const API = '../api.php';
 
 let editingWeek = null;
-let compiledMind = null; // { blob, size } — .mind gegenereerd in de browser
-let compiledMindMatchesPage = false; // marker hoort bij de geselecteerde pagina
 
 // ---- ISO week voorstel ----
 
@@ -137,12 +133,46 @@ document.getElementById('logout-button').addEventListener('click', async functio
 
 // ---- Layer rijen ----
 
+// Beeldverhouding (b/h) van de pagina — voor passende laag-defaults.
+// 0 = onbekend (dan vierkant 1×1).
+let pageAspect = 0;
+
+function fittedSize() {
+    if (pageAspect > 0) {
+        if (pageAspect <= 1) return { w: pageAspect.toFixed(3), h: '1' };
+        return { w: '1', h: (1 / pageAspect).toFixed(3) };
+    }
+    return { w: '1', h: '1' };
+}
+
+function refreshPageAspect(url, revoke) {
+    const img = new Image();
+    img.onload = function () {
+        if (img.width > 0 && img.height > 0) pageAspect = img.width / img.height;
+        if (revoke) URL.revokeObjectURL(url);
+    };
+    img.onerror = function () { if (revoke) URL.revokeObjectURL(url); };
+    img.src = url;
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+function baseName(url) {
+    return String(url || '').split('/').pop().split('?')[0];
+}
+
 function layerDefaults(index) {
+    const fit = fittedSize();
     return {
         x: '0', y: '0', z: (0.01 + index * 0.01).toFixed(2),
-        w: '1', h: '1.414', opacity: '1',
-        rx: '0', ry: '0', rz: '0', scale: '1',
+        w: fit.w, h: fit.h, opacity: '1',
+        rx: '0', ry: '0', rz: '0', scale: '1', lit: 0,
         anim_dur: '0', anim_x: '0', anim_y: '0', anim_z: '0',
+        existingFile: '',
     };
 }
 
@@ -156,9 +186,11 @@ function addLayerRow(values) {
 
     const row = document.createElement('div');
     row.className = 'layer-row';
+    const fileLabel = v.existingFile ? 'Nieuw bestand (leeg = behoud ' + escapeHtml(v.existingFile) + ')' : 'Bestand (PNG/GIF/GLB)';
     row.innerHTML =
         '<div class="layer-top">' +
-            '<label class="grow">Bestand (PNG/GIF/GLB)<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb"></label>' +
+            '<label class="grow">' + fileLabel + '<input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb"></label>' +
+            '<input type="hidden" name="layer_existing" value="' + escapeHtml(v.existingFile || '') + '">' +
             '<button type="button" class="remove-layer" title="Verwijder laag">×</button>' +
         '</div>' +
         '<div class="layer-group"><span class="group-title">Positie</span>' +
@@ -168,6 +200,7 @@ function addLayerRow(values) {
             numField('layer_w', 'Breedte', v.w) + numField('layer_h', 'Hoogte', v.h) +
             '<label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="' + v.opacity + '"></label>' +
             numField('layer_scale', 'Schaal', v.scale, ' min="0.01"') +
+            '<label><input type="checkbox" name="layer_lit" value="1"' + (v.lit ? ' checked' : '') + '> Licht/schaduw</label>' +
         '</div>' +
         '<div class="layer-group"><span class="group-title">Rotatie (°)</span>' +
             numField('layer_rx', 'X', v.rx) + numField('layer_ry', 'Y', v.ry) + numField('layer_rz', 'Z', v.rz) +
@@ -188,77 +221,11 @@ document.getElementById('add-layer').addEventListener('click', function () {
     addLayerRow();
 });
 
-// ---- .mind generatie in de browser ----
-
-const MAX_DIMENSION = 1600; // maximale zijde voor compilatie (sneller laden + detecteren, tracking blijft goed)
-
-const pageInput = document.getElementById('f-page');
-const compileBox = document.getElementById('compile-box');
-const compileButton = document.getElementById('compile-button');
-const compileProgress = document.getElementById('compile-progress');
-
-pageInput.addEventListener('change', function () {
-    compiledMind = null;
-    compiledMindMatchesPage = false;
-    compileProgress.textContent = '';
-    compileBox.style.display = pageInput.files.length ? 'block' : 'none';
+// Beeldverhouding bijhouden voor passende laag-defaults
+document.getElementById('f-page').addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) refreshPageAspect(URL.createObjectURL(file), true);
 });
-
-compileButton.addEventListener('click', async function () {
-    const file = pageInput.files[0];
-    if (!file) return;
-
-    compileButton.disabled = true;
-    compileProgress.textContent = 'Afbeelding laden…';
-
-    try {
-        // Afbeelding laden en verkleinen naar max. 1600px (sneller compileren, even goede tracking)
-        const img = await loadImageFile(file);
-        const canvas = document.createElement('canvas');
-        const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext('2d');
-        // Transparantie afvlakken op wit: een transparante PNG zou anders zwart
-        // in de marker krijgen, terwijl de print wit papier toont (mismatch).
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        const compiler = new Compiler();
-        await compiler.compileImageTargets([canvas], function (percent) {
-            compileProgress.textContent = 'Compileren: ' + Math.round(percent) + '%';
-        });
-
-        const data = compiler.exportData();
-        compiledMind = {
-            blob: new Blob([data], { type: 'application/octet-stream' }),
-            size: data.length,
-        };
-        compiledMindMatchesPage = true;
-        compileProgress.textContent = 'Klaar (' + (data.length / 1024).toFixed(0) + ' KB) — wordt meegestuurd bij opslaan.';
-    } catch (err) {
-        compileProgress.textContent = 'Compilatie mislukt: ' + (err.message || err) +
-            '. Gebruik een recente browser (Chrome/Safari/Firefox) en probeer opnieuw.';
-    }
-    compileButton.disabled = false;
-});
-
-function loadImageFile(file) {
-    return new Promise(function (resolve, reject) {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = function () {
-            URL.revokeObjectURL(url);
-            resolve(img);
-        };
-        img.onerror = function () {
-            URL.revokeObjectURL(url);
-            reject(new Error('afbeelding kon niet gelezen worden'));
-        };
-        img.src = url;
-    });
-}
 
 // ---- Essay opslaan ----
 
@@ -279,53 +246,50 @@ document.getElementById('essay-form').addEventListener('submit', async function 
     const pageFile = document.getElementById('f-page').files[0];
     if (pageFile) fd.append('page_image', pageFile);
 
-    // Marker: bij een nieuwe pagina-afbeelding is een vers gecompileerde
-    // .mind verplicht (geen manuele uploads meer)
-    if (pageFile && !compiledMind) {
-        errorEl.textContent = 'Genereer eerst de marker met GENEREER .MIND en sla daarna op.';
-        btn.disabled = false;
-        return;
-    }
+    // 8th Wall target wordt automatisch gegenereerd bij page_image-upload (zie api.php).
 
-    if (compiledMind) {
-        fd.append('mind_file', compiledMind.blob, 'target.mind');
-    }
-
-    // Enkel rijen met een bestand meesturen (compact, index-consistent)
-    let layerIndex = 0;
+    // Alle rijen meesturen: met nieuw bestand (has_file=1) of behoud
+    // bestaand bestand (has_file=0 + layer_existing). Rijen zonder beide
+    // worden overgeslagen. De server houdt de rij-volgorde aan.
     const getNum = function (row, name, def) {
         const el = row.querySelector('input[name="' + name + '"]');
         return (el && el.value !== '') ? el.value : def;
     };
     document.querySelectorAll('#layers-rows .layer-row').forEach(function (row) {
         const file = row.querySelector('input[name="layer_file"]').files[0];
-        if (!file) return;
-        fd.append('layers[]', file);
+        const existing = row.querySelector('input[name="layer_existing"]').value;
+        if (!file && !existing) return;
+        if (file) {
+            fd.append('layers[]', file);
+            fd.append('layer_has_file[]', '1');
+        } else {
+            fd.append('layer_has_file[]', '0');
+        }
+        fd.append('layer_existing[]', existing);
         fd.append('layer_x[]', getNum(row, 'layer_x', '0'));
         fd.append('layer_y[]', getNum(row, 'layer_y', '0'));
         fd.append('layer_z[]', getNum(row, 'layer_z', '0.01'));
         fd.append('layer_w[]', getNum(row, 'layer_w', '1'));
-        fd.append('layer_h[]', getNum(row, 'layer_h', '1.414'));
+        fd.append('layer_h[]', getNum(row, 'layer_h', '1'));
         fd.append('layer_opacity[]', getNum(row, 'layer_opacity', '1'));
         fd.append('layer_rx[]', getNum(row, 'layer_rx', '0'));
         fd.append('layer_ry[]', getNum(row, 'layer_ry', '0'));
         fd.append('layer_rz[]', getNum(row, 'layer_rz', '0'));
         fd.append('layer_scale[]', getNum(row, 'layer_scale', '1'));
+        fd.append('layer_lit[]', row.querySelector('input[name="layer_lit"]').checked ? '1' : '0');
         fd.append('layer_anim_dur[]', getNum(row, 'layer_anim_dur', '0'));
         fd.append('layer_anim_x[]', getNum(row, 'layer_anim_x', '0'));
         fd.append('layer_anim_y[]', getNum(row, 'layer_anim_y', '0'));
         fd.append('layer_anim_z[]', getNum(row, 'layer_anim_z', '0'));
-        layerIndex++;
     });
 
     try {
         const res = await fetch(API + '/admin/essays', { method: 'POST', body: fd });
         const data = await res.json();
         if (res.ok) {
-            okEl.textContent = 'Opgeslagen: ' + data.essay.week + ' — ' + (data.essay.mind ? 'AR marker aanwezig' : 'LET OP: nog geen AR marker (.mind)');
+            okEl.textContent = 'Opgeslagen: ' + data.essay.week + (data.essay.target8w ? '' : ' — LET OP: geen 8th Wall target aangemaakt');
             resetForm(data.essay.week);
             loadEssays();
-            rebuildBundle();
         } else {
             errorEl.textContent = data.message || 'Opslaan mislukt';
         }
@@ -384,26 +348,7 @@ async function loadEssays() {
         if (data.essays.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="color:#777">Nog geen essays.</td></tr>';
         }
-        refreshBundleInfo();
     } catch (err) {
-        /* geen verbinding */
-    }
-}
-
-// Toont hoe de chunks verdeeld zijn: 1 week = 1 essay, vorige-bundel = alle
-// gepubliceerde essays behalve de nieuwste week.
-async function refreshBundleInfo() {
-    try {
-        const res = await fetch(API + '/admin/bundle-sources');
-        const data = await res.json();
-        const n = data.published || 0;
-        const prev = (data.essays || []).length;
-        if (n < 2) {
-            bundleStatus.textContent = n + ' gepubliceerd essay — er zijn minstens 2 nodig (elk met een ANDERE week) voor een vorige-bundel';
-        } else {
-            bundleStatus.textContent = n + ' gepubliceerd: nieuwste week = huidige chunk, ' + prev + ' oudere week(s) = vorige-bundel';
-        }
-    } catch (e) {
         /* geen verbinding */
     }
 }
@@ -434,7 +379,6 @@ async function togglePublish(week, published) {
         body: JSON.stringify({ published: published }),
     });
     loadEssays();
-    rebuildBundle();
 }
 
 async function deleteEssay(week) {
@@ -442,7 +386,6 @@ async function deleteEssay(week) {
     await fetch(API + '/admin/essays/' + encodeURIComponent(week), { method: 'DELETE' });
     if (editingWeek === week) resetForm();
     loadEssays();
-    rebuildBundle();
 }
 
 async function wipeAll() {
@@ -451,71 +394,9 @@ async function wipeAll() {
     await fetch(API + '/admin/essays', { method: 'DELETE' });
     resetForm();
     loadEssays();
-    rebuildBundle();
 }
 
 document.getElementById('wipe-all').addEventListener('click', wipeAll);
-
-// ---- Vorige-bundel (chunk 2) ----
-
-const bundleStatus = document.getElementById('bundle-status');
-const bundleProgress = document.getElementById('bundle-progress');
-
-async function rebuildBundle() {
-    const btn = document.getElementById('bundle-button');
-    btn.disabled = true;
-    bundleProgress.textContent = 'Bezig…';
-
-    try {
-        const res = await fetch(API + '/admin/bundle-sources');
-        const data = await res.json();
-        const essays = (data.essays || []).filter(function (e) { return e.mind; });
-
-        if (essays.length === 0) {
-            const fd = new FormData();
-            fd.append('weeks', '[]');
-            await fetch(API + '/admin/bundle', { method: 'POST', body: fd });
-            bundleStatus.textContent = 'geen vorige essays — knop verborgen op de gsm';
-            bundleProgress.textContent = '';
-            btn.disabled = false;
-            return;
-        }
-
-        const dataList = [];
-        const weeks = [];
-        for (let i = 0; i < essays.length; i++) {
-            bundleProgress.textContent = 'Downloaden ' + (i + 1) + '/' + essays.length + '…';
-            const mindRes = await fetch(essays[i].mind);
-            if (!mindRes.ok) throw new Error('kon marker van ' + essays[i].week + ' niet ophalen');
-            const decoded = msgpack.decode(new Uint8Array(await mindRes.arrayBuffer()));
-            if (!decoded.dataList || !decoded.dataList.length) {
-                throw new Error('ongeldige marker ' + essays[i].week);
-            }
-            dataList.push(decoded.dataList[0]);
-            weeks.push(essays[i].week);
-        }
-
-        bundleProgress.textContent = 'Samenvoegen…';
-        const merged = msgpack.encode({ v: decoded && decoded.v ? decoded.v : 2, dataList });
-
-        const fd = new FormData();
-        fd.append('weeks', JSON.stringify(weeks));
-        fd.append('bundle_file', new Blob([merged], { type: 'application/octet-stream' }), 'previous.mind');
-
-        const upRes = await fetch(API + '/admin/bundle', { method: 'POST', body: fd });
-        const upData = await upRes.json();
-        if (!upRes.ok) throw new Error(upData.message || 'upload mislukt');
-
-        bundleStatus.textContent = 'up-to-date (' + weeks.length + ' vorige essays)';
-        bundleProgress.textContent = 'Klaar (' + (merged.length / 1024).toFixed(0) + ' KB)';
-    } catch (err) {
-        bundleStatus.textContent = 'NIET up-to-date — herbouw nodig';
-        bundleProgress.textContent = 'Mislukt: ' + (err.message || err);
-    }
-    btn.disabled = false;
-}
-
-document.getElementById('bundle-button').addEventListener('click', rebuildBundle);
 
 // ---- Formulier vullen voor bewerking ----
 
@@ -532,7 +413,10 @@ async function loadIntoForm(week) {
         document.getElementById('f-title').value = essay.title;
         document.getElementById('f-published').checked = true;
 
-        // Layers tonen (bestanden zelf kunnen niet herladen worden — die blijven staan als je geen nieuw bestand kiest)
+        // Layers tonen met behoud van bestaande bestanden (file-inputs kunnen
+        // niet vooringevuld worden — de bestandsnaam staat in de rij en het
+        // bestand blijft staan als je geen nieuw bestand kiest)
+        if (essay.page_image) refreshPageAspect(essay.page_image, false);
         const rows = document.getElementById('layers-rows');
         rows.innerHTML = '';
         essay.layers.forEach(function (layer) {
@@ -540,10 +424,14 @@ async function loadIntoForm(week) {
                 x: layer.x || 0, y: layer.y || 0, z: layer.z,
                 w: layer.w, h: layer.h, opacity: layer.opacity,
                 rx: layer.rx || 0, ry: layer.ry || 0, rz: layer.rz || 0, scale: layer.scale || 1,
+                lit: layer.lit ? 1 : 0,
                 anim_dur: layer.anim_dur, anim_x: layer.anim_x, anim_y: layer.anim_y, anim_z: layer.anim_z,
+                existingFile: baseName(layer.file),
             });
         });
         if (essay.layers.length === 0) addLayerRow();
+        document.getElementById('target8w-status').textContent =
+            essay.target8w ? ('8th Wall target aanwezig: ' + essay.target8w.name) : 'Nog geen 8th Wall target voor dit essay.';
         document.getElementById('form-error').textContent = '';
         document.getElementById('form-ok').textContent =
             'Bestaande bestanden (pagina/marker/layers) blijven behouden als je geen nieuw bestand kiest.';
@@ -554,14 +442,11 @@ async function loadIntoForm(week) {
 
 function resetForm(keepWeek) {
     editingWeek = null;
-    compiledMind = null;
-    compiledMindMatchesPage = false;
-    compileProgress.textContent = '';
-    compileBox.style.display = 'none';
     document.getElementById('form-heading').textContent = 'Nieuw essay';
     document.getElementById('f-week').value = keepWeek || isoWeek();
     document.getElementById('f-title').value = '';
     document.getElementById('f-page').value = '';
+    document.getElementById('target8w-status').textContent = '';
     document.getElementById('f-published').checked = true;
     document.getElementById('layers-rows').innerHTML = '';
     addLayerRow();

@@ -67,18 +67,16 @@
                         <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
                     </label>
 
-                    <div id="compile-box" class="compile-box" style="display:none;">
-                        <p>Genereren van de AR marker (.mind) uit de pagina — gebeurt in jouw browser, duurt meestal 30–60 seconden. Vereist voor opslaan.</p>
-                        <div class="compile-row">
-                            <button type="button" id="compile-button">GENEREER .MIND</button>
-                            <span id="compile-progress"></span>
-                        </div>
-                    </div>
-
                     <fieldset>
                         <legend>AR-lagen (PNG's en GIF's boven de pagina)</legend>
                         <div id="layers-rows"></div>
                         <button type="button" id="add-layer" class="ghost">+ Laag toevoegen</button>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>8th Wall target (voor de nieuwe AR-engine)</legend>
+                        <p class="bundle-info">Wordt automatisch gemaakt bij het uploaden van de pagina-afbeelding — enkel een JPG volstaat, verder niets nodig.</p>
+                        <p id="target8w-status" class="bundle-info"></p>
                     </fieldset>
 
                     <p id="form-error" class="error"></p>
@@ -105,21 +103,6 @@
                 </div>
             </section>
 
-            <!-- Vorige-bundel -->
-            <section class="card">
-                <h2>Vorige-bundel (chunk 2)</h2>
-                <p class="bundle-info">
-                    De app scant de huidige week instant. Alle vorige essays zitten samen in één bundel
-                    die je met de knop op de gsm ophaalt. Deze bundel wordt hier opgebouwd uit de losse
-                    markers (samengevoegd in je browser) en gebeurt automatisch na elke wijziging.
-                </p>
-                <p class="bundle-info">Status: <span id="bundle-status">…</span></p>
-                <div class="compile-row">
-                    <button type="button" id="bundle-button" class="ghost">BUNDEL OPBOUWEN</button>
-                    <span id="bundle-progress"></span>
-                </div>
-            </section>
-
             <!-- Wachtwoord wijzigen -->
             <section class="card">
                 <h2>Wachtwoord wijzigen</h2>
@@ -142,6 +125,6 @@
         </main>
     </div>
 
-    <script type="module" src="admin.js?v=9"></script>
+    <script type="module" src="admin.js?v=11"></script>
 </body>
 </html>
