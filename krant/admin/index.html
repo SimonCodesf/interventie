@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=15">
+    <link rel="stylesheet" href="admin.css?v=16">
 </head>
 <body>
 
@@ -48,16 +48,17 @@
                     <span class="status-dot"></span> KRANT AR // STUDIO v2.0
                 </div>
                 <div class="brand-quicklinks">
-                    <a href="../" target="_blank" rel="noopener" class="quicklink-pill">↗ Live Krant</a>
-                    <a href="../position/" id="sidebar-pos-link" class="quicklink-pill">⌖ AR Positioneren</a>
-                    <a href="../../admin/" class="quicklink-pill">⇄ Hoofd-Admin</a>
+                    <a href="../" target="_blank" rel="noopener" class="quicklink-pill">LIVE KRANT</a>
+                    <a href="../position/" id="sidebar-pos-link" class="quicklink-pill">AR POSITIONEREN</a>
+                    <a href="../../admin/" class="quicklink-pill">HOOFD-ADMIN</a>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
                 <button type="button" id="reset-form" class="nav-btn primary-nav">+ NIEUWE EDITIE</button>
-                <button type="button" id="analytics-btn" class="nav-btn">📊 ANALYTICS</button>
-                <button type="button" id="settings-btn" class="nav-btn">⚙ INSTELLINGEN</button>
+                <button type="button" id="nav-editor-btn" class="nav-btn active-view">STUDIO EDITOR</button>
+                <button type="button" id="analytics-btn" class="nav-btn">ANALYTICS</button>
+                <button type="button" id="settings-btn" class="nav-btn">INSTELLINGEN</button>
                 <button type="button" id="logout-button" class="nav-btn danger-nav">UITLOGGEN</button>
             </nav>
 
@@ -73,183 +74,315 @@
 
         <!-- Main Content -->
         <main class="admin-main">
-            <header class="workspace-header">
-                <div class="workspace-title-group">
-                    <span class="workspace-kicker" id="editor-mode-badge">NIEUWE EDITIE</span>
-                    <h2 id="form-heading">Nieuw essay</h2>
-                </div>
-                <div class="workspace-actions">
-                    <a href="../position/" id="header-position-link" class="btn ghost small-btn" title="Open dit essay in de smartphone AR Positioneer-tool">⌖ Open in AR Positioneer-tool</a>
-                    <button type="button" id="duplicate-essay-btn" class="btn ghost small-btn" style="display:none;">⧉ Dupliceer naar nieuwe week</button>
-                    <button type="button" id="delete-current-btn" class="btn danger small-btn" style="display:none;">Verwijder editie</button>
-                </div>
-            </header>
 
-            <form id="essay-form" class="editor-grid" novalidate>
+            <!-- ==========================================================
+                 VIEW 1: STUDIO EDITOR (Standaard weergave)
+                 ========================================================== -->
+            <div id="view-editor" class="workspace-view">
+                <header class="workspace-header">
+                    <div class="workspace-title-group">
+                        <span class="workspace-kicker" id="editor-mode-badge">NIEUWE EDITIE</span>
+                        <h2 id="form-heading">Nieuw essay</h2>
+                    </div>
+                    <div class="workspace-actions">
+                        <a href="../position/" id="header-position-link" class="btn ghost small-btn" title="Open dit essay in de smartphone AR Positioneer-tool">OPEN IN AR POSITIONEER-TOOL</a>
+                        <button type="button" id="duplicate-essay-btn" class="btn ghost small-btn" style="display:none;">DUPLICEER NAAR NIEUWE WEEK</button>
+                        <button type="button" id="delete-current-btn" class="btn danger small-btn" style="display:none;">VERWIJDER EDITIE</button>
+                    </div>
+                </header>
 
-                <!-- Linker kolom: Metadata, Pagina-afbeelding & Upload Overzicht -->
-                <div class="editor-col col-left">
+                <form id="essay-form" class="editor-grid" novalidate>
 
-                    <!-- Paneel 1: Metadata -->
-                    <section class="panel-card">
-                        <div class="panel-card-header">
-                            <span class="panel-card-title">1. Editie &amp; Publicatie</span>
-                            <span class="panel-card-tag">meta_data.sys</span>
-                        </div>
-                        <div class="panel-card-body">
-                            <div class="row two-col">
-                                <label>
-                                    Week-code (bv. 2026-41)
-                                    <input type="text" id="f-week" placeholder="2026-41" autocomplete="off" required>
-                                    <span id="week-hint" class="hint"></span>
+                    <!-- Linker kolom: Metadata, Pagina-afbeelding & Upload Overzicht -->
+                    <div class="editor-col col-left">
+
+                        <!-- Paneel 1: Metadata -->
+                        <section class="panel-card">
+                            <div class="panel-card-header">
+                                <span class="panel-card-title">1. Editie &amp; Publicatie</span>
+                                <span class="panel-card-tag">meta_data.sys</span>
+                            </div>
+                            <div class="panel-card-body">
+                                <div class="row two-col">
+                                    <label>
+                                        Week-code (bv. 2026-41)
+                                        <input type="text" id="f-week" placeholder="2026-41" autocomplete="off" required>
+                                        <span id="week-hint" class="hint"></span>
+                                    </label>
+                                    <label>
+                                        Publicatiestatus
+                                        <div class="publish-toggle-box">
+                                            <input type="checkbox" id="f-published" checked>
+                                            <span>Publiceer onmiddellijk (Live)</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <label style="margin-bottom:0;">
+                                    Titel van het essay / de editie
+                                    <input type="text" id="f-title" placeholder="bv. De publieke ruimte als archief" autocomplete="off" required>
                                 </label>
+                            </div>
+                        </section>
+
+                        <!-- Paneel 2: Pagina-afbeelding & 8th Wall Target -->
+                        <section class="panel-card">
+                            <div class="panel-card-header">
+                                <span class="panel-card-title">2. Krantenpagina &amp; 8th Wall AR Marker</span>
+                                <span id="target8w-badge" class="status-pill neutral">Auto-Target</span>
+                            </div>
+                            <div class="panel-card-body">
                                 <label>
-                                    Publicatiestatus
-                                    <div class="publish-toggle-box">
-                                        <input type="checkbox" id="f-published" checked>
-                                        <span>Publiceer onmiddellijk (Live)</span>
+                                    Pagina-afbeelding (JPG, PNG of WebP — dit is zowel de tekst als de AR-marker)
+                                    <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
+                                </label>
+                                <div id="page-file-info" class="file-meta-bar">Nog geen bestand geselecteerd.</div>
+
+                                <!-- Live Pagina Preview -->
+                                <div id="page-preview-wrap" class="page-preview-wrap" style="display:none;">
+                                    <img id="page-preview-img" src="" alt="Krantenpagina preview">
+                                    <div class="page-preview-meta">
+                                        <span id="page-dimensions-info"></span>
+                                        <span id="target8w-status" class="bundle-info"></span>
                                     </div>
-                                </label>
+                                </div>
                             </div>
+                        </section>
 
-                            <label style="margin-bottom:0;">
-                                Titel van het essay / de editie
-                                <input type="text" id="f-title" placeholder="bv. De publieke ruimte als archief" autocomplete="off" required>
-                            </label>
-                        </div>
-                    </section>
+                        <!-- Paneel 3: Upload Overzicht & Acties -->
+                        <section class="panel-card submit-card">
+                            <div class="panel-card-header">
+                                <span class="panel-card-title">3. Editie Overzicht &amp; Opslaan</span>
+                                <span id="summary-bundle-badge" class="status-pill neutral">0 KB</span>
+                            </div>
+                            <div class="panel-card-body">
+                                <div class="summary-checklist">
+                                    <div class="summary-row" id="sum-week"><span>Week-code</span><strong>—</strong></div>
+                                    <div class="summary-row" id="sum-title"><span>Titel</span><strong>—</strong></div>
+                                    <div class="summary-row" id="sum-page"><span>Pagina-afbeelding</span><strong>—</strong></div>
+                                    <div class="summary-row" id="sum-target"><span>8th Wall Target</span><strong>Automatisch bij opslaan</strong></div>
+                                    <div class="summary-row" id="sum-layers"><span>AR Lagen</span><strong>0 lagen</strong></div>
+                                </div>
 
-                    <!-- Paneel 2: Pagina-afbeelding & 8th Wall Target -->
+                                <!-- Upload voortgangsbalk -->
+                                <div id="upload-progress-wrap" class="upload-progress-wrap" style="display:none;">
+                                    <div class="upload-progress-bar">
+                                        <div id="upload-progress-fill" class="upload-progress-fill" style="width:0%;"></div>
+                                    </div>
+                                    <div class="upload-progress-meta">
+                                        <span id="upload-progress-text">Bezig met uploaden...</span>
+                                        <span id="upload-progress-pct">0%</span>
+                                    </div>
+                                </div>
+
+                                <p id="form-error" class="error"></p>
+                                <p id="form-ok" class="ok"></p>
+
+                                <div class="form-actions">
+                                    <button type="submit" id="save-button" class="btn-primary large-save-btn">ESSAY OPSLAAN &gt;&gt;</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Paneel 4: Tabeloverzicht van alle edities -->
+                        <section class="panel-card">
+                            <div class="panel-card-header">
+                                <span class="panel-card-title">Alle Edities Overzicht</span>
+                                <span class="panel-card-tag">SQLite :: essays.db</span>
+                            </div>
+                            <div class="panel-card-body" style="padding:0;">
+                                <div class="table-scroll-wrap">
+                                    <table id="essays-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Week</th>
+                                                <th>Titel</th>
+                                                <th>Status</th>
+                                                <th>Lagen</th>
+                                                <th>Scans</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- Rechter kolom: Visuele 2D Laag-Preview & AR Lagen Configuratie -->
+                    <div class="editor-col col-right">
+
+                        <!-- Interactieve 2D AR-Compositie Preview -->
+                        <section class="panel-card preview-stage-card">
+                            <div class="panel-card-header">
+                                <span class="panel-card-title">Live 2D Compositie-Preview (1:1 AR-schaal)</span>
+                                <div class="stage-controls">
+                                    <select id="stage-layer-select" class="stage-layer-select" title="Selecteer welke laag je wilt verplaatsen of schalen">
+                                        <option value="-1">Alle lagen interactief</option>
+                                    </select>
+                                    <span id="stage-coords-readout" class="stage-readout">X: 0.00 · Y: 0.00 · S: 1.00</span>
+                                    <button type="button" id="toggle-stage-btn" class="btn ghost mini-btn">Inklappen</button>
+                                </div>
+                            </div>
+                            <div id="stage-body" class="panel-card-body stage-body">
+                                <div id="ar-2d-stage" class="ar-2d-stage">
+                                    <div id="ar-2d-paper" class="ar-2d-paper">
+                                        <div class="ar-2d-placeholder">Kies een pagina-afbeelding of bewerk een essay om de AR-lagen op exacte 8th Wall schaal te zien.</div>
+                                        <div id="ar-2d-layers" class="ar-2d-layers"></div>
+                                    </div>
+                                </div>
+                                <p class="bundle-info" style="margin-top:8px;">
+                                    Sleep een laag om <strong>Pos X / Y</strong> aan te passen, of sleep het hoekpunt rechtsonder van de geselecteerde laag om de <strong>Schaal</strong> aan te passen.
+                                </p>
+                            </div>
+                        </section>
+
+                        <!-- AR Lagen Editor -->
+                        <section class="panel-card layers-editor-card">
+                            <div class="panel-card-header">
+                                <span class="panel-card-title">AR-Lagen boven de pagina (PNG, GIF, WebP &amp; 3D GLB)</span>
+                                <div class="layer-toolbar-btns">
+                                    <button type="button" id="layer-undo-btn" class="btn ghost mini-btn" disabled title="Ongedaan maken">UNDO</button>
+                                    <button type="button" id="layer-redo-btn" class="btn ghost mini-btn" disabled title="Opnieuw uitvoeren">REDO</button>
+                                    <button type="button" id="open-meme-search-btn" class="btn ghost mini-btn" title="Zoek een meme via Reddit">MEME ZOEKEN</button>
+                                    <button type="button" id="open-3d-search-btn" class="btn ghost mini-btn" title="Zoek een downloadbaar 3D-model via Sketchfab">3D ZOEKEN</button>
+                                    <button type="button" id="add-layer" class="btn-primary mini-btn">+ LAAG TOEVOEGEN</button>
+                                </div>
+                            </div>
+                            <div class="panel-card-body">
+                                <p class="bundle-info">
+                                    Foto's (max 1600px) en GIF's (max 800px) worden bij het opslaan automatisch geoptimaliseerd. Houd 3D-modellen (`.glb`) onder 4&nbsp;MB voor directe mobiele laadtijden.
+                                </p>
+                                <div id="layers-rows" class="layers-rows-container"></div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- ==========================================================
+                 VIEW 2: INGEBOUWDE ANALYTICS PAGINA
+                 ========================================================== -->
+            <div id="view-analytics" class="workspace-view hidden">
+                <header class="workspace-header">
+                    <div class="workspace-title-group">
+                        <span class="workspace-kicker">WEB &amp; AR ANALYTICS // COOKIE-VRIJ &amp; AVG-PROOF</span>
+                        <h2>Bezoekers, Leestijd &amp; AR-Scans</h2>
+                    </div>
+                    <div class="workspace-actions">
+                        <button type="button" id="back-to-editor-from-analytics" class="btn ghost small-btn">TERUG NAAR EDITOR</button>
+                    </div>
+                </header>
+
+                <div id="analytics-content" class="analytics-page-container">
+                    <p class="bundle-info">Statistieken laden...</p>
+                </div>
+            </div>
+
+            <!-- ==========================================================
+                 VIEW 3: INGEBOUWDE INSTELLINGEN PAGINA
+                 ========================================================== -->
+            <div id="view-settings" class="workspace-view hidden">
+                <header class="workspace-header">
+                    <div class="workspace-title-group">
+                        <span class="workspace-kicker">SYSTEEMBEHEER &amp; CONFIGURATIE</span>
+                        <h2>Instellingen &amp; Onderhoud</h2>
+                    </div>
+                    <div class="workspace-actions">
+                        <button type="button" id="back-to-editor-from-settings" class="btn ghost small-btn">TERUG NAAR EDITOR</button>
+                    </div>
+                </header>
+
+                <div class="settings-page-grid">
+                    <!-- 1. 8th Wall Targets Rebuild -->
                     <section class="panel-card">
                         <div class="panel-card-header">
-                            <span class="panel-card-title">2. Krantenpagina &amp; 8th Wall AR Marker</span>
-                            <span id="target8w-badge" class="status-pill neutral">Auto-Target</span>
+                            <span class="panel-card-title">8th Wall AR Targets Beheer</span>
+                            <span class="panel-card-tag">target8w.sys</span>
                         </div>
                         <div class="panel-card-body">
-                            <label>
-                                Pagina-afbeelding (JPG, PNG of WebP — dit is zowel de tekst als de AR-marker)
-                                <input type="file" id="f-page" accept=".jpg,.jpeg,.png,.webp">
-                            </label>
-                            <div id="page-file-info" class="file-meta-bar">Nog geen bestand geselecteerd.</div>
-
-                            <!-- Live Pagina Preview -->
-                            <div id="page-preview-wrap" class="page-preview-wrap" style="display:none;">
-                                <img id="page-preview-img" src="" alt="Krantenpagina preview">
-                                <div class="page-preview-meta">
-                                    <span id="page-dimensions-info"></span>
-                                    <span id="target8w-status" class="bundle-info"></span>
-                                </div>
+                            <p class="bundle-info" style="margin-top:0;">Controleer en regenereer de 8th Wall luminance-targets (`target8w.json` &amp; `target8w.jpg`) vanuit de geüploade krantenpagina's voor alle edities.</p>
+                            <div class="settings-action-row">
+                                <button type="button" id="rebuild-targets-btn" class="btn-primary">TARGETS CONTROLEREN &amp; HERBOUWEN</button>
+                                <span id="rebuild-targets-status" class="bundle-info" style="margin:0;"></span>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Paneel 3: Upload Overzicht & Acties -->
-                    <section class="panel-card submit-card">
-                        <div class="panel-card-header">
-                            <span class="panel-card-title">3. Editie Overzicht &amp; Opslaan</span>
-                            <span id="summary-bundle-badge" class="status-pill neutral">0 KB</span>
-                        </div>
-                        <div class="panel-card-body">
-                            <div class="summary-checklist">
-                                <div class="summary-row" id="sum-week"><span>Week-code</span><strong>—</strong></div>
-                                <div class="summary-row" id="sum-title"><span>Titel</span><strong>—</strong></div>
-                                <div class="summary-row" id="sum-page"><span>Pagina-afbeelding</span><strong>—</strong></div>
-                                <div class="summary-row" id="sum-target"><span>8th Wall Target</span><strong>Automatisch bij opslaan</strong></div>
-                                <div class="summary-row" id="sum-layers"><span>AR Lagen</span><strong>0 lagen</strong></div>
-                            </div>
-
-                            <!-- Upload voortgangsbalk -->
-                            <div id="upload-progress-wrap" class="upload-progress-wrap" style="display:none;">
-                                <div class="upload-progress-bar">
-                                    <div id="upload-progress-fill" class="upload-progress-fill" style="width:0%;"></div>
-                                </div>
-                                <div class="upload-progress-meta">
-                                    <span id="upload-progress-text">Bezig met uploaden...</span>
-                                    <span id="upload-progress-pct">0%</span>
-                                </div>
-                            </div>
-
-                            <p id="form-error" class="error"></p>
-                            <p id="form-ok" class="ok"></p>
-
-                            <div class="form-actions">
-                                <button type="submit" id="save-button" class="btn-primary large-save-btn">ESSAY OPSLAAN &gt;&gt;</button>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Paneel 4: Tabeloverzicht van alle edities -->
+                    <!-- 2. JSON Export -->
                     <section class="panel-card">
                         <div class="panel-card-header">
-                            <span class="panel-card-title">Alle Edities Overzicht</span>
-                            <span class="panel-card-tag">SQLite :: essays.db</span>
-                        </div>
-                        <div class="panel-card-body" style="padding:0;">
-                            <div class="table-scroll-wrap">
-                                <table id="essays-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Week</th>
-                                            <th>Titel</th>
-                                            <th>Status</th>
-                                            <th>Lagen</th>
-                                            <th>Scans</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
-
-                <!-- Rechter kolom: Visuele 2D Laag-Preview & AR Lagen Configuratie -->
-                <div class="editor-col col-right">
-
-                    <!-- Interactieve 2D AR-Compositie Preview -->
-                    <section class="panel-card preview-stage-card">
-                        <div class="panel-card-header">
-                            <span class="panel-card-title">Live 2D Compositie-Preview (Versleep lagen met muis)</span>
-                            <div class="stage-controls">
-                                <span id="stage-coords-readout" class="stage-readout">X: 0.00 · Y: 0.00</span>
-                                <button type="button" id="toggle-stage-btn" class="btn ghost mini-btn">Inklappen</button>
-                            </div>
-                        </div>
-                        <div id="stage-body" class="panel-card-body stage-body">
-                            <div id="ar-2d-stage" class="ar-2d-stage">
-                                <div id="ar-2d-paper" class="ar-2d-paper">
-                                    <div class="ar-2d-placeholder">Kies een pagina-afbeelding of bewerk een essay om de AR-lagen op de pagina te zien.</div>
-                                    <div id="ar-2d-layers" class="ar-2d-layers"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- AR Lagen Editor -->
-                    <section class="panel-card layers-editor-card">
-                        <div class="panel-card-header">
-                            <span class="panel-card-title">AR-Lagen boven de pagina (PNG, GIF, WebP &amp; 3D GLB)</span>
-                            <div class="layer-toolbar-btns">
-                                <button type="button" id="layer-undo-btn" class="btn ghost mini-btn" disabled title="Ongedaan maken">↶ Undo</button>
-                                <button type="button" id="layer-redo-btn" class="btn ghost mini-btn" disabled title="Opnieuw uitvoeren">↷ Redo</button>
-                                <button type="button" id="open-meme-search-btn" class="btn ghost mini-btn" title="Zoek een meme via Reddit">🖼 Meme zoeken</button>
-                                <button type="button" id="open-3d-search-btn" class="btn ghost mini-btn" title="Zoek een downloadbaar 3D-model via Sketchfab">🧊 3D zoeken</button>
-                                <button type="button" id="add-layer" class="btn-primary mini-btn">+ Laag toevoegen</button>
-                            </div>
+                            <span class="panel-card-title">Edities &amp; Metadata Backup Export</span>
+                            <span class="panel-card-tag">backup.json</span>
                         </div>
                         <div class="panel-card-body">
-                            <p class="bundle-info">
-                                Foto's (max 1600px) en GIF's (max 800px) worden bij het opslaan automatisch geoptimaliseerd. Houd 3D-modellen (`.glb`) onder 4&nbsp;MB voor directe mobiele laadtijden.
-                            </p>
-                            <div id="layers-rows" class="layers-rows-container"></div>
+                            <p class="bundle-info" style="margin-top:0;">Exporteer alle gepubliceerde en concept-edities inclusief AR-laagposities en bestandsverwijzingen naar één JSON-bestand.</p>
+                            <div class="settings-action-row">
+                                <button type="button" id="export-essays-json-btn" class="btn ghost">ESSAYS JSON EXPORTEREN</button>
+                                <span id="export-essays-status" class="bundle-info" style="margin:0;"></span>
+                            </div>
                         </div>
                     </section>
 
-                </div>
+                    <!-- 3. Sketchfab API Key -->
+                    <section class="panel-card">
+                        <div class="panel-card-header">
+                            <span class="panel-card-title">Integraties — Sketchfab 3D API Key</span>
+                            <span class="panel-card-tag">sketchfab.api</span>
+                        </div>
+                        <div class="panel-card-body">
+                            <p class="bundle-info" style="margin-top:0;">Vereist voor het rechtstreeks importeren van downloadbare `.glb` modellen in AR-lagen. Aanmaken via <a href="https://sketchfab.com/settings/password" target="_blank" rel="noopener">sketchfab.com → Password &amp; API</a>.</p>
+                            <div class="settings-action-row">
+                                <input type="password" id="sketchfab-api-key" placeholder="Plak Sketchfab API token..." style="flex:1;">
+                                <button type="button" id="save-sketchfab-key-btn" class="btn-primary">KEY OPSLAAN</button>
+                            </div>
+                            <p id="sketchfab-key-status" class="bundle-info" style="margin-top:0.5rem;"></p>
+                        </div>
+                    </section>
 
-            </form>
+                    <!-- 4. Wachtwoord wijzigen -->
+                    <section class="panel-card">
+                        <div class="panel-card-header">
+                            <span class="panel-card-title">Admin Wachtwoord Wijzigen</span>
+                            <span class="panel-card-tag">auth.sys</span>
+                        </div>
+                        <div class="panel-card-body">
+                            <form id="password-form" autocomplete="off">
+                                <div class="row two-col">
+                                    <label>
+                                        Huidig wachtwoord
+                                        <input type="password" id="pw-current" autocomplete="current-password" required>
+                                    </label>
+                                    <label>
+                                        Nieuw wachtwoord (min. 8 tekens)
+                                        <input type="password" id="pw-new" autocomplete="new-password" required>
+                                    </label>
+                                </div>
+                                <p id="pw-error" class="error"></p>
+                                <p id="pw-ok" class="ok"></p>
+                                <button type="submit" class="btn-primary">WACHTWOORD WIJZIGEN</button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <!-- 5. Gevarenzone -->
+                    <section class="panel-card danger-block">
+                        <div class="panel-card-header">
+                            <span class="panel-card-title">Gevarenzone — Alles Wissen</span>
+                            <span class="panel-card-tag">danger</span>
+                        </div>
+                        <div class="panel-card-body">
+                            <p class="bundle-info" style="margin-top:0;margin-bottom:10px;">Verwijdert alle essays én alle geüploade bestanden definitief van de server.</p>
+                            <button type="button" id="wipe-all" class="btn danger">WIS ALLE ESSAYS DEFINITIEF</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -263,8 +396,8 @@
             </div>
             <div class="krant-modal-body">
                 <div class="media-tabs">
-                    <button type="button" class="media-tab active" data-tab="memes">🖼 Reddit Memes</button>
-                    <button type="button" class="media-tab" data-tab="3d">🧊 Sketchfab 3D Modellen (.glb)</button>
+                    <button type="button" class="media-tab active" data-tab="memes">REDDIT MEMES &amp; GIFS</button>
+                    <button type="button" class="media-tab" data-tab="3d">SKETCHFAB 3D MODELLEN (.GLB)</button>
                 </div>
 
                 <div class="media-search-bar">
@@ -278,98 +411,12 @@
                     <button type="button" id="media-search-submit" class="btn-primary">ZOEKEN</button>
                 </div>
 
-                <div id="media-search-status" class="bundle-info">Voer een zoekterm in om een afbeelding, GIF of 3D-model direct als nieuwe AR-laag toe te voegen.</div>
+                <div id="media-search-status" class="bundle-info">Voer een zoekterm in om een afbeelding, GIF of 3D-model direct als AR-laag toe te voegen.</div>
                 <div id="media-search-results" class="media-results-grid"></div>
             </div>
         </div>
     </div>
 
-    <!-- Instellingen Modal -->
-    <div id="settings-modal" class="krant-modal hidden">
-        <div class="krant-modal-backdrop" data-close-modal="settings-modal"></div>
-        <div class="krant-modal-content medium-modal">
-            <div class="krant-modal-header">
-                <h3>INSTELLINGEN &amp; SYSTEEMBEHEER</h3>
-                <button type="button" class="krant-modal-close" data-close-modal="settings-modal">×</button>
-            </div>
-            <div class="krant-modal-body settings-body">
-
-                <!-- 1. 8th Wall Targets Rebuild -->
-                <section class="settings-block">
-                    <h4>8th Wall AR Targets Beheer</h4>
-                    <p class="bundle-info">Controleer en regenereer de 8th Wall luminance-targets (`target8w.json` &amp; `target8w.jpg`) vanuit de geüploade krantenpagina's voor alle edities.</p>
-                    <div class="settings-action-row">
-                        <button type="button" id="rebuild-targets-btn" class="btn-primary">TARGETS CONTROLEREN &amp; HERBOUWEN</button>
-                        <span id="rebuild-targets-status" class="bundle-info" style="margin:0;"></span>
-                    </div>
-                </section>
-
-                <!-- 2. JSON Export -->
-                <section class="settings-block">
-                    <h4>Edities &amp; Metadata Backup Export</h4>
-                    <p class="bundle-info">Exporteer alle gepubliceerde en concept-edities inclusief AR-laagposities en bestandsverwijzingen naar één JSON-bestand.</p>
-                    <div class="settings-action-row">
-                        <button type="button" id="export-essays-json-btn" class="btn ghost">↓ ESSAYS JSON EXPORTEREN</button>
-                        <span id="export-essays-status" class="bundle-info" style="margin:0;"></span>
-                    </div>
-                </section>
-
-                <!-- 3. Sketchfab API Key -->
-                <section class="settings-block">
-                    <h4>Integraties — Sketchfab 3D API Key</h4>
-                    <p class="bundle-info">Vereist voor het rechtstreeks importeren van downloadbare `.glb` modellen in AR-lagen. Aanmaken via <a href="https://sketchfab.com/settings/password" target="_blank" rel="noopener">sketchfab.com → Password &amp; API</a>.</p>
-                    <div class="settings-action-row">
-                        <input type="password" id="sketchfab-api-key" placeholder="Plak Sketchfab API token..." style="flex:1;">
-                        <button type="button" id="save-sketchfab-key-btn" class="btn-primary">KEY OPSLAAN</button>
-                    </div>
-                    <p id="sketchfab-key-status" class="bundle-info" style="margin-top:0.4rem;"></p>
-                </section>
-
-                <!-- 4. Wachtwoord wijzigen -->
-                <section class="settings-block">
-                    <h4>Admin Wachtwoord Wijzigen</h4>
-                    <form id="password-form" autocomplete="off">
-                        <div class="row two-col">
-                            <label>
-                                Huidig wachtwoord
-                                <input type="password" id="pw-current" autocomplete="current-password" required>
-                            </label>
-                            <label>
-                                Nieuw wachtwoord (min. 8 tekens)
-                                <input type="password" id="pw-new" autocomplete="new-password" required>
-                            </label>
-                        </div>
-                        <p id="pw-error" class="error"></p>
-                        <p id="pw-ok" class="ok"></p>
-                        <button type="submit" class="btn-primary">WACHTWOORD WIJZIGEN</button>
-                    </form>
-                </section>
-
-                <!-- 5. Gevarenzone -->
-                <section class="settings-block danger-block">
-                    <h4>Gevarenzone — Alles Wissen</h4>
-                    <p class="bundle-info">Verwijdert alle essays én alle geüploade bestanden definitief van de server.</p>
-                    <button type="button" id="wipe-all" class="btn danger">WIS ALLE ESSAYS DEFINITIEF</button>
-                </section>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Analytics Modal (Zelfgehost Cookie-vrij Web & AR Analytics Systeem) -->
-    <div id="analytics-modal" class="krant-modal hidden">
-        <div class="krant-modal-backdrop" data-close-modal="analytics-modal"></div>
-        <div class="krant-modal-content wide-modal">
-            <div class="krant-modal-header">
-                <h3>KRANT AR — WEB &amp; AR ANALYTICS (COOKIE-VRIJ // AVG-PROOF)</h3>
-                <button type="button" class="krant-modal-close" data-close-modal="analytics-modal">×</button>
-            </div>
-            <div class="krant-modal-body" id="analytics-content">
-                <p class="bundle-info">Statistieken laden...</p>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="admin.js?v=15"></script>
+    <script type="module" src="admin.js?v=16"></script>
 </body>
 </html>

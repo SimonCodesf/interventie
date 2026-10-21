@@ -8,7 +8,7 @@ ini_set('log_errors', 1);
 set_exception_handler(function ($exception) {
     error_log('Exception: ' . $exception->getMessage());
     http_response_code(500);
-    echo json_encode(['message' => 'Server error']);
+    echo json_encode(['message' => 'Server error: ' . $exception->getMessage()]);
     exit;
 });
 

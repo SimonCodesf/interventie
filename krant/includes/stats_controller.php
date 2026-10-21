@@ -1,6 +1,25 @@
 <?php
 // krant/includes/stats_controller.php - Zelfgehost, cookie-vrij web-analytics systeem voor Krant AR
 
+if (!function_exists('str_starts_with')) {
+    function str_starts_with($haystack, $needle) {
+        return (string)$needle === '' || strncmp((string)$haystack, (string)$needle, strlen((string)$needle)) === 0;
+    }
+}
+if (!function_exists('str_ends_with')) {
+    function str_ends_with($haystack, $needle) {
+        $needle = (string)$needle;
+        if ($needle === '') return true;
+        $len = strlen($needle);
+        return substr((string)$haystack, -$len) === $needle;
+    }
+}
+if (!function_exists('str_contains')) {
+    function str_contains($haystack, $needle) {
+        return (string)$needle === '' || strpos((string)$haystack, (string)$needle) !== false;
+    }
+}
+
 define('KRANT_STATS_DATA_DIR', dirname(__DIR__) . '/data');
 define('KRANT_STATS_DIR', KRANT_STATS_DATA_DIR . '/stats');
 define('KRANT_STATS_SALT_FILE', KRANT_STATS_DATA_DIR . '/stats_salt');
@@ -251,7 +270,7 @@ function writeKrantStatsEvent(array $event): bool {
     $record = [
         't'    => $timestamp,
         'sid'  => substr(preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($event['sid'] ?? '')), 0, 32),
-        'type' => in_array($event['type'] ?? '', ['view', 'dwell', 'err404'], true) ? $event['type'] : 'view',
+        'type' => in_array($event['type'] ?? '', ['view', 'dwell', 'err404', 'scan'], true) ? $event['type'] : 'view',
         'page' => (string)($event['page'] ?? '/krant/'),
         'ref'  => (string)($event['ref'] ?? ''),
         'dev'  => in_array($event['dev'] ?? '', ['desktop', 'mobile', 'tablet'], true) ? $event['dev'] : 'desktop',
@@ -863,7 +882,9 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             'share_pct' => round(($p['views'] / $totalHumanViews) * 100, 1),
         ];
     }
-    usort($topPages, fn($a, $b) => $b['views'] <=> $a['views']);
+    usort($topPages, function ($a, $b) {
+        return $b['views'] <=> $a['views'];
+    });
 
     $sourcesCount = [];
     $devicesCount = ['desktop' => 0, 'mobile' => 0, 'tablet' => 0];
@@ -923,10 +944,16 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             'last_ref'  => $err['last_ref'],
         ];
     }
-    usort($errors404, fn($a, $b) => $b['count'] <=> $a['count'] ?: ($b['last_seen'] <=> $a['last_seen']));
+    usort($errors404, function ($a, $b) {
+        $cmp = $b['count'] <=> $a['count'];
+        return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
+    });
 
     $botScans = array_values($botScansMap);
-    usort($botScans, fn($a, $b) => $b['count'] <=> $a['count'] ?: ($b['last_seen'] <=> $a['last_seen']));
+    usort($botScans, function ($a, $b) {
+        $cmp = $b['count'] <=> $a['count'];
+        return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
+    });
 
     $response = [
         'success'       => true,

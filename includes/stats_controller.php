@@ -1,6 +1,25 @@
 <?php
 // includes/stats_controller.php - Zelfgehost, cookie-vrij web-analytics systeem
 
+if (!function_exists('str_starts_with')) {
+    function str_starts_with($haystack, $needle) {
+        return (string)$needle === '' || strncmp((string)$haystack, (string)$needle, strlen((string)$needle)) === 0;
+    }
+}
+if (!function_exists('str_ends_with')) {
+    function str_ends_with($haystack, $needle) {
+        $needle = (string)$needle;
+        if ($needle === '') return true;
+        $len = strlen($needle);
+        return substr((string)$haystack, -$len) === $needle;
+    }
+}
+if (!function_exists('str_contains')) {
+    function str_contains($haystack, $needle) {
+        return (string)$needle === '' || strpos((string)$haystack, (string)$needle) !== false;
+    }
+}
+
 define('STATS_DATA_DIR', dirname(__DIR__) . '/data');
 define('STATS_DIR', STATS_DATA_DIR . '/stats');
 define('STATS_SALT_FILE', STATS_DATA_DIR . '/stats_salt');
@@ -860,7 +879,9 @@ function handleGetAdminStats(?PDO $db = null): void {
             'share_pct' => round(($p['views'] / $totalHumanViews) * 100, 1),
         ];
     }
-    usort($topPages, fn($a, $b) => $b['views'] <=> $a['views']);
+    usort($topPages, function ($a, $b) {
+        return $b['views'] <=> $a['views'];
+    });
 
     // Verkeersbronnen (Acquisitie), Apparaten & Talen op basis van sessies
     $sourcesCount = [];
@@ -922,11 +943,17 @@ function handleGetAdminStats(?PDO $db = null): void {
             'last_ref'  => $err['last_ref'],
         ];
     }
-    usort($errors404, fn($a, $b) => $b['count'] <=> $a['count'] ?: ($b['last_seen'] <=> $a['last_seen']));
+    usort($errors404, function ($a, $b) {
+        $cmp = $b['count'] <=> $a['count'];
+        return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
+    });
 
     // Formatteer geblokkeerde bot- & kwetsbaarheidsscans
     $botScans = array_values($botScansMap);
-    usort($botScans, fn($a, $b) => $b['count'] <=> $a['count'] ?: ($b['last_seen'] <=> $a['last_seen']));
+    usort($botScans, function ($a, $b) {
+        $cmp = $b['count'] <=> $a['count'];
+        return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
+    });
 
     $response = [
         'success'     => true,

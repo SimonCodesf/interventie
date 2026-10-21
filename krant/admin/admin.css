@@ -217,6 +217,13 @@ body {
   background: #e5e0d5;
 }
 
+.nav-btn.active-view {
+  background: #302e2a;
+  border-color: var(--paper);
+  color: #ffffff;
+  font-weight: 700;
+}
+
 .nav-btn.danger-nav:hover {
   background: #3b1818;
   border-color: #ef4444;
@@ -345,7 +352,7 @@ body {
 }
 
 /* ==========================================================================
-   MAIN CONTENT AREA
+   MAIN CONTENT AREA & BUILT-IN VIEWS
    ========================================================================== */
 
 .admin-main {
@@ -353,6 +360,10 @@ body {
   max-width: 1620px;
   width: 100%;
   margin: 0 auto;
+}
+
+.workspace-view {
+  width: 100%;
 }
 
 .workspace-header {
@@ -768,20 +779,28 @@ button:disabled {
 }
 
 /* ==========================================================================
-   2D INTERACTIVE AR COMPOSITION STAGE
+   2D INTERACTIVE AR COMPOSITION STAGE (EXACT 1:1 8TH WALL SCALE)
    ========================================================================== */
 
 .stage-controls {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stage-layer-select {
+  width: auto;
+  min-width: 170px;
+  padding: 4px 8px;
+  font-size: 11px;
 }
 
 .stage-readout {
   font-size: 11px;
   color: var(--ink-muted);
   background: var(--paper-alt);
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
 }
@@ -791,7 +810,7 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 28px;
   background:
     linear-gradient(45deg, #eae6dc 25%, transparent 25%),
     linear-gradient(-45deg, #eae6dc 25%, transparent 25%),
@@ -806,15 +825,17 @@ button:disabled {
 
 .ar-2d-paper {
   position: relative;
-  width: 280px;
+  width: 100%;
+  max-width: 380px;
   aspect-ratio: 0.7071;
   background-color: #fdfbf7;
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center;
+  background-repeat: no-repeat;
   border: 1.5px solid var(--ink);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
   user-select: none;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ar-2d-placeholder {
@@ -834,30 +855,32 @@ button:disabled {
   position: absolute;
   inset: 0;
   z-index: 2;
+  pointer-events: none;
 }
 
 .ar-2d-marker {
   position: absolute;
   transform: translate(-50%, -50%);
   cursor: grab;
-  border: 1.5px solid var(--accent-blue);
-  background: rgba(29, 78, 216, 0.14);
-  border-radius: 3px;
+  border: 1px dashed rgba(29, 78, 216, 0.55);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
-  padding: 2px;
-  transition: box-shadow 0.12s;
+  pointer-events: auto;
+  transition: box-shadow 0.12s, border-color 0.12s;
+}
+
+.ar-2d-marker.marker-passive {
+  pointer-events: none;
+  border-color: rgba(20, 20, 20, 0.2);
 }
 
 .ar-2d-marker:hover,
+.ar-2d-marker.selected,
 .ar-2d-marker.dragging {
-  border-color: #1e3a8a;
-  background: rgba(29, 78, 216, 0.24);
-  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2);
-  z-index: 10;
+  border: 1.5px solid var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.22);
 }
 
 .ar-2d-marker.dragging {
@@ -867,16 +890,30 @@ button:disabled {
 .ar-2d-marker-thumb {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;
+  pointer-events: none;
+  display: block;
+}
+
+.ar-2d-marker-3d {
+  width: 100%;
+  height: 100%;
+  background: rgba(29, 78, 216, 0.14);
+  border: 1.5px solid var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-blue);
   pointer-events: none;
 }
 
 .ar-2d-marker-label {
   position: absolute;
-  top: -17px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--ink);
+  top: 2px;
+  left: 2px;
+  background: rgba(20, 20, 20, 0.85);
   color: var(--paper);
   font-size: 9px;
   font-weight: 700;
@@ -884,6 +921,19 @@ button:disabled {
   border-radius: 2px;
   white-space: nowrap;
   pointer-events: none;
+}
+
+.ar-2d-resize-handle {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 11px;
+  height: 11px;
+  background: var(--accent-blue);
+  border: 1.5px solid #fff;
+  border-radius: 2px;
+  cursor: nwse-resize;
+  z-index: 5;
 }
 
 /* ==========================================================================
@@ -909,6 +959,12 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.layer-row.selected-row {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.12);
 }
 
 .layer-row.layer-hidden {
@@ -946,12 +1002,13 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .icon-btn {
   padding: 3px 7px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -1001,14 +1058,14 @@ button:disabled {
 .layer-file-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
 .layer-file-bar input[type="file"] {
   flex: 1;
-  min-width: 180px;
+  min-width: 170px;
   font-size: 11px;
 }
 
@@ -1075,7 +1132,30 @@ td.actions {
 }
 
 /* ==========================================================================
-   MODALS (.krant-modal)
+   BUILT-IN SETTINGS PAGE
+   ========================================================================== */
+
+.settings-page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.settings-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.danger-block {
+  border-color: #fca5a5;
+  background: #fffafa;
+}
+
+/* ==========================================================================
+   MODALS (.krant-modal for Media Search)
    ========================================================================== */
 
 .krant-modal {
@@ -1113,10 +1193,6 @@ td.actions {
   max-width: 780px;
 }
 
-.wide-modal {
-  max-width: 1220px;
-}
-
 .krant-modal-header {
   display: flex;
   align-items: center;
@@ -1150,7 +1226,6 @@ td.actions {
   flex: 1;
 }
 
-/* Media Search Modal */
 .media-tabs {
   display: flex;
   gap: 8px;
@@ -1221,42 +1296,15 @@ td.actions {
   overflow: hidden;
 }
 
-/* Settings Modal */
-.settings-body {
+/* ==========================================================================
+   BUILT-IN ANALYTICS PAGE
+   ========================================================================== */
+
+.analytics-page-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
 }
-
-.settings-block {
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #fcfbf8;
-}
-
-.settings-block h4 {
-  font-family: var(--font-serif);
-  font-size: 17px;
-  margin: 0 0 6px;
-}
-
-.settings-action-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.danger-block {
-  border-color: #fca5a5;
-  background: #fffafa;
-}
-
-/* ==========================================================================
-   ANALYTICS DASHBOARD
-   ========================================================================== */
 
 .krant-stats-toolbar {
   display: flex;
@@ -1264,9 +1312,11 @@ td.actions {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding-bottom: 14px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  background: var(--paper-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .krant-stats-live {
@@ -1298,7 +1348,7 @@ td.actions {
 }
 
 .period-pill {
-  padding: 5px 11px;
+  padding: 6px 12px;
   font-family: var(--font-mono);
   font-size: 11px;
   background: #fff;
@@ -1318,17 +1368,18 @@ td.actions {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .krant-kpi-card {
-  background: #fff;
+  background: var(--paper-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-shadow: var(--shadow-sm);
 }
 
 .krant-kpi-label {
@@ -1347,7 +1398,7 @@ td.actions {
 
 .krant-kpi-value {
   font-family: var(--font-serif);
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.1;
 }
@@ -1382,15 +1433,16 @@ td.actions {
 .krant-charts-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 18px;
 }
 
 .krant-chart-card {
-  background: #fff;
+  background: var(--paper-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
 }
 
 .krant-chart-head {
@@ -1404,12 +1456,12 @@ td.actions {
 
 .krant-chart-head h4 {
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: 17px;
   margin: 0;
 }
 
 .krant-vchart {
-  height: 170px;
+  height: 180px;
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -1464,8 +1516,8 @@ td.actions {
 .krant-panels-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 18px;
 }
 
 .krant-share-bar {
@@ -1485,7 +1537,8 @@ td.actions {
 @media (max-width: 1200px) {
   .editor-grid,
   .krant-charts-grid,
-  .krant-panels-grid {
+  .krant-panels-grid,
+  .settings-page-grid {
     grid-template-columns: 1fr;
   }
   .krant-kpi-grid {
