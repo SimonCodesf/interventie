@@ -6,6 +6,10 @@ Thumbs.db
 # Runtime data & uploads (worden op de server aangemaakt)
 data/*
 !data/.gitkeep
+data/stats/
+data/stats_salt
+stats/
+stats_salt
 uploads/essays/*
 !uploads/essays/.gitkeep
 

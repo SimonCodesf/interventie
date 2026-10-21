@@ -1,6 +1,13 @@
 # Krant AR - Apache configuratie
 Options -Indexes
 RewriteEngine On
+ErrorDocument 404 /krant/404.php
+
+# Serveer favicon op de root van /krant zonder 404
+RewriteRule ^favicon\.ico$ img/favicon.ico [L]
+
+# Blokkeer directe toegang tot stats en data directories
+RewriteRule ^(data/stats|stats|data)(/|$) - [F,L]
 
 # PHP upload limits (valt terug op .user.ini bij FastCGI hosting)
 php_value upload_max_filesize 64M
@@ -11,7 +18,7 @@ php_value max_execution_time 300
 RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
 
 # Beveiliging: gevoelige files blokkeren
-<FilesMatch "(\.db|\.db3|\.sqlite|login_attempts\.json|\.md|\.bak)$">
+<FilesMatch "(\.db|\.db3|\.sqlite|\.jsonl|stats_salt|dismissed_404\.json|login_attempts\.json|\.md|\.bak)$">
     Order allow,deny
     Deny from all
 </FilesMatch>

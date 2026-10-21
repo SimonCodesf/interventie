@@ -305,7 +305,7 @@ function buildScene(entries) {
         buildLayers(content, entry);
         anchor.appendChild(content);
 
-        anchorState[entry.name] = { visible: false, lastPos: null, hideTimer: 0 };
+        anchorState[entry.name] = { visible: false, lastPos: null, hideTimer: 0, scanRecorded: false };
 
         anchor.addEventListener('xrextrasfound', function () {
             const st = anchorState[entry.name];
@@ -315,6 +315,15 @@ function buildScene(entries) {
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
             document.getElementById('feed-loader').style.display = 'none';
+            if (!st.scanRecorded && entry.week) {
+                st.scanRecorded = true;
+                try {
+                    fetch('api.php/essays/' + encodeURIComponent(entry.week) + '/scan', { method: 'POST' }).catch(function () {});
+                } catch (e) {}
+                if (typeof window.trackKrantEssayScan === 'function') {
+                    window.trackKrantEssayScan(entry.week);
+                }
+            }
         });
         anchor.addEventListener('xrextraslost', function () {
             const st = anchorState[entry.name];

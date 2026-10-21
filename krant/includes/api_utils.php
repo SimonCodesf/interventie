@@ -27,7 +27,7 @@ function initDatabase() {
         )
     ");
 
-    // Migratie: 8th Wall target-kolommen (bestandsnamen, inhoud via API)
+    // Migratie: 8th Wall target-kolommen + scans/views counters
     $cols = [];
     foreach ($db->query("PRAGMA table_info(essays)") as $c) { $cols[] = $c['name']; }
     if (!in_array('target8w_json', $cols, true)) {
@@ -35,6 +35,12 @@ function initDatabase() {
     }
     if (!in_array('target8w_image', $cols, true)) {
         $db->exec("ALTER TABLE essays ADD COLUMN target8w_image TEXT DEFAULT ''");
+    }
+    if (!in_array('scans', $cols, true)) {
+        $db->exec("ALTER TABLE essays ADD COLUMN scans INTEGER DEFAULT 0");
+    }
+    if (!in_array('views', $cols, true)) {
+        $db->exec("ALTER TABLE essays ADD COLUMN views INTEGER DEFAULT 0");
     }
 
     return $db;
@@ -49,6 +55,22 @@ function getAdminHash($db) {
 function setAdminHash($db, $hash) {
     $stmt = $db->prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('admin_password_hash', ?)");
     $stmt->execute([$hash]);
+}
+
+function getKrantSetting($db, string $key, string $default = ''): string {
+    try {
+        $stmt = $db->prepare("SELECT value FROM settings WHERE key = ?");
+        $stmt->execute([$key]);
+        $row = $stmt->fetch();
+        return $row && isset($row['value']) ? (string)$row['value'] : $default;
+    } catch (Exception $e) {
+        return $default;
+    }
+}
+
+function setKrantSetting($db, string $key, string $value): void {
+    $stmt = $db->prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
+    $stmt->execute([$key, $value]);
 }
 
 function jsonResponse($data, $status = 200) {
@@ -254,25 +276,39 @@ function layerToApi($layer, $base, $v, $weekDir = '') {
 function essayToApi($row) {
     $v = '?v=' . urlencode((string)$row['updated_at']);
     $base = 'uploads/essays/' . rawurlencode($row['week']) . '/';
+    $weekDir = dirname(__DIR__) . '/uploads/essays/' . $row['week'];
+
+    $pageBytes = 0;
+    if (!empty($row['page_image']) && is_file($weekDir . '/' . basename((string)$row['page_image']))) {
+        $pageBytes = (int)@filesize($weekDir . '/' . basename((string)$row['page_image']));
+    }
 
     $essay = [
         'week'       => $row['week'],
         'title'      => $row['title'],
         'published'  => !empty($row['published']) ? 1 : 0,
         'page_image' => $row['page_image'] ? $base . rawurlencode($row['page_image']) . $v : '',
+        'page_bytes' => $pageBytes,
         'target8w'   => target8wToApi($row, $base, $v),
         'layers'     => [],
+        'scans'      => (int)($row['scans'] ?? 0),
+        'views'      => (int)($row['views'] ?? 0),
+        'created_at' => $row['created_at'] ?? $row['updated_at'],
         'updated_at' => $row['updated_at'],
     ];
 
+    $totalBytes = $pageBytes;
     $layers = json_decode((string)$row['layers'], true);
     if (is_array($layers)) {
-        $weekDir = dirname(__DIR__) . '/uploads/essays/' . $row['week'];
         foreach ($layers as $layer) {
             $entry = layerToApi($layer, $base, $v, $weekDir);
-            if ($entry) $essay['layers'][] = $entry;
+            if ($entry) {
+                $essay['layers'][] = $entry;
+                $totalBytes += (int)($entry['bytes'] ?? 0);
+            }
         }
     }
+    $essay['total_bytes'] = $totalBytes;
 
     return $essay;
 }

@@ -31,6 +31,10 @@ jobs:
             **/node_modules/**
             data/essays.db
             data/login_attempts.json
+            data/stats/**
+            data/stats_salt
+            stats/**
+            stats_salt
             tools/package-lock.json
             .DS_Store
             **/.DS_Store

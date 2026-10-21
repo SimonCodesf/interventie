@@ -24,6 +24,7 @@ session_start();
 require_once 'includes/config.php';
 require_once 'includes/security.php';
 require_once 'includes/api_utils.php';
+require_once 'includes/stats_controller.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -61,8 +62,21 @@ if ($method === 'GET' && $path === '/essays/current') {
     if (!$row) {
         jsonResponse(['message' => 'Nog geen essay gepubliceerd'], 404);
     }
+    try {
+        $db->prepare("UPDATE essays SET views = COALESCE(views, 0) + 1 WHERE week = ?")->execute([$row['week']]);
+        $row['views'] = (int)($row['views'] ?? 0) + 1;
+    } catch (Exception $e) {}
     $row = ensureTarget8w($db, $row);
     jsonResponse(essayToApi($row));
+}
+
+if ($method === 'POST' && preg_match('#^/essays/([^/]+)/scan$#', $path, $m)) {
+    $week = sanitizeWeek($m[1]);
+    try {
+        $stmt = $db->prepare("UPDATE essays SET scans = COALESCE(scans, 0) + 1 WHERE week = ?");
+        $stmt->execute([$week]);
+    } catch (Exception $e) {}
+    jsonResponse(['ok' => true]);
 }
 
 // Vorige essays: alle gepubliceerde essays behalve de nieuwste (huidige).
@@ -180,8 +194,24 @@ if ($method === 'GET' && $path === '/admin/status') {
 
 if ($method === 'GET' && $path === '/admin/essays') {
     requireAuth();
-    $rows = $db->query("SELECT week, title, published, updated_at FROM essays ORDER BY updated_at DESC")->fetchAll();
-    jsonResponse(['essays' => $rows]);
+    $rows = $db->query("SELECT * FROM essays ORDER BY week DESC, updated_at DESC")->fetchAll();
+    $essays = [];
+    foreach ($rows as $r) {
+        $full = essayToApi($r);
+        $essays[] = [
+            'week'         => $full['week'],
+            'title'        => $full['title'],
+            'published'    => $full['published'],
+            'page_image'   => $full['page_image'],
+            'has_target8w' => !empty($full['target8w']),
+            'layers_count' => count($full['layers']),
+            'total_bytes'  => $full['total_bytes'] ?? 0,
+            'scans'        => $full['scans'] ?? 0,
+            'views'        => $full['views'] ?? 0,
+            'updated_at'   => $full['updated_at'],
+        ];
+    }
+    jsonResponse(['essays' => $essays]);
 }
 
 if ($method === 'GET' && preg_match('#^/admin/essays/([^/]+)$#', $path, $m)) {
@@ -493,6 +523,378 @@ if ($method === 'GET' && $path === '/dev/feedback') {
     $file = dirname(DB_FILE) . '/feedback.json';
     $list = file_exists($file) ? (json_decode((string)file_get_contents($file), true) ?: []) : [];
     jsonResponse(['feedback' => $list]);
+}
+
+// ---- Admin: essay dupliceren naar nieuwe week ----
+
+if ($method === 'POST' && preg_match('#^/admin/essays/([^/]+)/duplicate$#', $path, $m)) {
+    requireAuth();
+    $sourceWeek = sanitizeWeek($m[1]);
+    $input = getJsonInput();
+    $targetWeek = sanitizeWeek((string)($input['to_week'] ?? ''));
+    $newTitle = trim((string)($input['title'] ?? ''));
+
+    if ($sourceWeek === $targetWeek) {
+        jsonResponse(['message' => 'Kies een andere doel-week om naar te dupliceren'], 400);
+    }
+
+    $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");
+    $stmt->execute([$sourceWeek]);
+    $src = $stmt->fetch();
+    if (!$src) {
+        jsonResponse(['message' => 'Bron-essay niet gevonden'], 404);
+    }
+
+    $check = $db->prepare("SELECT week FROM essays WHERE week = ?");
+    $check->execute([$targetWeek]);
+    if ($check->fetch()) {
+        jsonResponse(['message' => 'Week ' . $targetWeek . ' bestaat al'], 409);
+    }
+
+    $srcDir = ESSAYS_DIR . '/' . $sourceWeek;
+    $dstDir = ESSAYS_DIR . '/' . $targetWeek;
+    if (!file_exists($dstDir)) {
+        @mkdir($dstDir, 0755, true);
+    }
+
+    if (is_dir($srcDir)) {
+        foreach (glob($srcDir . '/*') ?: [] as $f) {
+            if (is_file($f)) {
+                @copy($f, $dstDir . '/' . basename($f));
+            }
+        }
+    }
+
+    // Regenereer target8w.json met de nieuwe week-naam
+    if (!empty($src['page_image'])) {
+        autogenerateTarget8w($dstDir, $targetWeek, $src['page_image']);
+    }
+
+    $finalTitle = $newTitle !== '' ? $newTitle : ($src['title'] . ' (Kopie)');
+    $db->prepare("INSERT INTO essays (week, title, text, page_image, mind_file, target8w_json, target8w_image, layers, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)")
+       ->execute([
+           $targetWeek,
+           $finalTitle,
+           $src['text'] ?? '',
+           $src['page_image'] ?? '',
+           $src['mind_file'] ?? '',
+           $src['target8w_json'] ?? '',
+           $src['target8w_image'] ?? '',
+           $src['layers'] ?? '[]',
+       ]);
+
+    $stmt = $db->prepare("SELECT * FROM essays WHERE week = ?");
+    $stmt->execute([$targetWeek]);
+    jsonResponse(['ok' => true, 'essay' => essayToApi($stmt->fetch())]);
+}
+
+// ---- Admin: 8th Wall Targets herbouwen & controleren ----
+
+if ($method === 'POST' && $path === '/admin/rebuild-targets') {
+    requireAuth();
+    $rows = $db->query("SELECT * FROM essays ORDER BY week DESC")->fetchAll();
+    $rebuilt = [];
+    $missingPage = [];
+
+    foreach ($rows as $r) {
+        $week = $r['week'];
+        $weekDir = ESSAYS_DIR . '/' . $week;
+        $pageImg = $r['page_image'] ?? '';
+        if ($pageImg === '' || !is_file($weekDir . '/' . basename($pageImg))) {
+            $missingPage[] = ['week' => $week, 'title' => $r['title']];
+            continue;
+        }
+        if (autogenerateTarget8w($weekDir, $week, $pageImg)) {
+            $db->prepare("UPDATE essays SET target8w_json = 'target8w.json', target8w_image = 'target8w.jpg', updated_at = CURRENT_TIMESTAMP WHERE week = ?")
+               ->execute([$week]);
+            $rebuilt[] = $week;
+        } else {
+            $missingPage[] = ['week' => $week, 'title' => $r['title']];
+        }
+    }
+
+    jsonResponse([
+        'ok'           => true,
+        'rebuilt'      => $rebuilt,
+        'missing_page' => $missingPage,
+        'message'      => count($rebuilt) . ' 8th Wall target(s) gegenereerd/gecontroleerd.',
+    ]);
+}
+
+// ---- Admin: JSON Export van alle essays ----
+
+if ($method === 'GET' && $path === '/admin/export/essays-json') {
+    requireAuth();
+    $rows = $db->query("SELECT * FROM essays ORDER BY week DESC")->fetchAll();
+    $items = [];
+    foreach ($rows as $r) {
+        $items[] = essayToApi($r);
+    }
+    jsonResponse([
+        'exported_at' => date('c'),
+        'project'     => 'Krant AR — Interventie',
+        'count'       => count($items),
+        'essays'      => $items,
+    ]);
+}
+
+// ---- Admin: Instellingen (Sketchfab API key etc.) ----
+
+if ($method === 'GET' && $path === '/admin/settings') {
+    requireAuth();
+    $sfKey = getKrantSetting($db, 'sketchfab_api_key', '');
+    // Fallback naar hoofdwebsite data/settings.json indien aanwezig
+    if ($sfKey === '') {
+        $mainSettingsFile = dirname(__DIR__) . '/data/settings.json';
+        if (is_file($mainSettingsFile)) {
+            $ms = json_decode((string)@file_get_contents($mainSettingsFile), true);
+            if (!empty($ms['sketchfab_api_key'])) {
+                $sfKey = (string)$ms['sketchfab_api_key'];
+            }
+        }
+    }
+    jsonResponse([
+        'sketchfab_key_set' => $sfKey !== '',
+    ]);
+}
+
+if ($method === 'POST' && $path === '/admin/settings') {
+    requireAuth();
+    $input = getJsonInput();
+    if (isset($input['sketchfab_api_key'])) {
+        setKrantSetting($db, 'sketchfab_api_key', trim((string)$input['sketchfab_api_key']));
+    }
+    jsonResponse(['ok' => true, 'message' => 'Instellingen opgeslagen']);
+}
+
+// ---- Admin: Media Zoeker (Memes & 3D Modellen voor AR Lagen) ----
+
+if ($method === 'GET' && $path === '/admin/search/memes') {
+    requireAuth();
+    $query = trim((string)($_GET['q'] ?? ''));
+    $source = (string)($_GET['source'] ?? 'memes');
+    if ($query === '') jsonResponse(['message' => 'Zoekterm is vereist'], 400);
+    $allowedSubs = ['memes', 'dankmemes', 'me_irl', 'AdviceAnimals', 'funny'];
+    if (!in_array($source, $allowedSubs, true)) $source = 'memes';
+
+    $fetchReddit = function ($url) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+            CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; interventie-krant/1.0; +https://interventie.org)',
+        ]);
+        $body = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return ($code === 200 && $body) ? json_decode($body, true) : null;
+    };
+
+    $extractMemes = function ($posts) {
+        $memes = [];
+        foreach ($posts as $post) {
+            $p = $post['data'] ?? [];
+            if (!empty($p['is_video']) || ($p['post_hint'] ?? '') === 'self') continue;
+            $imgUrl = $p['url_overridden_by_dest'] ?? $p['url'] ?? '';
+            if (!$imgUrl || str_contains($imgUrl, 'reddit.com/gallery')) continue;
+            $isImg = preg_match('/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i', $imgUrl) || ($p['post_hint'] ?? '') === 'image';
+            if (!$isImg) continue;
+            $preview = html_entity_decode($p['preview']['images'][0]['source']['url'] ?? $imgUrl);
+            $memes[] = [
+                'id'          => $p['id'] ?? '',
+                'title'       => $p['title'] ?? '',
+                'url'         => $imgUrl,
+                'preview_url' => $preview,
+                'author'      => $p['author'] ?? '',
+                'ups'         => (int)($p['ups'] ?? 0),
+            ];
+            if (count($memes) >= 12) break;
+        }
+        return $memes;
+    };
+
+    $searchUrl = 'https://www.reddit.com/r/' . urlencode($source) . '/search.json?' . http_build_query([
+        'q' => $query, 'restrict_sr' => '1', 'sort' => 'top', 't' => 'year', 'limit' => 50,
+    ]);
+    $data = $fetchReddit($searchUrl);
+    $memes = $data ? $extractMemes($data['data']['children'] ?? []) : [];
+    if (empty($memes)) {
+        $hotUrl = 'https://www.reddit.com/r/' . urlencode($source) . '/hot.json?limit=50';
+        $data = $fetchReddit($hotUrl);
+        $memes = $data ? $extractMemes($data['data']['children'] ?? []) : [];
+    }
+    jsonResponse(['success' => true, 'memes' => $memes]);
+}
+
+if ($method === 'GET' && $path === '/admin/search/3d') {
+    requireAuth();
+    $query = trim((string)($_GET['q'] ?? ''));
+    $maxTriangles = min((int)($_GET['max_triangles'] ?? 15000), 100000);
+    if ($query === '') jsonResponse(['message' => 'Zoekterm is vereist'], 400);
+
+    $sketchfabUrl = 'https://api.sketchfab.com/v3/models?' . http_build_query([
+        'q'                => $query,
+        'type'             => 'models',
+        'downloadable'     => 'true',
+        'max_vertex_count' => $maxTriangles,
+        'sort_by'          => '-likeCount',
+        'count'            => 16,
+    ]);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $sketchfabUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT      => 'interventie-krant/1.0 (+https://interventie.org)',
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ]);
+    $body = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($code !== 200 || !$body) {
+        jsonResponse(['success' => false, 'models' => [], 'message' => 'Sketchfab niet bereikbaar']);
+    }
+    $data = json_decode($body, true);
+    $models = [];
+    foreach ($data['results'] ?? [] as $m) {
+        $thumb = '';
+        foreach ($m['thumbnails']['images'] ?? [] as $img) {
+            if (($img['width'] ?? 9999) <= 640) { $thumb = $img['url']; break; }
+        }
+        if (!$thumb && !empty($m['thumbnails']['images'])) {
+            $thumb = end($m['thumbnails']['images'])['url'];
+        }
+        $models[] = [
+            'uid'        => $m['uid'] ?? '',
+            'name'       => $m['name'] ?? '',
+            'thumbnail'  => $thumb,
+            'face_count' => $m['faceCount'] ?? 0,
+            'author'     => $m['user']['displayName'] ?? '',
+            'glb_size'   => $m['archives']['glb']['size'] ?? 0,
+        ];
+    }
+    jsonResponse(['success' => true, 'models' => $models]);
+}
+
+// Download een gekozen Meme/GIF of Sketchfab 3D-model zodat de admin het direct als laag-bestand kan toevoegen
+if ($method === 'GET' && $path === '/admin/fetch-remote-asset') {
+    requireAuth();
+    $type = (string)($_GET['type'] ?? 'image');
+
+    if ($type === '3d') {
+        $uid = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($_GET['uid'] ?? ''));
+        if ($uid === '') jsonResponse(['message' => 'Geen model UID opgegeven'], 400);
+
+        $apiKey = getKrantSetting($db, 'sketchfab_api_key', '');
+        if ($apiKey === '') {
+            $mainSettingsFile = dirname(__DIR__) . '/data/settings.json';
+            if (is_file($mainSettingsFile)) {
+                $ms = json_decode((string)@file_get_contents($mainSettingsFile), true);
+                if (!empty($ms['sketchfab_api_key'])) {
+                    $apiKey = (string)$ms['sketchfab_api_key'];
+                }
+            }
+        }
+        if ($apiKey === '') {
+            jsonResponse(['message' => 'Configureer eerst een Sketchfab API key via Instellingen'], 400);
+        }
+
+        $dlUrl = 'https://api.sketchfab.com/v3/models/' . urlencode($uid) . '/download';
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $dlUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_HTTPHEADER     => ['Authorization: Token ' . $apiKey, 'Accept: application/json'],
+        ]);
+        $dlBody = curl_exec($ch);
+        $dlCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($dlCode !== 200 || !$dlBody) {
+            jsonResponse(['message' => 'Sketchfab download-URL ophalen mislukt (HTTP ' . $dlCode . ')'], 502);
+        }
+        $dlData = json_decode($dlBody, true);
+        $glbUrl = $dlData['glb']['url'] ?? ($dlData['gltf']['url'] ?? '');
+        if (!$glbUrl) {
+            jsonResponse(['message' => 'Geen GLB beschikbaar voor dit model'], 502);
+        }
+
+        $ch = curl_init($glbUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT        => 45,
+        ]);
+        $fileData = curl_exec($ch);
+        $fileCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($fileCode !== 200 || !$fileData || strlen($fileData) > MAX_GLB_SIZE) {
+            jsonResponse(['message' => 'GLB bestand te groot (max 10MB) of download mislukt'], 502);
+        }
+
+        if (substr($fileData, 0, 2) === 'PK' && class_exists('ZipArchive')) {
+            $tmpZip = sys_get_temp_dir() . '/krant_sf_' . $uid . '.zip';
+            file_put_contents($tmpZip, $fileData);
+            $zip = new ZipArchive();
+            if ($zip->open($tmpZip) === true) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $fn = $zip->getNameIndex($i);
+                    if (strtolower(pathinfo($fn, PATHINFO_EXTENSION)) === 'glb') {
+                        $fileData = $zip->getFromIndex($i);
+                        break;
+                    }
+                }
+                $zip->close();
+            }
+            @unlink($tmpZip);
+        }
+
+        header('Content-Type: model/gltf-binary');
+        header('Content-Disposition: inline; filename="model_' . $uid . '.glb"');
+        echo $fileData;
+        exit;
+    }
+
+    // Externe afbeelding / GIF proxy voor laag-import
+    $url = (string)($_GET['url'] ?? '');
+    if (!preg_match('#^https?://#i', $url)) {
+        jsonResponse(['message' => 'Ongeldige URL'], 400);
+    }
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_USERAGENT      => 'interventie-krant/1.0',
+    ]);
+    $data = curl_exec($ch);
+    $ct = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($code !== 200 || !$data) {
+        jsonResponse(['message' => 'Afbeelding ophalen mislukt'], 502);
+    }
+    header('Content-Type: ' . ($ct !== '' ? $ct : 'image/jpeg'));
+    echo $data;
+    exit;
+}
+
+// ---- Admin: Web Analytics endpoints ----
+
+if ($method === 'GET' && $path === '/admin/stats') {
+    handleGetKrantAdminStats($db);
+}
+
+if ($method === 'POST' && ($path === '/admin/stats/dismiss-404' || $path === '/admin/stats/dismiss_404')) {
+    handleKrantDismiss404();
 }
 
 // Onbekende route
