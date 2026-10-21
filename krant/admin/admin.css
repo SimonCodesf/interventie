@@ -1071,8 +1071,8 @@ button:disabled {
 
 .layer-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(5, minmax(64px, 1fr));
+  gap: 8px;
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px dashed var(--paper-subtle);
@@ -1085,8 +1085,34 @@ button:disabled {
 }
 
 .layer-group input[type="number"] {
-  padding: 4px 6px;
+  padding: 5px 7px;
   font-size: 11px;
+}
+
+.layer-advanced {
+  margin-top: 8px;
+  border-top: 1px dashed var(--paper-subtle);
+  padding-top: 6px;
+}
+
+.layer-advanced summary {
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  user-select: none;
+  padding: 3px 0;
+}
+
+.layer-advanced summary:hover {
+  color: var(--ink);
+}
+
+.layer-advanced[open] summary {
+  color: var(--ink);
+  margin-bottom: 4px;
 }
 
 /* ==========================================================================
@@ -1297,13 +1323,13 @@ td.actions {
 }
 
 /* ==========================================================================
-   BUILT-IN ANALYTICS PAGE
+   BUILT-IN ANALYTICS PAGE (PURPOSE-BUILT FOR KRANT AR)
    ========================================================================== */
 
 .analytics-page-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 20px;
 }
 
 .krant-stats-toolbar {
@@ -1313,10 +1339,10 @@ td.actions {
   gap: 12px;
   flex-wrap: wrap;
   padding: 14px 18px;
-  margin-bottom: 16px;
   background: var(--paper-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .krant-stats-live {
@@ -1355,6 +1381,11 @@ td.actions {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: all 0.14s;
+}
+
+.period-pill:hover {
+  background: var(--paper-alt);
 }
 
 .period-pill.active {
@@ -1366,26 +1397,32 @@ td.actions {
 
 .krant-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .krant-kpi-card {
   background: var(--paper-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 8px;
   box-shadow: var(--shadow-sm);
+}
+
+.krant-kpi-card.highlight-card {
+  border-color: var(--border-strong);
+  background: #faf8f3;
 }
 
 .krant-kpi-label {
   font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--ink-muted);
 }
 
@@ -1393,21 +1430,35 @@ td.actions {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 6px;
+  gap: 8px;
 }
 
 .krant-kpi-value {
   font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.krant-kpi-title-value {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .krant-kpi-trend {
   font-size: 10px;
   font-weight: 700;
-  padding: 1px 5px;
+  padding: 2px 6px;
   border-radius: 3px;
+  white-space: nowrap;
 }
 
 .krant-kpi-trend.up {
@@ -1426,22 +1477,19 @@ td.actions {
 }
 
 .krant-kpi-sub {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-muted);
-}
-
-.krant-charts-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 18px;
-  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .krant-chart-card {
   background: var(--paper-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 16px 18px;
+  padding: 18px 20px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1449,19 +1497,54 @@ td.actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--paper-subtle);
   flex-wrap: wrap;
 }
 
 .krant-chart-head h4 {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: 19px;
+  font-weight: 600;
   margin: 0;
 }
 
+.article-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--paper-alt);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.article-rank.rank-1 {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.krant-two-col-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 20px;
+}
+
+.krant-three-col-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
 .krant-vchart {
-  height: 180px;
+  height: 190px;
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -1491,6 +1574,12 @@ td.actions {
   height: 100%;
 }
 
+.krant-vbar-scans {
+  background: var(--accent-blue);
+  border-radius: 2px 2px 0 0;
+  width: 100%;
+}
+
 .krant-vbar-views {
   background: var(--ink);
   border-radius: 2px 2px 0 0;
@@ -1498,12 +1587,13 @@ td.actions {
 }
 
 .krant-vbar-visitors {
-  background: var(--accent-blue);
+  background: #a8a29e;
   width: 100%;
 }
 
-.krant-vbar-col:hover .krant-vbar-views {
-  background: #44403c;
+.krant-vbar-col:hover .krant-vbar-views,
+.krant-vbar-col:hover .krant-vbar-scans {
+  opacity: 0.8;
 }
 
 .krant-vbar-label {
@@ -1513,16 +1603,58 @@ td.actions {
   white-space: nowrap;
 }
 
-.krant-panels-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 18px;
-  margin-bottom: 18px;
+.chart-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+/* AR Conversion Funnel */
+.krant-funnel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.krant-funnel-step {
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.krant-funnel-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.krant-funnel-title {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.krant-funnel-val {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .krant-share-bar {
   width: 100%;
-  height: 5px;
+  height: 6px;
   background: var(--paper-subtle);
   border-radius: 999px;
   overflow: hidden;
@@ -1532,17 +1664,76 @@ td.actions {
 .krant-share-fill {
   height: 100%;
   background: var(--ink);
+  border-radius: 999px;
 }
 
-@media (max-width: 1200px) {
+.krant-share-fill.blue {
+  background: var(--accent-blue);
+}
+
+.krant-metric-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.krant-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.krant-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+/* Collapsible Tech / 404 / Bot Section */
+.analytics-tech-details {
+  background: var(--paper-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.analytics-tech-details summary {
+  padding: 14px 18px;
+  background: var(--paper);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.analytics-tech-details[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.analytics-tech-body {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 1280px) {
   .editor-grid,
-  .krant-charts-grid,
-  .krant-panels-grid,
+  .krant-two-col-grid,
+  .krant-three-col-grid,
+  .analytics-tech-body,
   .settings-page-grid {
     grid-template-columns: 1fr;
   }
   .krant-kpi-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -1555,6 +1746,6 @@ td.actions {
     height: auto;
   }
   .krant-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 }

@@ -272,6 +272,9 @@ function buildScene(entries) {
         const d = (e && e.detail) || {};
         console.error('[AR] realityerror', d);
         if (firstFoundAt) return;
+        if (typeof window.trackKrantCameraDenied === 'function') {
+            window.trackKrantCameraDenied();
+        }
         const reason = (d.error && d.error.message) ||
             (d.isDeviceBrowserSupported === false ? 'deze browser of dit toestel wordt niet ondersteund' : 'de camera kon niet gestart worden');
         overlay().style.display = 'flex';
@@ -305,13 +308,24 @@ function buildScene(entries) {
         buildLayers(content, entry);
         anchor.appendChild(content);
 
-        anchorState[entry.name] = { visible: false, lastPos: null, hideTimer: 0, scanRecorded: false };
+        anchorState[entry.name] = { visible: false, lastPos: null, hideTimer: 0, scanRecorded: false, foundAt: 0 };
+
+        function flushAnchorDwell() {
+            const st = anchorState[entry.name];
+            if (!st || !st.foundAt) return;
+            const sec = Math.round((Date.now() - st.foundAt) / 1000);
+            st.foundAt = 0;
+            if (sec >= 1 && entry.week && typeof window.trackKrantEssayDwell === 'function') {
+                window.trackKrantEssayDwell(entry.week, sec);
+            }
+        }
 
         anchor.addEventListener('xrextrasfound', function () {
             const st = anchorState[entry.name];
             if (st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
             foundCount++;
             if (!firstFoundAt) firstFoundAt = performance.now();
+            if (!st.visible) st.foundAt = Date.now();
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
             document.getElementById('feed-loader').style.display = 'none';
@@ -338,8 +352,15 @@ function buildScene(entries) {
             if (st.hideTimer) clearTimeout(st.hideTimer);
             st.hideTimer = setTimeout(function () {
                 st.hideTimer = 0;
-                if (anchorObj && !anchorState[entry.name].visible) anchorObj.visible = false;
+                if (anchorObj && !anchorState[entry.name].visible) {
+                    anchorObj.visible = false;
+                    flushAnchorDwell();
+                }
             }, LOST_GRACE_MS);
+        });
+        window.addEventListener('pagehide', flushAnchorDwell);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') flushAnchorDwell();
         });
 
         scene.appendChild(anchor);
@@ -408,6 +429,9 @@ async function bootAR() {
     btn.disabled = true;
 
     if (await cameraBlocked()) {
+        if (typeof window.trackKrantCameraDenied === 'function') {
+            window.trackKrantCameraDenied();
+        }
         // Site staat op blokkeren: Chrome toont uit zichzelf geen vraag meer.
         // De knop stelt de vraag alsnog — bij een zachte blokkade komt de
         // prompt terug en start alles direct. Bij een harde blokkade volgt
@@ -500,6 +524,9 @@ async function bootAR() {
 
     overlay().style.display = 'none';
     bootStatus('');
+    if (typeof window.trackKrantCameraStart === 'function') {
+        window.trackKrantCameraStart();
+    }
     buildScene(entries);
 }
 

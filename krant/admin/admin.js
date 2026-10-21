@@ -930,25 +930,27 @@ function addLayerRow(values) {
           ${numField('layer_x', 'Pos X', v.x)}
           ${numField('layer_y', 'Pos Y', v.y)}
           ${numField('layer_z', 'Diepte Z', v.z)}
-          ${numField('layer_w', 'Breedte', v.w)}
-          ${numField('layer_h', 'Hoogte', v.h)}
-        </div>
-
-        <div class="layer-group">
-          <label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="${escHtml(v.opacity)}"></label>
           ${numField('layer_scale', 'Schaal', v.scale, ' min="0.01"')}
-          ${numField('layer_rx', 'Rot X°', v.rx)}
-          ${numField('layer_ry', 'Rot Y°', v.ry)}
-          ${numField('layer_rz', 'Rot Z°', v.rz)}
+          <label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="${escHtml(v.opacity)}"></label>
         </div>
 
-        <div class="layer-group">
-          <label style="justify-content:center;"><input type="checkbox" name="layer_lit" value="1"${v.lit ? ' checked' : ''}> Licht/schaduw</label>
-          <label>Anim (s)<input type="number" step="0.1" min="0" name="layer_anim_dur" value="${escHtml(v.anim_dur)}"></label>
-          ${numField('layer_anim_x', 'Naar X', v.anim_x)}
-          ${numField('layer_anim_y', 'Naar Y', v.anim_y)}
-          ${numField('layer_anim_z', 'Naar Z', v.anim_z)}
-        </div>
+        <details class="layer-advanced" ${(Number(v.rx) || Number(v.ry) || Number(v.rz) || Number(v.anim_dur) > 0) ? 'open' : ''}>
+          <summary>Geavanceerde parameters (Afmetingen, Rotatie &amp; Animatie)</summary>
+          <div class="layer-group">
+            ${numField('layer_w', 'Breedte', v.w)}
+            ${numField('layer_h', 'Hoogte', v.h)}
+            ${numField('layer_rx', 'Rot X°', v.rx)}
+            ${numField('layer_ry', 'Rot Y°', v.ry)}
+            ${numField('layer_rz', 'Rot Z°', v.rz)}
+          </div>
+          <div class="layer-group">
+            <label style="justify-content:center;"><input type="checkbox" name="layer_lit" value="1"${v.lit ? ' checked' : ''}> Licht/schaduw</label>
+            <label>Anim (s)<input type="number" step="0.1" min="0" name="layer_anim_dur" value="${escHtml(v.anim_dur)}"></label>
+            ${numField('layer_anim_x', 'Naar X', v.anim_x)}
+            ${numField('layer_anim_y', 'Naar Y', v.anim_y)}
+            ${numField('layer_anim_z', 'Naar Z', v.anim_z)}
+          </div>
+        </details>
       </div>
     </div>
   `;
@@ -1734,13 +1736,89 @@ function renderTrendBadge(trendVal, invertColors = false) {
   return `<span class="krant-kpi-trend ${cls}">${sign}${n}%</span>`;
 }
 
+function formatRelativeOrDate(ts) {
+  const n = Number(ts) || 0;
+  if (n <= 0) return '—';
+  const diffSec = Math.max(0, Math.floor(Date.now() / 1000) - n);
+  if (diffSec < 60) return 'Zojuist';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m geleden`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}u geleden`;
+  const d = new Date(n * 1000);
+  return d.toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' });
+}
+
+function renderEssayScanRows(essayMetrics, filterQuery = '') {
+  if (!essayMetrics || essayMetrics.length === 0) {
+    return `<tr><td colspan="9" class="bundle-info">Nog geen edities aangemaakt.</td></tr>`;
+  }
+  const q = filterQuery.trim().toLowerCase();
+  const filtered = q
+    ? essayMetrics.filter(
+        (em) =>
+          String(em.week || '').toLowerCase().includes(q) ||
+          String(em.title || '').toLowerCase().includes(q)
+      )
+    : essayMetrics;
+
+  if (filtered.length === 0) {
+    return `<tr><td colspan="9" class="bundle-info">Geen edities gevonden voor "${escHtml(filterQuery)}".</td></tr>`;
+  }
+
+  return filtered
+    .map((em, idx) => {
+      const periodScans = Number(em.period_scans) || 0;
+      const allTimeScans = Number(em.scans) || 0;
+      const uniqueScanners = Number(em.unique_scanners) || 0;
+      const sharePct = Number(em.share_pct) || 0;
+      const avgArDwell = Number(em.avg_ar_dwell) || 0;
+      const layersCount = Number(em.layers_count) || 0;
+      const isTop = idx === 0 && (periodScans > 0 || allTimeScans > 0);
+
+      return `
+        <tr>
+          <td style="width:36px;">
+            <span class="article-rank ${isTop ? 'rank-1' : ''}">${idx + 1}</span>
+          </td>
+          <td>
+            <div><strong>${escHtml(em.title || em.week)}</strong></div>
+            <div class="bundle-info" style="margin:2px 0 0;">Editie ${escHtml(em.week)} · ${layersCount} AR-laag/lagen</div>
+          </td>
+          <td>
+            <span class="badge ${em.published ? 'live' : 'draft'}">
+              ${em.published ? 'LIVE' : 'CONCEPT'}
+            </span>
+          </td>
+          <td style="min-width:150px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <strong>${periodScans} scans</strong>
+              <span class="bundle-info">${sharePct}%</span>
+            </div>
+            <div class="krant-share-bar">
+              <div class="krant-share-fill blue" style="width:${Math.min(100, sharePct)}%;"></div>
+            </div>
+          </td>
+          <td><strong>${allTimeScans}</strong></td>
+          <td>${uniqueScanners > 0 ? uniqueScanners : '—'}</td>
+          <td>${avgArDwell > 0 ? formatDuration(avgArDwell) : '—'}</td>
+          <td class="bundle-info">${em.last_scanned ? formatRelativeOrDate(em.last_scanned) : '—'}</td>
+          <td style="text-align:right;">
+            <button type="button" class="btn ghost mini-btn analytics-open-essay-btn" data-week="${escHtml(em.week)}">
+              BEWERK
+            </button>
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
 function renderKrantAnalytics(data) {
   try {
     const kpis = data.kpis || {};
+    const funnel = data.ar_funnel || {};
     const daily = Array.isArray(data.daily) ? data.daily : [];
     const peakDay = data.peak_day || null;
     const hourly = Array.isArray(data.hourly) ? data.hourly : [];
-    const pages = Array.isArray(data.pages) ? data.pages : [];
     const sources = Array.isArray(data.sources) ? data.sources : [];
     const devices = Array.isArray(data.devices) ? data.devices : [];
     const languages = Array.isArray(data.languages) ? data.languages : [];
@@ -1748,18 +1826,41 @@ function renderKrantAnalytics(data) {
     const botScans = Array.isArray(data.bot_scans) ? data.bot_scans : [];
     const essayMetrics = Array.isArray(data.essay_metrics) ? data.essay_metrics : [];
 
-    const maxDailyViews = Math.max(1, ...daily.map((d) => Number(d.views) || 0));
-    const maxHourlyViews = Math.max(1, ...hourly.map((h) => Number(h.views) || 0));
+    const totalSessions = Math.max(0, Number(funnel.sessions ?? kpis.sessions?.value) || 0);
+    const camStarts = Math.max(0, Number(funnel.camera_starts ?? kpis.camera_starts?.value) || 0);
+    const camRate = Number(funnel.camera_rate ?? kpis.camera_starts?.rate) || 0;
+    const camDenied = Math.max(0, Number(funnel.camera_denied ?? kpis.camera_starts?.denied) || 0);
+    const scannedSessions = Math.max(0, Number(funnel.scanned_sessions ?? kpis.scan_conversion?.scanned_sessions) || 0);
+    const scanRate = Number(funnel.scan_rate ?? kpis.scan_conversion?.value) || 0;
+    const periodScans = Number(kpis.scans?.period_value ?? funnel.period_scans) || 0;
+    const allTimeScans = Number(kpis.scans?.all_time ?? funnel.all_time_scans) || 0;
+    const displayScans = periodScans > 0 ? periodScans : allTimeScans;
+    const topEssay = funnel.top_essay || (essayMetrics.length > 0 && (essayMetrics[0].period_scans > 0 || essayMetrics[0].scans > 0) ? essayMetrics[0] : null);
+
+    const maxDailyVal = Math.max(
+      1,
+      ...daily.map((d) => Math.max(Number(d.views) || 0, Number(d.scans) || 0, Number(d.visitors) || 0))
+    );
+    const maxHourlyVal = Math.max(
+      1,
+      ...hourly.map((h) => Math.max(Number(h.views) || 0, Number(h.scans) || 0))
+    );
+
+    const deviceLabels = {
+      mobile: 'Smartphone (AR)',
+      desktop: 'Desktop',
+      tablet: 'Tablet',
+    };
 
     analyticsContent.innerHTML = `
-      <!-- Toolbar -->
+      <!-- 1. Top Toolbar -->
       <div class="krant-stats-toolbar">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div class="krant-stats-live">
             <span class="krant-stats-live-dot"></span>
-            <span>Nu online: ${Number(data.live_online) || 0} bezoekers</span>
+            <span>Nu actief: ${Number(data.live_online) || 0} lezers</span>
           </div>
-          <span class="bundle-info" style="margin:0;">Zelfgehost · Cookie-vrij · AVG/GDPR-proof</span>
+          <span class="bundle-info" style="margin:0;">8th Wall AR-Tracking · Cookie-vrij · AVG/GDPR-proof</span>
         </div>
         <div class="krant-stats-controls">
           ${[
@@ -1782,84 +1883,120 @@ function renderKrantAnalytics(data) {
         </div>
       </div>
 
-      <!-- 6 KPI Cards -->
+      <!-- 2. 4 Kern-KPI's voor De Krant AR -->
       <div class="krant-kpi-grid">
-        <div class="krant-kpi-card">
-          <span class="krant-kpi-label">Paginaweergaven</span>
+        <div class="krant-kpi-card highlight-card">
+          <span class="krant-kpi-label">AR Artikel-Scans</span>
           <div class="krant-kpi-value-row">
-            <span class="krant-kpi-value">${Number(kpis.views?.value) || 0}</span>
-            ${renderTrendBadge(kpis.views?.trend)}
+            <span class="krant-kpi-value">${displayScans}</span>
+            ${renderTrendBadge(kpis.scans?.trend)}
           </div>
-          <span class="krant-kpi-sub">Vorige periode: ${Number(kpis.views?.previous) || 0}</span>
+          <div class="krant-kpi-sub">
+            <span>In periode: ${periodScans}</span>
+            <span>All-time: ${allTimeScans}</span>
+          </div>
         </div>
 
         <div class="krant-kpi-card">
-          <span class="krant-kpi-label">Unieke bezoekers</span>
+          <span class="krant-kpi-label">Meest Gescand Artikel</span>
+          <div class="krant-kpi-value-row">
+            <span class="krant-kpi-title-value">
+              ${topEssay ? escHtml(topEssay.title || topEssay.week) : 'Nog geen scans'}
+            </span>
+          </div>
+          <div class="krant-kpi-sub">
+            <span>${topEssay ? `Editie ${escHtml(topEssay.week)}` : 'Scan een pagina met de camera'}</span>
+            <strong>${topEssay ? `${topEssay.period_scans || topEssay.scans} scans (${topEssay.share_pct}%)` : ''}</strong>
+          </div>
+        </div>
+
+        <div class="krant-kpi-card">
+          <span class="krant-kpi-label">AR Scan-Conversie</span>
+          <div class="krant-kpi-value-row">
+            <span class="krant-kpi-value">${scanRate}%</span>
+            ${renderTrendBadge(kpis.scan_conversion?.trend)}
+          </div>
+          <div class="krant-kpi-sub">
+            <span>Camera gestart: ${camRate}%</span>
+            <span>${scannedSessions} / ${totalSessions} sessies</span>
+          </div>
+        </div>
+
+        <div class="krant-kpi-card">
+          <span class="krant-kpi-label">Unieke Bezoekers &amp; Kijktijd</span>
           <div class="krant-kpi-value-row">
             <span class="krant-kpi-value">${Number(kpis.visitors?.value) || 0}</span>
             ${renderTrendBadge(kpis.visitors?.trend)}
           </div>
-          <span class="krant-kpi-sub">Vorige periode: ${Number(kpis.visitors?.previous) || 0}</span>
-        </div>
-
-        <div class="krant-kpi-card">
-          <span class="krant-kpi-label">Sessies</span>
-          <div class="krant-kpi-value-row">
-            <span class="krant-kpi-value">${Number(kpis.sessions?.value) || 0}</span>
-            ${renderTrendBadge(kpis.sessions?.trend)}
+          <div class="krant-kpi-sub">
+            <span>Gem. kijktijd: <strong>${formatDuration(kpis.avg_dwell?.avg_ar_dwell || kpis.avg_dwell?.value)}</strong></span>
+            <span>${totalSessions} sessies</span>
           </div>
-          <span class="krant-kpi-sub">${Number(kpis.sessions?.pages_per_session) || 0} pagina's / sessie</span>
-        </div>
-
-        <div class="krant-kpi-card">
-          <span class="krant-kpi-label">Gem. leestijd</span>
-          <div class="krant-kpi-value-row">
-            <span class="krant-kpi-value">${formatDuration(kpis.avg_dwell?.value)}</span>
-            ${renderTrendBadge(kpis.avg_dwell?.trend)}
-          </div>
-          <span class="krant-kpi-sub">Actieve tabbladtijd</span>
-        </div>
-
-        <div class="krant-kpi-card">
-          <span class="krant-kpi-label">Engaged Bounce Rate</span>
-          <div class="krant-kpi-value-row">
-            <span class="krant-kpi-value">${Number(kpis.bounce_rate?.value) || 0}%</span>
-            ${renderTrendBadge(kpis.bounce_rate?.trend, true)}
-          </div>
-          <span class="krant-kpi-sub">1 pagina &amp; &lt; 15s leestijd</span>
-        </div>
-
-        <div class="krant-kpi-card">
-          <span class="krant-kpi-label">Gefilterde Bots</span>
-          <div class="krant-kpi-value-row">
-            <span class="krant-kpi-value">${Number(kpis.bots_filtered?.value) || 0}</span>
-            ${renderTrendBadge(kpis.bots_filtered?.trend)}
-          </div>
-          <span class="krant-kpi-sub">Crawlers &amp; scanners</span>
         </div>
       </div>
 
-      <!-- Daily & 24h Vertical Bar Charts -->
-      <div class="krant-charts-grid">
+      <!-- 3. Hoofdpaneel: Gescande Artikelen & Edities -->
+      <div class="krant-chart-card">
+        <div class="krant-chart-head">
+          <div>
+            <h4>Gescande Artikelen &amp; Edities (${essayMetrics.length})</h4>
+            <p class="bundle-info" style="margin:2px 0 0;">Welke artikelen uit de fysieke krant worden het vaakst met de smartphone-camera gescand</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="search" id="krant-articles-filter" placeholder="Filter op week of titel..." style="width:210px;padding:6px 10px;font-size:11px;" />
+          </div>
+        </div>
+        <div class="table-scroll-wrap">
+          <table id="krant-articles-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Artikel / Editie</th>
+                <th>Status</th>
+                <th>Scans in periode</th>
+                <th>All-time scans</th>
+                <th>Unieke scanners</th>
+                <th>Gem. AR-kijktijd</th>
+                <th>Laatst gescand</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderEssayScanRows(essayMetrics)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. Dagelijkse Tijdreeks & AR Conversie-Funnel -->
+      <div class="krant-two-col-grid">
         <div class="krant-chart-card">
           <div class="krant-chart-head">
-            <h4>Dagelijkse weergaven &amp; unieke bezoekers</h4>
-            <span class="bundle-info" id="krant-daily-hover-readout">
-              ${peakDay && peakDay.views > 0 ? `Piekdag: ${peakDay.label} (${peakDay.views} views, ${peakDay.visitors} bezoekers)` : 'Beweeg over een kolom voor details'}
-            </span>
+            <div>
+              <h4>Dagelijkse AR-Scans &amp; Bezoekers</h4>
+              <span class="bundle-info" id="krant-daily-hover-readout">
+                ${peakDay && (peakDay.scans > 0 || peakDay.views > 0) ? `Piekdag: ${peakDay.label} (${peakDay.scans || 0} scans, ${peakDay.visitors} bezoekers)` : 'Beweeg over een kolom voor dagdetails'}
+              </span>
+            </div>
+            <div class="chart-legend">
+              <span><i class="legend-swatch" style="background:var(--accent-blue);"></i>AR-Scans</span>
+              <span><i class="legend-swatch" style="background:var(--ink);"></i>Bezoeken</span>
+            </div>
           </div>
           <div class="krant-vchart">
             ${daily
               .map((d, idx) => {
-                const viewsH = Math.max(d.views > 0 ? 4 : 1, Math.round((d.views / maxDailyViews) * 100));
-                const visH = Math.max(d.visitors > 0 ? 3 : 0, Math.round((d.visitors / maxDailyViews) * 100));
+                const scans = Number(d.scans) || 0;
+                const views = Number(d.views) || 0;
+                const scansH = Math.max(scans > 0 ? 5 : 0, Math.round((scans / maxDailyVal) * 100));
+                const viewsH = Math.max(views > 0 ? 4 : 1, Math.round((views / maxDailyVal) * 100));
                 const showLbl =
                   daily.length <= 14 || idx === 0 || idx === daily.length - 1 || idx % Math.ceil(daily.length / 8) === 0;
                 return `
-                  <div class="krant-vbar-col" data-label="${escHtml(d.label)}" data-views="${d.views}" data-visitors="${d.visitors}" data-sessions="${d.sessions}">
+                  <div class="krant-vbar-col" data-label="${escHtml(d.label)}" data-scans="${scans}" data-views="${views}" data-visitors="${d.visitors}">
                     <div class="krant-vbar-stack">
+                      ${scans > 0 ? `<div class="krant-vbar-scans" style="height:${scansH}%;"></div>` : ''}
                       <div class="krant-vbar-views" style="height:${viewsH}%;"></div>
-                      <div class="krant-vbar-visitors" style="height:${visH}%;"></div>
                     </div>
                     <span class="krant-vbar-label">${showLbl ? escHtml(d.label) : ''}</span>
                   </div>
@@ -1871,17 +2008,64 @@ function renderKrantAnalytics(data) {
 
         <div class="krant-chart-card">
           <div class="krant-chart-head">
-            <h4>Verkeer per uur (24u)</h4>
+            <div>
+              <h4>AR Gebruikers-Funnel</h4>
+              <p class="bundle-info" style="margin:2px 0 0;">Van het openen van de webapp tot het daadwerkelijk scannen van de krant</p>
+            </div>
+          </div>
+          <div class="krant-funnel-list">
+            <div class="krant-funnel-step">
+              <div class="krant-funnel-top">
+                <span class="krant-funnel-title">1. Krant AR Geopend</span>
+                <span class="krant-funnel-val">${totalSessions} sessies (100%)</span>
+              </div>
+              <div class="krant-share-bar"><div class="krant-share-fill" style="width:100%;"></div></div>
+              <div class="bundle-info" style="margin-top:4px;">${Number(kpis.visitors?.value) || 0} unieke bezoekers · Bounce rate: ${Number(kpis.bounce_rate?.value) || 0}%</div>
+            </div>
+
+            <div class="krant-funnel-step">
+              <div class="krant-funnel-top">
+                <span class="krant-funnel-title">2. Camera Gestart (8th Wall Engine)</span>
+                <span class="krant-funnel-val">${camStarts} sessies (${camRate}%)</span>
+              </div>
+              <div class="krant-share-bar"><div class="krant-share-fill blue" style="width:${Math.min(100, camRate)}%;"></div></div>
+              <div class="bundle-info" style="margin-top:4px;">
+                ${camDenied > 0 ? `Camera geweigerd / geblokkeerd in ${camDenied} sessie(s)` : 'Geen camera-weigeringen geregistreerd'}
+              </div>
+            </div>
+
+            <div class="krant-funnel-step">
+              <div class="krant-funnel-top">
+                <span class="krant-funnel-title">3. Krantenartikel Gescand</span>
+                <span class="krant-funnel-val">${scannedSessions} sessies (${scanRate}%)</span>
+              </div>
+              <div class="krant-share-bar"><div class="krant-share-fill blue" style="width:${Math.min(100, scanRate)}%;"></div></div>
+              <div class="bundle-info" style="margin-top:4px;">
+                ${periodScans} scans in deze periode · ${allTimeScans} scans all-time
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Uur-verdeling, Toestellen & Herkomst (3-Koloms Grid) -->
+      <div class="krant-three-col-grid">
+        <div class="krant-chart-card">
+          <div class="krant-chart-head">
+            <h4>Moment van de dag (24u)</h4>
             <span class="bundle-info" id="krant-hourly-hover-readout">00:00 – 23:00</span>
           </div>
-          <div class="krant-vchart">
+          <div class="krant-vchart" style="height:150px;">
             ${hourly
               .map((h) => {
-                const pct = Math.max(h.views > 0 ? 4 : 1, Math.round((h.views / maxHourlyViews) * 100));
+                const scans = Number(h.scans) || 0;
+                const views = Number(h.views) || 0;
+                const val = Math.max(scans, views);
+                const pct = Math.max(val > 0 ? 5 : 1, Math.round((val / maxHourlyVal) * 100));
                 return `
-                  <div class="krant-vbar-col krant-hour-col" data-label="${escHtml(h.label)}" data-views="${h.views}" data-visitors="${h.visitors}">
+                  <div class="krant-vbar-col krant-hour-col" data-label="${escHtml(h.label)}" data-scans="${scans}" data-views="${views}" data-visitors="${h.visitors}">
                     <div class="krant-vbar-stack">
-                      <div class="krant-vbar-views" style="height:${pct}%;"></div>
+                      <div class="${scans > 0 ? 'krant-vbar-scans' : 'krant-vbar-views'}" style="height:${pct}%;"></div>
                     </div>
                     <span class="krant-vbar-label">${h.hour % 4 === 0 ? escHtml(String(h.hour).padStart(2, '0')) : ''}</span>
                   </div>
@@ -1890,236 +2074,158 @@ function renderKrantAnalytics(data) {
               .join('')}
           </div>
         </div>
-      </div>
 
-      <!-- Top Pages & Traffic Sources -->
-      <div class="krant-panels-grid">
         <div class="krant-chart-card">
           <div class="krant-chart-head">
-            <h4>Top pagina's (${pages.length})</h4>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <input type="search" id="krant-pages-filter" placeholder="Filter pagina..." style="width:150px;padding:4px 8px;font-size:11px;" />
+            <h4>Toestellen &amp; Talen</h4>
+            <span class="bundle-info">Mobiel vs. Desktop</span>
+          </div>
+          <ul class="krant-metric-list">
+            ${
+              devices.length === 0
+                ? `<li class="bundle-info">Nog geen toesteldata.</li>`
+                : devices
+                    .map(
+                      (d) => `
+                  <li class="krant-metric-item">
+                    <div class="krant-metric-row">
+                      <span><strong>${escHtml(deviceLabels[d.device] || d.device)}</strong></span>
+                      <span>${d.sessions} (${d.share_pct}%)</span>
+                    </div>
+                    <div class="krant-share-bar"><div class="krant-share-fill" style="width:${d.share_pct}%;"></div></div>
+                  </li>
+                `
+                    )
+                    .join('')
+            }
+          </ul>
+          ${
+            languages.length > 0
+              ? `
+            <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--paper-subtle);font-size:11px;">
+              <span class="bundle-info">Talen: </span>
+              ${languages.map((l) => `<strong>${escHtml(l.lang)}</strong> (${l.share_pct}%)`).join(' · ')}
+            </div>
+          `
+              : ''
+          }
+        </div>
+
+        <div class="krant-chart-card">
+          <div class="krant-chart-head">
+            <h4>Herkomst (QR &amp; Kanalen)</h4>
+            <span class="bundle-info">Acquisitie</span>
+          </div>
+          <ul class="krant-metric-list">
+            ${
+              sources.length === 0
+                ? `<li class="bundle-info">Nog geen sessies geregistreerd.</li>`
+                : sources
+                    .slice(0, 6)
+                    .map(
+                      (s) => `
+                  <li class="krant-metric-item">
+                    <div class="krant-metric-row">
+                      <span><strong>${escHtml(s.source === 'Direct' ? 'Direct / Krant QR-code' : s.source)}</strong></span>
+                      <span>${s.sessions} (${s.share_pct}%)</span>
+                    </div>
+                    <div class="krant-share-bar"><div class="krant-share-fill" style="width:${s.share_pct}%;"></div></div>
+                  </li>
+                `
+                    )
+                    .join('')
+            }
+          </ul>
+        </div>
+      </div>
+
+      <!-- 6. Inklapbare Systeemdiagnose (404-meldingen & Bot-filtering) -->
+      <details class="analytics-tech-details" ${errors404.length > 0 ? 'open' : ''}>
+        <summary>
+          <span>Systeemdiagnose: 404-meldingen (${errors404.length}) &amp; Geblokkeerde bot-scans (${Number(kpis.bots_filtered?.value) || 0})</span>
+          <span class="bundle-info" style="margin:0;">Klik om te openen/sluiten</span>
+        </summary>
+        <div class="analytics-tech-body">
+          <div>
+            <div class="krant-chart-head">
+              <h4>Errors (404 — Echte bezoekers: ${errors404.length})</h4>
               ${
-                pages.length > 8
-                  ? `<button type="button" class="btn ghost mini-btn" id="krant-toggle-all-pages">${showAllTopPages ? 'TOON TOP 8' : `TOON ALLES (${pages.length})`}</button>`
+                errors404.length > 0
+                  ? `<button type="button" class="btn danger mini-btn" id="krant-dismiss-all-404">WIS ALLES</button>`
                   : ''
               }
             </div>
-          </div>
-          <div class="table-scroll-wrap">
-            <table id="krant-top-pages-table">
-              <thead>
-                <tr>
-                  <th>Pagina</th>
-                  <th>Weergaven</th>
-                  <th>Bezoekers</th>
-                  <th>Gem. leestijd</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${renderTopPagesRows(pages)}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="krant-chart-card">
-          <div class="krant-chart-head">
-            <h4>Verkeersbronnen (Acquisitie)</h4>
-            <span class="bundle-info">Eerste externe referrer</span>
-          </div>
-          <div class="table-scroll-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Bron / Kanaal</th>
-                  <th>Sessies</th>
-                  <th>Aandeel</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  sources.length === 0
-                    ? `<tr><td colspan="3" class="bundle-info">Nog geen sessies geregistreerd.</td></tr>`
-                    : sources
-                        .map(
-                          (s) => `
-                      <tr>
-                        <td><strong>${escHtml(s.source)}</strong></td>
-                        <td>${s.sessions}</td>
-                        <td>
-                          <div>${s.share_pct}%</div>
-                          <div class="krant-share-bar"><div class="krant-share-fill" style="width:${s.share_pct}%;"></div></div>
-                        </td>
-                      </tr>
-                    `
-                        )
-                        .join('')
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Krant AR Scans per Edition + Devices/Languages -->
-      <div class="krant-panels-grid">
-        <div class="krant-chart-card">
-          <div class="krant-chart-head">
-            <h4>Krant Edities: AR Scans &amp; Weergaven</h4>
-            <span class="bundle-info">8th Wall camera-scans</span>
-          </div>
-          <div class="table-scroll-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Week</th>
-                  <th>Titel</th>
-                  <th>AR Scans</th>
-                  <th>Views</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  essayMetrics.length === 0
-                    ? `<tr><td colspan="4" class="bundle-info">Nog geen edities.</td></tr>`
-                    : essayMetrics
-                        .map(
-                          (em) => `
-                      <tr>
-                        <td><strong>${escHtml(em.week)}</strong></td>
-                        <td>${escHtml(em.title)}</td>
-                        <td><strong>${em.scans}</strong></td>
-                        <td>${em.views}</td>
-                      </tr>
-                    `
-                        )
-                        .join('')
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="krant-chart-card">
-          <div class="krant-chart-head">
-            <h4>Apparaten &amp; Talen</h4>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:11px;">
-            <div>
-              <strong>Apparaten</strong>
-              <ul style="list-style:none;padding:0;margin:6px 0 0;">
-                ${
-                  devices.length === 0
-                    ? `<li class="bundle-info">—</li>`
-                    : devices
-                        .map(
-                          (d) =>
-                            `<li style="display:flex;justify-content:space-between;padding:3px 0;"><span>${escHtml(d.device)}</span><strong>${d.sessions} (${d.share_pct}%)</strong></li>`
-                        )
-                        .join('')
-                }
-              </ul>
+            <div class="table-scroll-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Pad</th>
+                    <th>Hits</th>
+                    <th>Referrer</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    errors404.length === 0
+                      ? `<tr><td colspan="4" class="bundle-info">Geen 404-meldingen van echte bezoekers.</td></tr>`
+                      : errors404
+                          .map(
+                            (err) => `
+                        <tr>
+                          <td><code>${escHtml(err.page)}</code></td>
+                          <td><strong>${err.count}</strong></td>
+                          <td class="bundle-info">${escHtml(err.last_ref || 'Direct')}</td>
+                          <td style="text-align:right;">
+                            <button type="button" class="icon-btn danger dismiss-404-btn" data-page="${escHtml(err.page)}">WIS</button>
+                          </td>
+                        </tr>
+                      `
+                          )
+                          .join('')
+                  }
+                </tbody>
+              </table>
             </div>
-            <div>
-              <strong>Talen</strong>
-              <ul style="list-style:none;padding:0;margin:6px 0 0;">
-                ${
-                  languages.length === 0
-                    ? `<li class="bundle-info">—</li>`
-                    : languages
-                        .map(
-                          (l) =>
-                            `<li style="display:flex;justify-content:space-between;padding:3px 0;"><span>${escHtml(l.lang)}</span><strong>${l.sessions} (${l.share_pct}%)</strong></li>`
-                        )
-                        .join('')
-                }
-              </ul>
+          </div>
+
+          <div>
+            <div class="krant-chart-head">
+              <h4>Geblokkeerde bot- &amp; kwetsbaarheidsscans (${botScans.length})</h4>
+              <span class="bundle-info">Automatisch genegeerd</span>
+            </div>
+            <div class="table-scroll-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Pad</th>
+                    <th>Categorie</th>
+                    <th>Hits</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    botScans.length === 0
+                      ? `<tr><td colspan="3" class="bundle-info">Geen kwetsbaarheidsscans gedetecteerd.</td></tr>`
+                      : botScans
+                          .slice(0, 15)
+                          .map(
+                            (s) => `
+                        <tr>
+                          <td><code class="bundle-info">${escHtml(s.page)}</code></td>
+                          <td class="bundle-info">${escHtml(s.category || 'Bot')}</td>
+                          <td>${s.count}</td>
+                        </tr>
+                      `
+                          )
+                          .join('')
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Real 404 Errors vs Blocked Bot/Vulnerability Scans -->
-      <div class="krant-panels-grid">
-        <div class="krant-chart-card">
-          <div class="krant-chart-head">
-            <h4>Errors (404 — Echte bezoekers: ${errors404.length})</h4>
-            ${
-              errors404.length > 0
-                ? `<button type="button" class="btn danger mini-btn" id="krant-dismiss-all-404">WIS ALLES</button>`
-                : ''
-            }
-          </div>
-          <div class="table-scroll-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Pad</th>
-                  <th>Hits</th>
-                  <th>Referrer</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  errors404.length === 0
-                    ? `<tr><td colspan="4" class="bundle-info">Geen 404-meldingen van echte bezoekers.</td></tr>`
-                    : errors404
-                        .map(
-                          (err) => `
-                      <tr>
-                        <td><code>${escHtml(err.page)}</code></td>
-                        <td><strong>${err.count}</strong></td>
-                        <td class="bundle-info">${escHtml(err.last_ref || 'Direct')}</td>
-                        <td>
-                          <button type="button" class="icon-btn danger dismiss-404-btn" data-page="${escHtml(err.page)}" title="Wis deze 404">WIS</button>
-                        </td>
-                      </tr>
-                    `
-                        )
-                        .join('')
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="krant-chart-card">
-          <div class="krant-chart-head">
-            <h4>Geblokkeerde bot- &amp; kwetsbaarheidsscans (${botScans.length})</h4>
-            <span class="bundle-info">Automatisch gefilterd</span>
-          </div>
-          <div class="table-scroll-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Pad</th>
-                  <th>Type</th>
-                  <th>Hits</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  botScans.length === 0
-                    ? `<tr><td colspan="3" class="bundle-info">Geen kwetsbaarheidsscans gedetecteerd.</td></tr>`
-                    : botScans
-                        .map(
-                          (s) => `
-                      <tr>
-                        <td><code class="bundle-info">${escHtml(s.page)}</code></td>
-                        <td class="bundle-info">${escHtml(s.category || 'Bot')}</td>
-                        <td>${s.count}</td>
-                      </tr>
-                    `
-                        )
-                        .join('')
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      </details>
     `;
 
     // Wire up analytics events
@@ -2136,10 +2242,11 @@ function renderKrantAnalytics(data) {
     });
 
     const dailyReadout = document.getElementById('krant-daily-hover-readout');
-    analyticsContent.querySelectorAll('.krant-vbar-col[data-sessions]').forEach((col) => {
+    analyticsContent.querySelectorAll('.krant-vbar-col[data-scans]').forEach((col) => {
+      if (col.classList.contains('krant-hour-col')) return;
       col.addEventListener('mouseenter', () => {
         if (dailyReadout) {
-          dailyReadout.textContent = `${col.dataset.label}: ${col.dataset.views} weergaven · ${col.dataset.visitors} unieke bezoekers · ${col.dataset.sessions} sessies`;
+          dailyReadout.textContent = `${col.dataset.label}: ${col.dataset.scans} AR-scans · ${col.dataset.views} weergaven · ${col.dataset.visitors} unieke bezoekers`;
         }
       });
     });
@@ -2148,25 +2255,32 @@ function renderKrantAnalytics(data) {
     analyticsContent.querySelectorAll('.krant-hour-col').forEach((col) => {
       col.addEventListener('mouseenter', () => {
         if (hourlyReadout) {
-          hourlyReadout.textContent = `${col.dataset.label} — ${col.dataset.views} weergaven (${col.dataset.visitors} bezoekers)`;
+          hourlyReadout.textContent = `${col.dataset.label} — ${col.dataset.scans} scans · ${col.dataset.views} weergaven`;
         }
       });
     });
 
-    const pagesFilter = document.getElementById('krant-pages-filter');
-    const pagesTbody = document.querySelector('#krant-top-pages-table tbody');
-    pagesFilter?.addEventListener('input', () => {
-      const q = pagesFilter.value.trim().toLowerCase();
-      const filtered = pages.filter(
-        (p) => p.page.toLowerCase().includes(q) || (p.title || '').toLowerCase().includes(q)
-      );
-      if (pagesTbody) pagesTbody.innerHTML = renderTopPagesRows(filtered, true);
+    const articlesFilter = document.getElementById('krant-articles-filter');
+    const articlesTbody = document.querySelector('#krant-articles-table tbody');
+    articlesFilter?.addEventListener('input', () => {
+      if (articlesTbody) {
+        articlesTbody.innerHTML = renderEssayScanRows(essayMetrics, articlesFilter.value);
+        bindAnalyticsEssayButtons();
+      }
     });
 
-    document.getElementById('krant-toggle-all-pages')?.addEventListener('click', () => {
-      showAllTopPages = !showAllTopPages;
-      renderKrantAnalytics(currentStatsData);
-    });
+    function bindAnalyticsEssayButtons() {
+      analyticsContent.querySelectorAll('.analytics-open-essay-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const wk = btn.dataset.week;
+          if (wk) {
+            switchMainView('editor');
+            loadIntoForm(wk);
+          }
+        });
+      });
+    }
+    bindAnalyticsEssayButtons();
 
     analyticsContent.querySelectorAll('.dismiss-404-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -2190,46 +2304,31 @@ function renderKrantAnalytics(data) {
   }
 }
 
-function renderTopPagesRows(pages, forceAll = false) {
-  if (!pages || pages.length === 0) {
-    return `<tr><td colspan="4" class="bundle-info">Nog geen paginaweergaven.</td></tr>`;
-  }
-  const list = forceAll || showAllTopPages ? pages : pages.slice(0, 8);
-  return list
-    .map(
-      (p) => `
-      <tr>
-        <td>
-          <div><a href="${escHtml(p.page)}" target="_blank" rel="noopener"><strong>${escHtml(p.title || p.page)}</strong></a></div>
-          <div class="bundle-info">${escHtml(p.page)}</div>
-          <div class="krant-share-bar"><div class="krant-share-fill" style="width:${p.share_pct}%;"></div></div>
-        </td>
-        <td><strong>${p.views}</strong> <span class="bundle-info">(${p.share_pct}%)</span></td>
-        <td>${p.visitors}</td>
-        <td>${formatDuration(p.avg_dwell)}</td>
-      </tr>
-    `
-    )
-    .join('');
-}
-
 function exportKrantAnalyticsCsv(data) {
   const lines = [
-    ['Type', 'Datum/Pad', 'Titel', 'Weergaven', 'Unieke Bezoekers', 'Sessies/GemLeestijdSec'].join(','),
+    ['Type', 'Week/Datum', 'Titel/Label', 'Scans (Periode)', 'Scans (All-time) / Views', 'Unieke Scanners / Bezoekers', 'Gem. AR-Kijktijd (sec)'].join(','),
   ];
-  (data.daily || []).forEach((d) => {
-    lines.push(['DAG', d.date, `"${d.label}"`, d.views, d.visitors, d.sessions].join(','));
+  (data.essay_metrics || []).forEach((em) => {
+    const cleanTitle = `"${String(em.title || '').replace(/"/g, '""')}"`;
+    lines.push([
+      'ARTIKEL',
+      `"${em.week}"`,
+      cleanTitle,
+      em.period_scans || 0,
+      em.scans || 0,
+      em.unique_scanners || 0,
+      em.avg_ar_dwell || 0,
+    ].join(','));
   });
-  (data.pages || []).forEach((p) => {
-    const cleanTitle = `"${String(p.title || '').replace(/"/g, '""')}"`;
-    lines.push(['PAGINA', `"${p.page}"`, cleanTitle, p.views, p.visitors, p.avg_dwell].join(','));
+  (data.daily || []).forEach((d) => {
+    lines.push(['DAG', d.date, `"${d.label}"`, d.scans || 0, d.views || 0, d.visitors || 0, d.sessions || 0].join(','));
   });
 
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `krant-analytics-${data.period_days}d-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `krant-ar-analytics-${data.period_days}d-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

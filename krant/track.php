@@ -35,10 +35,11 @@ if (empty($payload['type']) && empty($payload['page'])) {
     exit;
 }
 
-$type = in_array($payload['type'] ?? '', ['view', 'dwell'], true) ? $payload['type'] : 'view';
+$allowedTypes = ['view', 'dwell', 'scan', 'ar_dwell', 'cam_start', 'cam_denied'];
+$type = in_array($payload['type'] ?? '', $allowedTypes, true) ? $payload['type'] : 'view';
 $sec  = isset($payload['sec']) ? (int)$payload['sec'] : 0;
 
-if ($type === 'dwell' && $sec <= 0) {
+if (($type === 'dwell' || $type === 'ar_dwell') && $sec <= 0) {
     http_response_code(204);
     exit;
 }

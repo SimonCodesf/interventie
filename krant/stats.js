@@ -180,21 +180,67 @@
         sec: 0
     });
 
-    // Hulpfunctie voor AR-scans van een specifieke essay-week vanuit krant/js/app.js
-    var scannedWeeksInSession = {};
-    window.trackKrantEssayScan = function (week) {
-        if (!week || scannedWeeksInSession[week]) return;
-        scannedWeeksInSession[week] = true;
-        var scanPage = getNormalizedPage('?week=' + encodeURIComponent(week));
-        currentPage = scanPage;
+    // Hulpfuncties voor Krant AR-specifieke interacties vanuit krant/js/app.js
+    var camStartedInSession = false;
+    window.trackKrantCameraStart = function () {
+        if (camStartedInSession) return;
+        camStartedInSession = true;
         sendPayload({
             sid: sid,
-            type: 'view',
+            type: 'cam_start',
+            page: '/krant/',
+            ref: '',
+            dev: deviceType,
+            lang: language,
+            sec: 0
+        });
+    };
+
+    var camDeniedInSession = false;
+    window.trackKrantCameraDenied = function () {
+        if (camDeniedInSession) return;
+        camDeniedInSession = true;
+        sendPayload({
+            sid: sid,
+            type: 'cam_denied',
+            page: '/krant/',
+            ref: '',
+            dev: deviceType,
+            lang: language,
+            sec: 0
+        });
+    };
+
+    var scannedWeeksInSession = {};
+    window.trackKrantEssayScan = function (week) {
+        if (!week) return;
+        var scanPage = getNormalizedPage('?week=' + encodeURIComponent(week));
+        currentPage = scanPage;
+        if (scannedWeeksInSession[week]) return;
+        scannedWeeksInSession[week] = true;
+        sendPayload({
+            sid: sid,
+            type: 'scan',
             page: scanPage,
             ref: '',
             dev: deviceType,
             lang: language,
             sec: 0
+        });
+    };
+
+    window.trackKrantEssayDwell = function (week, sec) {
+        var s = Math.round(Number(sec) || 0);
+        if (!week || s <= 0) return;
+        var scanPage = getNormalizedPage('?week=' + encodeURIComponent(week));
+        sendPayload({
+            sid: sid,
+            type: 'ar_dwell',
+            page: scanPage,
+            ref: '',
+            dev: deviceType,
+            lang: language,
+            sec: Math.min(1800, s)
         });
     };
 

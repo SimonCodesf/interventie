@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=16">
+    <link rel="stylesheet" href="admin.css?v=17">
 </head>
 <body>
 
@@ -184,31 +184,6 @@
                             </div>
                         </section>
 
-                        <!-- Paneel 4: Tabeloverzicht van alle edities -->
-                        <section class="panel-card">
-                            <div class="panel-card-header">
-                                <span class="panel-card-title">Alle Edities Overzicht</span>
-                                <span class="panel-card-tag">SQLite :: essays.db</span>
-                            </div>
-                            <div class="panel-card-body" style="padding:0;">
-                                <div class="table-scroll-wrap">
-                                    <table id="essays-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Week</th>
-                                                <th>Titel</th>
-                                                <th>Status</th>
-                                                <th>Lagen</th>
-                                                <th>Scans</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </section>
-
                     </div>
 
                     <!-- Rechter kolom: Visuele 2D Laag-Preview & AR Lagen Configuratie -->
@@ -262,6 +237,31 @@
                     </div>
 
                 </form>
+
+                <!-- Volledige breedte tabeloverzicht van alle edities onder de editor -->
+                <section class="panel-card" style="margin-top:24px;">
+                    <div class="panel-card-header">
+                        <span class="panel-card-title">Alle Edities Overzicht</span>
+                        <span class="panel-card-tag">SQLite :: essays.db</span>
+                    </div>
+                    <div class="panel-card-body" style="padding:0;">
+                        <div class="table-scroll-wrap">
+                            <table id="essays-table">
+                                <thead>
+                                    <tr>
+                                        <th>Week</th>
+                                        <th>Titel</th>
+                                        <th>Status</th>
+                                        <th>AR Lagen</th>
+                                        <th>AR Scans</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             <!-- ==========================================================
@@ -270,8 +270,8 @@
             <div id="view-analytics" class="workspace-view hidden">
                 <header class="workspace-header">
                     <div class="workspace-title-group">
-                        <span class="workspace-kicker">WEB &amp; AR ANALYTICS // COOKIE-VRIJ &amp; AVG-PROOF</span>
-                        <h2>Bezoekers, Leestijd &amp; AR-Scans</h2>
+                        <span class="workspace-kicker">AR KRANT ANALYTICS // COOKIE-VRIJ &amp; AVG-PROOF</span>
+                        <h2>Gescande Artikelen, AR-Funnel &amp; Kijktijd</h2>
                     </div>
                     <div class="workspace-actions">
                         <button type="button" id="back-to-editor-from-analytics" class="btn ghost small-btn">TERUG NAAR EDITOR</button>
@@ -417,6 +417,6 @@
         </div>
     </div>
 
-    <script type="module" src="admin.js?v=16"></script>
+    <script type="module" src="admin.js?v=17"></script>
 </body>
 </html>

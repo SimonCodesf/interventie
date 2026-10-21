@@ -267,10 +267,11 @@ function writeKrantStatsEvent(array $event): bool {
     $dateStr = date('Y-m-d', $timestamp);
     $filePath = KRANT_STATS_DIR . '/' . $dateStr . '.jsonl';
 
+    $allowedEventTypes = ['view', 'dwell', 'err404', 'scan', 'ar_dwell', 'cam_start', 'cam_denied'];
     $record = [
         't'    => $timestamp,
         'sid'  => substr(preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($event['sid'] ?? '')), 0, 32),
-        'type' => in_array($event['type'] ?? '', ['view', 'dwell', 'err404', 'scan'], true) ? $event['type'] : 'view',
+        'type' => in_array($event['type'] ?? '', $allowedEventTypes, true) ? $event['type'] : 'view',
         'page' => (string)($event['page'] ?? '/krant/'),
         'ref'  => (string)($event['ref'] ?? ''),
         'dev'  => in_array($event['dev'] ?? '', ['desktop', 'mobile', 'tablet'], true) ? $event['dev'] : 'desktop',
@@ -491,12 +492,30 @@ function computeKrantKpiTrend(float $current, float $previous): ?float {
 }
 
 /**
- * Aggregeer events binnen een tijdvenster voor KPI-berekening.
+ * Haal week-identificatie uit een paginapad zoals /krant/?week=1
+ */
+function extractKrantWeekFromPage(string $page): string {
+    $queryStr = parse_url($page, PHP_URL_QUERY);
+    if (is_string($queryStr) && $queryStr !== '') {
+        parse_str($queryStr, $q);
+        foreach (['week', 'slug', 'id'] as $k) {
+            if (!empty($q[$k]) && is_scalar($q[$k])) {
+                return strtolower(trim((string)$q[$k]));
+            }
+        }
+    }
+    return '';
+}
+
+/**
+ * Aggregeer events binnen een tijdvenster voor KPI-berekening (inclusief AR-specifieke metrics).
  */
 function aggregateKrantPeriodMetrics(array $events): array {
     $sessions = [];
     $visitors = [];
+    $scanners = [];
     $totalViews = 0;
+    $totalScans = 0;
     $botsFiltered = 0;
 
     foreach ($events as $ev) {
@@ -522,22 +541,28 @@ function aggregateKrantPeriodMetrics(array $events): array {
 
         if (!isset($sessions[$sid])) {
             $sessions[$sid] = [
-                'v'          => $v,
-                'views'      => 0,
-                'page_dwell' => [],
-                'first_ref'  => '',
-                'dev'        => (string)($ev['dev'] ?? 'desktop'),
-                'lang'       => (string)($ev['lang'] ?? ''),
-                'first_t'    => (int)($ev['t'] ?? 0),
+                'v'             => $v,
+                'views'         => 0,
+                'scans'         => 0,
+                'scanned_weeks' => [],
+                'cam_started'   => false,
+                'cam_denied'    => false,
+                'ar_dwell'      => 0,
+                'page_dwell'    => [],
+                'first_ref'     => '',
+                'dev'           => (string)($ev['dev'] ?? 'desktop'),
+                'lang'          => (string)($ev['lang'] ?? ''),
+                'first_t'       => (int)($ev['t'] ?? 0),
             ];
+        }
+
+        if ($v !== '') {
+            $visitors[$v] = true;
         }
 
         if ($type === 'view') {
             $totalViews++;
             $sessions[$sid]['views']++;
-            if ($v !== '') {
-                $visitors[$v] = true;
-            }
             if ($sessions[$sid]['first_ref'] === '' && !empty($ev['ref'])) {
                 $sessions[$sid]['first_ref'] = (string)$ev['ref'];
             }
@@ -550,38 +575,82 @@ function aggregateKrantPeriodMetrics(array $events): array {
                 $sessions[$sid]['page_dwell'][$page] = 0;
             }
             $sessions[$sid]['page_dwell'][$page] = min(1800, $sessions[$sid]['page_dwell'][$page] + $sec);
+        } elseif ($type === 'cam_start') {
+            $sessions[$sid]['cam_started'] = true;
+        } elseif ($type === 'cam_denied') {
+            $sessions[$sid]['cam_denied'] = true;
+        } elseif ($type === 'scan') {
+            $totalScans++;
+            $sessions[$sid]['scans']++;
+            $sessions[$sid]['cam_started'] = true;
+            if ($v !== '') {
+                $scanners[$v] = true;
+            }
+            $w = extractKrantWeekFromPage($page);
+            if ($w !== '') {
+                $sessions[$sid]['scanned_weeks'][$w] = true;
+            }
+        } elseif ($type === 'ar_dwell') {
+            $sec = max(0, min(1800, (int)($ev['sec'] ?? 0)));
+            $sessions[$sid]['ar_dwell'] = min(1800, $sessions[$sid]['ar_dwell'] + $sec);
         }
     }
 
     $validSessions = array_filter($sessions, function ($s) {
-        return $s['views'] > 0;
+        return $s['views'] > 0 || $s['scans'] > 0 || $s['cam_started'] || $s['cam_denied'];
     });
 
     $sessionCount = count($validSessions);
     $visitorCount = count($visitors);
     $totalDwellSec = 0;
+    $totalArDwellSec = 0;
     $bouncedSessions = 0;
+    $cameraSessions = 0;
+    $scannedSessions = 0;
+    $deniedSessions = 0;
 
     foreach ($validSessions as $s) {
-        $sessDwell = array_sum($s['page_dwell']);
+        $sessDwell = max(array_sum($s['page_dwell']), $s['ar_dwell']);
         $totalDwellSec += $sessDwell;
+        $totalArDwellSec += $s['ar_dwell'];
 
-        // Engaged Bounce Rate: enkel bounce als 1 pagina én leestijd < 15 seconden
-        if ($s['views'] === 1 && $sessDwell < 15) {
+        if ($s['cam_started'] || $s['scans'] > 0) {
+            $cameraSessions++;
+        }
+        if ($s['scans'] > 0) {
+            $scannedSessions++;
+        }
+        if ($s['cam_denied'] && !$s['cam_started']) {
+            $deniedSessions++;
+        }
+
+        // Engaged Bounce Rate: enkel bounce als geen camera gestart én geen scan én leestijd < 15 seconden
+        if (!$s['cam_started'] && $s['scans'] === 0 && $sessDwell < 15) {
             $bouncedSessions++;
         }
     }
 
     $pagesPerSession = $sessionCount > 0 ? round($totalViews / $sessionCount, 2) : 0.0;
     $avgDwellSec     = $sessionCount > 0 ? (int)round($totalDwellSec / $sessionCount) : 0;
+    $avgArDwellSec   = $scannedSessions > 0 ? (int)round($totalArDwellSec / $scannedSessions) : $avgDwellSec;
     $bounceRate      = $sessionCount > 0 ? round(($bouncedSessions / $sessionCount) * 100, 1) : 0.0;
+    $cameraRate      = $sessionCount > 0 ? round(($cameraSessions / $sessionCount) * 100, 1) : 0.0;
+    $scanRate        = $sessionCount > 0 ? round(($scannedSessions / $sessionCount) * 100, 1) : 0.0;
 
     return [
         'views'             => $totalViews,
+        'scans'             => $totalScans,
+        'scanners'          => count($scanners),
         'visitors'          => $visitorCount,
         'sessions'          => $sessionCount,
+        'camera_sessions'   => $cameraSessions,
+        'scanned_sessions'  => $scannedSessions,
+        'denied_sessions'   => $deniedSessions,
+        'camera_rate'       => $cameraRate,
+        'scan_rate'         => $scanRate,
         'pages_per_session' => $pagesPerSession,
         'avg_dwell'         => $avgDwellSec,
+        'avg_ar_dwell'      => $avgArDwellSec,
         'bounce_rate'       => $bounceRate,
         'bots_filtered'     => $botsFiltered,
         '_sessions_map'     => $validSessions,
@@ -612,23 +681,34 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         $filesToReadDays = 2 * $days;
     }
 
-    // Haal essay-titels & scans op
+    // Haal essay-titels, lagen & all-time scans op uit essays.db
     $essayTitleMap = [];
-    $essayMetrics = [];
+    $essayMetricsByWeek = [];
+    $totalAllTimeScans = 0;
     if ($db) {
         try {
-            $stmt = $db->query("SELECT week, title, published, scans, views, updated_at FROM essays ORDER BY week DESC");
+            $stmt = $db->query("SELECT week, title, published, layers, scans, views, updated_at FROM essays ORDER BY week DESC");
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $w = strtolower((string)($row['week'] ?? ''));
                 if ($w !== '') {
                     $essayTitleMap[$w] = (string)($row['title'] ?? $w);
-                    $essayMetrics[] = [
-                        'week'       => $row['week'],
-                        'title'      => $row['title'],
-                        'published'  => (int)($row['published'] ?? 0),
-                        'scans'      => (int)($row['scans'] ?? 0),
-                        'views'      => (int)($row['views'] ?? 0),
-                        'updated_at' => $row['updated_at'] ?? '',
+                    $layersArr = json_decode((string)($row['layers'] ?? '[]'), true);
+                    $layersCount = is_array($layersArr) ? count($layersArr) : 0;
+                    $dbScans = (int)($row['scans'] ?? 0);
+                    $totalAllTimeScans += $dbScans;
+                    $essayMetricsByWeek[$w] = [
+                        'week'            => (string)$row['week'],
+                        'title'           => (string)$row['title'],
+                        'published'       => (int)($row['published'] ?? 0),
+                        'layers_count'    => $layersCount,
+                        'scans'           => $dbScans,
+                        'views'           => (int)($row['views'] ?? 0),
+                        'period_scans'    => 0,
+                        'unique_scanners' => [],
+                        'ar_dwell_sum'    => 0,
+                        'ar_dwell_count'  => 0,
+                        'last_scanned'    => 0,
+                        'updated_at'      => $row['updated_at'] ?? '',
                     ];
                 }
             }
@@ -694,6 +774,7 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             'date'     => $dKey,
             'label'    => $label,
             'views'    => 0,
+            'scans'    => 0,
             'visitors' => [],
             'sessions' => [],
         ];
@@ -706,6 +787,7 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             'hour'     => $h,
             'label'    => sprintf('%02d:00', $h),
             'views'    => 0,
+            'scans'    => 0,
             'visitors' => [],
         ];
     }
@@ -840,6 +922,49 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             if ($added > 0 && isset($pagesMap[$page])) {
                 $pagesMap[$page]['dwell_sum'] += $added;
             }
+        } elseif ($type === 'scan') {
+            if (isset($dailyMap[$dKey])) {
+                $dailyMap[$dKey]['scans']++;
+                if ($v !== '') $dailyMap[$dKey]['visitors'][$v] = true;
+                $dailyMap[$dKey]['sessions'][$sid] = true;
+            }
+            if (isset($hourlyMap[$hour])) {
+                $hourlyMap[$hour]['scans']++;
+                if ($v !== '') $hourlyMap[$hour]['visitors'][$v] = true;
+            }
+            $w = extractKrantWeekFromPage($page);
+            if ($w !== '') {
+                if (!isset($essayMetricsByWeek[$w])) {
+                    $essayMetricsByWeek[$w] = [
+                        'week'            => $w,
+                        'title'           => $essayTitleMap[$w] ?? ('Editie ' . strtoupper($w)),
+                        'published'       => 1,
+                        'layers_count'    => 0,
+                        'scans'           => 0,
+                        'views'           => 0,
+                        'period_scans'    => 0,
+                        'unique_scanners' => [],
+                        'ar_dwell_sum'    => 0,
+                        'ar_dwell_count'  => 0,
+                        'last_scanned'    => 0,
+                        'updated_at'      => '',
+                    ];
+                }
+                $essayMetricsByWeek[$w]['period_scans']++;
+                if ($v !== '') {
+                    $essayMetricsByWeek[$w]['unique_scanners'][$v] = true;
+                }
+                if ($t > $essayMetricsByWeek[$w]['last_scanned']) {
+                    $essayMetricsByWeek[$w]['last_scanned'] = $t;
+                }
+            }
+        } elseif ($type === 'ar_dwell') {
+            $sec = max(0, min(1800, (int)($ev['sec'] ?? 0)));
+            $w = extractKrantWeekFromPage($page);
+            if ($w !== '' && $sec > 0 && isset($essayMetricsByWeek[$w])) {
+                $essayMetricsByWeek[$w]['ar_dwell_sum'] += $sec;
+                $essayMetricsByWeek[$w]['ar_dwell_count']++;
+            }
         }
     }
 
@@ -850,11 +975,12 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             'date'     => $d['date'],
             'label'    => $d['label'],
             'views'    => $d['views'],
+            'scans'    => $d['scans'],
             'visitors' => count($d['visitors']),
             'sessions' => count($d['sessions']),
         ];
         $dailySeries[] = $item;
-        if ($peakDay === null || $item['views'] > $peakDay['views']) {
+        if ($peakDay === null || ($item['scans'] * 10 + $item['views']) > ($peakDay['scans'] * 10 + $peakDay['views'])) {
             $peakDay = $item;
         }
     }
@@ -865,9 +991,50 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
             'hour'     => $h['hour'],
             'label'    => $h['label'],
             'views'    => $h['views'],
+            'scans'    => $h['scans'],
             'visitors' => count($h['visitors']),
         ];
     }
+
+    // Bereken artikel/editie scan-statistieken en sorteer op meest gescand
+    $sumPeriodScans = 0;
+    $sumDbScans = 0;
+    foreach ($essayMetricsByWeek as $em) {
+        $sumPeriodScans += $em['period_scans'];
+        $sumDbScans += max($em['scans'], $em['period_scans']);
+    }
+
+    $essayMetrics = [];
+    foreach ($essayMetricsByWeek as $w => $em) {
+        $allTimeScans = max($em['scans'], $em['period_scans']);
+        $effectiveScans = $sumPeriodScans > 0 ? $em['period_scans'] : $allTimeScans;
+        $denom = $sumPeriodScans > 0 ? max(1, $sumPeriodScans) : max(1, $sumDbScans);
+        $avgArDwell = $em['ar_dwell_count'] > 0
+            ? (int)round($em['ar_dwell_sum'] / max(1, $em['period_scans'] ?: $em['ar_dwell_count']))
+            : 0;
+
+        $essayMetrics[] = [
+            'week'            => $em['week'],
+            'title'           => $em['title'],
+            'published'       => $em['published'],
+            'layers_count'    => $em['layers_count'],
+            'scans'           => $allTimeScans,
+            'period_scans'    => $em['period_scans'],
+            'unique_scanners' => count($em['unique_scanners']),
+            'avg_ar_dwell'    => $avgArDwell,
+            'last_scanned'    => $em['last_scanned'],
+            'views'           => $em['views'],
+            'share_pct'       => ($sumPeriodScans > 0 || $sumDbScans > 0) ? round(($effectiveScans / $denom) * 100, 1) : 0.0,
+            'updated_at'      => $em['updated_at'],
+        ];
+    }
+    usort($essayMetrics, function ($a, $b) {
+        $cmp = $b['period_scans'] <=> $a['period_scans'];
+        if ($cmp !== 0) return $cmp;
+        $cmp2 = $b['scans'] <=> $a['scans'];
+        if ($cmp2 !== 0) return $cmp2;
+        return strcmp((string)$b['week'], (string)$a['week']);
+    });
 
     $totalHumanViews = max(1, $curMetrics['views']);
     $topPages = [];
@@ -955,21 +1122,46 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
     });
 
+    $topEssay = !empty($essayMetrics) && ($essayMetrics[0]['period_scans'] > 0 || $essayMetrics[0]['scans'] > 0)
+        ? $essayMetrics[0]
+        : null;
+
     $response = [
         'success'       => true,
         'period_days'   => $days,
         'generated_at'  => $now,
         'live_online'   => count($liveVisitors),
         'kpis'          => [
-            'views' => [
-                'value'    => $curMetrics['views'],
-                'previous' => $prevMetrics['views'],
-                'trend'    => computeKrantKpiTrend($curMetrics['views'], $prevMetrics['views']),
+            'scans' => [
+                'value'         => $curMetrics['scans'] > 0 ? $curMetrics['scans'] : $totalAllTimeScans,
+                'period_value'  => $curMetrics['scans'],
+                'all_time'      => max($totalAllTimeScans, $curMetrics['scans']),
+                'previous'      => $prevMetrics['scans'],
+                'trend'         => computeKrantKpiTrend($curMetrics['scans'], $prevMetrics['scans']),
             ],
             'visitors' => [
                 'value'    => $curMetrics['visitors'],
                 'previous' => $prevMetrics['visitors'],
                 'trend'    => computeKrantKpiTrend($curMetrics['visitors'], $prevMetrics['visitors']),
+            ],
+            'camera_starts' => [
+                'value'    => $curMetrics['camera_sessions'],
+                'rate'     => $curMetrics['camera_rate'],
+                'denied'   => $curMetrics['denied_sessions'],
+                'previous' => $prevMetrics['camera_sessions'],
+                'trend'    => computeKrantKpiTrend($curMetrics['camera_sessions'], $prevMetrics['camera_sessions']),
+            ],
+            'scan_conversion' => [
+                'value'            => $curMetrics['scan_rate'],
+                'scanned_sessions' => $curMetrics['scanned_sessions'],
+                'scanners'         => $curMetrics['scanners'],
+                'previous'         => $prevMetrics['scan_rate'],
+                'trend'            => computeKrantKpiTrend($curMetrics['scan_rate'], $prevMetrics['scan_rate']),
+            ],
+            'views' => [
+                'value'    => $curMetrics['views'],
+                'previous' => $prevMetrics['views'],
+                'trend'    => computeKrantKpiTrend($curMetrics['views'], $prevMetrics['views']),
             ],
             'sessions' => [
                 'value'             => $curMetrics['sessions'],
@@ -978,9 +1170,10 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 'pages_per_session' => $curMetrics['pages_per_session'],
             ],
             'avg_dwell' => [
-                'value'    => $curMetrics['avg_dwell'],
-                'previous' => $prevMetrics['avg_dwell'],
-                'trend'    => computeKrantKpiTrend($curMetrics['avg_dwell'], $prevMetrics['avg_dwell']),
+                'value'        => $curMetrics['avg_dwell'],
+                'avg_ar_dwell' => $curMetrics['avg_ar_dwell'],
+                'previous'     => $prevMetrics['avg_dwell'],
+                'trend'        => computeKrantKpiTrend($curMetrics['avg_dwell'], $prevMetrics['avg_dwell']),
             ],
             'bounce_rate' => [
                 'value'    => $curMetrics['bounce_rate'],
@@ -992,6 +1185,18 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 'previous' => $prevMetrics['bots_filtered'],
                 'trend'    => computeKrantKpiTrend($curMetrics['bots_filtered'], $prevMetrics['bots_filtered']),
             ],
+        ],
+        'ar_funnel'     => [
+            'sessions'         => $curMetrics['sessions'],
+            'visitors'         => $curMetrics['visitors'],
+            'camera_starts'    => $curMetrics['camera_sessions'],
+            'camera_rate'      => $curMetrics['camera_rate'],
+            'camera_denied'    => $curMetrics['denied_sessions'],
+            'scanned_sessions' => $curMetrics['scanned_sessions'],
+            'scan_rate'        => $curMetrics['scan_rate'],
+            'period_scans'     => $curMetrics['scans'],
+            'all_time_scans'   => max($totalAllTimeScans, $curMetrics['scans']),
+            'top_essay'        => $topEssay,
         ],
         'daily'         => $dailySeries,
         'peak_day'      => $peakDay,
