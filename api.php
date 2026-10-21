@@ -35,6 +35,7 @@ require_once 'includes/security.php';
 require_once 'includes/api_utils.php';
 require_once 'includes/poster_controller.php';
 require_once 'includes/klipy_proxy.php';
+require_once 'includes/stats_controller.php';
 
 // Headers
 header('Content-Type: application/json');
@@ -565,6 +566,10 @@ if ($method === 'GET' && $path === '/posters') {
     handleDeleteSlide($matches[1]);
 } elseif ($method === 'GET' && $path === '/admin/memeborden-metrics') {
     handleMemebordenMetrics();
+} elseif ($method === 'GET' && $path === '/admin/stats') {
+    handleGetAdminStats($db);
+} elseif ($method === 'POST' && ($path === '/admin/stats/dismiss-404' || $path === '/admin/stats/dismiss_404')) {
+    handleDismiss404();
 } elseif ($method === 'POST' && preg_match('#^/verkeersborden/scan/([^/]+)$#', $path, $matches)) {
     handleMemebordenScan($matches[1]);
 } elseif ($method === 'POST' && preg_match('#^/verkeersborden/view/([^/]+)$#', $path, $matches)) {

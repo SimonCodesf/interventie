@@ -15,6 +15,10 @@ data/ar-markers.db
 data/admin_activity.log
 data/login_attempts.json
 data/klipy_cache/
+data/stats/
+data/stats_salt
+stats/
+stats_salt
 assets/ar-settings.json
 
 # AR Markers (Upload via admin system, not git!)

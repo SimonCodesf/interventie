@@ -29,6 +29,10 @@ jobs:
             **/scripts/**
             **/uploads/**
             data/**
+            stats/**
+            stats_salt
+            data/stats/**
+            data/stats_salt
             krant/**
             admin/database.db
             .gitignore

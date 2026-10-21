@@ -1,5 +1,12 @@
 # PHP Poster Website
 RewriteEngine On
+ErrorDocument 404 /404.php
+
+# Serveer favicon op de root zonder 404
+RewriteRule ^favicon\.ico$ img/favicon.ico [L]
+
+# Blokkeer directe toegang tot stats en data directories
+RewriteRule ^(data/stats|stats)(/|$) - [F,L]
 
 # PHP Upload Limits for high-quality posters
 php_value upload_max_filesize 120M
@@ -12,7 +19,7 @@ php_value memory_limit 256M
 RewriteRule ^api/(.*)$ api.php/$1 [L,QSA]
 
 # Security: Protect sensitive files from direct access
-<FilesMatch "(config\.php|security\.php|admin_activity\.log|login_attempts\.json|posters\.db|\.md|\.bak|\.backup)$">
+<FilesMatch "(config\.php|security\.php|stats_controller\.php|stats_salt|dismissed_404\.json|admin_activity\.log|login_attempts\.json|posters\.db|\.jsonl|\.md|\.bak|\.backup)$">
     Order allow,deny
     Deny from all
 </FilesMatch>

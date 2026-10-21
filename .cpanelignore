@@ -17,3 +17,7 @@ uploads/thumbnails/*
 
 # Development only
 nodemon.json
+stats/
+stats_salt
+data/stats/
+data/stats_salt

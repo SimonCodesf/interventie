@@ -3991,6 +3991,11 @@ function closeSettingsModal() {
 }
 window.closeSettingsModal = closeSettingsModal;
 
+var analyticsPeriodDays = 30;
+var analyticsShowAllPages = false;
+var analyticsPageSearch = '';
+var lastAnalyticsStats = null;
+
 function openAnalyticsModal() {
     const modal = document.getElementById('analytics-modal');
     const content = document.getElementById('analytics-content');
@@ -4012,83 +4017,612 @@ function closeAnalyticsModal() {
 
 window.closeAnalyticsModal = closeAnalyticsModal;
 
+function escapeHtmlAttr(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatDurationSec(sec) {
+    var s = Math.max(0, Math.round(Number(sec) || 0));
+    if (s < 60) return s + 's';
+    var m = Math.floor(s / 60);
+    var rem = s % 60;
+    return m + 'm ' + (rem < 10 ? '0' + rem : rem) + 's';
+}
+
+function formatTrendBadge(trend, invertColors) {
+    if (trend === null || trend === undefined || isNaN(trend)) {
+        return '<span class="stats-trend-badge neutral">—</span>';
+    }
+    var val = Number(trend);
+    if (val === 0) {
+        return '<span class="stats-trend-badge neutral">0%</span>';
+    }
+    var isUp = val > 0;
+    var isGood = invertColors ? !isUp : isUp;
+    var cls = isGood ? 'up' : 'down';
+    var arrow = isUp ? '↑ +' : '↓ ';
+    return '<span class="stats-trend-badge ' + cls + '" title="Vergeleken met voorgaande periode">' + arrow + val.toFixed(1).replace(/\.0$/, '') + '%</span>';
+}
+
+function formatRelativeTime(unixTs) {
+    if (!unixTs) return '-';
+    var diff = Math.max(0, Math.floor(Date.now() / 1000) - Number(unixTs));
+    if (diff < 60) return 'zojuist';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm geleden';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'u geleden';
+    var d = new Date(Number(unixTs) * 1000);
+    return d.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function exportAnalyticsCsv() {
+    if (!lastAnalyticsStats) return;
+    var lines = [];
+    lines.push('# DAGSTATISTIEKEN (' + lastAnalyticsStats.period_days + ' DAGEN)');
+    lines.push('Datum,Label,Paginaweergaven,Unieke_Bezoekers,Sessies');
+    (lastAnalyticsStats.daily || []).forEach(function (d) {
+        lines.push([
+            d.date,
+            '"' + String(d.label || '').replace(/"/g, '""') + '"',
+            d.views || 0,
+            d.visitors || 0,
+            d.sessions || 0
+        ].join(','));
+    });
+
+    lines.push('');
+    lines.push('# TOP PAGINAS');
+    lines.push('Pagina,Titel,Paginaweergaven,Unieke_Bezoekers,Gem_Leestijd_Sec,Aandeel_Pct');
+    (lastAnalyticsStats.pages || []).forEach(function (p) {
+        lines.push([
+            '"' + String(p.page || '').replace(/"/g, '""') + '"',
+            '"' + String(p.title || '').replace(/"/g, '""') + '"',
+            p.views || 0,
+            p.visitors || 0,
+            p.avg_dwell || 0,
+            p.share_pct || 0
+        ].join(','));
+    });
+
+    var csvBlob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(csvBlob);
+    var a = document.createElement('a');
+    var dateTag = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'interventie-analytics-' + lastAnalyticsStats.period_days + 'd-' + dateTag + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+async function dismissAnalytics404(page, all) {
+    try {
+        const token = sessionStorage.getItem('adminToken');
+        const resp = await fetch(`${API_URL}/admin/stats/dismiss-404`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(all ? { all: true } : { page: page })
+        });
+        if (resp.ok) {
+            renderAnalyticsModal();
+        }
+    } catch (e) {
+        console.error('404 wissen mislukt:', e);
+    }
+}
+
 async function renderAnalyticsModal() {
     try {
         const token = sessionStorage.getItem('adminToken');
-        const [postersResp, memesResp] = await Promise.all([
-            fetch(`${API_URL}/posters`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} }),
-            fetch(`${API_URL}/admin/memeborden-metrics`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} })
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const [statsResp, postersResp, memesResp] = await Promise.all([
+            fetch(`${API_URL}/admin/stats?days=${analyticsPeriodDays}`, { headers }),
+            fetch(`${API_URL}/posters`, { headers }),
+            fetch(`${API_URL}/admin/memeborden-metrics`, { headers })
         ]);
-        if (!postersResp.ok) throw new Error(`HTTP ${postersResp.status}`);
 
-        var posters = await postersResp.json();
-        // Add project field to posters
+        if (!statsResp.ok) throw new Error(`HTTP ${statsResp.status}`);
+        const stats = await statsResp.json();
+        lastAnalyticsStats = stats;
+
+        var posters = postersResp.ok ? await postersResp.json() : [];
         posters.forEach(function (p) { p.project = p.project || 'INTERVENTIE'; });
-
         var memeborden = memesResp.ok ? await memesResp.json() : [];
-        var all = posters.concat(memeborden);
+        var allItems = posters.concat(memeborden);
         const totalMemes = memeborden.length;
-
-        const totalDownloads = all.reduce((s, p) => s + (parseInt(p.downloads, 10) || 0), 0);
-        const totalScans = all.reduce((s, p) => s + (parseInt(p.upload_meta?.scans || p.scans, 10) || 0), 0);
-        const totalViews = all.reduce((s, p) => s + (parseInt(p.upload_meta?.views || p.views, 10) || 0), 0);
-        const avgDownloads = all.length ? Math.round(totalDownloads / all.filter(p => !p.id?.startsWith('mb-')).length) : 0;
-
-        var sorted = all.slice();
-        var sortCol = 'downloads';
-        var sortDir = -1;
+        const totalDownloads = allItems.reduce((s, p) => s + (parseInt(p.downloads, 10) || 0), 0);
+        const totalScans = allItems.reduce((s, p) => s + (parseInt(p.upload_meta?.scans || p.scans, 10) || 0), 0);
+        const totalPosterViews = allItems.reduce((s, p) => s + (parseInt(p.upload_meta?.views || p.views, 10) || 0), 0);
 
         const content = document.getElementById('analytics-content');
         if (!content) return;
 
-        function renderTable() {
-            var rows = sorted.map(function (p) {
+        const kpis = stats.kpis || {};
+        const viewsKpi = kpis.views || { value: 0, trend: 0 };
+        const visitorsKpi = kpis.visitors || { value: 0, trend: 0 };
+        const sessionsKpi = kpis.sessions || { value: 0, trend: 0, pages_per_session: 0 };
+        const dwellKpi = kpis.avg_dwell || { value: 0, trend: 0 };
+        const bounceKpi = kpis.bounce_rate || { value: 0, trend: 0 };
+        const botsKpi = kpis.bots_filtered || { value: 0, trend: 0 };
+
+        const liveCount = Number(stats.live_online || 0);
+        const liveDotClass = liveCount > 0 ? 'stats-live-dot' : 'stats-live-dot idle';
+        const liveLabel = liveCount === 1 ? '1 bezoeker' : liveCount + ' bezoekers';
+
+        // 1. Dagelijkse kolomgrafiek opbouwen
+        const daily = stats.daily || [];
+        const maxDailyViews = Math.max(1, ...daily.map(d => d.views || 0));
+        const peakDate = stats.peak_day && stats.peak_day.views > 0 ? stats.peak_day.date : null;
+        const peakSummary = peakDate
+            ? `Piekdag: ${escapeHtmlAttr(stats.peak_day.label)} (${stats.peak_day.views} views)`
+            : 'Geen piekdag';
+
+        const labelStep = daily.length > 60 ? Math.ceil(daily.length / 10) : (daily.length > 20 ? 3 : 1);
+        const dailyBarsHtml = daily.map(function (d, idx) {
+            const vPct = d.views > 0 ? Math.max(4, Math.round((d.views / maxDailyViews) * 100)) : 2;
+            const uPct = d.visitors > 0 ? Math.max(4, Math.round((d.visitors / maxDailyViews) * 100)) : 2;
+            const isPeak = peakDate && d.date === peakDate;
+            const showLabel = (idx % labelStep === 0) || (idx === daily.length - 1);
+            return '<div class="stats-bar-col' + (isPeak ? ' is-peak' : '') + '" ' +
+                'data-date="' + escapeHtmlAttr(d.date) + '" ' +
+                'data-label="' + escapeHtmlAttr(d.label) + '" ' +
+                'data-views="' + (d.views || 0) + '" ' +
+                'data-visitors="' + (d.visitors || 0) + '" ' +
+                'data-sessions="' + (d.sessions || 0) + '" ' +
+                'title="' + escapeHtmlAttr(d.label + ' (' + d.date + '): ' + d.views + ' views, ' + d.visitors + ' unieke bezoekers, ' + d.sessions + ' sessies') + '">' +
+                '<div class="stats-bar-stack">' +
+                    '<div class="stats-bar-views" style="height:' + vPct + '%;"></div>' +
+                    '<div class="stats-bar-visitors" style="height:' + uPct + '%;"></div>' +
+                '</div>' +
+                (showLabel ? '<span class="stats-bar-label">' + escapeHtmlAttr(d.label) + '</span>' : '') +
+            '</div>';
+        }).join('');
+
+        // 2. 24-uurs kolomgrafiek opbouwen
+        const hourly = stats.hourly || [];
+        const maxHourlyViews = Math.max(1, ...hourly.map(h => h.views || 0));
+        const hourlyBarsHtml = hourly.map(function (h, idx) {
+            const hPct = h.views > 0 ? Math.max(4, Math.round((h.views / maxHourlyViews) * 100)) : 2;
+            const uPct = h.visitors > 0 ? Math.max(4, Math.round((h.visitors / maxHourlyViews) * 100)) : 2;
+            const showLabel = (idx % 4 === 0) || idx === 23;
+            return '<div class="stats-bar-col stats-hour-col" ' +
+                'data-hour="' + escapeHtmlAttr(h.label) + '" ' +
+                'data-views="' + (h.views || 0) + '" ' +
+                'data-visitors="' + (h.visitors || 0) + '" ' +
+                'title="' + escapeHtmlAttr(h.label + ' — ' + h.views + ' views, ' + h.visitors + ' bezoekers') + '">' +
+                '<div class="stats-bar-stack">' +
+                    '<div class="stats-bar-views" style="height:' + hPct + '%;"></div>' +
+                    '<div class="stats-bar-visitors" style="height:' + uPct + '%;"></div>' +
+                '</div>' +
+                (showLabel ? '<span class="stats-bar-label">' + escapeHtmlAttr(h.label.slice(0, 2)) + 'u</span>' : '') +
+            '</div>';
+        }).join('');
+
+        // 3. Verkeersbronnen + Apparaten & Talen
+        const sources = stats.sources || [];
+        const sourcesRowsHtml = sources.length > 0 ? sources.map(function (src) {
+            return '<tr>' +
+                '<td><strong>' + escapeHtmlAttr(src.source) + '</strong></td>' +
+                '<td>' + (src.sessions || 0) + '</td>' +
+                '<td>' +
+                    '<div class="stats-share-wrap">' +
+                        '<div class="stats-share-bar"><div class="stats-share-fill" style="width:' + Math.min(100, src.share_pct || 0) + '%;"></div></div>' +
+                        '<span class="stats-share-pct">' + (src.share_pct || 0) + '%</span>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>';
+        }).join('') : '<tr><td colspan="3" style="color:rgba(255,255,255,0.45);">Nog geen sessiebronnen geregistreerd in deze periode.</td></tr>';
+
+        const devicesPillsHtml = (stats.devices || []).map(function (d) {
+            return '<span class="stats-mini-pill">' + escapeHtmlAttr(String(d.device || '').toUpperCase()) + ': ' + (d.share_pct || 0) + '% (' + (d.sessions || 0) + ')</span>';
+        }).join('');
+
+        const langsPillsHtml = (stats.languages || []).map(function (l) {
+            return '<span class="stats-mini-pill">' + escapeHtmlAttr(l.lang) + ': ' + (l.share_pct || 0) + '%</span>';
+        }).join('');
+
+        // 4. Echte 404 errors vs Geblokkeerde Bot-scans
+        const errors404 = stats.errors_404 || [];
+        const errors404RowsHtml = errors404.length > 0 ? errors404.map(function (err) {
+            return '<tr>' +
+                '<td><code style="color:#ff9b9b;">' + escapeHtmlAttr(err.page) + '</code></td>' +
+                '<td>' + escapeHtmlAttr(err.last_ref || 'Direct') + '</td>' +
+                '<td>' + (err.count || 0) + ' <span style="opacity:0.5;">(' + (err.visitors || 0) + ' bez.)</span></td>' +
+                '<td>' + escapeHtmlAttr(formatRelativeTime(err.last_seen)) + '</td>' +
+                '<td style="text-align:right;">' +
+                    '<button type="button" class="stats-dismiss-btn" data-dismiss-page="' + escapeHtmlAttr(err.page) + '" title="Markeer als opgelost">✕</button>' +
+                '</td>' +
+            '</tr>';
+        }).join('') : '<tr><td colspan="5" style="color:rgba(255,255,255,0.45);">Geen onopgeloste bezoekers-404\'s in deze periode.</td></tr>';
+
+        const botScans = stats.bot_scans || [];
+        const botScansRowsHtml = botScans.length > 0 ? botScans.map(function (scan) {
+            return '<tr>' +
+                '<td><code style="color:rgba(255,255,255,0.75);">' + escapeHtmlAttr(scan.page) + '</code></td>' +
+                '<td><span class="stats-scan-tag">' + escapeHtmlAttr(scan.category || 'Bot Scan') + '</span></td>' +
+                '<td>' + (scan.count || 0) + '</td>' +
+                '<td>' + escapeHtmlAttr(formatRelativeTime(scan.last_seen)) + '</td>' +
+            '</tr>';
+        }).join('') : '<tr><td colspan="4" style="color:rgba(255,255,255,0.45);">Geen geblokkeerde kwetsbaarheidsscans in deze periode.</td></tr>';
+
+        // Functie voor Top Pagina's tabel met zoekfilter & Toon alles
+        function renderTopPagesSection() {
+            const allPages = stats.pages || [];
+            const q = analyticsPageSearch.trim().toLowerCase();
+            const filtered = q
+                ? allPages.filter(p => String(p.page || '').toLowerCase().includes(q) || String(p.title || '').toLowerCase().includes(q))
+                : allPages;
+            const visible = analyticsShowAllPages ? filtered : filtered.slice(0, 10);
+
+            const rows = visible.length > 0 ? visible.map(function (p) {
+                return '<tr>' +
+                    '<td>' +
+                        '<a href="' + escapeHtmlAttr(p.page) + '" target="_blank" rel="noopener" class="stats-page-link">' + escapeHtmlAttr(p.title || p.page) + '</a>' +
+                        '<span class="stats-page-path">' + escapeHtmlAttr(p.page) + '</span>' +
+                    '</td>' +
+                    '<td>' + (p.views || 0) + '</td>' +
+                    '<td>' + (p.visitors || 0) + '</td>' +
+                    '<td>' + formatDurationSec(p.avg_dwell || 0) + '</td>' +
+                    '<td>' +
+                        '<div class="stats-share-wrap">' +
+                            '<div class="stats-share-bar"><div class="stats-share-fill" style="width:' + Math.min(100, p.share_pct || 0) + '%;"></div></div>' +
+                            '<span class="stats-share-pct">' + (p.share_pct || 0) + '%</span>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            }).join('') : '<tr><td colspan="5" style="color:rgba(255,255,255,0.45);">Geen paginaweergaven gevonden.</td></tr>';
+
+            const toggleBtnHtml = filtered.length > 10
+                ? '<button type="button" id="stats-toggle-all-pages" class="stats-action-btn">' +
+                    (analyticsShowAllPages ? 'Toon top 10' : 'Toon alles (' + filtered.length + ')') +
+                  '</button>'
+                : '';
+
+            return '<table class="analytics-table">' +
+                '<thead><tr>' +
+                    '<th>PAGINA &amp; TITEL</th>' +
+                    '<th>VIEWS</th>' +
+                    '<th>BEZOEKERS</th>' +
+                    '<th>LEESTIJD</th>' +
+                    '<th>AANDEEL</th>' +
+                '</tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+            '</table>' +
+            (toggleBtnHtml ? '<div style="padding:6px; text-align:center; border-top:1px solid rgba(255,255,255,0.1);">' + toggleBtnHtml + '</div>' : '');
+        }
+
+        // Sorteerbare AR Poster & Memeborden tabel
+        var sortedItems = allItems.slice();
+        var sortCol = 'downloads';
+        var sortDir = -1;
+
+        function renderPosterMetricsTable() {
+            var rows = sortedItems.map(function (p) {
                 var d = parseInt(p.downloads || 0, 10);
                 var s = parseInt(p.upload_meta?.scans || p.scans || 0, 10);
                 var v = parseInt(p.upload_meta?.views || p.views || 0, 10);
                 var proj = p.project || 'INTERVENTIE';
                 if (proj === 'MEMEBORDEN') proj = 'MB';
-                return '<tr><td>' + proj + '</td><td>' + (p.title || p.id || '?') + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
+                return '<tr><td>' + escapeHtmlAttr(proj) + '</td><td>' + escapeHtmlAttr(p.title || p.id || '?') + '</td><td>' + d + '</td><td>' + s + '</td><td>' + v + '</td></tr>';
             }).join('');
             return '<table class="analytics-table"><thead><tr>' +
                 '<th data-col="project" class="sortable">PROJ</th>' +
                 '<th data-col="title" class="sortable">TITEL</th>' +
                 '<th data-col="downloads" class="sortable' + (sortCol === 'downloads' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">DOWNLOADS</th>' +
-                '<th data-col="scans" class="sortable' + (sortCol === 'scans' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">SCANS</th>' +
-                '<th data-col="views" class="sortable' + (sortCol === 'views' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">VIEWS</th>' +
+                '<th data-col="scans" class="sortable' + (sortCol === 'scans' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">AR SCANS</th>' +
+                '<th data-col="views" class="sortable' + (sortCol === 'views' ? (sortDir > 0 ? ' asc' : ' desc') : '') + '">MODAL VIEWS</th>' +
                 '</tr></thead><tbody>' + rows + '</tbody></table>';
         }
 
-        content.innerHTML =
-            '<div class="analytics-summary">' +
-                '<div class="analytics-card"><strong>Downloads</strong>' + totalDownloads + '</div>' +
-                '<div class="analytics-card"><strong>Scans (AR)</strong>' + totalScans + '</div>' +
-                '<div class="analytics-card"><strong>Views</strong>' + totalViews + '</div>' +
-                '<div class="analytics-card"><strong>Posters</strong>' + posters.length + '</div>' +
-                '<div class="analytics-card"><strong>Memeborden</strong>' + totalMemes + '</div>' +
-            '</div>' +
-            '<div class="analytics-table-wrap">' + renderTable() + '</div>';
+        const periodOptions = [
+            { days: 1, label: '24u' },
+            { days: 7, label: '7d' },
+            { days: 30, label: '30d' },
+            { days: 90, label: '90d' },
+            { days: 365, label: '365d' }
+        ];
 
-        content.querySelectorAll('.sortable').forEach(function (th) {
-            th.addEventListener('click', handleSort);
+        const periodBtnsHtml = periodOptions.map(function (opt) {
+            const active = analyticsPeriodDays === opt.days ? ' active' : '';
+            return '<button type="button" class="stats-period-btn' + active + '" data-days="' + opt.days + '">' + opt.label + '</button>';
+        }).join('');
+
+        content.innerHTML =
+            '<!-- Toolbar -->' +
+            '<div class="stats-toolbar">' +
+                '<div class="stats-live-pill">' +
+                    '<span class="' + liveDotClass + '"></span>' +
+                    '<span>Nu online: <strong>' + liveLabel + '</strong> <span style="opacity:0.6;">(laatste 5m)</span></span>' +
+                '</div>' +
+                '<div class="stats-controls">' +
+                    '<div class="stats-period-group">' + periodBtnsHtml + '</div>' +
+                    '<button type="button" id="stats-export-csv-btn" class="stats-action-btn" title="Exporteer pagina- en dagstatistieken naar CSV">↓ CSV EXPORT</button>' +
+                    '<button type="button" id="stats-refresh-btn" class="stats-action-btn" title="Statistieken verversen">↻ VERVERS</button>' +
+                '</div>' +
+            '</div>' +
+
+            '<!-- 6 KPI Kaarten met Trend Badges -->' +
+            '<div class="stats-kpi-grid">' +
+                '<div class="stats-kpi-card">' +
+                    '<div class="stats-kpi-top">' +
+                        '<span class="stats-kpi-label">Paginaweergaven</span>' +
+                        formatTrendBadge(viewsKpi.trend, false) +
+                    '</div>' +
+                    '<div class="stats-kpi-value">' + (viewsKpi.value || 0) + '</div>' +
+                    '<div class="stats-kpi-sub">Vorige periode: ' + (viewsKpi.previous || 0) + '</div>' +
+                '</div>' +
+                '<div class="stats-kpi-card">' +
+                    '<div class="stats-kpi-top">' +
+                        '<span class="stats-kpi-label">Unieke bezoekers</span>' +
+                        formatTrendBadge(visitorsKpi.trend, false) +
+                    '</div>' +
+                    '<div class="stats-kpi-value">' + (visitorsKpi.value || 0) + '</div>' +
+                    '<div class="stats-kpi-sub">Vorige periode: ' + (visitorsKpi.previous || 0) + '</div>' +
+                '</div>' +
+                '<div class="stats-kpi-card">' +
+                    '<div class="stats-kpi-top">' +
+                        '<span class="stats-kpi-label">Sessies</span>' +
+                        formatTrendBadge(sessionsKpi.trend, false) +
+                    '</div>' +
+                    '<div class="stats-kpi-value">' + (sessionsKpi.value || 0) + '</div>' +
+                    '<div class="stats-kpi-sub">' + (sessionsKpi.pages_per_session || 0) + ' pagina\'s / sessie</div>' +
+                '</div>' +
+                '<div class="stats-kpi-card">' +
+                    '<div class="stats-kpi-top">' +
+                        '<span class="stats-kpi-label">Gem. leestijd</span>' +
+                        formatTrendBadge(dwellKpi.trend, false) +
+                    '</div>' +
+                    '<div class="stats-kpi-value">' + formatDurationSec(dwellKpi.value || 0) + '</div>' +
+                    '<div class="stats-kpi-sub">Actieve tabbladtijd</div>' +
+                '</div>' +
+                '<div class="stats-kpi-card">' +
+                    '<div class="stats-kpi-top">' +
+                        '<span class="stats-kpi-label">Bounce rate</span>' +
+                        formatTrendBadge(bounceKpi.trend, true) +
+                    '</div>' +
+                    '<div class="stats-kpi-value">' + (bounceKpi.value || 0) + '%</div>' +
+                    '<div class="stats-kpi-sub">1 pag. &amp; &lt; 15s leestijd</div>' +
+                '</div>' +
+                '<div class="stats-kpi-card">' +
+                    '<div class="stats-kpi-top">' +
+                        '<span class="stats-kpi-label">Gefilterde bots</span>' +
+                        formatTrendBadge(botsKpi.trend, false) +
+                    '</div>' +
+                    '<div class="stats-kpi-value">' + (botsKpi.value || 0) + '</div>' +
+                    '<div class="stats-kpi-sub">Crawlers &amp; scans geweerd</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<!-- Grafieken: Dagelijks & 24-uurs -->' +
+            '<div class="stats-row-grid">' +
+                '<div class="stats-panel">' +
+                    '<div class="stats-panel-header">' +
+                        '<span class="stats-panel-title">Dagelijkse views &amp; unieke bezoekers</span>' +
+                        '<div class="stats-panel-meta">' +
+                            '<span class="stats-legend">' +
+                                '<span><i class="stats-legend-swatch" style="background:#fff;"></i>Views</span>' +
+                                '<span><i class="stats-legend-swatch" style="background:#7dff9a;"></i>Bezoekers</span>' +
+                            '</span>' +
+                            '<span class="stats-peak-badge">' + peakSummary + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="stats-panel-body">' +
+                        '<div id="stats-daily-readout" class="stats-chart-readout">' +
+                            '<span>Beweeg over een kolom voor dagdetails</span>' +
+                            '<span>Periode: ' + analyticsPeriodDays + 'd</span>' +
+                        '</div>' +
+                        '<div id="stats-daily-chart" class="stats-bar-chart">' + dailyBarsHtml + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="stats-panel">' +
+                    '<div class="stats-panel-header">' +
+                        '<span class="stats-panel-title">Verkeer per uur (00:00 – 23:00)</span>' +
+                        '<span class="stats-panel-meta">24-uurs profiel</span>' +
+                    '</div>' +
+                    '<div class="stats-panel-body">' +
+                        '<div id="stats-hourly-readout" class="stats-chart-readout">' +
+                            '<span>Beweeg over een uur-kolom</span>' +
+                            '<span>00:00 – 23:00</span>' +
+                        '</div>' +
+                        '<div id="stats-hourly-chart" class="stats-bar-chart">' + hourlyBarsHtml + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<!-- Top Pagina\'s & Verkeersbronnen -->' +
+            '<div class="stats-row-grid">' +
+                '<div class="stats-panel">' +
+                    '<div class="stats-panel-header">' +
+                        '<span class="stats-panel-title">Top pagina\'s</span>' +
+                        '<div class="stats-filter-row">' +
+                            '<input type="search" id="stats-page-search" class="stats-search-input" placeholder="Zoek op pagina of titel..." value="' + escapeHtmlAttr(analyticsPageSearch) + '">' +
+                        '</div>' +
+                    '</div>' +
+                    '<div id="stats-top-pages-wrap" class="analytics-table-wrap">' +
+                        renderTopPagesSection() +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="stats-panel">' +
+                    '<div class="stats-panel-header">' +
+                        '<span class="stats-panel-title">Verkeersbronnen (Acquisitie)</span>' +
+                        '<span class="stats-panel-meta">Eerste externe ref / UTM</span>' +
+                    '</div>' +
+                    '<div class="stats-panel-body" style="padding:0;">' +
+                        '<div class="analytics-table-wrap" style="border:none; max-height:210px;">' +
+                            '<table class="analytics-table">' +
+                                '<thead><tr><th>BRON</th><th>SESSIES</th><th>AANDEEL</th></tr></thead>' +
+                                '<tbody>' + sourcesRowsHtml + '</tbody>' +
+                            '</table>' +
+                        '</div>' +
+                        '<div style="padding:8px 10px;">' +
+                            '<div class="stats-mini-pills">' +
+                                (devicesPillsHtml || '<span class="stats-mini-pill">Geen apparaatdata</span>') +
+                                langsPillsHtml +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<!-- Scheiding tussen echte 404\'s en Geblokkeerde Bot-scans -->' +
+            '<div class="stats-row-equal">' +
+                '<div class="stats-panel">' +
+                    '<div class="stats-panel-header">' +
+                        '<span class="stats-panel-title">Errors (404) — Echte bezoekers (' + errors404.length + ')</span>' +
+                        (errors404.length > 0
+                            ? '<button type="button" id="stats-dismiss-all-404" class="stats-action-btn" style="padding:2px 8px; font-size:0.56rem;">Wis alles</button>'
+                            : '<span class="stats-panel-meta">Schoon</span>') +
+                    '</div>' +
+                    '<div class="analytics-table-wrap" style="border:none;">' +
+                        '<table class="analytics-table">' +
+                            '<thead><tr><th>PAD</th><th>BRON</th><th>HITS</th><th>LAATST</th><th></th></tr></thead>' +
+                            '<tbody>' + errors404RowsHtml + '</tbody>' +
+                        '</table>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="stats-panel">' +
+                    '<div class="stats-panel-header">' +
+                        '<span class="stats-panel-title">Geblokkeerde bot- &amp; kwetsbaarheidsscans (' + botScans.length + ')</span>' +
+                        '<span class="stats-panel-meta">Automatisch gefilterd</span>' +
+                    '</div>' +
+                    '<div class="analytics-table-wrap" style="border:none;">' +
+                        '<table class="analytics-table">' +
+                            '<thead><tr><th>GEBLOKKEERD PAD</th><th>TYPE SCAN</th><th>HITS</th><th>LAATST</th></tr></thead>' +
+                            '<tbody>' + botScansRowsHtml + '</tbody>' +
+                        '</table>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<!-- Poster & Memeborden AR Scans / Downloads -->' +
+            '<div class="stats-panel">' +
+                '<div class="stats-panel-header">' +
+                    '<span class="stats-panel-title">AR Scans &amp; Poster Downloads Overzicht</span>' +
+                    '<span class="stats-panel-meta">Downloads: ' + totalDownloads + ' | AR Scans: ' + totalScans + ' | Views: ' + totalPosterViews + ' | Posters: ' + posters.length + ' | Memeborden: ' + totalMemes + '</span>' +
+                '</div>' +
+                '<div id="stats-poster-table-wrap" class="analytics-table-wrap" style="border:none;">' +
+                    renderPosterMetricsTable() +
+                '</div>' +
+            '</div>';
+
+        // Event listeners koppelen
+        content.querySelectorAll('.stats-period-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                analyticsPeriodDays = parseInt(btn.dataset.days, 10) || 30;
+                renderAnalyticsModal();
+            });
         });
 
-        function handleSort(e) {
-            var col = e.currentTarget.dataset.col;
-            if (sortCol === col) { sortDir *= -1; } else { sortCol = col; sortDir = -1; }
-            sorted.sort(function (a, b) {
-                if (col === 'title') { return sortDir * (a.title || '').localeCompare(b.title || ''); }
-                if (col === 'project') { return sortDir * ((a.project || '').localeCompare(b.project || '')); }
-                var av = parseInt((a.upload_meta?.[col] ?? a[col]) || 0, 10);
-                var bv = parseInt((b.upload_meta?.[col] ?? b[col]) || 0, 10);
-                return sortDir * (av - bv);
-            });
-            var tableWrap = content.querySelector('.analytics-table-wrap');
-            if (tableWrap) tableWrap.innerHTML = renderTable();
-            content.querySelectorAll('.sortable').forEach(function (th) {
-                th.addEventListener('click', handleSort);
+        const refreshBtn = document.getElementById('stats-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function () {
+                renderAnalyticsModal();
             });
         }
+
+        const exportBtn = document.getElementById('stats-export-csv-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportAnalyticsCsv);
+        }
+
+        // Hover-uitlezing op dagelijkse kolomgrafiek
+        const dailyReadout = document.getElementById('stats-daily-readout');
+        content.querySelectorAll('#stats-daily-chart .stats-bar-col').forEach(function (col) {
+            col.addEventListener('mouseenter', function () {
+                if (!dailyReadout) return;
+                dailyReadout.innerHTML =
+                    '<span><strong>' + escapeHtmlAttr(col.dataset.label) + '</strong> (' + escapeHtmlAttr(col.dataset.date) + ')</span>' +
+                    '<span><strong>' + col.dataset.views + '</strong> views · <strong>' + col.dataset.visitors + '</strong> bezoekers · <strong>' + col.dataset.sessions + '</strong> sessies</span>';
+            });
+        });
+
+        // Hover-uitlezing op 24-uurs kolomgrafiek
+        const hourlyReadout = document.getElementById('stats-hourly-readout');
+        content.querySelectorAll('#stats-hourly-chart .stats-hour-col').forEach(function (col) {
+            col.addEventListener('mouseenter', function () {
+                if (!hourlyReadout) return;
+                hourlyReadout.innerHTML =
+                    '<span>Uurvak: <strong>' + escapeHtmlAttr(col.dataset.hour) + '</strong></span>' +
+                    '<span><strong>' + col.dataset.views + '</strong> views · <strong>' + col.dataset.visitors + '</strong> unieke bezoekers</span>';
+            });
+        });
+
+        // Zoekfilter en Toon alles voor Top Pagina's
+        function bindTopPagesEvents() {
+            const toggleBtn = document.getElementById('stats-toggle-all-pages');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    analyticsShowAllPages = !analyticsShowAllPages;
+                    const wrap = document.getElementById('stats-top-pages-wrap');
+                    if (wrap) {
+                        wrap.innerHTML = renderTopPagesSection();
+                        bindTopPagesEvents();
+                    }
+                });
+            }
+        }
+        bindTopPagesEvents();
+
+        const searchInput = document.getElementById('stats-page-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function (e) {
+                analyticsPageSearch = e.target.value || '';
+                const wrap = document.getElementById('stats-top-pages-wrap');
+                if (wrap) {
+                    wrap.innerHTML = renderTopPagesSection();
+                    bindTopPagesEvents();
+                }
+            });
+        }
+
+        // 404 dismiss knoppen
+        content.querySelectorAll('[data-dismiss-page]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                dismissAnalytics404(btn.getAttribute('data-dismiss-page'), false);
+            });
+        });
+
+        const dismissAllBtn = document.getElementById('stats-dismiss-all-404');
+        if (dismissAllBtn) {
+            dismissAllBtn.addEventListener('click', function () {
+                dismissAnalytics404('', true);
+            });
+        }
+
+        // Sorteerbare Poster/Memeborden tabel
+        function bindPosterSort() {
+            const wrap = document.getElementById('stats-poster-table-wrap');
+            if (!wrap) return;
+            wrap.querySelectorAll('.sortable').forEach(function (th) {
+                th.addEventListener('click', function (e) {
+                    var col = e.currentTarget.dataset.col;
+                    if (sortCol === col) { sortDir *= -1; } else { sortCol = col; sortDir = -1; }
+                    sortedItems.sort(function (a, b) {
+                        if (col === 'title') { return sortDir * (a.title || '').localeCompare(b.title || ''); }
+                        if (col === 'project') { return sortDir * ((a.project || '').localeCompare(b.project || '')); }
+                        var av = parseInt((a.upload_meta?.[col] ?? a[col]) || 0, 10);
+                        var bv = parseInt((b.upload_meta?.[col] ?? b[col]) || 0, 10);
+                        return sortDir * (av - bv);
+                    });
+                    wrap.innerHTML = renderPosterMetricsTable();
+                    bindPosterSort();
+                });
+            });
+        }
+        bindPosterSort();
+
     } catch (error) {
         console.error('Analytics laden mislukt', error);
         const content = document.getElementById('analytics-content');

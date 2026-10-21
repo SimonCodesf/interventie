@@ -9,5 +9,8 @@ deployment:
     - /bin/cp -R assets $DEPLOYPATH
     - /bin/cp -R admin $DEPLOYPATH
     - /bin/cp -R api.php $DEPLOYPATH
+    - /bin/cp -R track.php $DEPLOYPATH
+    - /bin/cp -R 404.php $DEPLOYPATH
+    - /bin/cp -R stats.js $DEPLOYPATH
     - /bin/cp -R img $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH
