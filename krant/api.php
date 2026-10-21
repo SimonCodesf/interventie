@@ -163,8 +163,8 @@ if ($method === 'POST' && $path === '/admin/setup') {
 if ($method === 'POST' && $path === '/admin/password') {
     requireAuth();
     $input = getJsonInput();
-    $current = (string)($input['current'] ?? '');
-    $new = (string)($input['new'] ?? '');
+    $current = (string)($input['current'] ?? ($input['currentPassword'] ?? ''));
+    $new = (string)($input['new'] ?? ($input['newPassword'] ?? ''));
 
     $hash = getAdminHash($db);
     if (!$hash || !verifyPassword($current, $hash)) {
@@ -183,10 +183,14 @@ if ($method === 'POST' && $path === '/admin/logout') {
     jsonResponse(['ok' => true]);
 }
 
-if ($method === 'GET' && $path === '/admin/status') {
+if ($method === 'GET' && ($path === '/admin/status' || $path === '/admin/state')) {
+    $loggedIn = isValidSession();
+    $needsSetup = getAdminHash($db) === null;
     jsonResponse([
-        'logged_in' => isValidSession(),
-        'needs_setup' => getAdminHash($db) === null,
+        'logged_in'     => $loggedIn,
+        'authenticated' => $loggedIn,
+        'needs_setup'   => $needsSetup,
+        'setupComplete' => !$needsSetup,
     ]);
 }
 
@@ -203,7 +207,10 @@ if ($method === 'GET' && $path === '/admin/essays') {
             'title'        => $full['title'],
             'published'    => $full['published'],
             'page_image'   => $full['page_image'],
+            'page_bytes'   => $full['page_bytes'] ?? 0,
+            'target8w'     => $full['target8w'],
             'has_target8w' => !empty($full['target8w']),
+            'layers'       => $full['layers'],
             'layers_count' => count($full['layers']),
             'total_bytes'  => $full['total_bytes'] ?? 0,
             'scans'        => $full['scans'] ?? 0,
@@ -472,7 +479,7 @@ if ($method === 'DELETE' && preg_match('#^/admin/essays/([^/]+)$#', $path, $m)) 
 }
 
 // Alles wissen (frisse start): alle essays + alle bestanden
-if ($method === 'DELETE' && $path === '/admin/essays') {
+if (($method === 'DELETE' && $path === '/admin/essays') || ($method === 'POST' && $path === '/admin/wipe')) {
     requireAuth();
 
     $db->exec("DELETE FROM essays");
@@ -531,7 +538,7 @@ if ($method === 'POST' && preg_match('#^/admin/essays/([^/]+)/duplicate$#', $pat
     requireAuth();
     $sourceWeek = sanitizeWeek($m[1]);
     $input = getJsonInput();
-    $targetWeek = sanitizeWeek((string)($input['to_week'] ?? ''));
+    $targetWeek = sanitizeWeek((string)($input['to_week'] ?? ($input['target_week'] ?? '')));
     $newTitle = trim((string)($input['title'] ?? ''));
 
     if ($sourceWeek === $targetWeek) {

@@ -3,13 +3,13 @@
    Vanilla JS (ES2020+)
    ========================================================================== */
 
-const API_BASE = '../api.php';
+const API = '../api.php';
 
 // State
 let allEssays = [];
 let editingWeek = null;
-let existingPagePath = null;
-let currentPageRatio = 0.7071; // A-series default
+let existingPageUrl = '';
+let pageAspect = 0.7071;
 let activeMediaSearchLayerRow = null;
 let activeMediaTab = 'memes';
 let currentStatsDays = 30;
@@ -28,6 +28,7 @@ const panelView = document.getElementById('panel-view');
 
 const setupForm = document.getElementById('setup-form');
 const setupPassword = document.getElementById('setup-password');
+const setupPassword2 = document.getElementById('setup-password2');
 const setupError = document.getElementById('setup-error');
 
 const loginForm = document.getElementById('login-form');
@@ -122,6 +123,16 @@ const analyticsContent = document.getElementById('analytics-content');
    HELPERS & API FETCH
    ========================================================================== */
 
+function isoWeek() {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  return d.getUTCFullYear() + '-' + String(week).padStart(2, '0');
+}
+
 function escHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -131,11 +142,18 @@ function escHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function formatBytes(bytes) {
-  const n = Number(bytes) || 0;
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+function baseName(url) {
+  return String(url || '')
+    .split('/')
+    .pop()
+    .split('?')[0];
+}
+
+function fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+  return (n / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 function formatDuration(sec) {
@@ -146,8 +164,14 @@ function formatDuration(sec) {
   return `${m}m ${rem}s`;
 }
 
+function resolveAssetUrl(relPath) {
+  if (!relPath) return '';
+  if (/^(https?:|blob:|data:|\.\.\/)/i.test(relPath)) return relPath;
+  return `../${String(relPath).replace(/^\/+/, '')}`;
+}
+
 async function apiJson(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API}${path}`, {
     credentials: 'same-origin',
     ...options,
     headers: {
@@ -159,72 +183,75 @@ async function apiJson(path, options = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || `HTTP ${res.status}`);
+    throw new Error(data.message || data.error || `HTTP ${res.status}`);
   }
   return data;
 }
 
-function resolveAssetUrl(relPath) {
-  if (!relPath) return '';
-  if (/^(https?:|blob:|data:)/i.test(relPath)) return relPath;
-  return `../${String(relPath).replace(/^\/+/, '')}`;
-}
-
 /* ==========================================================================
-   AUTH & INITIALIZATION
+   VIEWS & AUTHENTICATION
    ========================================================================== */
 
-async function checkAuthState() {
-  try {
-    const state = await apiJson('/admin/state');
-    setupView.classList.add('hidden');
-    loginView.classList.add('hidden');
-    panelView.classList.add('hidden');
+function showSetup() {
+  setupView.style.display = 'flex';
+  loginView.style.display = 'none';
+  panelView.style.display = 'none';
+}
 
-    if (!state.setupComplete) {
-      setupView.classList.remove('hidden');
-    } else if (!state.authenticated) {
-      loginView.classList.remove('hidden');
-    } else {
-      panelView.classList.remove('hidden');
-      await initStudioPanel();
-    }
-  } catch (err) {
-    loginView.classList.remove('hidden');
-    loginError.textContent = err.message || 'Kan status niet ophalen.';
-    loginError.classList.remove('hidden');
-  }
+function showLogin() {
+  setupView.style.display = 'none';
+  loginView.style.display = 'flex';
+  panelView.style.display = 'none';
+}
+
+function showPanel() {
+  setupView.style.display = 'none';
+  loginView.style.display = 'none';
+  panelView.style.display = 'grid';
+  loadEssays();
 }
 
 setupForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  setupError.classList.add('hidden');
+  setupError.textContent = '';
+  const p1 = setupPassword.value;
+  const p2 = setupPassword2 ? setupPassword2.value : p1;
+
+  if (p1 !== p2) {
+    setupError.textContent = 'Wachtwoorden komen niet overeen';
+    return;
+  }
+
   try {
     await apiJson('/admin/setup', {
       method: 'POST',
-      body: JSON.stringify({ password: setupPassword.value }),
+      body: JSON.stringify({ password: p1 }),
     });
     setupPassword.value = '';
-    await checkAuthState();
+    if (setupPassword2) setupPassword2.value = '';
+    showPanel();
   } catch (err) {
-    setupError.textContent = err.message;
-    setupError.classList.remove('hidden');
+    setupError.textContent = err.message || 'Opslaan mislukt';
   }
 });
 
 loginForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  loginError.classList.add('hidden');
+  loginError.textContent = '';
+  const btn = loginForm.querySelector('button[type="submit"]');
+  if (btn) btn.disabled = true;
+
   try {
     await apiJson('/admin/login', {
       method: 'POST',
       body: JSON.stringify({ password: loginPassword.value }),
     });
     loginPassword.value = '';
-    await checkAuthState();
+    showPanel();
   } catch (err) {
-    loginError.textContent = err.message;
-    loginError.classList.remove('hidden');
+    loginError.textContent = err.message || 'Fout wachtwoord';
+  } finally {
+    if (btn) btn.disabled = false;
   }
 });
 
@@ -232,21 +259,8 @@ logoutBtn?.addEventListener('click', async () => {
   try {
     await apiJson('/admin/logout', { method: 'POST' });
   } catch (_) {}
-  await checkAuthState();
+  showLogin();
 });
-
-async function initStudioPanel() {
-  if (!fPublished.value) {
-    fPublished.value = new Date().toISOString().slice(0, 10);
-  }
-  await loadEssays();
-  if (layersRows.children.length === 0) {
-    addLayerRow();
-    recordLayerHistory();
-  }
-  updateSummaryChecklist();
-  render2dStage();
-}
 
 /* ==========================================================================
    LOAD & RENDER ESSAYS (SIDEBAR + TABLE)
@@ -254,9 +268,14 @@ async function initStudioPanel() {
 
 async function loadEssays() {
   try {
-    const data = await apiJson('/admin/essays');
+    const res = await fetch(`${API}/admin/essays`, { credentials: 'same-origin' });
+    if (res.status === 401) {
+      showLogin();
+      return;
+    }
+    const data = await res.json();
     allEssays = Array.isArray(data.essays) ? data.essays : [];
-    sidebarEssayCount.textContent = String(allEssays.length);
+    if (sidebarEssayCount) sidebarEssayCount.textContent = String(allEssays.length);
     renderSidebarEssays();
     renderEssaysTable();
   } catch (err) {
@@ -265,39 +284,44 @@ async function loadEssays() {
 }
 
 function renderSidebarEssays() {
+  if (!sidebarEssayList) return;
   const q = (sidebarSearch?.value || '').trim().toLowerCase();
   const filtered = allEssays.filter((e) => {
     if (!q) return true;
     return (
-      String(e.week).includes(q) ||
-      (e.title || '').toLowerCase().includes(q) ||
-      (e.published_at || '').toLowerCase().includes(q)
+      String(e.week).toLowerCase().includes(q) ||
+      (e.title || '').toLowerCase().includes(q)
     );
   });
 
   if (filtered.length === 0) {
-    sidebarEssayList.innerHTML = `<div class="muted small" style="padding:12px;">Geen edities gevonden.</div>`;
+    sidebarEssayList.innerHTML = `<div class="bundle-info" style="padding:12px;">Geen edities gevonden.</div>`;
     return;
   }
 
   sidebarEssayList.innerHTML = filtered
     .map((e) => {
-      const isActive = Number(editingWeek) === Number(e.week);
-      const hasTarget = Boolean(e.hasTarget8w);
-      const thumbUrl = resolveAssetUrl(e.page);
-      const layerCount = Array.isArray(e.layers) ? e.layers.length : 0;
+      const isActive = editingWeek === e.week;
+      const hasTarget = Boolean(e.has_target8w || e.target8w);
+      const thumbUrl = resolveAssetUrl(e.page_image);
+      const layerCount = e.layers_count ?? (Array.isArray(e.layers) ? e.layers.length : 0);
       const scanCount = Number(e.scans) || 0;
+      const pubBadge = e.published ? 'LIVE' : 'CONCEPT';
       return `
-        <button type="button" class="sidebar-essay-item ${isActive ? 'active' : ''}" data-week="${e.week}">
-          <img class="sidebar-essay-thumb" src="${escHtml(thumbUrl)}" alt="W${e.week}" loading="lazy" />
+        <button type="button" class="sidebar-essay-item ${isActive ? 'active' : ''}" data-week="${escHtml(e.week)}">
+          ${
+            thumbUrl
+              ? `<img class="sidebar-essay-thumb" src="${escHtml(thumbUrl)}" alt="${escHtml(e.week)}" loading="lazy" />`
+              : `<div class="sidebar-essay-thumb"></div>`
+          }
           <div class="sidebar-essay-meta">
             <div class="sidebar-essay-top">
-              <span class="sidebar-essay-week">WEEK ${e.week}</span>
-              <span>${escHtml(e.published_at || '—')}</span>
+              <span class="sidebar-essay-week">${escHtml(e.week)}</span>
+              <span>${pubBadge}</span>
             </div>
-            <div class="sidebar-essay-title">${escHtml(e.title || `Editie ${e.week}`)}</div>
+            <div class="sidebar-essay-title">${escHtml(e.title || e.week)}</div>
             <div class="sidebar-essay-stats">
-              <span><i class="${hasTarget ? 'dot-ready' : 'dot-missing'}"></i> ${hasTarget ? '8W klaar' : 'Geen 8W'}</span>
+              <span><i class="${hasTarget ? 'dot-ready' : 'dot-missing'}"></i> ${hasTarget ? '8W' : 'Geen 8W'}</span>
               <span>• ${layerCount} lagen</span>
               <span>• ${scanCount} scans</span>
             </div>
@@ -308,11 +332,7 @@ function renderSidebarEssays() {
     .join('');
 
   sidebarEssayList.querySelectorAll('.sidebar-essay-item').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const wk = Number(btn.dataset.week);
-      const found = allEssays.find((x) => Number(x.week) === wk);
-      if (found) startEditEssay(found);
-    });
+    btn.addEventListener('click', () => loadIntoForm(btn.dataset.week));
   });
 }
 
@@ -321,196 +341,294 @@ sidebarSearch?.addEventListener('input', renderSidebarEssays);
 function renderEssaysTable() {
   if (!essaysTableBody) return;
   if (allEssays.length === 0) {
-    essaysTableBody.innerHTML = `<tr><td colspan="6" class="muted">Nog geen edities gepubliceerd.</td></tr>`;
+    essaysTableBody.innerHTML = `<tr><td colspan="6" style="color:#777">Nog geen edities.</td></tr>`;
     return;
   }
 
   essaysTableBody.innerHTML = allEssays
-    .map((e) => {
-      const layerCount = Array.isArray(e.layers) ? e.layers.length : 0;
-      const hasTarget = Boolean(e.hasTarget8w);
-      const scans = Number(e.scans) || 0;
+    .map((essay) => {
+      const layerCount = essay.layers_count ?? (Array.isArray(essay.layers) ? essay.layers.length : 0);
+      const scans = Number(essay.scans) || 0;
       return `
         <tr>
-          <td><strong>#${e.week}</strong></td>
+          <td><strong>${escHtml(essay.week)}</strong></td>
+          <td>${escHtml(essay.title)}</td>
           <td>
-            <div><strong>${escHtml(e.title || '—')}</strong></div>
-            <div class="muted small">${escHtml(e.published_at || '')}</div>
-          </td>
-          <td>${layerCount}</td>
-          <td>${scans}</td>
-          <td>
-            <span class="card-badge ${hasTarget ? 'badge-ok' : 'badge-warn'}">
-              ${hasTarget ? '✓ 8W Target' : '⚠ Geen target'}
+            <span class="badge ${essay.published ? 'live' : 'draft'}">
+              ${essay.published ? 'live' : 'draft'}
             </span>
           </td>
-          <td>
-            <div class="table-actions">
-              <button type="button" class="btn btn-sm edit-row-btn" data-week="${e.week}">Bewerk</button>
-              <a class="btn btn-sm" href="../position/?week=${e.week}" target="_blank" rel="noopener">3D</a>
-              <button type="button" class="btn btn-sm btn-danger del-row-btn" data-week="${e.week}">✕</button>
-            </div>
+          <td>${layerCount} <span class="hint">(${fmtBytes(essay.total_bytes || 0)})</span></td>
+          <td>${scans}</td>
+          <td class="actions">
+            <button type="button" class="ghost small-btn pub-row-btn" data-week="${escHtml(essay.week)}" data-pub="${essay.published ? 1 : 0}">
+              ${essay.published ? 'OFFLINE' : 'PUBLICEER'}
+            </button>
+            <button type="button" class="ghost small-btn edit-row-btn" data-week="${escHtml(essay.week)}">BEWERK</button>
+            <a class="btn ghost small-btn" href="../position/?week=${encodeURIComponent(essay.week)}" title="Open in 3D AR Positioneer-tool">3D</a>
+            <button type="button" class="danger small-btn del-row-btn" data-week="${escHtml(essay.week)}">✕</button>
           </td>
         </tr>
       `;
     })
     .join('');
 
-  essaysTableBody.querySelectorAll('.edit-row-btn').forEach((btn) => {
+  essaysTableBody.querySelectorAll('.pub-row-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const found = allEssays.find((x) => Number(x.week) === Number(btn.dataset.week));
-      if (found) startEditEssay(found);
+      const nextPub = Number(btn.dataset.pub) === 1 ? 0 : 1;
+      togglePublish(btn.dataset.week, nextPub);
     });
+  });
+
+  essaysTableBody.querySelectorAll('.edit-row-btn').forEach((btn) => {
+    btn.addEventListener('click', () => loadIntoForm(btn.dataset.week));
   });
 
   essaysTableBody.querySelectorAll('.del-row-btn').forEach((btn) => {
-    btn.addEventListener('click', () => deleteEssayByWeek(Number(btn.dataset.week)));
+    btn.addEventListener('click', () => deleteEssay(btn.dataset.week));
   });
 }
 
+async function togglePublish(week, published) {
+  try {
+    await apiJson(`/admin/essays/${encodeURIComponent(week)}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({ published }),
+    });
+    await loadEssays();
+  } catch (err) {
+    alert(`Publicatiestatus wijzigen mislukt: ${err.message}`);
+  }
+}
+
 /* ==========================================================================
-   FORM EDIT / RESET / DUPLICATE / DELETE
+   PAGE ASPECT RATIO & LIVE PREVIEW
    ========================================================================== */
 
-function resetEditorForm() {
-  editingWeek = null;
-  existingPagePath = null;
-  currentPageRatio = 0.7071;
-
-  essayForm.reset();
-  fWeek.disabled = false;
-  fPublished.value = new Date().toISOString().slice(0, 10);
-
-  // Suggest next available week number
-  const maxWeek = allEssays.reduce((m, e) => Math.max(m, Number(e.week) || 0), 0);
-  fWeek.value = String(maxWeek + 1);
-  weekHint.textContent = `Suggestie: week ${maxWeek + 1}`;
-
-  editorModeBadge.textContent = 'NIEUWE EDITIE';
-  editorModeBadge.classList.remove('editing');
-  formHeading.textContent = 'Nieuwe krant-editie aanmaken';
-  saveButton.textContent = 'Opslaan & AR-bundel bouwen';
-
-  headerPositionLink.classList.add('hidden');
-  duplicateEssayBtn.classList.add('hidden');
-  deleteCurrentBtn.classList.add('hidden');
-  if (sidebarPosLink) sidebarPosLink.href = '../position/';
-
-  pagePreviewWrap.classList.add('hidden');
-  pagePreviewImg.src = '';
-  pageFileInfo.textContent = 'Sleep een krantenpagina hierheen of klik om te bladeren';
-  target8wBadge.textContent = 'Nog niet gegenereerd';
-  target8wBadge.className = 'card-badge';
-  target8wStatus.textContent = 'Bij het opslaan wordt automatisch een 8th Wall image target (.jpg) opgebouwd.';
-
-  ar2dPaper.style.backgroundImage = 'none';
-  ar2dPaper.style.aspectRatio = '0.7071';
-
-  layersRows.innerHTML = '';
-  addLayerRow();
-  layerHistory = [];
-  layerHistoryIndex = -1;
-  recordLayerHistory();
-
-  formError.classList.add('hidden');
-  formOk.classList.add('hidden');
-  renderSidebarEssays();
-  updateSummaryChecklist();
-  render2dStage();
+function fittedSize() {
+  if (pageAspect > 0) {
+    if (pageAspect <= 1) return { w: pageAspect.toFixed(3), h: '1' };
+    return { w: '1', h: (1 / pageAspect).toFixed(3) };
+  }
+  return { w: '1', h: '1' };
 }
 
-function startEditEssay(essay) {
-  editingWeek = Number(essay.week);
-  existingPagePath = essay.page || null;
-  currentPageRatio = Number(essay.pageRatio) > 0 ? Number(essay.pageRatio) : 0.7071;
-
-  fWeek.value = String(essay.week);
-  fWeek.disabled = true;
-  weekHint.textContent = `Bewerken van bestaande week #${essay.week}`;
-  fPublished.value = essay.published_at || '';
-  fTitle.value = essay.title || '';
-  fPage.value = '';
-
-  editorModeBadge.textContent = `BEWERK WEEK #${essay.week}`;
-  editorModeBadge.classList.add('editing');
-  formHeading.textContent = `Week ${essay.week}: ${essay.title || 'Zonder titel'}`;
-  saveButton.textContent = `Wijzigingen voor Week #${essay.week} opslaan`;
-
-  const posUrl = `../position/?week=${essay.week}`;
-  headerPositionLink.href = posUrl;
-  headerPositionLink.classList.remove('hidden');
-  if (sidebarPosLink) sidebarPosLink.href = posUrl;
-  duplicateEssayBtn.classList.remove('hidden');
-  deleteCurrentBtn.classList.remove('hidden');
-
-  if (existingPagePath) {
-    const resolved = resolveAssetUrl(existingPagePath);
-    pagePreviewImg.src = resolved;
-    pagePreviewWrap.classList.remove('hidden');
-    pageFileInfo.textContent = `Huidig bestand: ${existingPagePath} (kies nieuw bestand om te vervangen)`;
-    ar2dPaper.style.backgroundImage = `url("${resolved}")`;
-    ar2dPaper.style.aspectRatio = String(currentPageRatio);
-    pageDimensionsInfo.textContent = `Verhouding B/H: ${currentPageRatio.toFixed(3)}`;
-  } else {
-    pagePreviewWrap.classList.add('hidden');
-  }
-
-  if (essay.hasTarget8w) {
-    target8wBadge.textContent = '✓ 8W Target actief';
-    target8wBadge.className = 'card-badge badge-ok';
-    target8wStatus.textContent = `8th Wall target gereed (${essay.target8w || 'target8w.jpg'}).`;
-  } else {
-    target8wBadge.textContent = '⚠ Ontbreekt';
-    target8wBadge.className = 'card-badge badge-warn';
-    target8wStatus.textContent = 'Geen 8th Wall target gevonden. Sla opnieuw op of gebruik "Herbouw 8th Wall Targets" in Instellingen.';
-  }
-
-  layersRows.innerHTML = '';
-  const layers = Array.isArray(essay.layers) ? essay.layers : [];
-  if (layers.length === 0) {
-    addLayerRow();
-  } else {
-    layers.forEach((l) => addLayerRow(l));
-  }
-
-  layerHistory = [];
-  layerHistoryIndex = -1;
-  recordLayerHistory();
-
-  formError.classList.add('hidden');
-  formOk.classList.add('hidden');
-  renderSidebarEssays();
-  updateSummaryChecklist();
-  render2dStage();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-resetFormBtn?.addEventListener('click', resetEditorForm);
-
-duplicateEssayBtn?.addEventListener('click', async () => {
-  if (!editingWeek) return;
-  const maxWeek = allEssays.reduce((m, e) => Math.max(m, Number(e.week) || 0), 0);
-  const targetWeekStr = prompt(
-    `Naar welk weeknummer wil je Week #${editingWeek} dupliceren?`,
-    String(maxWeek + 1)
-  );
-  if (!targetWeekStr) return;
-  const targetWeek = Number(targetWeekStr);
-  if (!Number.isInteger(targetWeek) || targetWeek < 1) {
-    alert('Ongeldig weeknummer.');
+function updatePagePreview(url, fileMetaText = '', revoke = false) {
+  if (!url) {
+    pagePreviewWrap.style.display = 'none';
+    ar2dPaper.style.backgroundImage = 'none';
     return;
   }
 
+  const resolved = resolveAssetUrl(url);
+  pagePreviewWrap.style.display = 'block';
+  pagePreviewImg.onload = () => {
+    if (pagePreviewImg.naturalWidth > 0 && pagePreviewImg.naturalHeight > 0) {
+      pageAspect = pagePreviewImg.naturalWidth / pagePreviewImg.naturalHeight;
+      pageDimensionsInfo.textContent = `${pagePreviewImg.naturalWidth} × ${pagePreviewImg.naturalHeight} px (verhouding ${pageAspect.toFixed(3)})`;
+      ar2dPaper.style.aspectRatio = String(pageAspect);
+      render2dStage();
+    }
+    if (revoke) URL.revokeObjectURL(url);
+  };
+  pagePreviewImg.src = resolved;
+  ar2dPaper.style.backgroundImage = `url("${resolved}")`;
+  const placeholder = ar2dPaper.querySelector('.ar-2d-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+  if (fileMetaText) pageFileInfo.textContent = fileMetaText;
+}
+
+fPage?.addEventListener('change', () => {
+  const file = fPage.files?.[0];
+  if (!file) return;
+  const blobUrl = URL.createObjectURL(file);
+  updatePagePreview(blobUrl, `Geselecteerd: ${file.name} (${fmtBytes(file.size)})`, false);
+  updateSummaryChecklist();
+});
+
+// Check if a week already exists when typing a week code
+fWeek?.addEventListener('change', async () => {
+  const week = fWeek.value.trim();
+  if (!week) {
+    weekHint.textContent = '';
+    updateSummaryChecklist();
+    return;
+  }
   try {
-    const res = await apiJson(`/admin/essays/${editingWeek}/duplicate`, {
+    const res = await fetch(`${API}/admin/essays/${encodeURIComponent(week)}`, {
+      credentials: 'same-origin',
+    });
+    if (res.ok) {
+      weekHint.textContent =
+        'Deze week bestaat al — opslaan OVERSCHRIJFT dat essay. Gebruik een andere week voor een nieuw essay.';
+    } else if (res.status === 404) {
+      weekHint.textContent = 'Nieuwe week — wordt een nieuw essay.';
+    } else {
+      weekHint.textContent = '';
+    }
+  } catch (_) {
+    weekHint.textContent = '';
+  }
+  updateSummaryChecklist();
+});
+
+fWeek?.addEventListener('input', updateSummaryChecklist);
+fTitle?.addEventListener('input', updateSummaryChecklist);
+fPublished?.addEventListener('change', updateSummaryChecklist);
+
+/* ==========================================================================
+   LOAD INTO FORM / RESET / DUPLICATE / DELETE
+   ========================================================================== */
+
+async function loadIntoForm(week) {
+  try {
+    const data = await apiJson(`/admin/essays/${encodeURIComponent(week)}`);
+    const essay = data.essay;
+    if (!essay) return;
+
+    editingWeek = essay.week;
+    existingPageUrl = essay.page_image || '';
+
+    editorModeBadge.textContent = `BEWERK EDITIE // ${essay.week}`;
+    editorModeBadge.classList.add('editing');
+    formHeading.textContent = `Bewerken: ${essay.week} — ${essay.title || ''}`;
+    fWeek.value = essay.week;
+    fTitle.value = essay.title || '';
+    fPublished.checked = Boolean(essay.published);
+    fPage.value = '';
+    weekHint.textContent = `Bestaande editie (${essay.week})`;
+
+    const posUrl = `../position/?week=${encodeURIComponent(essay.week)}`;
+    if (headerPositionLink) headerPositionLink.href = posUrl;
+    if (sidebarPosLink) sidebarPosLink.href = posUrl;
+    if (duplicateEssayBtn) duplicateEssayBtn.style.display = 'inline-flex';
+    if (deleteCurrentBtn) deleteCurrentBtn.style.display = 'inline-flex';
+
+    if (essay.page_image) {
+      updatePagePreview(
+        essay.page_image,
+        `Huidige pagina: ${baseName(essay.page_image)} (${fmtBytes(essay.page_bytes || 0)}) — kies een nieuw bestand om te vervangen`
+      );
+    } else {
+      updatePagePreview('', 'Nog geen pagina-afbeelding.');
+    }
+
+    if (essay.target8w) {
+      target8wBadge.textContent = '✓ 8W Target actief';
+      target8wBadge.className = 'status-pill ok';
+      target8wStatus.textContent = `8th Wall target aanwezig: ${essay.target8w.name}`;
+    } else {
+      target8wBadge.textContent = '⚠ Geen 8W target';
+      target8wBadge.className = 'status-pill warn';
+      target8wStatus.textContent = 'Nog geen 8th Wall target voor dit essay.';
+    }
+
+    layersRows.innerHTML = '';
+    const layers = Array.isArray(essay.layers) ? essay.layers : [];
+    layers.forEach((layer) => {
+      addLayerRow({
+        x: layer.x || 0,
+        y: layer.y || 0,
+        z: layer.z,
+        w: layer.w,
+        h: layer.h,
+        opacity: layer.opacity,
+        rx: layer.rx || 0,
+        ry: layer.ry || 0,
+        rz: layer.rz || 0,
+        scale: layer.scale || 1,
+        lit: layer.lit ? 1 : 0,
+        anim_dur: layer.anim_dur,
+        anim_x: layer.anim_x,
+        anim_y: layer.anim_y,
+        anim_z: layer.anim_z,
+        existingFile: baseName(layer.file),
+        existingUrl: layer.file,
+        existingSize: layer.bytes || 0,
+      });
+    });
+    if (layers.length === 0) addLayerRow();
+
+    layerHistory = [];
+    layerHistoryIndex = -1;
+    recordLayerHistory();
+
+    formError.textContent = '';
+    formOk.textContent =
+      'Bestaande bestanden (pagina/marker/layers) blijven behouden als je geen nieuw bestand kiest.';
+
+    renderSidebarEssays();
+    updateSummaryChecklist();
+    render2dStage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    formError.textContent = err.message;
+  }
+}
+
+function resetForm(keepWeek) {
+  editingWeek = null;
+  existingPageUrl = '';
+  pageAspect = 0.7071;
+
+  editorModeBadge.textContent = 'NIEUWE EDITIE';
+  editorModeBadge.classList.remove('editing');
+  formHeading.textContent = 'Nieuw essay';
+  fWeek.value = keepWeek || isoWeek();
+  fTitle.value = '';
+  fPage.value = '';
+  fPublished.checked = true;
+  weekHint.textContent = '';
+
+  if (duplicateEssayBtn) duplicateEssayBtn.style.display = 'none';
+  if (deleteCurrentBtn) deleteCurrentBtn.style.display = 'none';
+  if (headerPositionLink) headerPositionLink.href = '../position/';
+  if (sidebarPosLink) sidebarPosLink.href = '../position/';
+
+  pagePreviewWrap.style.display = 'none';
+  pageFileInfo.textContent = 'Nog geen bestand geselecteerd.';
+  target8wBadge.textContent = 'Auto-Target';
+  target8wBadge.className = 'status-pill neutral';
+  target8wStatus.textContent = '';
+
+  ar2dPaper.style.backgroundImage = 'none';
+  ar2dPaper.style.aspectRatio = '0.7071';
+  const placeholder = ar2dPaper.querySelector('.ar-2d-placeholder');
+  if (placeholder) placeholder.style.display = 'flex';
+
+  layersRows.innerHTML = '';
+  addLayerRow();
+
+  layerHistory = [];
+  layerHistoryIndex = -1;
+  recordLayerHistory();
+
+  formError.textContent = '';
+  formOk.textContent = '';
+  renderSidebarEssays();
+  updateSummaryChecklist();
+  render2dStage();
+}
+
+resetFormBtn?.addEventListener('click', () => resetForm());
+
+duplicateEssayBtn?.addEventListener('click', async () => {
+  if (!editingWeek) return;
+  const targetWeek = prompt(
+    `Naar welke week-code wil je "${editingWeek}" dupliceren?`,
+    isoWeek()
+  );
+  if (!targetWeek) return;
+
+  try {
+    const res = await apiJson(`/admin/essays/${encodeURIComponent(editingWeek)}/duplicate`, {
       method: 'POST',
-      body: JSON.stringify({ target_week: targetWeek }),
+      body: JSON.stringify({ to_week: targetWeek.trim() }),
     });
     await loadEssays();
     if (res.essay) {
-      startEditEssay(res.essay);
-      formOk.textContent = `Week #${editingWeek} gedupliceerd naar Week #${targetWeek}.`;
-      formOk.classList.remove('hidden');
+      await loadIntoForm(res.essay.week);
+      formOk.textContent = `Editie gedupliceerd naar ${res.essay.week}.`;
     }
   } catch (err) {
     alert(`Dupliceren mislukt: ${err.message}`);
@@ -518,95 +636,120 @@ duplicateEssayBtn?.addEventListener('click', async () => {
 });
 
 deleteCurrentBtn?.addEventListener('click', () => {
-  if (editingWeek) deleteEssayByWeek(editingWeek);
+  if (editingWeek) deleteEssay(editingWeek);
 });
 
-async function deleteEssayByWeek(week) {
-  if (!confirm(`Weet je zeker dat je Week #${week} inclusief alle AR-lagen wilt verwijderen?`)) {
-    return;
-  }
+async function deleteEssay(week) {
+  if (!confirm(`Essay "${week}" definitief verwijderen?`)) return;
   try {
-    await apiJson(`/admin/essays/${week}`, { method: 'DELETE' });
+    await apiJson(`/admin/essays/${encodeURIComponent(week)}`, { method: 'DELETE' });
+    if (editingWeek === week) resetForm();
     await loadEssays();
-    if (Number(editingWeek) === Number(week)) {
-      resetEditorForm();
-    }
   } catch (err) {
     alert(`Verwijderen mislukt: ${err.message}`);
   }
 }
 
 /* ==========================================================================
-   PAGE UPLOAD PREVIEW & CHECKLIST SUMMARY
+   SUMMARY CHECKLIST
    ========================================================================== */
 
-fPage?.addEventListener('change', () => {
-  const file = fPage.files?.[0];
-  if (!file) return;
-  pageFileInfo.textContent = `${file.name} (${formatBytes(file.size)})`;
-
-  const url = URL.createObjectURL(file);
-  pagePreviewImg.onload = () => {
-    if (pagePreviewImg.naturalWidth && pagePreviewImg.naturalHeight) {
-      currentPageRatio = pagePreviewImg.naturalWidth / pagePreviewImg.naturalHeight;
-      pageDimensionsInfo.textContent = `${pagePreviewImg.naturalWidth} × ${pagePreviewImg.naturalHeight} px (ratio ${currentPageRatio.toFixed(3)})`;
-      ar2dPaper.style.aspectRatio = String(currentPageRatio);
-      render2dStage();
-    }
-  };
-  pagePreviewImg.src = url;
-  pagePreviewWrap.classList.remove('hidden');
-  ar2dPaper.style.backgroundImage = `url("${url}")`;
-  updateSummaryChecklist();
-});
-
-fWeek?.addEventListener('input', updateSummaryChecklist);
-fTitle?.addEventListener('input', updateSummaryChecklist);
-
 function updateSummaryChecklist() {
-  const wk = fWeek?.value?.trim() || '';
-  const title = fTitle?.value?.trim() || '';
-  const hasNewPage = Boolean(fPage?.files?.[0]);
-  const hasPage = hasNewPage || Boolean(existingPagePath);
+  const wk = fWeek?.value?.trim() || '—';
+  const title = fTitle?.value?.trim() || '—';
+  const pageFile = fPage?.files?.[0];
 
-  const rows = Array.from(layersRows.querySelectorAll('.layer-card'));
-  const validLayers = rows.filter((r) => {
-    const hasFile = Boolean(r.querySelector('.layer-file-input')?.files?.[0]);
-    const hasExisting = Boolean(r.dataset.existingPath);
-    return hasFile || hasExisting;
+  let totalBytes = pageFile ? pageFile.size : 0;
+  const rows = Array.from(layersRows.querySelectorAll('.layer-row'));
+  let validLayers = 0;
+
+  rows.forEach((row) => {
+    const f = row.querySelector('input[name="layer_file"]')?.files?.[0];
+    const ex = row.querySelector('input[name="layer_existing"]')?.value || '';
+    const exSize = Number(row.dataset.existingSize) || 0;
+    if (f) {
+      validLayers++;
+      totalBytes += f.size;
+    } else if (ex) {
+      validLayers++;
+      totalBytes += exSize;
+    }
   });
 
-  sumWeek.textContent = wk ? `Week #${wk}` : '—';
-  sumTitle.textContent = title || '—';
-  sumPage.textContent = hasNewPage
-    ? `Nieuw (${fPage.files[0].name})`
-    : existingPagePath
-    ? 'Bestaand bestand'
-    : 'Ontbreekt';
-  sumTarget.textContent = hasPage ? 'Wordt automatisch gebouwd' : 'Wacht op pagina';
-  sumLayers.textContent = `${validLayers.length} / ${rows.length} gereed`;
-
-  const allReady = Boolean(wk && title && hasPage && validLayers.length > 0);
-  summaryBundleBadge.textContent = allReady ? '✓ Klaar voor publicatie' : 'Incompleet';
-  summaryBundleBadge.className = `card-badge ${allReady ? 'badge-ok' : 'badge-warn'}`;
+  if (sumWeek) sumWeek.innerHTML = `<span>Week-code</span><strong>${escHtml(wk)}</strong>`;
+  if (sumTitle) sumTitle.innerHTML = `<span>Titel</span><strong>${escHtml(title)}</strong>`;
+  if (sumPage) {
+    const pageLabel = pageFile
+      ? `${pageFile.name} (${fmtBytes(pageFile.size)})`
+      : existingPageUrl
+      ? `${baseName(existingPageUrl)} (behouden)`
+      : 'Nog niet gekozen';
+    sumPage.innerHTML = `<span>Pagina-afbeelding</span><strong>${escHtml(pageLabel)}</strong>`;
+  }
+  if (sumTarget) {
+    sumTarget.innerHTML = `<span>8th Wall Target</span><strong>Automatisch bij opslaan</strong>`;
+  }
+  if (sumLayers) {
+    sumLayers.innerHTML = `<span>AR Lagen</span><strong>${validLayers} actieve laag/lagen</strong>`;
+  }
+  if (summaryBundleBadge) {
+    summaryBundleBadge.textContent = fmtBytes(totalBytes);
+  }
 }
 
 /* ==========================================================================
-   AR LAYERS MANAGEMENT & UNDO/REDO
+   AR LAYERS MANAGEMENT + UNDO/REDO + 2D STAGE
    ========================================================================== */
 
+function layerDefaults(index) {
+  const fit = fittedSize();
+  return {
+    x: '0',
+    y: '0',
+    z: (0.01 + index * 0.01).toFixed(2),
+    w: fit.w,
+    h: fit.h,
+    opacity: '1',
+    rx: '0',
+    ry: '0',
+    rz: '0',
+    scale: '1',
+    lit: 0,
+    anim_dur: '0',
+    anim_x: '0',
+    anim_y: '0',
+    anim_z: '0',
+    existingFile: '',
+    existingUrl: '',
+    existingSize: 0,
+  };
+}
+
 function getLayersSnapshot() {
-  return Array.from(layersRows.querySelectorAll('.layer-card')).map((row) => ({
-    type: row.querySelector('.layer-type').value,
-    existingPath: row.dataset.existingPath || '',
-    previewUrl: row.dataset.previewUrl || '',
-    hiddenOnStage: row.classList.contains('layer-hidden'),
-    x: Number(row.querySelector('.layer-x').value) || 0,
-    y: Number(row.querySelector('.layer-y').value) || 0,
-    z: Number(row.querySelector('.layer-z').value) || 0,
-    scale: Number(row.querySelector('.layer-scale').value) || 1,
-    rotZ: Number(row.querySelector('.layer-rotz').value) || 0,
-  }));
+  return Array.from(layersRows.querySelectorAll('.layer-row')).map((row) => {
+    const g = (name) => row.querySelector(`input[name="${name}"]`)?.value ?? '0';
+    return {
+      x: g('layer_x'),
+      y: g('layer_y'),
+      z: g('layer_z'),
+      w: g('layer_w'),
+      h: g('layer_h'),
+      opacity: g('layer_opacity'),
+      rx: g('layer_rx'),
+      ry: g('layer_ry'),
+      rz: g('layer_rz'),
+      scale: g('layer_scale'),
+      lit: row.querySelector('input[name="layer_lit"]')?.checked ? 1 : 0,
+      anim_dur: g('layer_anim_dur'),
+      anim_x: g('layer_anim_x'),
+      anim_y: g('layer_anim_y'),
+      anim_z: g('layer_anim_z'),
+      existingFile: g('layer_existing'),
+      existingUrl: row.dataset.previewUrl || '',
+      existingSize: Number(row.dataset.existingSize) || 0,
+      hiddenOnStage: row.classList.contains('layer-hidden'),
+    };
+  });
 }
 
 function recordLayerHistory() {
@@ -630,7 +773,7 @@ function restoreLayerSnapshot(snapJson) {
   try {
     const items = JSON.parse(snapJson);
     layersRows.innerHTML = '';
-    items.forEach((item) => addLayerRow(item));
+    items.forEach((v) => addLayerRow(v));
     updateSummaryChecklist();
     render2dStage();
   } finally {
@@ -653,267 +796,259 @@ layerRedoBtn?.addEventListener('click', () => {
   }
 });
 
-function addLayerRow(initial = {}) {
-  const type = initial.type || 'image';
-  const existingPath = initial.path || initial.existingPath || '';
-  const pos = initial.position || {};
-  const rot = initial.rotation || {};
-  const x = initial.x ?? pos.x ?? 0;
-  const y = initial.y ?? pos.y ?? 0;
-  const z = initial.z ?? pos.z ?? 0.02;
-  const scale = initial.scale ?? 1;
-  const rotZ = initial.rotZ ?? rot.z ?? 0;
-  const previewUrl = initial.previewUrl || (existingPath ? resolveAssetUrl(existingPath) : '');
+function numField(name, label, value, extra = '') {
+  return `<label>${label}<input type="number" step="0.01" name="${name}" value="${escHtml(value)}"${extra}></label>`;
+}
 
-  const card = document.createElement('div');
-  card.className = `layer-card ${initial.hiddenOnStage ? 'layer-hidden' : ''}`;
-  if (existingPath) card.dataset.existingPath = existingPath;
-  if (previewUrl) card.dataset.previewUrl = previewUrl;
+function renderThumbPreviewHtml(filenameOrUrl) {
+  if (!filenameOrUrl) return `<span>Geen bestand</span>`;
+  const clean = baseName(filenameOrUrl).toLowerCase();
+  if (clean.endsWith('.glb') || clean.endsWith('.gltf')) {
+    return `<span>🧊 3D GLB</span>`;
+  }
+  return `<img src="${escHtml(resolveAssetUrl(filenameOrUrl))}" alt="Preview" />`;
+}
 
-  card.innerHTML = `
-    <div class="layer-card-header">
-      <div class="layer-card-title">
+function addLayerRow(values) {
+  const v = values || layerDefaults(layersRows.children.length);
+  const row = document.createElement('div');
+  row.className = `layer-row ${v.hiddenOnStage ? 'layer-hidden' : ''}`;
+  row.dataset.existingSize = String(v.existingSize || 0);
+  if (v.existingUrl) {
+    row.dataset.previewUrl = v.existingUrl;
+  }
+
+  const fileLabel = v.existingFile
+    ? `Behouden: ${escHtml(v.existingFile)} (${fmtBytes(v.existingSize)})`
+    : 'Kies bestand (PNG/JPG/WebP/GIF/GLB)';
+
+  row.innerHTML = `
+    <div class="layer-top">
+      <div class="layer-head-left">
         <span class="layer-index-pill">#1</span>
-        <span class="layer-type-badge">${escHtml(type.toUpperCase())}</span>
-        <span class="layer-filename muted small">${existingPath ? escHtml(existingPath.split('/').pop()) : 'Nieuwe laag'}</span>
+        <strong class="layer-file-title">${fileLabel}</strong>
+        <span class="layer-size hint">${v.existingFile ? escHtml(fmtBytes(v.existingSize)) : ''}</span>
       </div>
-      <div class="layer-card-controls">
-        <button type="button" class="icon-btn layer-vis-btn" title="Toon/verberg op 2D canvas">${initial.hiddenOnStage ? '👁‍🗨' : '👁'}</button>
-        <button type="button" class="icon-btn layer-up-btn" title="Omhoog">↑</button>
-        <button type="button" class="icon-btn layer-down-btn" title="Omlaag">↓</button>
+      <div class="layer-controls">
+        <button type="button" class="icon-btn layer-vis-btn" title="Toon/verberg op 2D preview">${v.hiddenOnStage ? '👁‍🗨' : '👁'}</button>
+        <button type="button" class="icon-btn layer-up-btn" title="Laag omhoog">↑</button>
+        <button type="button" class="icon-btn layer-down-btn" title="Laag omlaag">↓</button>
         <button type="button" class="icon-btn layer-dup-btn" title="Dupliceer laag">⧉</button>
-        <button type="button" class="icon-btn danger layer-del-btn" title="Verwijder laag">✕</button>
+        <button type="button" class="icon-btn danger remove-layer" title="Verwijder laag">×</button>
       </div>
     </div>
-    <div class="layer-card-body">
+
+    <div class="layer-main-grid">
       <div class="layer-thumb-box">
-        ${renderLayerThumbHtml(type, previewUrl)}
+        ${renderThumbPreviewHtml(v.existingUrl || '')}
       </div>
-      <div class="layer-fields">
-        <div class="layer-row-top">
-          <select class="layer-type">
-            <option value="image" ${type === 'image' ? 'selected' : ''}>Afbeelding</option>
-            <option value="gif" ${type === 'gif' ? 'selected' : ''}>GIF / Meme</option>
-            <option value="video" ${type === 'video' ? 'selected' : ''}>Video (MP4/WebM)</option>
-            <option value="model" ${type === 'model' ? 'selected' : ''}>3D Model (GLB)</option>
-          </select>
-          <input type="file" class="layer-file-input" accept="image/*,video/*,.glb,.gltf" />
-          <button type="button" class="btn btn-sm btn-secondary layer-search-media-btn" title="Zoek online meme, GIF of 3D model">Zoek media…</button>
+      <div>
+        <div class="layer-file-bar">
+          <input type="file" name="layer_file" accept=".png,.webp,.jpg,.jpeg,.gif,.glb">
+          <input type="hidden" name="layer_existing" value="${escHtml(v.existingFile || '')}">
+          <button type="button" class="btn ghost mini-btn layer-search-meme-btn">🖼 Meme</button>
+          <button type="button" class="btn ghost mini-btn layer-search-3d-btn">🧊 3D</button>
         </div>
-        <div class="layer-coords-grid">
-          <label class="coord-field">
-            <span>Pos X</span>
-            <input type="number" class="layer-x" step="0.01" value="${Number(x).toFixed(2)}" />
-          </label>
-          <label class="coord-field">
-            <span>Pos Y</span>
-            <input type="number" class="layer-y" step="0.01" value="${Number(y).toFixed(2)}" />
-          </label>
-          <label class="coord-field">
-            <span>Diepte Z</span>
-            <input type="number" class="layer-z" step="0.01" value="${Number(z).toFixed(2)}" />
-          </label>
-          <label class="coord-field">
-            <span>Schaal</span>
-            <input type="number" class="layer-scale" step="0.05" min="0.05" value="${Number(scale).toFixed(2)}" />
-          </label>
-          <label class="coord-field">
-            <span>Rot Z (°)</span>
-            <input type="number" class="layer-rotz" step="1" value="${Math.round(Number(rotZ))}" />
-          </label>
+
+        <div class="layer-group">
+          ${numField('layer_x', 'Pos X', v.x)}
+          ${numField('layer_y', 'Pos Y', v.y)}
+          ${numField('layer_z', 'Diepte Z', v.z)}
+          ${numField('layer_w', 'Breedte', v.w)}
+          ${numField('layer_h', 'Hoogte', v.h)}
+        </div>
+
+        <div class="layer-group">
+          <label>Dekking<input type="number" step="0.05" min="0" max="1" name="layer_opacity" value="${escHtml(v.opacity)}"></label>
+          ${numField('layer_scale', 'Schaal', v.scale, ' min="0.01"')}
+          ${numField('layer_rx', 'Rot X°', v.rx)}
+          ${numField('layer_ry', 'Rot Y°', v.ry)}
+          ${numField('layer_rz', 'Rot Z°', v.rz)}
+        </div>
+
+        <div class="layer-group">
+          <label style="justify-content:center;"><input type="checkbox" name="layer_lit" value="1"${v.lit ? ' checked' : ''}> Licht/schaduw</label>
+          <label>Anim (s)<input type="number" step="0.1" min="0" name="layer_anim_dur" value="${escHtml(v.anim_dur)}"></label>
+          ${numField('layer_anim_x', 'Naar X', v.anim_x)}
+          ${numField('layer_anim_y', 'Naar Y', v.anim_y)}
+          ${numField('layer_anim_z', 'Naar Z', v.anim_z)}
         </div>
       </div>
     </div>
   `;
 
-  const typeSelect = card.querySelector('.layer-type');
-  const typeBadge = card.querySelector('.layer-type-badge');
-  const fileInput = card.querySelector('.layer-file-input');
-  const filenameLabel = card.querySelector('.layer-filename');
-  const thumbBox = card.querySelector('.layer-thumb-box');
-
-  typeSelect.addEventListener('change', () => {
-    typeBadge.textContent = typeSelect.value.toUpperCase();
-    thumbBox.innerHTML = renderLayerThumbHtml(typeSelect.value, card.dataset.previewUrl || '');
-    recordLayerHistory();
-    render2dStage();
-  });
+  const fileInput = row.querySelector('input[name="layer_file"]');
+  const fileTitle = row.querySelector('.layer-file-title');
+  const sizeEl = row.querySelector('.layer-size');
+  const thumbBox = row.querySelector('.layer-thumb-box');
 
   fileInput.addEventListener('change', () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-    filenameLabel.textContent = `${file.name} (${formatBytes(file.size)})`;
-
-    // Auto-detect type from extension
-    const ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'glb' || ext === 'gltf') typeSelect.value = 'model';
-    else if (ext === 'gif') typeSelect.value = 'gif';
-    else if (['mp4', 'webm', 'mov'].includes(ext)) typeSelect.value = 'video';
-    else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) typeSelect.value = 'image';
-    typeBadge.textContent = typeSelect.value.toUpperCase();
-
-    const blobUrl = URL.createObjectURL(file);
-    card.dataset.previewUrl = blobUrl;
-    thumbBox.innerHTML = renderLayerThumbHtml(typeSelect.value, blobUrl);
+    const f = fileInput.files?.[0];
+    if (f) {
+      fileTitle.textContent = f.name;
+      sizeEl.textContent = fmtBytes(f.size);
+      if (f.name.toLowerCase().endsWith('.glb')) {
+        row.dataset.previewUrl = f.name;
+        thumbBox.innerHTML = `<span>🧊 3D GLB</span>`;
+      } else {
+        const blobUrl = URL.createObjectURL(f);
+        row.dataset.previewUrl = blobUrl;
+        thumbBox.innerHTML = `<img src="${escHtml(blobUrl)}" alt="Preview" />`;
+      }
+    }
     updateSummaryChecklist();
     recordLayerHistory();
     render2dStage();
   });
 
-  card.querySelectorAll('.layer-coords-grid input').forEach((inp) => {
-    inp.addEventListener('input', () => {
-      render2dStage();
-    });
-    inp.addEventListener('change', () => {
-      recordLayerHistory();
-    });
+  row.querySelectorAll('input[type="number"], input[type="checkbox"]').forEach((inp) => {
+    inp.addEventListener('input', () => render2dStage());
+    inp.addEventListener('change', () => recordLayerHistory());
   });
 
-  card.querySelector('.layer-vis-btn').addEventListener('click', (e) => {
-    card.classList.toggle('layer-hidden');
-    e.currentTarget.textContent = card.classList.contains('layer-hidden') ? '👁‍🗨' : '👁';
+  row.querySelector('.layer-vis-btn').addEventListener('click', (e) => {
+    row.classList.toggle('layer-hidden');
+    e.currentTarget.textContent = row.classList.contains('layer-hidden') ? '👁‍🗨' : '👁';
     recordLayerHistory();
     render2dStage();
   });
 
-  card.querySelector('.layer-up-btn').addEventListener('click', () => {
-    const prev = card.previousElementSibling;
+  row.querySelector('.layer-up-btn').addEventListener('click', () => {
+    const prev = row.previousElementSibling;
     if (prev) {
-      layersRows.insertBefore(card, prev);
-      renumberLayerCards();
+      layersRows.insertBefore(row, prev);
+      renumberLayerRows();
       recordLayerHistory();
       render2dStage();
     }
   });
 
-  card.querySelector('.layer-down-btn').addEventListener('click', () => {
-    const next = card.nextElementSibling;
+  row.querySelector('.layer-down-btn').addEventListener('click', () => {
+    const next = row.nextElementSibling;
     if (next) {
-      layersRows.insertBefore(next, card);
-      renumberLayerCards();
+      layersRows.insertBefore(next, row);
+      renumberLayerRows();
       recordLayerHistory();
       render2dStage();
     }
   });
 
-  card.querySelector('.layer-dup-btn').addEventListener('click', () => {
-    const cloneData = {
-      type: typeSelect.value,
-      existingPath: card.dataset.existingPath || '',
-      previewUrl: card.dataset.previewUrl || '',
-      x: (Number(card.querySelector('.layer-x').value) || 0) + 0.08,
-      y: (Number(card.querySelector('.layer-y').value) || 0) - 0.08,
-      z: (Number(card.querySelector('.layer-z').value) || 0) + 0.02,
-      scale: Number(card.querySelector('.layer-scale').value) || 1,
-      rotZ: Number(card.querySelector('.layer-rotz').value) || 0,
-    };
-    const newCard = addLayerRow(cloneData);
+  row.querySelector('.layer-dup-btn').addEventListener('click', () => {
+    const g = (n) => row.querySelector(`input[name="${n}"]`)?.value ?? '0';
+    const newRow = addLayerRow({
+      x: (Number(g('layer_x')) + 0.06).toFixed(2),
+      y: (Number(g('layer_y')) - 0.06).toFixed(2),
+      z: (Number(g('layer_z')) + 0.01).toFixed(2),
+      w: g('layer_w'),
+      h: g('layer_h'),
+      opacity: g('layer_opacity'),
+      rx: g('layer_rx'),
+      ry: g('layer_ry'),
+      rz: g('layer_rz'),
+      scale: g('layer_scale'),
+      lit: row.querySelector('input[name="layer_lit"]')?.checked ? 1 : 0,
+      anim_dur: g('layer_anim_dur'),
+      anim_x: g('layer_anim_x'),
+      anim_y: g('layer_anim_y'),
+      anim_z: g('layer_anim_z'),
+      existingFile: g('layer_existing'),
+      existingUrl: row.dataset.previewUrl || '',
+      existingSize: Number(row.dataset.existingSize) || 0,
+    });
     if (fileInput.files?.[0]) {
       const dt = new DataTransfer();
       dt.items.add(fileInput.files[0]);
-      newCard.querySelector('.layer-file-input').files = dt.files;
-      newCard.querySelector('.layer-filename').textContent = fileInput.files[0].name;
+      const newInput = newRow.querySelector('input[name="layer_file"]');
+      newInput.files = dt.files;
+      newInput.dispatchEvent(new Event('change'));
     }
     recordLayerHistory();
     updateSummaryChecklist();
     render2dStage();
   });
 
-  card.querySelector('.layer-del-btn').addEventListener('click', () => {
-    card.remove();
+  row.querySelector('.remove-layer').addEventListener('click', () => {
+    row.remove();
     if (layersRows.children.length === 0) addLayerRow();
-    renumberLayerCards();
+    renumberLayerRows();
     recordLayerHistory();
     updateSummaryChecklist();
     render2dStage();
   });
 
-  card.querySelector('.layer-search-media-btn').addEventListener('click', () => {
-    const wantedTab = typeSelect.value === 'model' ? '3d' : 'memes';
-    openMediaSearchModal(card, wantedTab);
+  row.querySelector('.layer-search-meme-btn').addEventListener('click', () => {
+    openMediaSearchModal(row, 'memes');
   });
 
-  layersRows.appendChild(card);
-  renumberLayerCards();
+  row.querySelector('.layer-search-3d-btn').addEventListener('click', () => {
+    openMediaSearchModal(row, '3d');
+  });
+
+  layersRows.appendChild(row);
+  renumberLayerRows();
   updateSummaryChecklist();
   render2dStage();
-  return card;
+  return row;
 }
 
-function renderLayerThumbHtml(type, url) {
-  if (!url) {
-    return `<span>${type === 'model' ? '🧊 3D' : 'Geen media'}</span>`;
-  }
-  if (type === 'model') {
-    return `<span>🧊 3D GLB</span>`;
-  }
-  if (type === 'video') {
-    return `<video src="${escHtml(url)}" muted loop playsinline></video>`;
-  }
-  return `<img src="${escHtml(url)}" alt="Layer preview" />`;
-}
-
-function renumberLayerCards() {
-  Array.from(layersRows.querySelectorAll('.layer-card')).forEach((card, i) => {
-    const pill = card.querySelector('.layer-index-pill');
-    if (pill) pill.textContent = `#${i + 1}`;
+function renumberLayerRows() {
+  Array.from(layersRows.querySelectorAll('.layer-row')).forEach((row, idx) => {
+    const pill = row.querySelector('.layer-index-pill');
+    if (pill) pill.textContent = `#${idx + 1}`;
   });
 }
 
 addLayerBtn?.addEventListener('click', () => {
-  addLayerRow({ z: (layersRows.children.length + 1) * 0.02 });
+  addLayerRow();
   recordLayerHistory();
 });
 
 /* ==========================================================================
-   INTERACTIVE 2D AR COMPOSITION STAGE (DRAG TO POSITION)
+   INTERACTIVE 2D AR STAGE (DRAG TO POSITION)
    ========================================================================== */
 
 toggleStageBtn?.addEventListener('click', () => {
   const hidden = stageBody.classList.toggle('hidden');
-  toggleStageBtn.textContent = hidden ? 'Toon' : 'Inklappen';
+  toggleStageBtn.textContent = hidden ? 'Uitklappen' : 'Inklappen';
 });
 
 function render2dStage() {
   if (!ar2dLayers) return;
   ar2dLayers.innerHTML = '';
 
-  const cards = Array.from(layersRows.querySelectorAll('.layer-card'));
-  cards.forEach((card, idx) => {
-    if (card.classList.contains('layer-hidden')) return;
+  const rows = Array.from(layersRows.querySelectorAll('.layer-row'));
+  rows.forEach((row, idx) => {
+    if (row.classList.contains('layer-hidden')) return;
 
-    const type = card.querySelector('.layer-type')?.value || 'image';
-    const x = Number(card.querySelector('.layer-x')?.value) || 0;
-    const y = Number(card.querySelector('.layer-y')?.value) || 0;
-    const scale = Math.max(0.15, Number(card.querySelector('.layer-scale')?.value) || 1);
-    const rotZ = Number(card.querySelector('.layer-rotz')?.value) || 0;
-    const previewUrl = card.dataset.previewUrl || '';
+    const x = Number(row.querySelector('input[name="layer_x"]')?.value) || 0;
+    const y = Number(row.querySelector('input[name="layer_y"]')?.value) || 0;
+    const scale = Math.max(0.2, Number(row.querySelector('input[name="layer_scale"]')?.value) || 1);
+    const rz = Number(row.querySelector('input[name="layer_rz"]')?.value) || 0;
+    const previewUrl = row.dataset.previewUrl || '';
 
-    // Map 8th Wall image target space:
-    // X in [-0.5 * ratio, +0.5 * ratio] -> [0%, 100%]
-    // Y in [+0.5, -0.5] -> [0%, 100%]
-    const halfW = Math.max(0.25, currentPageRatio * 0.5);
-    const leftPct = 50 + (x / (halfW * 2)) * 100;
+    const ratio = pageAspect > 0 ? pageAspect : 0.7071;
+    const leftPct = 50 + (x / ratio) * 100;
     const topPct = 50 - y * 100;
 
     const marker = document.createElement('div');
     marker.className = 'ar-2d-marker';
     marker.style.left = `${leftPct}%`;
     marker.style.top = `${topPct}%`;
-    const baseSize = Math.min(130, Math.max(34, 52 * scale));
-    marker.style.width = `${baseSize}px`;
-    marker.style.height = `${baseSize}px`;
-    marker.style.transform = `translate(-50%, -50%) rotate(${-rotZ}deg)`;
+    const sizePx = Math.min(130, Math.max(32, 54 * scale));
+    marker.style.width = `${sizePx}px`;
+    marker.style.height = `${sizePx}px`;
+    marker.style.transform = `translate(-50%, -50%) rotate(${-rz}deg)`;
 
-    let inner = `<span class="ar-2d-marker-label">#${idx + 1} ${escHtml(type.toUpperCase())}</span>`;
-    if (previewUrl && (type === 'image' || type === 'gif')) {
-      inner += `<img class="ar-2d-marker-thumb" src="${escHtml(previewUrl)}" alt="" />`;
-    } else {
-      inner += `<span style="font-size:10px;font-weight:700;">#${idx + 1}</span>`;
-    }
-    marker.innerHTML = inner;
+    const isGlb = previewUrl.toLowerCase().endsWith('.glb');
+    marker.innerHTML = `
+      <span class="ar-2d-marker-label">#${idx + 1}</span>
+      ${
+        previewUrl && !isGlb
+          ? `<img class="ar-2d-marker-thumb" src="${escHtml(resolveAssetUrl(previewUrl))}" alt="" />`
+          : `<span style="font-size:10px;font-weight:700;">${isGlb ? '🧊 3D' : `#${idx + 1}`}</span>`
+      }
+    `;
 
-    // Mouse / Pointer Dragging on 2D stage
     marker.addEventListener('pointerdown', (ev) => {
       ev.preventDefault();
       marker.setPointerCapture(ev.pointerId);
@@ -923,14 +1058,16 @@ function render2dStage() {
       const onMove = (moveEv) => {
         const relX = (moveEv.clientX - rect.left) / rect.width - 0.5;
         const relY = 0.5 - (moveEv.clientY - rect.top) / rect.height;
-        const worldX = Number((relX * currentPageRatio).toFixed(2));
+        const worldX = Number((relX * ratio).toFixed(2));
         const worldY = Number(relY.toFixed(2));
 
-        card.querySelector('.layer-x').value = worldX.toFixed(2);
-        card.querySelector('.layer-y').value = worldY.toFixed(2);
+        row.querySelector('input[name="layer_x"]').value = worldX.toFixed(2);
+        row.querySelector('input[name="layer_y"]').value = worldY.toFixed(2);
         marker.style.left = `${(relX + 0.5) * 100}%`;
         marker.style.top = `${(0.5 - relY) * 100}%`;
-        stageCoordsReadout.textContent = `Laag #${idx + 1} → X: ${worldX.toFixed(2)} · Y: ${worldY.toFixed(2)}`;
+        if (stageCoordsReadout) {
+          stageCoordsReadout.textContent = `Laag #${idx + 1} → X: ${worldX.toFixed(2)} · Y: ${worldY.toFixed(2)}`;
+        }
       };
 
       const onUp = (upEv) => {
@@ -950,90 +1087,75 @@ function render2dStage() {
 }
 
 /* ==========================================================================
-   SAVE ESSAY WITH XHR PROGRESS BAR
+   SAVE ESSAY (EXACT API.PHP FORMDATA CONTRACT + XHR PROGRESS)
    ========================================================================== */
 
 essayForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  formError.classList.add('hidden');
-  formOk.classList.add('hidden');
+  formError.textContent = '';
+  formOk.textContent = '';
 
-  const weekVal = Number(fWeek.value);
-  if (!Number.isInteger(weekVal) || weekVal < 1) {
-    formError.textContent = 'Geef een geldig weeknummer op (>= 1).';
-    formError.classList.remove('hidden');
+  const week = fWeek.value.trim();
+  const title = fTitle.value.trim();
+  if (!week || !title) {
+    formError.textContent = 'Week-code en titel zijn verplicht.';
     return;
   }
 
   const fd = new FormData();
-  fd.append('week', String(weekVal));
-  fd.append('title', fTitle.value.trim());
-  fd.append('published_at', fPublished.value.trim());
+  fd.append('week', week);
+  fd.append('title', title);
+  fd.append('published', fPublished.checked ? '1' : '0');
 
-  if (fPage.files?.[0]) {
-    fd.append('page', fPage.files[0]);
-  } else if (existingPagePath) {
-    fd.append('existing_page', existingPagePath);
-  } else {
-    formError.textContent = 'Selecteer een krantenpagina-afbeelding.';
-    formError.classList.remove('hidden');
-    return;
+  const pageFile = fPage.files?.[0];
+  if (pageFile) {
+    fd.append('page_image', pageFile);
   }
 
-  const cards = Array.from(layersRows.querySelectorAll('.layer-card'));
-  const layersPayload = [];
+  const getNum = (row, name, def) => {
+    const el = row.querySelector(`input[name="${name}"]`);
+    return el && el.value !== '' ? el.value : def;
+  };
 
-  cards.forEach((card, i) => {
-    const fileInput = card.querySelector('.layer-file-input');
-    const file = fileInput?.files?.[0];
-    const existing = card.dataset.existingPath || '';
+  layersRows.querySelectorAll('.layer-row').forEach((row) => {
+    const file = row.querySelector('input[name="layer_file"]')?.files?.[0];
+    const existing = row.querySelector('input[name="layer_existing"]')?.value || '';
     if (!file && !existing) return;
 
-    const layerMeta = {
-      type: card.querySelector('.layer-type').value,
-      position: {
-        x: Number(card.querySelector('.layer-x').value) || 0,
-        y: Number(card.querySelector('.layer-y').value) || 0,
-        z: Number(card.querySelector('.layer-z').value) || 0,
-      },
-      scale: Number(card.querySelector('.layer-scale').value) || 1,
-      rotation: {
-        x: 0,
-        y: 0,
-        z: Number(card.querySelector('.layer-rotz').value) || 0,
-      },
-    };
-
     if (file) {
-      const fieldName = `layer_file_${i}`;
-      fd.append(fieldName, file);
-      layerMeta.uploadField = fieldName;
+      fd.append('layers[]', file);
+      fd.append('layer_has_file[]', '1');
     } else {
-      layerMeta.path = existing;
+      fd.append('layer_has_file[]', '0');
     }
-
-    layersPayload.push(layerMeta);
+    fd.append('layer_existing[]', existing);
+    fd.append('layer_x[]', getNum(row, 'layer_x', '0'));
+    fd.append('layer_y[]', getNum(row, 'layer_y', '0'));
+    fd.append('layer_z[]', getNum(row, 'layer_z', '0.01'));
+    fd.append('layer_w[]', getNum(row, 'layer_w', '1'));
+    fd.append('layer_h[]', getNum(row, 'layer_h', '1'));
+    fd.append('layer_opacity[]', getNum(row, 'layer_opacity', '1'));
+    fd.append('layer_rx[]', getNum(row, 'layer_rx', '0'));
+    fd.append('layer_ry[]', getNum(row, 'layer_ry', '0'));
+    fd.append('layer_rz[]', getNum(row, 'layer_rz', '0'));
+    fd.append('layer_scale[]', getNum(row, 'layer_scale', '1'));
+    fd.append('layer_lit[]', row.querySelector('input[name="layer_lit"]')?.checked ? '1' : '0');
+    fd.append('layer_anim_dur[]', getNum(row, 'layer_anim_dur', '0'));
+    fd.append('layer_anim_x[]', getNum(row, 'layer_anim_x', '0'));
+    fd.append('layer_anim_y[]', getNum(row, 'layer_anim_y', '0'));
+    fd.append('layer_anim_z[]', getNum(row, 'layer_anim_z', '0'));
   });
 
-  if (layersPayload.length === 0) {
-    formError.textContent = 'Voeg ten minste één geldige AR-laag met mediabestand toe.';
-    formError.classList.remove('hidden');
-    return;
-  }
-
-  fd.append('layers', JSON.stringify(layersPayload));
-
-  // Upload with XHR for real-time progress bar
   saveButton.disabled = true;
-  uploadProgressWrap.classList.remove('hidden');
+  uploadProgressWrap.style.display = 'block';
   uploadProgressFill.style.width = '0%';
   uploadProgressPct.textContent = '0%';
-  uploadProgressText.textContent = 'Uploaden naar server…';
+  uploadProgressText.textContent = 'Bezig met uploaden...';
 
   try {
-    const result = await new Promise((resolve, reject) => {
+    const data = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${API_BASE}/admin/essays`, true);
+      xhr.open('POST', `${API}/admin/essays`, true);
       xhr.withCredentials = true;
 
       xhr.upload.onprogress = (ev) => {
@@ -1042,7 +1164,7 @@ essayForm?.addEventListener('submit', async (e) => {
           uploadProgressFill.style.width = `${pct}%`;
           uploadProgressPct.textContent = `${pct}%`;
           if (pct >= 100) {
-            uploadProgressText.textContent = '8th Wall target & AR-bundel verwerken…';
+            uploadProgressText.textContent = '8th Wall target & lagen verwerken...';
           }
         }
       };
@@ -1055,41 +1177,39 @@ essayForm?.addEventListener('submit', async (e) => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(parsed);
         } else {
-          reject(new Error(parsed.error || `HTTP ${xhr.status}`));
+          reject(new Error(parsed.message || parsed.error || `HTTP ${xhr.status}`));
         }
       };
 
-      xhr.onerror = () => reject(new Error('Netwerkfout tijdens uploaden.'));
+      xhr.onerror = () => reject(new Error('Geen verbinding met de server'));
       xhr.send(fd);
     });
 
     await loadEssays();
-    if (result.essay) {
-      startEditEssay(result.essay);
+    if (data.essay) {
+      await loadIntoForm(data.essay.week);
+      formOk.textContent =
+        'Opgeslagen: ' +
+        data.essay.week +
+        (data.essay.target8w ? ' (✓ 8th Wall target klaar)' : ' — LET OP: geen 8th Wall target aangemaakt');
     }
-    formOk.textContent = `Week #${weekVal} succesvol opgeslagen en 8th Wall target bijgewerkt!`;
-    formOk.classList.remove('hidden');
   } catch (err) {
-    formError.textContent = err.message;
-    formError.classList.remove('hidden');
+    formError.textContent = err.message || 'Opslaan mislukt';
   } finally {
     saveButton.disabled = false;
     setTimeout(() => {
-      uploadProgressWrap.classList.add('hidden');
-    }, 900);
+      uploadProgressWrap.style.display = 'none';
+    }, 800);
   }
 });
 
 /* ==========================================================================
-   MEDIA SEARCH MODAL (MEMES / GIFS / SKETCHFAB 3D)
+   MEDIA SEARCH MODAL (REDDIT MEMES & SKETCHFAB 3D)
    ========================================================================== */
 
-function openMediaSearchModal(targetLayerCard = null, tab = 'memes') {
+function openMediaSearchModal(targetRow = null, tab = 'memes') {
   activeMediaSearchLayerRow =
-    targetLayerCard ||
-    layersRows.querySelector('.layer-card:last-child') ||
-    addLayerRow();
-
+    targetRow || layersRows.querySelector('.layer-row:last-child') || addLayerRow();
   setMediaSearchTab(tab);
   mediaSearchModal.classList.remove('hidden');
   mediaSearchQuery.focus();
@@ -1098,19 +1218,19 @@ function openMediaSearchModal(targetLayerCard = null, tab = 'memes') {
 function setMediaSearchTab(tab) {
   activeMediaTab = tab;
   document.querySelectorAll('.media-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.mediaTab === tab);
+    btn.classList.toggle('active', btn.dataset.tab === tab);
   });
   if (tab === '3d') {
-    mediaSearchSub.classList.add('hidden');
-    mediaSearchQuery.placeholder = 'Zoek downloadbare 3D modellen op Sketchfab (bv. chair, newspaper, statue)…';
+    mediaSearchSub.style.display = 'none';
+    mediaSearchQuery.placeholder = 'Zoek downloadbare 3D modellen op Sketchfab (bv. chair, newspaper, statue)...';
   } else {
-    mediaSearchSub.classList.remove('hidden');
-    mediaSearchQuery.placeholder = 'Zoek memes of GIFs op Reddit (bv. cat, art, surreal)…';
+    mediaSearchSub.style.display = '';
+    mediaSearchQuery.placeholder = 'Zoek memes of GIFs op Reddit (bv. cat, art, newspaper)...';
   }
 }
 
 document.querySelectorAll('.media-tab').forEach((btn) => {
-  btn.addEventListener('click', () => setMediaSearchTab(btn.dataset.mediaTab));
+  btn.addEventListener('click', () => setMediaSearchTab(btn.dataset.tab));
 });
 
 openMemeSearchBtn?.addEventListener('click', () => openMediaSearchModal(null, 'memes'));
@@ -1126,34 +1246,38 @@ mediaSearchQuery?.addEventListener('keydown', (e) => {
 
 async function runMediaSearch() {
   const q = mediaSearchQuery.value.trim();
-  const sub = mediaSearchSub.value.trim() || 'memes';
+  const source = mediaSearchSub.value || 'memes';
+  if (!q) {
+    mediaSearchStatus.textContent = 'Voer eerst een zoekterm in.';
+    return;
+  }
+
   mediaSearchResults.innerHTML = '';
-  mediaSearchStatus.textContent = 'Zoeken…';
-  mediaSearchStatus.classList.remove('hidden');
+  mediaSearchStatus.textContent = 'Zoeken...';
 
   try {
     if (activeMediaTab === 'memes') {
       const data = await apiJson(
-        `/admin/search/memes?q=${encodeURIComponent(q)}&sub=${encodeURIComponent(sub)}`
+        `/admin/search/memes?q=${encodeURIComponent(q)}&source=${encodeURIComponent(source)}`
       );
-      const items = data.items || [];
-      if (items.length === 0) {
-        mediaSearchStatus.textContent = 'Geen memes/GIFs gevonden.';
+      const memes = Array.isArray(data.memes) ? data.memes : [];
+      if (memes.length === 0) {
+        mediaSearchStatus.textContent = 'Geen memes gevonden.';
         return;
       }
-      mediaSearchStatus.classList.add('hidden');
-      mediaSearchResults.innerHTML = items
+      mediaSearchStatus.textContent = `${memes.length} resultaten gevonden. Klik om direct in de laag te plaatsen:`;
+      mediaSearchResults.innerHTML = memes
         .map(
-          (item) => `
+          (m) => `
           <div class="media-result-card">
-            <img class="media-result-thumb" src="${escHtml(item.preview || item.url)}" alt="" loading="lazy" />
+            <img class="media-result-thumb" src="${escHtml(m.preview_url || m.url)}" alt="" loading="lazy" />
             <div class="media-result-info">
-              <div class="media-result-title" title="${escHtml(item.title)}">${escHtml(item.title)}</div>
-              <button type="button" class="btn btn-sm btn-primary import-media-btn"
-                data-kind="meme"
-                data-url="${escHtml(item.url)}"
-                data-title="${escHtml(item.title)}">
-                Gebruik in laag
+              <div class="media-result-title" title="${escHtml(m.title)}">${escHtml(m.title)}</div>
+              <button type="button" class="btn-primary mini-btn import-remote-btn"
+                data-type="image"
+                data-url="${escHtml(m.url)}"
+                data-title="${escHtml(m.title)}">
+                Kies Meme
               </button>
             </div>
           </div>
@@ -1161,24 +1285,24 @@ async function runMediaSearch() {
         )
         .join('');
     } else {
-      const data = await apiJson(`/admin/search/3d?q=${encodeURIComponent(q || 'sculpture')}`);
-      const items = data.items || [];
-      if (items.length === 0) {
-        mediaSearchStatus.textContent = 'Geen downloadbare 3D modellen gevonden.';
+      const data = await apiJson(`/admin/search/3d?q=${encodeURIComponent(q)}`);
+      const models = Array.isArray(data.models) ? data.models : [];
+      if (models.length === 0) {
+        mediaSearchStatus.textContent = 'Geen downloadbare 3D-modellen gevonden.';
         return;
       }
-      mediaSearchStatus.classList.add('hidden');
-      mediaSearchResults.innerHTML = items
+      mediaSearchStatus.textContent = `${models.length} 3D-modellen gevonden:`;
+      mediaSearchResults.innerHTML = models
         .map(
-          (item) => `
+          (m) => `
           <div class="media-result-card">
-            <img class="media-result-thumb" src="${escHtml(item.thumb)}" alt="" loading="lazy" />
+            <img class="media-result-thumb" src="${escHtml(m.thumbnail)}" alt="" loading="lazy" />
             <div class="media-result-info">
-              <div class="media-result-title" title="${escHtml(item.name)}">${escHtml(item.name)}</div>
-              <button type="button" class="btn btn-sm btn-primary import-media-btn"
-                data-kind="sketchfab"
-                data-uid="${escHtml(item.uid)}"
-                data-title="${escHtml(item.name)}">
+              <div class="media-result-title" title="${escHtml(m.name)}">${escHtml(m.name)} (${fmtBytes(m.glb_size || 0)})</div>
+              <button type="button" class="btn-primary mini-btn import-remote-btn"
+                data-type="3d"
+                data-uid="${escHtml(m.uid)}"
+                data-title="${escHtml(m.name)}">
                 Importeer GLB
               </button>
             </div>
@@ -1188,7 +1312,7 @@ async function runMediaSearch() {
         .join('');
     }
 
-    mediaSearchResults.querySelectorAll('.import-media-btn').forEach((btn) => {
+    mediaSearchResults.querySelectorAll('.import-remote-btn').forEach((btn) => {
       btn.addEventListener('click', () => importRemoteMediaIntoLayer(btn));
     });
   } catch (err) {
@@ -1197,36 +1321,38 @@ async function runMediaSearch() {
 }
 
 async function importRemoteMediaIntoLayer(btn) {
-  const kind = btn.dataset.kind;
+  const type = btn.dataset.type;
   const title = btn.dataset.title || 'asset';
-  const origText = btn.textContent;
+  const orig = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Downloaden…';
+  btn.textContent = 'Laden...';
 
   try {
-    const query =
-      kind === 'sketchfab'
-        ? `kind=sketchfab&uid=${encodeURIComponent(btn.dataset.uid)}`
-        : `kind=url&url=${encodeURIComponent(btn.dataset.url)}`;
+    const qs =
+      type === '3d'
+        ? `type=3d&uid=${encodeURIComponent(btn.dataset.uid)}`
+        : `type=image&url=${encodeURIComponent(btn.dataset.url)}`;
 
-    const res = await fetch(`${API_BASE}/admin/fetch-remote-asset?${query}`, {
+    const res = await fetch(`${API}/admin/fetch-remote-asset?${qs}`, {
       credentials: 'same-origin',
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || `HTTP ${res.status}`);
+      throw new Error(errData.message || `HTTP ${res.status}`);
     }
 
     const blob = await res.blob();
-    const filenameHeader = res.headers.get('X-Asset-Filename');
-    const safeName =
-      filenameHeader ||
-      `${title.replace(/[^a-z0-9_-]+/gi, '_').slice(0, 32)}.${kind === 'sketchfab' ? 'glb' : 'jpg'}`;
+    let ext = 'jpg';
+    if (type === '3d') ext = 'glb';
+    else if (blob.type.includes('png')) ext = 'png';
+    else if (blob.type.includes('gif')) ext = 'gif';
+    else if (blob.type.includes('webp')) ext = 'webp';
 
+    const safeName = `${title.replace(/[^a-z0-9_-]+/gi, '_').slice(0, 30) || 'layer'}.${ext}`;
     const file = new File([blob], safeName, { type: blob.type || 'application/octet-stream' });
-    const targetCard = activeMediaSearchLayerRow || addLayerRow();
-    const fileInput = targetCard.querySelector('.layer-file-input');
 
+    const row = activeMediaSearchLayerRow || addLayerRow();
+    const fileInput = row.querySelector('input[name="layer_file"]');
     const dt = new DataTransfer();
     dt.items.add(file);
     fileInput.files = dt.files;
@@ -1237,30 +1363,30 @@ async function importRemoteMediaIntoLayer(btn) {
     alert(`Importeren mislukt: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.textContent = origText;
+    btn.textContent = orig;
   }
 }
 
 /* ==========================================================================
-   SETTINGS MODAL (8W TARGET REBUILD, EXPORT, SKETCHFAB, PASSWORD, WIPE)
+   SETTINGS MODAL (REBUILD TARGETS, EXPORT JSON, SKETCHFAB, PASSWORD, WIPE)
    ========================================================================== */
 
 settingsBtn?.addEventListener('click', async () => {
   settingsModal.classList.remove('hidden');
   try {
     const data = await apiJson('/admin/settings');
-    sketchfabKeyStatus.textContent = data.hasSketchfabKey
-      ? `Actieve sleutel: ${data.sketchfabKeyPreview}`
-      : 'Nog geen Sketchfab API-sleutel ingesteld.';
+    sketchfabKeyStatus.textContent = data.sketchfab_key_set
+      ? '✓ Sketchfab API-key is ingesteld.'
+      : 'Nog geen Sketchfab API-key ingesteld.';
   } catch (_) {}
 });
 
 rebuildTargetsBtn?.addEventListener('click', async () => {
   rebuildTargetsBtn.disabled = true;
-  rebuildTargetsStatus.textContent = 'Bezig met controleren en herbouwen van 8th Wall targets…';
+  rebuildTargetsStatus.textContent = 'Bezig met controleren en herbouwen...';
   try {
-    const res = await apiJson('/admin/rebuild-targets', { method: 'POST' });
-    rebuildTargetsStatus.textContent = `Klaar! ${res.rebuilt} van ${res.checked} edities herbouwd.`;
+    const data = await apiJson('/admin/rebuild-targets', { method: 'POST' });
+    rebuildTargetsStatus.textContent = data.message || 'Targets bijgewerkt.';
     await loadEssays();
   } catch (err) {
     rebuildTargetsStatus.textContent = `Fout: ${err.message}`;
@@ -1270,7 +1396,7 @@ rebuildTargetsBtn?.addEventListener('click', async () => {
 });
 
 exportEssaysJsonBtn?.addEventListener('click', async () => {
-  exportEssaysStatus.textContent = 'Backup voorbereiden…';
+  exportEssaysStatus.textContent = 'Exporteren...';
   try {
     const data = await apiJson('/admin/export/essays-json');
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1288,14 +1414,12 @@ exportEssaysJsonBtn?.addEventListener('click', async () => {
 
 saveSketchfabKeyBtn?.addEventListener('click', async () => {
   try {
-    const res = await apiJson('/admin/settings', {
+    await apiJson('/admin/settings', {
       method: 'POST',
       body: JSON.stringify({ sketchfab_api_key: sketchfabApiKeyInput.value.trim() }),
     });
     sketchfabApiKeyInput.value = '';
-    sketchfabKeyStatus.textContent = res.hasSketchfabKey
-      ? '✓ Sketchfab API-sleutel opgeslagen.'
-      : 'Sleutel gewist.';
+    sketchfabKeyStatus.textContent = '✓ Sketchfab API-key opgeslagen.';
   } catch (err) {
     sketchfabKeyStatus.textContent = `Fout: ${err.message}`;
   }
@@ -1303,39 +1427,31 @@ saveSketchfabKeyBtn?.addEventListener('click', async () => {
 
 passwordForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  pwError.classList.add('hidden');
-  pwOk.classList.add('hidden');
+  pwError.textContent = '';
+  pwOk.textContent = '';
   try {
     await apiJson('/admin/password', {
       method: 'POST',
       body: JSON.stringify({
-        currentPassword: pwCurrent.value,
-        newPassword: pwNew.value,
+        current: pwCurrent.value,
+        new: pwNew.value,
       }),
     });
-    pwCurrent.value = '';
-    pwNew.value = '';
-    pwOk.textContent = 'Wachtwoord succesvol gewijzigd.';
-    pwOk.classList.remove('hidden');
+    pwOk.textContent = 'Wachtwoord gewijzigd.';
+    passwordForm.reset();
   } catch (err) {
-    pwError.textContent = err.message;
-    pwError.classList.remove('hidden');
+    pwError.textContent = err.message || 'Wijzigen mislukt';
   }
 });
 
 wipeAllBtn?.addEventListener('click', async () => {
-  if (
-    !confirm(
-      'WAARSCHUWING: Dit verwijdert ALLE krant-edities en geüploade bestanden definitief! Doorgaan?'
-    )
-  ) {
-    return;
-  }
+  if (!confirm('ALLE essays + bestanden definitief verwijderen? Dit kan niet ongedaan worden.')) return;
+  if (!confirm('Zeker weten? Alles wordt gewist.')) return;
   try {
-    await apiJson('/admin/wipe', { method: 'POST' });
+    await apiJson('/admin/essays', { method: 'DELETE' });
     settingsModal.classList.add('hidden');
+    resetForm();
     await loadEssays();
-    resetEditorForm();
   } catch (err) {
     alert(`Wissen mislukt: ${err.message}`);
   }
@@ -1345,16 +1461,10 @@ wipeAllBtn?.addEventListener('click', async () => {
    MODAL CLOSE HANDLERS
    ========================================================================== */
 
-document.querySelectorAll('[data-close-modal]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const id = btn.dataset.closeModal;
+document.querySelectorAll('[data-close-modal]').forEach((el) => {
+  el.addEventListener('click', () => {
+    const id = el.dataset.closeModal;
     document.getElementById(id)?.classList.add('hidden');
-  });
-});
-
-[mediaSearchModal, settingsModal, analyticsModal].forEach((modal) => {
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.add('hidden');
   });
 });
 
@@ -1369,21 +1479,21 @@ analyticsBtn?.addEventListener('click', () => {
 
 async function loadKrantAnalytics(days = 30) {
   currentStatsDays = days;
-  analyticsContent.innerHTML = `<div class="muted" style="padding:24px;">Statistieken voor de afgelopen ${days} dagen laden…</div>`;
+  analyticsContent.innerHTML = `<p class="bundle-info">Statistieken voor de afgelopen ${days} dagen laden...</p>`;
   try {
     const data = await apiJson(`/admin/stats?days=${days}`);
     currentStatsData = data;
     renderKrantAnalytics(data);
   } catch (err) {
-    analyticsContent.innerHTML = `<div class="error">Kon statistieken niet laden: ${escHtml(err.message)}</div>`;
+    analyticsContent.innerHTML = `<p class="error">Kon statistieken niet laden: ${escHtml(err.message)}</p>`;
   }
 }
 
-function renderTrendBadge(val, invertColors = false) {
-  if (val === null || val === undefined) {
+function renderTrendBadge(trendVal, invertColors = false) {
+  if (trendVal === null || trendVal === undefined) {
     return `<span class="krant-kpi-trend neutral">—</span>`;
   }
-  const n = Number(val);
+  const n = Number(trendVal);
   if (n === 0) {
     return `<span class="krant-kpi-trend neutral">0%</span>`;
   }
@@ -1396,27 +1506,19 @@ function renderTrendBadge(val, invertColors = false) {
 
 function renderKrantAnalytics(data) {
   const kpis = data.kpis || {};
-  const trends = kpis.trends || {};
   const daily = Array.isArray(data.daily) ? data.daily : [];
-  const hourly = Array.isArray(data.hourly) ? data.hourly : new Array(24).fill(0);
-  const topPages = Array.isArray(data.top_pages) ? data.top_pages : [];
-  const referrers = Array.isArray(data.referrers) ? data.referrers : [];
-  const devices = data.devices || {};
-  const browsers = data.browsers || {};
-  const languages = data.languages || {};
+  const peakDay = data.peak_day || null;
+  const hourly = Array.isArray(data.hourly) ? data.hourly : [];
+  const pages = Array.isArray(data.pages) ? data.pages : [];
+  const sources = Array.isArray(data.sources) ? data.sources : [];
+  const devices = Array.isArray(data.devices) ? data.devices : [];
+  const languages = Array.isArray(data.languages) ? data.languages : [];
   const errors404 = Array.isArray(data.errors_404) ? data.errors_404 : [];
-  const blockedScans = Array.isArray(data.blocked_scans) ? data.blocked_scans : [];
-  const essayScans = Array.isArray(data.essay_scans) ? data.essay_scans : [];
+  const botScans = Array.isArray(data.bot_scans) ? data.bot_scans : [];
+  const essayMetrics = Array.isArray(data.essay_metrics) ? data.essay_metrics : [];
 
-  // Peak day
-  let peakDay = null;
-  let maxDailyViews = 1;
-  daily.forEach((d) => {
-    if (d.views > maxDailyViews) maxDailyViews = d.views;
-    if (!peakDay || d.views > peakDay.views) peakDay = d;
-  });
-
-  const maxHourly = Math.max(1, ...hourly);
+  const maxDailyViews = Math.max(1, ...daily.map((d) => Number(d.views) || 0));
+  const maxHourlyViews = Math.max(1, ...hourly.map((h) => Number(h.views) || 0));
 
   analyticsContent.innerHTML = `
     <!-- Toolbar -->
@@ -1424,9 +1526,9 @@ function renderKrantAnalytics(data) {
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div class="krant-stats-live">
           <span class="krant-stats-live-dot"></span>
-          <span>Nu online: ${Number(data.live_visitors) || 0} bezoekers</span>
+          <span>● Nu online: ${Number(data.live_online) || 0} bezoekers</span>
         </div>
-        <span class="muted small">Cookie-vrij · AVG/GDPR-proof · ${Number(kpis.ar_scans) || 0} AR-scans in periode</span>
+        <span class="bundle-info">Zelfgehost · Cookie-vrij · AVG/GDPR-proof</span>
       </div>
       <div class="krant-stats-controls">
         ${[
@@ -1444,8 +1546,8 @@ function renderKrantAnalytics(data) {
         `
           )
           .join('')}
-        <button type="button" class="btn btn-sm btn-secondary" id="krant-export-csv-btn">⬇ CSV Export</button>
-        <button type="button" class="btn btn-sm" id="krant-refresh-stats-btn">↻ Ververs</button>
+        <button type="button" class="btn ghost small-btn" id="krant-export-csv-btn">⬇ CSV Export</button>
+        <button type="button" class="btn ghost small-btn" id="krant-refresh-stats-btn">↻ Ververs</button>
       </div>
     </div>
 
@@ -1454,64 +1556,64 @@ function renderKrantAnalytics(data) {
       <div class="krant-kpi-card">
         <span class="krant-kpi-label">Paginaweergaven</span>
         <div class="krant-kpi-value-row">
-          <span class="krant-kpi-value">${Number(kpis.pageviews) || 0}</span>
-          ${renderTrendBadge(trends.pageviews)}
+          <span class="krant-kpi-value">${Number(kpis.views?.value) || 0}</span>
+          ${renderTrendBadge(kpis.views?.trend)}
         </div>
-        <span class="krant-kpi-sub">Vorige periode: ${Number(kpis.prev?.pageviews) || 0}</span>
+        <span class="krant-kpi-sub">Vorige periode: ${Number(kpis.views?.previous) || 0}</span>
       </div>
 
       <div class="krant-kpi-card">
         <span class="krant-kpi-label">Unieke bezoekers</span>
         <div class="krant-kpi-value-row">
-          <span class="krant-kpi-value">${Number(kpis.unique_visitors) || 0}</span>
-          ${renderTrendBadge(trends.unique_visitors)}
+          <span class="krant-kpi-value">${Number(kpis.visitors?.value) || 0}</span>
+          ${renderTrendBadge(kpis.visitors?.trend)}
         </div>
-        <span class="krant-kpi-sub">Anonieme dag-hashes</span>
+        <span class="krant-kpi-sub">Vorige periode: ${Number(kpis.visitors?.previous) || 0}</span>
       </div>
 
       <div class="krant-kpi-card">
         <span class="krant-kpi-label">Sessies</span>
         <div class="krant-kpi-value-row">
-          <span class="krant-kpi-value">${Number(kpis.sessions) || 0}</span>
-          ${renderTrendBadge(trends.sessions)}
+          <span class="krant-kpi-value">${Number(kpis.sessions?.value) || 0}</span>
+          ${renderTrendBadge(kpis.sessions?.trend)}
         </div>
-        <span class="krant-kpi-sub">${Number(kpis.pages_per_session) || 0} pagina's / sessie</span>
+        <span class="krant-kpi-sub">${Number(kpis.sessions?.pages_per_session) || 0} pagina's / sessie</span>
       </div>
 
       <div class="krant-kpi-card">
         <span class="krant-kpi-label">Gem. leestijd</span>
         <div class="krant-kpi-value-row">
-          <span class="krant-kpi-value">${formatDuration(kpis.avg_duration_sec)}</span>
-          ${renderTrendBadge(trends.avg_duration_sec)}
+          <span class="krant-kpi-value">${formatDuration(kpis.avg_dwell?.value)}</span>
+          ${renderTrendBadge(kpis.avg_dwell?.trend)}
         </div>
-        <span class="krant-kpi-sub">Enkel actieve tabbladtijd</span>
+        <span class="krant-kpi-sub">Actieve tabbladtijd</span>
       </div>
 
       <div class="krant-kpi-card">
         <span class="krant-kpi-label">Engaged Bounce Rate</span>
         <div class="krant-kpi-value-row">
-          <span class="krant-kpi-value">${Number(kpis.bounce_rate) || 0}%</span>
-          ${renderTrendBadge(trends.bounce_rate, true)}
+          <span class="krant-kpi-value">${Number(kpis.bounce_rate?.value) || 0}%</span>
+          ${renderTrendBadge(kpis.bounce_rate?.trend, true)}
         </div>
-        <span class="krant-kpi-sub">1 pagina &lt; 15s leestijd</span>
+        <span class="krant-kpi-sub">1 pagina &amp; &lt; 15s leestijd</span>
       </div>
 
       <div class="krant-kpi-card">
         <span class="krant-kpi-label">Gefilterde Bots</span>
         <div class="krant-kpi-value-row">
-          <span class="krant-kpi-value">${Number(kpis.bot_hits) || 0}</span>
-          <span class="krant-kpi-trend neutral">Ratio ${Number(kpis.bot_ratio) || 0}%</span>
+          <span class="krant-kpi-value">${Number(kpis.bots_filtered?.value) || 0}</span>
+          ${renderTrendBadge(kpis.bots_filtered?.trend)}
         </div>
-        <span class="krant-kpi-sub">Crawlers &amp; scanners genegeerd</span>
+        <span class="krant-kpi-sub">Crawlers &amp; scanners</span>
       </div>
     </div>
 
-    <!-- Daily & 24h Charts -->
+    <!-- Daily & 24h Vertical Bar Charts -->
     <div class="krant-charts-grid">
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>Dagelijkse weergaven &amp; bezoekers</h4>
-          <span class="muted small" id="krant-daily-hover-readout">
+          <h4>Dagelijkse weergaven &amp; unieke bezoekers</h4>
+          <span class="bundle-info" id="krant-daily-hover-readout">
             ${peakDay && peakDay.views > 0 ? `Piekdag: ${peakDay.label} (${peakDay.views} views, ${peakDay.visitors} bezoekers)` : 'Beweeg over een kolom voor details'}
           </span>
         </div>
@@ -1520,7 +1622,7 @@ function renderKrantAnalytics(data) {
             .map((d, idx) => {
               const viewsH = Math.max(d.views > 0 ? 4 : 1, Math.round((d.views / maxDailyViews) * 100));
               const visH = Math.max(d.visitors > 0 ? 3 : 0, Math.round((d.visitors / maxDailyViews) * 100));
-              const showLabel =
+              const showLbl =
                 daily.length <= 14 || idx === 0 || idx === daily.length - 1 || idx % Math.ceil(daily.length / 8) === 0;
               return `
                 <div class="krant-vbar-col" data-label="${escHtml(d.label)}" data-views="${d.views}" data-visitors="${d.visitors}" data-sessions="${d.sessions}">
@@ -1528,7 +1630,7 @@ function renderKrantAnalytics(data) {
                     <div class="krant-vbar-views" style="height:${viewsH}%;"></div>
                     <div class="krant-vbar-visitors" style="height:${visH}%;"></div>
                   </div>
-                  <span class="krant-vbar-label">${showLabel ? escHtml(d.label) : ''}</span>
+                  <span class="krant-vbar-label">${showLbl ? escHtml(d.label) : ''}</span>
                 </div>
               `;
             })
@@ -1539,19 +1641,18 @@ function renderKrantAnalytics(data) {
       <div class="krant-chart-card">
         <div class="krant-chart-head">
           <h4>Verkeer per uur (24u)</h4>
-          <span class="muted small" id="krant-hourly-hover-readout">00:00 – 23:00</span>
+          <span class="bundle-info" id="krant-hourly-hover-readout">00:00 – 23:00</span>
         </div>
         <div class="krant-vchart">
           ${hourly
-            .map((count, h) => {
-              const hPct = Math.max(count > 0 ? 4 : 1, Math.round((count / maxHourly) * 100));
-              const lbl = String(h).padStart(2, '0');
+            .map((h) => {
+              const pct = Math.max(h.views > 0 ? 4 : 1, Math.round((h.views / maxHourlyViews) * 100));
               return `
-                <div class="krant-vbar-col krant-hour-col" data-hour="${lbl}:00" data-count="${count}">
+                <div class="krant-vbar-col krant-hour-col" data-label="${escHtml(h.label)}" data-views="${h.views}" data-visitors="${h.visitors}">
                   <div class="krant-vbar-stack">
-                    <div class="krant-vbar-views" style="height:${hPct}%;"></div>
+                    <div class="krant-vbar-views" style="height:${pct}%;"></div>
                   </div>
-                  <span class="krant-vbar-label">${h % 4 === 0 ? lbl : ''}</span>
+                  <span class="krant-vbar-label">${h.hour % 4 === 0 ? escHtml(String(h.hour).padStart(2, '0')) : ''}</span>
                 </div>
               `;
             })
@@ -1564,28 +1665,28 @@ function renderKrantAnalytics(data) {
     <div class="krant-panels-grid">
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>Top pagina's (${topPages.length})</h4>
+          <h4>Top pagina's (${pages.length})</h4>
           <div style="display:flex;gap:6px;align-items:center;">
-            <input type="search" id="krant-pages-filter" placeholder="Filter pagina…" style="width:150px;padding:4px 8px;font-size:11px;" />
+            <input type="search" id="krant-pages-filter" placeholder="Filter pagina..." style="width:150px;padding:4px 8px;font-size:11px;" />
             ${
-              topPages.length > 8
-                ? `<button type="button" class="btn btn-sm" id="krant-toggle-all-pages">${showAllTopPages ? 'Toon top 8' : `Toon alles (${topPages.length})`}</button>`
+              pages.length > 8
+                ? `<button type="button" class="btn ghost mini-btn" id="krant-toggle-all-pages">${showAllTopPages ? 'Toon top 8' : `Toon alles (${pages.length})`}</button>`
                 : ''
             }
           </div>
         </div>
-        <div class="table-scroll">
-          <table class="studio-table" id="krant-top-pages-table">
+        <div class="table-scroll-wrap">
+          <table id="krant-top-pages-table">
             <thead>
               <tr>
                 <th>Pagina</th>
                 <th>Weergaven</th>
                 <th>Bezoekers</th>
-                <th>Gem. tijd</th>
+                <th>Gem. leestijd</th>
               </tr>
             </thead>
             <tbody>
-              ${renderTopPagesRows(topPages)}
+              ${renderTopPagesRows(pages)}
             </tbody>
           </table>
         </div>
@@ -1593,11 +1694,11 @@ function renderKrantAnalytics(data) {
 
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>Verkeersbronnen &amp; Acquisitie</h4>
-          <span class="muted small">Eerste externe referrer</span>
+          <h4>Verkeersbronnen (Acquisitie)</h4>
+          <span class="bundle-info">Eerste externe referrer</span>
         </div>
-        <div class="table-scroll">
-          <table class="studio-table">
+        <div class="table-scroll-wrap">
+          <table>
             <thead>
               <tr>
                 <th>Bron / Kanaal</th>
@@ -1607,17 +1708,17 @@ function renderKrantAnalytics(data) {
             </thead>
             <tbody>
               ${
-                referrers.length === 0
-                  ? `<tr><td colspan="3" class="muted">Nog geen sessies geregistreerd.</td></tr>`
-                  : referrers
+                sources.length === 0
+                  ? `<tr><td colspan="3" class="bundle-info">Nog geen sessies geregistreerd.</td></tr>`
+                  : sources
                       .map(
-                        (r) => `
+                        (s) => `
                     <tr>
-                      <td><strong>${escHtml(r.source)}</strong></td>
-                      <td>${r.count}</td>
+                      <td><strong>${escHtml(s.source)}</strong></td>
+                      <td>${s.sessions}</td>
                       <td>
-                        <div>${r.pct}%</div>
-                        <div class="krant-share-bar"><div class="krant-share-fill" style="width:${r.pct}%;"></div></div>
+                        <div>${s.share_pct}%</div>
+                        <div class="krant-share-bar"><div class="krant-share-fill" style="width:${s.share_pct}%;"></div></div>
                       </td>
                     </tr>
                   `
@@ -1630,35 +1731,35 @@ function renderKrantAnalytics(data) {
       </div>
     </div>
 
-    <!-- Krant Editions AR Scans & Technical Breakdown -->
+    <!-- Krant AR Scans per Edition + Devices/Languages -->
     <div class="krant-panels-grid">
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>AR Krant-edities: Scans &amp; Weergaven</h4>
-          <span class="muted small">8th Wall Image Target triggers</span>
+          <h4>Krant Edities: AR Scans &amp; Weergaven</h4>
+          <span class="bundle-info">8th Wall camera-scans</span>
         </div>
-        <div class="table-scroll">
-          <table class="studio-table">
+        <div class="table-scroll-wrap">
+          <table>
             <thead>
               <tr>
-                <th>Editie</th>
+                <th>Week</th>
                 <th>Titel</th>
-                <th>AR Scans (Periode / Totaal)</th>
-                <th>Views (Totaal)</th>
+                <th>AR Scans</th>
+                <th>Views</th>
               </tr>
             </thead>
             <tbody>
               ${
-                essayScans.length === 0
-                  ? `<tr><td colspan="4" class="muted">Geen edities gevonden.</td></tr>`
-                  : essayScans
+                essayMetrics.length === 0
+                  ? `<tr><td colspan="4" class="bundle-info">Nog geen edities.</td></tr>`
+                  : essayMetrics
                       .map(
-                        (es) => `
+                        (em) => `
                     <tr>
-                      <td><strong>Week #${es.week}</strong></td>
-                      <td>${escHtml(es.title)}</td>
-                      <td><strong>${es.period_scans}</strong> <span class="muted small">/ ${es.total_scans} totaal</span></td>
-                      <td>${es.total_views}</td>
+                      <td><strong>${escHtml(em.week)}</strong></td>
+                      <td>${escHtml(em.title)}</td>
+                      <td><strong>${em.scans}</strong></td>
+                      <td>${em.views}</td>
                     </tr>
                   `
                       )
@@ -1671,33 +1772,35 @@ function renderKrantAnalytics(data) {
 
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>Apparaten, Browsers &amp; Talen</h4>
+          <h4>Apparaten &amp; Talen</h4>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:11px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:11px;">
           <div>
             <strong>Apparaten</strong>
             <ul style="list-style:none;padding:0;margin:6px 0 0;">
-              ${Object.entries(devices)
-                .map(([k, v]) => `<li style="display:flex;justify-content:space-between;padding:2px 0;"><span>${escHtml(k)}</span><strong>${v}</strong></li>`)
-                .join('')}
-            </ul>
-          </div>
-          <div>
-            <strong>Browsers</strong>
-            <ul style="list-style:none;padding:0;margin:6px 0 0;">
-              ${Object.entries(browsers)
-                .map(([k, v]) => `<li style="display:flex;justify-content:space-between;padding:2px 0;"><span>${escHtml(k)}</span><strong>${v}</strong></li>`)
-                .join('')}
+              ${
+                devices.length === 0
+                  ? `<li class="bundle-info">—</li>`
+                  : devices
+                      .map(
+                        (d) =>
+                          `<li style="display:flex;justify-content:space-between;padding:3px 0;"><span>${escHtml(d.device)}</span><strong>${d.sessions} (${d.share_pct}%)</strong></li>`
+                      )
+                      .join('')
+              }
             </ul>
           </div>
           <div>
             <strong>Talen</strong>
             <ul style="list-style:none;padding:0;margin:6px 0 0;">
               ${
-                Object.keys(languages).length === 0
-                  ? `<li class="muted">—</li>`
-                  : Object.entries(languages)
-                      .map(([k, v]) => `<li style="display:flex;justify-content:space-between;padding:2px 0;"><span>${escHtml(k.toUpperCase())}</span><strong>${v}</strong></li>`)
+                languages.length === 0
+                  ? `<li class="bundle-info">—</li>`
+                  : languages
+                      .map(
+                        (l) =>
+                          `<li style="display:flex;justify-content:space-between;padding:3px 0;"><span>${escHtml(l.lang)}</span><strong>${l.sessions} (${l.share_pct}%)</strong></li>`
+                      )
                       .join('')
               }
             </ul>
@@ -1706,40 +1809,40 @@ function renderKrantAnalytics(data) {
       </div>
     </div>
 
-    <!-- Real 404 Errors vs Blocked Vulnerability Scans -->
+    <!-- Real 404 Errors vs Blocked Bot/Vulnerability Scans -->
     <div class="krant-panels-grid">
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>Echte Bezoekers-404's (${errors404.length})</h4>
+          <h4>Errors (404 — Echte bezoekers: ${errors404.length})</h4>
           ${
             errors404.length > 0
-              ? `<button type="button" class="btn btn-sm btn-danger" id="krant-dismiss-all-404">Wis alles</button>`
+              ? `<button type="button" class="btn danger mini-btn" id="krant-dismiss-all-404">Wis alles</button>`
               : ''
           }
         </div>
-        <div class="table-scroll">
-          <table class="studio-table">
+        <div class="table-scroll-wrap">
+          <table>
             <thead>
               <tr>
                 <th>Pad</th>
                 <th>Hits</th>
-                <th>Herkomst</th>
-                <th>Actie</th>
+                <th>Referrer</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               ${
                 errors404.length === 0
-                  ? `<tr><td colspan="4" class="muted">Geen onopgeloste 404-meldingen van echte bezoekers.</td></tr>`
+                  ? `<tr><td colspan="4" class="bundle-info">Geen 404-meldingen van echte bezoekers.</td></tr>`
                   : errors404
                       .map(
                         (err) => `
                     <tr>
                       <td><code>${escHtml(err.page)}</code></td>
                       <td><strong>${err.count}</strong></td>
-                      <td class="muted small">${escHtml(err.last_ref || 'Direct')}</td>
+                      <td class="bundle-info">${escHtml(err.last_ref || 'Direct')}</td>
                       <td>
-                        <button type="button" class="icon-btn danger dismiss-404-btn" data-page="${escHtml(err.page)}" title="Markeer als opgelost">✕</button>
+                        <button type="button" class="icon-btn danger dismiss-404-btn" data-page="${escHtml(err.page)}" title="Wis deze 404">✕</button>
                       </td>
                     </tr>
                   `
@@ -1753,26 +1856,28 @@ function renderKrantAnalytics(data) {
 
       <div class="krant-chart-card">
         <div class="krant-chart-head">
-          <h4>Geblokkeerde Bot- &amp; Kwetsbaarheidsscans (${blockedScans.length})</h4>
-          <span class="muted small">Automatisch gefilterd</span>
+          <h4>Geblokkeerde bot- &amp; kwetsbaarheidsscans (${botScans.length})</h4>
+          <span class="bundle-info">Automatisch gefilterd</span>
         </div>
-        <div class="table-scroll">
-          <table class="studio-table">
+        <div class="table-scroll-wrap">
+          <table>
             <thead>
               <tr>
-                <th>Gezocht pad</th>
-                <th>Pogingen</th>
+                <th>Pad</th>
+                <th>Type</th>
+                <th>Hits</th>
               </tr>
             </thead>
             <tbody>
               ${
-                blockedScans.length === 0
-                  ? `<tr><td colspan="2" class="muted">Geen kwetsbaarheidsscans gedetecteerd in deze periode.</td></tr>`
-                  : blockedScans
+                botScans.length === 0
+                  ? `<tr><td colspan="3" class="bundle-info">Geen kwetsbaarheidsscans gedetecteerd.</td></tr>`
+                  : botScans
                       .map(
                         (s) => `
                     <tr>
-                      <td><code class="muted">${escHtml(s.page)}</code></td>
+                      <td><code class="bundle-info">${escHtml(s.page)}</code></td>
+                      <td class="bundle-info">${escHtml(s.category || 'Bot')}</td>
                       <td>${s.count}</td>
                     </tr>
                   `
@@ -1786,7 +1891,7 @@ function renderKrantAnalytics(data) {
     </div>
   `;
 
-  // Wire up analytics interactions
+  // Wire up analytics events
   analyticsContent.querySelectorAll('.period-pill').forEach((btn) => {
     btn.addEventListener('click', () => loadKrantAnalytics(Number(btn.dataset.days)));
   });
@@ -1799,9 +1904,8 @@ function renderKrantAnalytics(data) {
     exportKrantAnalyticsCsv(data);
   });
 
-  // Hover readouts for daily & hourly charts
   const dailyReadout = document.getElementById('krant-daily-hover-readout');
-  analyticsContent.querySelectorAll('.krant-vbar-col[data-views]').forEach((col) => {
+  analyticsContent.querySelectorAll('.krant-vbar-col[data-sessions]').forEach((col) => {
     col.addEventListener('mouseenter', () => {
       if (dailyReadout) {
         dailyReadout.textContent = `${col.dataset.label}: ${col.dataset.views} weergaven · ${col.dataset.visitors} unieke bezoekers · ${col.dataset.sessions} sessies`;
@@ -1813,17 +1917,16 @@ function renderKrantAnalytics(data) {
   analyticsContent.querySelectorAll('.krant-hour-col').forEach((col) => {
     col.addEventListener('mouseenter', () => {
       if (hourlyReadout) {
-        hourlyReadout.textContent = `${col.dataset.hour} — ${col.dataset.count} weergaven`;
+        hourlyReadout.textContent = `${col.dataset.label} — ${col.dataset.views} weergaven (${col.dataset.visitors} bezoekers)`;
       }
     });
   });
 
-  // Top pages search & show-all
   const pagesFilter = document.getElementById('krant-pages-filter');
   const pagesTbody = document.querySelector('#krant-top-pages-table tbody');
   pagesFilter?.addEventListener('input', () => {
     const q = pagesFilter.value.trim().toLowerCase();
-    const filtered = topPages.filter(
+    const filtered = pages.filter(
       (p) => p.page.toLowerCase().includes(q) || (p.title || '').toLowerCase().includes(q)
     );
     if (pagesTbody) pagesTbody.innerHTML = renderTopPagesRows(filtered, true);
@@ -1834,7 +1937,6 @@ function renderKrantAnalytics(data) {
     renderKrantAnalytics(currentStatsData);
   });
 
-  // Dismiss 404s
   analyticsContent.querySelectorAll('.dismiss-404-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
       await apiJson('/admin/stats/dismiss-404', {
@@ -1848,7 +1950,7 @@ function renderKrantAnalytics(data) {
   document.getElementById('krant-dismiss-all-404')?.addEventListener('click', async () => {
     await apiJson('/admin/stats/dismiss-404', {
       method: 'POST',
-      body: JSON.stringify({ page: '__ALL__' }),
+      body: JSON.stringify({ all: true }),
     });
     await loadKrantAnalytics(currentStatsDays);
   });
@@ -1856,7 +1958,7 @@ function renderKrantAnalytics(data) {
 
 function renderTopPagesRows(pages, forceAll = false) {
   if (!pages || pages.length === 0) {
-    return `<tr><td colspan="4" class="muted">Nog geen paginaweergaven.</td></tr>`;
+    return `<tr><td colspan="4" class="bundle-info">Nog geen paginaweergaven.</td></tr>`;
   }
   const list = forceAll || showAllTopPages ? pages : pages.slice(0, 8);
   return list
@@ -1865,12 +1967,12 @@ function renderTopPagesRows(pages, forceAll = false) {
       <tr>
         <td>
           <div><a href="${escHtml(p.page)}" target="_blank" rel="noopener"><strong>${escHtml(p.title || p.page)}</strong></a></div>
-          <div class="muted small">${escHtml(p.page)}</div>
-          <div class="krant-share-bar"><div class="krant-share-fill" style="width:${p.pct}%;"></div></div>
+          <div class="bundle-info">${escHtml(p.page)}</div>
+          <div class="krant-share-bar"><div class="krant-share-fill" style="width:${p.share_pct}%;"></div></div>
         </td>
-        <td><strong>${p.views}</strong> <span class="muted small">(${p.pct}%)</span></td>
+        <td><strong>${p.views}</strong> <span class="bundle-info">(${p.share_pct}%)</span></td>
         <td>${p.visitors}</td>
-        <td>${formatDuration(p.avg_dwell_sec)}</td>
+        <td>${formatDuration(p.avg_dwell)}</td>
       </tr>
     `
     )
@@ -1879,14 +1981,14 @@ function renderTopPagesRows(pages, forceAll = false) {
 
 function exportKrantAnalyticsCsv(data) {
   const lines = [
-    ['Type', 'Datum/Pad', 'Titel', 'Weergaven', 'Unieke Bezoekers', 'Sessies/GemTijdSec'].join(','),
+    ['Type', 'Datum/Pad', 'Titel', 'Weergaven', 'Unieke Bezoekers', 'Sessies/GemLeestijdSec'].join(','),
   ];
   (data.daily || []).forEach((d) => {
-    lines.push(['DAG', d.date, d.label, d.views, d.visitors, d.sessions].join(','));
+    lines.push(['DAG', d.date, `"${d.label}"`, d.views, d.visitors, d.sessions].join(','));
   });
-  (data.top_pages || []).forEach((p) => {
+  (data.pages || []).forEach((p) => {
     const cleanTitle = `"${String(p.title || '').replace(/"/g, '""')}"`;
-    lines.push(['PAGINA', `"${p.page}"`, cleanTitle, p.views, p.visitors, p.avg_dwell_sec].join(','));
+    lines.push(['PAGINA', `"${p.page}"`, cleanTitle, p.views, p.visitors, p.avg_dwell].join(','));
   });
 
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -1898,5 +2000,22 @@ function exportKrantAnalyticsCsv(data) {
   URL.revokeObjectURL(url);
 }
 
-// Start
-checkAuthState();
+/* ==========================================================================
+   INITIALIZATION
+   ========================================================================== */
+
+(async function init() {
+  resetForm();
+  try {
+    const data = await apiJson('/admin/status');
+    if (data.needs_setup) {
+      showSetup();
+    } else if (data.logged_in) {
+      showPanel();
+    } else {
+      showLogin();
+    }
+  } catch (_) {
+    showLogin();
+  }
+})();
