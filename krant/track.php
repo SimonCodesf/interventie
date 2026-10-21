@@ -35,7 +35,7 @@ if (empty($payload['type']) && empty($payload['page'])) {
     exit;
 }
 
-$allowedTypes = ['view', 'dwell', 'scan', 'ar_dwell', 'cam_start', 'cam_denied'];
+$allowedTypes = ['view', 'dwell', 'scan', 'ar_dwell', 'cam_start', 'cam_denied', 'ar_perf', 'ar_error'];
 $type = in_array($payload['type'] ?? '', $allowedTypes, true) ? $payload['type'] : 'view';
 $sec  = isset($payload['sec']) ? (int)$payload['sec'] : 0;
 
@@ -77,7 +77,46 @@ if ($sid === '') {
     $sid = substr($visitorHash, 0, 12);
 }
 
-// 5. Schrijf JSONL-regel met flock(LOCK_EX)
+// 5. Hardware, Performance & Error Details sanitizen voor LLM-diagnostiek
+$hw = null;
+if (!empty($payload['hw']) && is_array($payload['hw'])) {
+    $rawHw = $payload['hw'];
+    $hw = [
+        'model'  => substr(strip_tags((string)($rawHw['model'] ?? '')), 0, 60),
+        'gpu'    => substr(strip_tags((string)($rawHw['gpu'] ?? '')), 0, 80),
+        'screen' => substr(strip_tags((string)($rawHw['screen'] ?? '')), 0, 40),
+        'ram'    => substr(strip_tags((string)($rawHw['ram'] ?? '')), 0, 20),
+        'cores'  => substr(strip_tags((string)($rawHw['cores'] ?? '')), 0, 20),
+        'conn'   => substr(strip_tags((string)($rawHw['conn'] ?? '')), 0, 20),
+    ];
+}
+
+$perf = null;
+if (!empty($payload['perf']) && is_array($payload['perf'])) {
+    $rawP = $payload['perf'];
+    $perf = [
+        't_engine' => max(0, min(120000, (int)($rawP['t_engine'] ?? 0))),
+        't_cam'    => max(0, min(120000, (int)($rawP['t_cam'] ?? 0))),
+        't_lock'   => max(0, min(120000, (int)($rawP['t_lock'] ?? 0))),
+        'jit'      => (float)($rawP['jit'] ?? 0),
+        'found'    => (int)($rawP['found'] ?? 0),
+        'lost'     => (int)($rawP['lost'] ?? 0),
+        'fps'      => (int)($rawP['fps'] ?? 0),
+    ];
+}
+
+$err = null;
+if (!empty($payload['err']) && is_array($payload['err'])) {
+    $rawE = $payload['err'];
+    $err = [
+        'category' => substr(strip_tags((string)($rawE['category'] ?? 'general')), 0, 32),
+        'message'  => substr(strip_tags((string)($rawE['message'] ?? '')), 0, 300),
+        'details'  => substr(strip_tags((string)($rawE['details'] ?? '')), 0, 500),
+        'stage'    => substr(strip_tags((string)($rawE['stage'] ?? 'runtime')), 0, 32),
+    ];
+}
+
+// 6. Schrijf JSONL-regel met flock(LOCK_EX)
 writeKrantStatsEvent([
     't'    => time(),
     'sid'  => $sid,
@@ -89,6 +128,9 @@ writeKrantStatsEvent([
     'sec'  => max(0, min(1800, $sec)),
     'v'    => $visitorHash,
     'bot'  => $isBot,
+    'hw'   => $hw,
+    'perf' => $perf,
+    'err'  => $err,
 ]);
 
 http_response_code(204);

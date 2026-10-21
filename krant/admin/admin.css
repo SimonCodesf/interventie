@@ -1549,7 +1549,9 @@ td.actions {
   align-items: flex-end;
   gap: 4px;
   padding-top: 18px;
+  margin-bottom: 24px;
   border-bottom: 1px solid var(--border);
+  position: relative;
 }
 
 .krant-vbar-col {
@@ -1567,23 +1569,31 @@ td.actions {
 .krant-vbar-stack {
   width: 100%;
   max-width: 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: stretch;
   height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
 }
 
 .krant-vbar-scans {
   background: var(--accent-blue);
   border-radius: 2px 2px 0 0;
-  width: 100%;
+  flex: 1;
+  min-width: 3px;
 }
 
 .krant-vbar-views {
   background: var(--ink);
   border-radius: 2px 2px 0 0;
-  width: 100%;
+  flex: 1;
+  min-width: 3px;
+}
+
+.krant-vbar-views.is-zero {
+  background: var(--paper-subtle);
+  height: 2px !important;
 }
 
 .krant-vbar-visitors {
@@ -1597,10 +1607,15 @@ td.actions {
 }
 
 .krant-vbar-label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 9px;
+  line-height: 1;
   color: var(--ink-muted);
-  margin-top: 4px;
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .chart-legend {
@@ -1691,6 +1706,92 @@ td.actions {
   justify-content: space-between;
   align-items: baseline;
   font-size: 12px;
+}
+
+/* AR Diagnostics & LLM Export Card */
+.krant-diag-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.krant-diag-badge {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diag-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.diag-val {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.diag-val.has-errors {
+  color: var(--accent-red);
+}
+
+.krant-diag-subgrid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 20px;
+}
+
+.krant-diag-table th,
+.krant-diag-table td {
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.error-log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error-log-item {
+  background: var(--paper);
+  border-left: 3px solid var(--accent-red);
+  padding: 8px 10px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.error-log-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.error-cat-badge {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
 }
 
 /* Collapsible Tech / 404 / Bot Section */

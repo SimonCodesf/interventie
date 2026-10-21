@@ -1825,6 +1825,10 @@ function renderKrantAnalytics(data) {
     const errors404 = Array.isArray(data.errors_404) ? data.errors_404 : [];
     const botScans = Array.isArray(data.bot_scans) ? data.bot_scans : [];
     const essayMetrics = Array.isArray(data.essay_metrics) ? data.essay_metrics : [];
+    const arDiag = data.ar_diagnostics || {};
+    const perfSummary = arDiag.perf_summary || {};
+    const gsmHardware = Array.isArray(arDiag.gsm_hardware) ? arDiag.gsm_hardware : [];
+    const recentArErrors = Array.isArray(arDiag.recent_errors) ? arDiag.recent_errors : [];
 
     const totalSessions = Math.max(0, Number(funnel.sessions ?? kpis.sessions?.value) || 0);
     const camStarts = Math.max(0, Number(funnel.camera_starts ?? kpis.camera_starts?.value) || 0);
@@ -1988,17 +1992,18 @@ function renderKrantAnalytics(data) {
               .map((d, idx) => {
                 const scans = Number(d.scans) || 0;
                 const views = Number(d.views) || 0;
-                const scansH = Math.max(scans > 0 ? 5 : 0, Math.round((scans / maxDailyVal) * 100));
-                const viewsH = Math.max(views > 0 ? 4 : 1, Math.round((views / maxDailyVal) * 100));
+                const scansH = scans > 0 ? Math.max(6, Math.round((scans / maxDailyVal) * 100)) : 0;
+                const viewsH = views > 0 ? Math.max(6, Math.round((views / maxDailyVal) * 100)) : 0;
+                const isZero = scans === 0 && views === 0;
                 const showLbl =
                   daily.length <= 14 || idx === 0 || idx === daily.length - 1 || idx % Math.ceil(daily.length / 8) === 0;
                 return `
                   <div class="krant-vbar-col" data-label="${escHtml(d.label)}" data-scans="${scans}" data-views="${views}" data-visitors="${d.visitors}">
                     <div class="krant-vbar-stack">
                       ${scans > 0 ? `<div class="krant-vbar-scans" style="height:${scansH}%;"></div>` : ''}
-                      <div class="krant-vbar-views" style="height:${viewsH}%;"></div>
+                      ${views > 0 || isZero ? `<div class="krant-vbar-views ${isZero ? 'is-zero' : ''}" style="height:${viewsH}%;"></div>` : ''}
                     </div>
-                    <span class="krant-vbar-label">${showLbl ? escHtml(d.label) : ''}</span>
+                    ${showLbl ? `<span class="krant-vbar-label">${escHtml(d.label)}</span>` : ''}
                   </div>
                 `;
               })
@@ -2061,13 +2066,15 @@ function renderKrantAnalytics(data) {
                 const scans = Number(h.scans) || 0;
                 const views = Number(h.views) || 0;
                 const val = Math.max(scans, views);
-                const pct = Math.max(val > 0 ? 5 : 1, Math.round((val / maxHourlyVal) * 100));
+                const isZero = val === 0;
+                const pct = val > 0 ? Math.max(6, Math.round((val / maxHourlyVal) * 100)) : 0;
+                const showHour = h.hour % 4 === 0;
                 return `
                   <div class="krant-vbar-col krant-hour-col" data-label="${escHtml(h.label)}" data-scans="${scans}" data-views="${views}" data-visitors="${h.visitors}">
                     <div class="krant-vbar-stack">
-                      <div class="${scans > 0 ? 'krant-vbar-scans' : 'krant-vbar-views'}" style="height:${pct}%;"></div>
+                      <div class="${scans > 0 ? 'krant-vbar-scans' : 'krant-vbar-views'} ${isZero ? 'is-zero' : ''}" style="height:${pct}%;"></div>
                     </div>
-                    <span class="krant-vbar-label">${h.hour % 4 === 0 ? escHtml(String(h.hour).padStart(2, '0')) : ''}</span>
+                    ${showHour ? `<span class="krant-vbar-label">${escHtml(String(h.hour).padStart(2, '0'))}</span>` : ''}
                   </div>
                 `;
               })
@@ -2139,7 +2146,124 @@ function renderKrantAnalytics(data) {
         </div>
       </div>
 
-      <!-- 6. Inklapbare Systeemdiagnose (404-meldingen & Bot-filtering) -->
+      <!-- 6. AR Telemetrie, GSM Modellen & LLM-Diagnose -->
+      <div class="krant-chart-card">
+        <div class="krant-chart-head">
+          <div>
+            <h4>AR Telemetrie, GSM Modellen &amp; LLM Export</h4>
+            <p class="bundle-info" style="margin:2px 0 0;">Precieze mobiele telemetrie (hardware, laadtijden, GPU en fouten) — direct exporteerbaar voor AI debugging</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button type="button" class="btn ghost small-btn" id="krant-copy-llm-prompt-btn">KOPIEER LLM PROMPT</button>
+            <button type="button" class="btn ghost small-btn" id="krant-download-llm-json-btn">DOWNLOAD JSON</button>
+          </div>
+        </div>
+
+        <div class="krant-diag-badges-grid">
+          <div class="krant-diag-badge">
+            <span class="diag-label">Mediaan Target Lock</span>
+            <strong class="diag-val">${perfSummary.median_lock_ms > 0 ? (perfSummary.median_lock_ms / 1000).toFixed(2) + 's' : '—'}</strong>
+            <span class="bundle-info">Tijd tot herkenning van krant</span>
+          </div>
+          <div class="krant-diag-badge">
+            <span class="diag-label">Mediaan Engine Laadtijd</span>
+            <strong class="diag-val">${perfSummary.median_engine_ms > 0 ? (perfSummary.median_engine_ms / 1000).toFixed(2) + 's' : '—'}</strong>
+            <span class="bundle-info">A-Frame + 8th Wall chunks</span>
+          </div>
+          <div class="krant-diag-badge">
+            <span class="diag-label">Mediaan Camera Start</span>
+            <strong class="diag-val">${perfSummary.median_cam_ms > 0 ? (perfSummary.median_cam_ms / 1000).toFixed(2) + 's' : '—'}</strong>
+            <span class="bundle-info">Stream request tot active feed</span>
+          </div>
+          <div class="krant-diag-badge">
+            <span class="diag-label">Geregistreerde AR Fouten</span>
+            <strong class="diag-val ${recentArErrors.length > 0 ? 'has-errors' : ''}">${recentArErrors.length}</strong>
+            <span class="bundle-info">${recentArErrors.length > 0 ? 'Fouten opgevangen in periode' : 'Geen hardware/camera crashes'}</span>
+          </div>
+        </div>
+
+        <div class="krant-diag-subgrid">
+          <div>
+            <div class="krant-chart-head" style="margin-bottom:8px;padding-bottom:8px;">
+              <h5 style="margin:0;font-size:13px;font-family:var(--font-serif);font-weight:600;">GSM Toestellen &amp; GPU Matrix (${gsmHardware.length})</h5>
+              <span class="bundle-info">Scan-succes per model</span>
+            </div>
+            <div class="table-scroll-wrap">
+              <table class="krant-diag-table">
+                <thead>
+                  <tr>
+                    <th>GSM Model</th>
+                    <th>GPU / Renderer</th>
+                    <th>Sessies</th>
+                    <th>Scans</th>
+                    <th>Fouten</th>
+                    <th>Gem. Lock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    gsmHardware.length === 0
+                      ? `<tr><td colspan="6" class="bundle-info">Nog geen mobiele telemetrie vastgelegd.</td></tr>`
+                      : gsmHardware
+                          .slice(0, 15)
+                          .map(
+                            (g) => `
+                        <tr>
+                          <td><strong>${escHtml(g.model)}</strong></td>
+                          <td class="bundle-info">${escHtml(g.gpu || '—')}</td>
+                          <td>${g.sessions}</td>
+                          <td><strong>${g.scans}</strong> (${g.scan_rate_pct}%)</td>
+                          <td><span class="${g.errors > 0 ? 'krant-kpi-trend down' : 'bundle-info'}">${g.errors}</span></td>
+                          <td>${g.avg_lock_ms > 0 ? (g.avg_lock_ms / 1000).toFixed(2) + 's' : '—'}</td>
+                        </tr>
+                      `
+                          )
+                          .join('')
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <div class="krant-chart-head" style="margin-bottom:8px;padding-bottom:8px;">
+              <h5 style="margin:0;font-size:13px;font-family:var(--font-serif);font-weight:600;">Recente AR Foutmeldingen (${recentArErrors.length})</h5>
+              <span class="bundle-info">Voor LLM analyse</span>
+            </div>
+            <div style="max-height:280px;overflow-y:auto;">
+              ${
+                recentArErrors.length === 0
+                  ? `<p class="bundle-info" style="padding:10px 0;">Geen camera- of WebGL-fouten gedetecteerd in deze periode.</p>`
+                  : `
+                <ul class="error-log-list">
+                  ${recentArErrors
+                    .slice(0, 15)
+                    .map((err) => {
+                      const hw = err.hw || {};
+                      return `
+                      <li class="error-log-item">
+                        <div class="error-log-top">
+                          <span class="error-cat-badge">${escHtml(err.category || 'error')} / ${escHtml(err.stage || 'runtime')}</span>
+                          <span class="bundle-info">${formatRelativeOrDate(err.t)}</span>
+                        </div>
+                        <div><strong>${escHtml(err.message || 'Onbekende fout')}</strong></div>
+                        <div class="bundle-info">
+                          Toestel: ${escHtml(hw.model || 'Onbekend')} · GPU: ${escHtml(hw.gpu || 'Onbekend')} ${hw.screen ? '· ' + escHtml(hw.screen) : ''}
+                        </div>
+                        ${err.details ? `<div style="font-family:var(--font-mono);font-size:9px;color:var(--ink-muted);word-break:break-all;">${escHtml(err.details.slice(0, 150))}</div>` : ''}
+                      </li>
+                    `;
+                    })
+                    .join('')}
+                </ul>
+              `
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Inklapbare Systeemdiagnose (404-meldingen & Bot-filtering) -->
       <details class="analytics-tech-details" ${errors404.length > 0 ? 'open' : ''}>
         <summary>
           <span>Systeemdiagnose: 404-meldingen (${errors404.length}) &amp; Geblokkeerde bot-scans (${Number(kpis.bots_filtered?.value) || 0})</span>
@@ -2239,6 +2363,41 @@ function renderKrantAnalytics(data) {
 
     document.getElementById('krant-export-csv-btn')?.addEventListener('click', () => {
       exportKrantAnalyticsCsv(data);
+    });
+
+    document.getElementById('krant-copy-llm-prompt-btn')?.addEventListener('click', async () => {
+      const promptText = data.ar_diagnostics?.llm_prompt || 'Geen telemetrie beschikbaar.';
+      const btn = document.getElementById('krant-copy-llm-prompt-btn');
+      try {
+        await navigator.clipboard.writeText(promptText);
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = 'GEKOPIEERD NAAR KLEMBLORD!';
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        }
+      } catch (e) {
+        alert('Kopiëren mislukt: selecteer handmatig in JSON.');
+      }
+    });
+
+    document.getElementById('krant-download-llm-json-btn')?.addEventListener('click', () => {
+      const diagData = {
+        generated_at: new Date().toISOString(),
+        period_days: data.period_days,
+        kpis: data.kpis,
+        ar_funnel: data.ar_funnel,
+        ar_diagnostics: data.ar_diagnostics,
+        essay_metrics: data.essay_metrics,
+        hourly: data.hourly,
+        daily: data.daily
+      };
+      const blob = new Blob([JSON.stringify(diagData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `krant-ar-diagnostics-${data.period_days}d-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
     });
 
     const dailyReadout = document.getElementById('krant-daily-hover-readout');

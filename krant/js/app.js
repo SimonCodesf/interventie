@@ -272,11 +272,19 @@ function buildScene(entries) {
         const d = (e && e.detail) || {};
         console.error('[AR] realityerror', d);
         if (firstFoundAt) return;
-        if (typeof window.trackKrantCameraDenied === 'function') {
-            window.trackKrantCameraDenied();
-        }
         const reason = (d.error && d.error.message) ||
             (d.isDeviceBrowserSupported === false ? 'deze browser of dit toestel wordt niet ondersteund' : 'de camera kon niet gestart worden');
+        if (typeof window.trackKrantCameraDenied === 'function') {
+            window.trackKrantCameraDenied(reason);
+        }
+        if (typeof window.trackKrantArError === 'function') {
+            window.trackKrantArError({
+                category: 'realityerror',
+                message: reason,
+                details: (d.error && (d.error.stack || d.error.name)) || '',
+                stage: 'reality'
+            });
+        }
         overlay().style.display = 'flex';
         const btn = document.getElementById('start-btn');
         btn.textContent = 'OPNIEUW PROBEREN';
@@ -324,7 +332,18 @@ function buildScene(entries) {
             const st = anchorState[entry.name];
             if (st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
             foundCount++;
-            if (!firstFoundAt) firstFoundAt = performance.now();
+            if (!firstFoundAt) {
+                firstFoundAt = performance.now();
+                if (typeof window.trackKrantArPerf === 'function') {
+                    window.trackKrantArPerf({
+                        t_engine: window.__arEngineLoadMs || 0,
+                        t_cam: window.__arCameraReadyMs || 0,
+                        t_lock: Math.round(firstFoundAt - bootTime),
+                        found: 1,
+                        lost: 0
+                    });
+                }
+            }
             if (!st.visible) st.foundAt = Date.now();
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
@@ -375,6 +394,13 @@ function buildScene(entries) {
         const alive = canvas && canvas.width > 0;
         if (!alive && !firstFoundAt) {
             console.warn('[AR] watchdog: geen actieve pipeline');
+            if (typeof window.trackKrantArError === 'function') {
+                window.trackKrantArError({
+                    category: 'watchdog',
+                    message: 'Watchdog: geen actieve XR-pipeline / canvas na 15s',
+                    stage: 'pipeline'
+                });
+            }
             retryOverlay();
         }
     }, 15000);
@@ -408,6 +434,14 @@ function startJitterLoop() {
                 jit: jit, found: foundCount, lost: lostCount,
                 lock: firstFoundAt ? Math.round(firstFoundAt - bootTime) : null,
             };
+            if (frameCount % 120 === 0 && typeof window.trackKrantArPerf === 'function') {
+                window.trackKrantArPerf({
+                    jit: jit,
+                    found: foundCount,
+                    lost: lostCount,
+                    fps: Math.round(1000 / (jit > 0 ? jit * 100 : 16))
+                });
+            }
         }
     }, 100);
 }
@@ -420,6 +454,13 @@ async function bootAR() {
     bootTime = performance.now();
 
     if (!webglSupported()) {
+        if (typeof window.trackKrantArError === 'function') {
+            window.trackKrantArError({
+                category: 'webgl',
+                message: 'WebGL niet ondersteund door browser of toestel',
+                stage: 'boot'
+            });
+        }
         fatalError('NIET BESCHIKBAAR');
         return;
     }
@@ -430,7 +471,7 @@ async function bootAR() {
 
     if (await cameraBlocked()) {
         if (typeof window.trackKrantCameraDenied === 'function') {
-            window.trackKrantCameraDenied();
+            window.trackKrantCameraDenied('Camera geblokkeerd via browser permissies');
         }
         // Site staat op blokkeren: Chrome toont uit zichzelf geen vraag meer.
         // De knop stelt de vraag alsnog — bij een zachte blokkade komt de
@@ -450,6 +491,9 @@ async function bootAR() {
         const perm = await ensureCameraPermission();
         if (!perm.ok) {
             btn.textContent = 'CAMERA TOESTAAN';
+            if (typeof window.trackKrantCameraDenied === 'function') {
+                window.trackKrantCameraDenied(perm.reason || 'Camera permissie geweigerd');
+            }
             if (perm.reason === 'NotReadableError' || perm.reason === 'NotFoundError') {
                 bootStatus('Camera is bezet of niet gevonden (' + perm.reason + '). Sluit andere camera-apps en probeer opnieuw.');
             } else if (perm.reason === 'unsupported') {
@@ -467,6 +511,7 @@ async function bootAR() {
 
     let XR8, XrController;
     const entries = [];
+    const engineStart = performance.now();
     try {
         bootStatus('Bibliotheken laden…');
         let loadedCount = 0;
@@ -511,10 +556,20 @@ async function bootAR() {
         }
 
         XrController.configure({ imageTargetData: entries.map(function (e) { return e.targetData; }) });
-        console.log('[AR] XR8 geconfigureerd met ' + entries.length + ' target(s)');
+        window.__arEngineLoadMs = Math.round(performance.now() - engineStart);
+        window.__arCameraReadyMs = Math.round(performance.now() - bootTime);
+        console.log('[AR] XR8 geconfigureerd met ' + entries.length + ' target(s) in ' + window.__arEngineLoadMs + 'ms');
         bootStatus('Camera starten…');
     } catch (e) {
         console.error(e);
+        if (typeof window.trackKrantArError === 'function') {
+            window.trackKrantArError({
+                category: 'engine',
+                message: (e && e.message) || String(e),
+                details: (e && e.stack) || '',
+                stage: 'engine_init'
+            });
+        }
         btn.textContent = 'OPNIEUW PROBEREN';
         bootStatus('Starten mislukt: ' + (e && e.message ? e.message : e) + '. Controleer je verbinding en probeer opnieuw.');
         bootStarted = false;

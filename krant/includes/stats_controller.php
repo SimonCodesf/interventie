@@ -267,7 +267,7 @@ function writeKrantStatsEvent(array $event): bool {
     $dateStr = date('Y-m-d', $timestamp);
     $filePath = KRANT_STATS_DIR . '/' . $dateStr . '.jsonl';
 
-    $allowedEventTypes = ['view', 'dwell', 'err404', 'scan', 'ar_dwell', 'cam_start', 'cam_denied'];
+    $allowedEventTypes = ['view', 'dwell', 'err404', 'scan', 'ar_dwell', 'cam_start', 'cam_denied', 'ar_perf', 'ar_error'];
     $record = [
         't'    => $timestamp,
         'sid'  => substr(preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($event['sid'] ?? '')), 0, 32),
@@ -280,6 +280,16 @@ function writeKrantStatsEvent(array $event): bool {
         'v'    => substr(preg_replace('/[^a-f0-9]/', '', strtolower((string)($event['v'] ?? ''))), 0, 16),
         'bot'  => !empty($event['bot']) ? 1 : 0,
     ];
+
+    if (!empty($event['hw']) && is_array($event['hw'])) {
+        $record['hw'] = $event['hw'];
+    }
+    if (!empty($event['perf']) && is_array($event['perf'])) {
+        $record['perf'] = $event['perf'];
+    }
+    if (!empty($event['err']) && is_array($event['err'])) {
+        $record['err'] = $event['err'];
+    }
 
     $line = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
     $fh = @fopen($filePath, 'ab');
@@ -801,6 +811,11 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
     $real404Map = [];
     $botScansMap = [];
 
+    // 5. AR Telemetrie, Hardware (GSM/GPU) & Foutenopvang voor LLM
+    $arErrorsList = [];
+    $arPerfList = [];
+    $gsmHardwareMap = [];
+
     $ownHost = strtolower($_SERVER['HTTP_HOST'] ?? '');
     $ownHost = preg_replace('/:\d+$/', '', $ownHost);
     $ownHost = preg_replace('/^www\./', '', $ownHost);
@@ -965,6 +980,51 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 $essayMetricsByWeek[$w]['ar_dwell_sum'] += $sec;
                 $essayMetricsByWeek[$w]['ar_dwell_count']++;
             }
+        } elseif ($type === 'ar_perf') {
+            if (!empty($ev['perf']) && is_array($ev['perf'])) {
+                $p = $ev['perf'];
+                $p['t'] = $t;
+                $p['sid'] = $sid;
+                $p['hw'] = $ev['hw'] ?? null;
+                $arPerfList[] = $p;
+            }
+        } elseif ($type === 'ar_error') {
+            if (!empty($ev['err']) && is_array($ev['err'])) {
+                $e = $ev['err'];
+                $e['t'] = $t;
+                $e['sid'] = $sid;
+                $e['hw'] = $ev['hw'] ?? null;
+                $arErrorsList[] = $e;
+            }
+        }
+
+        // GSM Hardware matrix bijhouden per sessie
+        if (!empty($ev['hw']) && is_array($ev['hw'])) {
+            $hw = $ev['hw'];
+            $model = trim((string)($hw['model'] ?? ''));
+            if ($model !== '' && $model !== 'Onbekend') {
+                if (!isset($gsmHardwareMap[$model])) {
+                    $gsmHardwareMap[$model] = [
+                        'model'      => $model,
+                        'gpu'        => (string)($hw['gpu'] ?? 'Onbekend'),
+                        'screen'     => (string)($hw['screen'] ?? ''),
+                        'sessions'   => [],
+                        'scans'      => 0,
+                        'errors'     => 0,
+                        'lock_times' => [],
+                    ];
+                }
+                $gsmHardwareMap[$model]['sessions'][$sid] = true;
+                if ($type === 'scan') {
+                    $gsmHardwareMap[$model]['scans']++;
+                }
+                if ($type === 'ar_error' || $type === 'cam_denied') {
+                    $gsmHardwareMap[$model]['errors']++;
+                }
+                if ($type === 'ar_perf' && !empty($ev['perf']['t_lock'])) {
+                    $gsmHardwareMap[$model]['lock_times'][] = (int)$ev['perf']['t_lock'];
+                }
+            }
         }
     }
 
@@ -1122,6 +1182,116 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
     });
 
+    // 6. Bereken AR Performance-statistieken (laadtijd, first target lock, jitter)
+    $engineTimes = [];
+    $camTimes = [];
+    $lockTimes = [];
+    $jitters = [];
+    foreach ($arPerfList as $p) {
+        if (!empty($p['t_engine']) && $p['t_engine'] > 0) $engineTimes[] = (int)$p['t_engine'];
+        if (!empty($p['t_cam']) && $p['t_cam'] > 0) $camTimes[] = (int)$p['t_cam'];
+        if (!empty($p['t_lock']) && $p['t_lock'] > 0) $lockTimes[] = (int)$p['t_lock'];
+        if (!empty($p['jit']) && $p['jit'] > 0) $jitters[] = (float)$p['jit'];
+    }
+
+    $computeMedian = function (array $arr): int {
+        if (empty($arr)) return 0;
+        sort($arr);
+        $count = count($arr);
+        $mid = (int)floor($count / 2);
+        if ($count % 2 === 0) {
+            return (int)round(($arr[$mid - 1] + $arr[$mid]) / 2);
+        }
+        return (int)$arr[$mid];
+    };
+
+    $arPerfSummary = [
+        'median_engine_ms'   => $computeMedian($engineTimes),
+        'median_cam_ms'      => $computeMedian($camTimes),
+        'median_lock_ms'     => $computeMedian($lockTimes),
+        'avg_jitter'         => !empty($jitters) ? round(array_sum($jitters) / count($jitters), 3) : 0.0,
+        'samples_count'      => count($arPerfList),
+        'total_errors_count' => count($arErrorsList),
+    ];
+
+    // 7. GSM Modellen & GPU Hardware Matrix
+    $gsmHardwareList = [];
+    foreach ($gsmHardwareMap as $mKey => $mVal) {
+        $sessCount = count($mVal['sessions']);
+        $scanCount = (int)$mVal['scans'];
+        $errCount  = (int)$mVal['errors'];
+        $avgLock   = !empty($mVal['lock_times']) ? (int)round(array_sum($mVal['lock_times']) / count($mVal['lock_times'])) : 0;
+        $gsmHardwareList[] = [
+            'model'         => $mVal['model'],
+            'gpu'           => $mVal['gpu'],
+            'screen'        => $mVal['screen'],
+            'sessions'      => $sessCount,
+            'scans'         => $scanCount,
+            'errors'        => $errCount,
+            'scan_rate_pct' => $sessCount > 0 ? round(($scanCount / $sessCount) * 100, 1) : 0.0,
+            'avg_lock_ms'   => $avgLock,
+        ];
+    }
+    usort($gsmHardwareList, function ($a, $b) {
+        $cmp = $b['sessions'] <=> $a['sessions'];
+        return $cmp !== 0 ? $cmp : ($b['scans'] <=> $a['scans']);
+    });
+
+    // Sorteer fouten nieuwste eerst
+    usort($arErrorsList, function ($a, $b) {
+        return ($b['t'] ?? 0) <=> ($a['t'] ?? 0);
+    });
+
+    // 8. Genereer gestructureerde LLM Diagnose Prompt (Markdown)
+    $llmPromptLines = [];
+    $llmPromptLines[] = "# De Krant WebAR Telemetrie & Foutendiagnose Rapport";
+    $llmPromptLines[] = "- Periode: {$days} dagen (" . date('Y-m-d H:i:s', $now) . ")";
+    $llmPromptLines[] = "- Unieke Bezoekers: {$curMetrics['visitors']}, Sessies: {$curMetrics['sessions']}, AR Scans: {$curMetrics['scans']}";
+    $llmPromptLines[] = "- AR Conversie: Camera gestart: {$curMetrics['camera_rate']}% ({$curMetrics['camera_sessions']} sessies, {$curMetrics['denied_sessions']} geweigerd), Artikel gescand: {$curMetrics['scan_rate']}%";
+    $llmPromptLines[] = "- Performance Medians: Engine laadtijd: {$arPerfSummary['median_engine_ms']}ms, Camera start: {$arPerfSummary['median_cam_ms']}ms, Eerste target lock: {$arPerfSummary['median_lock_ms']}ms, Gemeten Jitter: {$arPerfSummary['avg_jitter']}";
+    $llmPromptLines[] = "- Geregistreerde AR fouten in periode: " . count($arErrorsList);
+    $llmPromptLines[] = "";
+    $llmPromptLines[] = "## GSM Hardware & GPU Overzicht";
+    if (empty($gsmHardwareList)) {
+        $llmPromptLines[] = "Geen GSM hardware-data geregistreerd.";
+    } else {
+        $llmPromptLines[] = "| GSM Toestelmodel | GPU / Renderer | Sessies | Scans | Fouten | Gem. Lock (ms) |";
+        $llmPromptLines[] = "|---|---|---|---|---|---|";
+        foreach (array_slice($gsmHardwareList, 0, 15) as $gh) {
+            $llmPromptLines[] = "| {$gh['model']} | {$gh['gpu']} | {$gh['sessions']} | {$gh['scans']} | {$gh['errors']} | {$gh['avg_lock_ms']} |";
+        }
+    }
+    $llmPromptLines[] = "";
+    $llmPromptLines[] = "## Recente AR Fouten & Problemen (Laatste " . min(20, count($arErrorsList)) . ")";
+    if (empty($arErrorsList)) {
+        $llmPromptLines[] = "Geen AR runtime- of camerafouten geregistreerd in deze periode.";
+    } else {
+        foreach (array_slice($arErrorsList, 0, 20) as $errItem) {
+            $errT = date('Y-m-d H:i:s', (int)($errItem['t'] ?? $now));
+            $errCat = $errItem['category'] ?? 'general';
+            $errStage = $errItem['stage'] ?? 'runtime';
+            $errMsg = $errItem['message'] ?? 'Fout';
+            $errHw = $errItem['hw'] ?? [];
+            $mStr = !empty($errHw['model']) ? $errHw['model'] : 'Onbekend toestel';
+            $gStr = !empty($errHw['gpu']) ? $errHw['gpu'] : 'Onbekende GPU';
+            $sStr = !empty($errHw['screen']) ? $errHw['screen'] : '';
+            $llmPromptLines[] = "- [{$errT}] [{$errCat} / {$errStage}] {$errMsg}";
+            $llmPromptLines[] = "  Toestel: {$mStr} | GPU: {$gStr}" . ($sStr ? " | Scherm: {$sStr}" : "");
+            if (!empty($errItem['details'])) {
+                $llmPromptLines[] = "  Details: " . substr(str_replace(["\r", "\n"], ' ', $errItem['details']), 0, 200);
+            }
+        }
+    }
+    $llmPromptLines[] = "";
+    $llmPromptLines[] = "## Instructie voor AI / LLM Assistent";
+    $llmPromptLines[] = "Je bent een expert in WebAR, WebGL, mobile browser compatibiliteit en 8th Wall / Niantic image-tracking pipelines.";
+    $llmPromptLines[] = "Analyseer bovenstaande telemetrie van de fysieke WebAR krant.";
+    $llmPromptLines[] = "1. Identificeer eventuele bottlenecks in script-loading of camera-initialisatie op specifieke GSM-modellen of GPU's.";
+    $llmPromptLines[] = "2. Verklaar de geregistreerde fouten en camera-weigeringen.";
+    $llmPromptLines[] = "3. Geef concrete, direct implementeerbare JavaScript/A-Frame optimalisaties om de WebAR ervaring op alle smartphones 100% stabiel en snel te maken.";
+
+    $llmDiagnosticPrompt = implode("\n", $llmPromptLines);
+
     $topEssay = !empty($essayMetrics) && ($essayMetrics[0]['period_scans'] > 0 || $essayMetrics[0]['scans'] > 0)
         ? $essayMetrics[0]
         : null;
@@ -1208,6 +1378,12 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         'errors_404'    => $errors404,
         'bot_scans'     => array_slice($botScans, 0, 100),
         'essay_metrics' => $essayMetrics,
+        'ar_diagnostics' => [
+            'perf_summary'   => $arPerfSummary,
+            'gsm_hardware'   => $gsmHardwareList,
+            'recent_errors'  => array_slice($arErrorsList, 0, 50),
+            'llm_prompt'     => $llmDiagnosticPrompt,
+        ],
     ];
 
     jsonResponse($response);

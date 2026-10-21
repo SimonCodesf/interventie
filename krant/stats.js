@@ -114,7 +114,118 @@
         return refHost;
     }
 
-    // 5. Device & taal detectie
+    // 5. Device, GSM Model & GPU Hardware Detectie
+    var cachedHardware = null;
+
+    function parseGsmModel(ua) {
+        if (!ua) return 'Onbekend';
+        // iPhone / iPad
+        if (/iPhone/i.test(ua)) {
+            var m = ua.match(/iPhone OS ([0-9_]+)/i);
+            var ver = m ? m[1].replace(/_/g, '.') : '';
+            return 'Apple iPhone' + (ver ? ' (iOS ' + ver + ')' : '');
+        }
+        if (/iPad/i.test(ua)) {
+            return 'Apple iPad';
+        }
+        // Samsung
+        var sm = ua.match(/SM-[A-Z0-9]+/i);
+        if (sm) {
+            return 'Samsung ' + sm[0].toUpperCase();
+        }
+        // Google Pixel
+        var px = ua.match(/Pixel\s?[0-9a-zA-Z\s]+/i);
+        if (px) {
+            return 'Google ' + px[0].trim();
+        }
+        // Xiaomi / Redmi / POCO
+        var redmi = ua.match(/(Redmi[A-Za-z0-9_\s-]+|POCO[A-Za-z0-9_\s-]+|Mi\s?[0-9A-Za-z]+)/i);
+        if (redmi) {
+            return 'Xiaomi ' + redmi[0].trim();
+        }
+        // OnePlus
+        var op = ua.match(/(OnePlus[A-Za-z0-9_\s-]+|CPH[0-9]+)/i);
+        if (op) {
+            return 'OnePlus ' + op[0].trim();
+        }
+        // Motorola
+        var moto = ua.match(/moto\s?[a-z0-9_\s-]+/i);
+        if (moto) {
+            return 'Motorola ' + moto[0].trim();
+        }
+        // Generic Android build model e.g. "; Build/..." or "; [Model] Build/"
+        var gen = ua.match(/;\s?([A-Za-z0-9\s_-]{3,24})\sBuild\//i);
+        if (gen && gen[1] && !/Android|Linux|K/i.test(gen[1].trim())) {
+            return gen[1].trim();
+        }
+        if (/Android/i.test(ua)) {
+            return 'Android Toestel';
+        }
+        if (/Macintosh/i.test(ua)) {
+            return 'Apple Mac';
+        }
+        if (/Windows/i.test(ua)) {
+            return 'Windows PC';
+        }
+        if (/Linux/i.test(ua)) {
+            return 'Linux';
+        }
+        return 'Onbekend';
+    }
+
+    function getGpuRenderer() {
+        try {
+            var canvas = document.createElement('canvas');
+            var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) return 'Geen WebGL';
+            var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+            if (dbg) {
+                var r = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+                if (r) return String(r).replace(/ANGLE \((.*)\)/, '$1').trim();
+            }
+            return String(gl.getParameter(gl.RENDERER) || 'Generieke WebGL GPU');
+        } catch (e) {
+            return 'WebGL Fout';
+        }
+    }
+
+    function getKrantDeviceHardware() {
+        if (cachedHardware) return cachedHardware;
+        var ua = navigator.userAgent || '';
+        var scr = (window.screen ? window.screen.width + 'x' + window.screen.height : '0x0') +
+                  (window.devicePixelRatio ? ' @' + window.devicePixelRatio.toFixed(1) + 'x' : '');
+        var orient = (window.screen && window.screen.orientation && window.screen.orientation.type) ||
+                     (window.innerHeight > window.innerWidth ? 'portrait' : 'landscape');
+        var conn = (navigator.connection && (navigator.connection.effectiveType || navigator.connection.type)) || '';
+        var ram = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : '';
+        var cores = navigator.hardwareConcurrency ? navigator.hardwareConcurrency + ' cores' : '';
+
+        cachedHardware = {
+            model: parseGsmModel(ua),
+            gpu: getGpuRenderer(),
+            screen: scr + ' (' + orient + ')',
+            ram: ram,
+            cores: cores,
+            conn: conn,
+            ua: ua.slice(0, 220)
+        };
+
+        // Query Client Hints async indien beschikbaar om het exacte toestelmodel bij te werken
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+            try {
+                navigator.userAgentData.getHighEntropyValues(['model', 'platform', 'platformVersion']).then(function (hints) {
+                    if (hints && hints.model) {
+                        cachedHardware.model = (hints.platform ? hints.platform + ' ' : '') + hints.model;
+                    }
+                }).catch(function () {});
+            } catch (e) {}
+        }
+
+        return cachedHardware;
+    }
+
+    window.getKrantDeviceHardware = getKrantDeviceHardware;
+
     function getDeviceType() {
         var ua = navigator.userAgent || '';
         var w = window.innerWidth || screen.width || 1024;
@@ -177,12 +288,13 @@
         ref: currentRef,
         dev: deviceType,
         lang: language,
-        sec: 0
+        sec: 0,
+        hw: getKrantDeviceHardware()
     });
 
     // Hulpfuncties voor Krant AR-specifieke interacties vanuit krant/js/app.js
     var camStartedInSession = false;
-    window.trackKrantCameraStart = function () {
+    window.trackKrantCameraStart = function (optHw) {
         if (camStartedInSession) return;
         camStartedInSession = true;
         sendPayload({
@@ -192,12 +304,13 @@
             ref: '',
             dev: deviceType,
             lang: language,
-            sec: 0
+            sec: 0,
+            hw: optHw || getKrantDeviceHardware()
         });
     };
 
     var camDeniedInSession = false;
-    window.trackKrantCameraDenied = function () {
+    window.trackKrantCameraDenied = function (reason) {
         if (camDeniedInSession) return;
         camDeniedInSession = true;
         sendPayload({
@@ -207,7 +320,9 @@
             ref: '',
             dev: deviceType,
             lang: language,
-            sec: 0
+            sec: 0,
+            hw: getKrantDeviceHardware(),
+            err: { category: 'camera', message: reason || 'Toestemming geweigerd of geblokkeerd', stage: 'permission' }
         });
     };
 
@@ -225,7 +340,8 @@
             ref: '',
             dev: deviceType,
             lang: language,
-            sec: 0
+            sec: 0,
+            hw: getKrantDeviceHardware()
         });
     };
 
@@ -241,6 +357,55 @@
             dev: deviceType,
             lang: language,
             sec: Math.min(1800, s)
+        });
+    };
+
+    // Telemetrie voor AR Performance (laadtijd, first target lock, jitter)
+    window.trackKrantArPerf = function (perf) {
+        if (!perf) return;
+        sendPayload({
+            sid: sid,
+            type: 'ar_perf',
+            page: currentPage,
+            ref: '',
+            dev: deviceType,
+            lang: language,
+            sec: 0,
+            hw: getKrantDeviceHardware(),
+            perf: {
+                t_engine: Math.round(Number(perf.t_engine) || 0),
+                t_cam: Math.round(Number(perf.t_cam) || 0),
+                t_lock: Math.round(Number(perf.t_lock) || 0),
+                jit: Number(Number(perf.jit || 0).toFixed(3)),
+                found: Number(perf.found) || 0,
+                lost: Number(perf.lost) || 0,
+                fps: Math.round(Number(perf.fps) || 0)
+            }
+        });
+    };
+
+    // Opvangen van WebGL-, RealityError-, Camera- en Asset-fouten
+    var reportedErrors = {};
+    window.trackKrantArError = function (err) {
+        if (!err) return;
+        var key = (err.category || '') + ':' + (err.message || '');
+        if (reportedErrors[key]) return; // Voorkom herhaalde flood
+        reportedErrors[key] = true;
+        sendPayload({
+            sid: sid,
+            type: 'ar_error',
+            page: currentPage,
+            ref: '',
+            dev: deviceType,
+            lang: language,
+            sec: 0,
+            hw: getKrantDeviceHardware(),
+            err: {
+                category: String(err.category || 'general').slice(0, 32),
+                message: String(err.message || 'Onbekende AR-fout').slice(0, 300),
+                details: String(err.details || '').slice(0, 500),
+                stage: String(err.stage || 'runtime').slice(0, 32)
+            }
         });
     };
 
