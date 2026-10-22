@@ -35,12 +35,19 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Path parsing (/essays/current, /admin/essays, ...)
 $path = '/';
-if (isset($_SERVER['PATH_INFO'])) {
+if (!empty($_GET['endpoint'])) {
+    $rawEp = trim((string)$_GET['endpoint']);
+    $parsedEp = parse_url($rawEp, PHP_URL_PATH);
+    $path = is_string($parsedEp) && $parsedEp !== '' ? $parsedEp : $rawEp;
+    if (!str_starts_with($path, '/')) {
+        $path = '/' . $path;
+    }
+} elseif (isset($_SERVER['PATH_INFO']) && trim($_SERVER['PATH_INFO']) !== '') {
     $path = $_SERVER['PATH_INFO'];
 } else {
     $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-    $scriptName = str_replace('/index.php', '', $_SERVER['SCRIPT_NAME']);
-    $path = str_replace($scriptName, '', parse_url($requestUri, PHP_URL_PATH));
+    $scriptName = str_replace('/index.php', '', $_SERVER['SCRIPT_NAME'] ?? '');
+    $path = str_replace($scriptName, '', parse_url($requestUri, PHP_URL_PATH) ?? '/');
     $path = str_replace('/api.php', '', $path);
     if (empty($path)) $path = '/';
 }

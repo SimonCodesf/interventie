@@ -2496,12 +2496,10 @@ function renderKrantAnalytics(data) {
         targetBtn.disabled = true;
         targetBtn.textContent = 'Koppelen...';
         try {
-          const resp = await fetch(`${API}?endpoint=/admin/stats/claim-device`, {
+          const res = await apiJson('/admin/stats/claim-device', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ hash, model, label: 'Mijn iPhone' })
           });
-          const res = await resp.json();
           if (!res.success) throw new Error(res.message || 'Koppelen mislukt');
           currentAdminFilter = 'only';
           await loadKrantAnalytics(currentStatsDays, 'only');
@@ -2553,12 +2551,10 @@ function renderKrantAnalytics(data) {
               if (!confirm('Weet je zeker dat je dit apparaat wilt ontkoppelen?')) return;
               b.disabled = true;
               try {
-                const resp = await fetch(`${API}?endpoint=/admin/stats/unclaim-device`, {
+                const res = await apiJson('/admin/stats/unclaim-device', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ hash: h })
                 });
-                const res = await resp.json();
                 if (!res.success) throw new Error(res.message);
                 modal.classList.add('hidden');
                 loadKrantAnalytics(currentStatsDays, currentAdminFilter);
