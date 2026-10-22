@@ -3965,6 +3965,7 @@ async function openSettingsModal() {
     applyLocalAdminSettings(localSettings);
     setRebuildStatus('Klaar om te starten.', '#9aa0a6');
     setBookExportStatus('Klaar om te exporteren.', '#9aa0a6');
+    updateAdminOptOutUI();
 
     // Controleer of Sketchfab key al is opgeslagen
     try {
@@ -3990,6 +3991,75 @@ function closeSettingsModal() {
     if (modal) modal.style.display = 'none';
 }
 window.closeSettingsModal = closeSettingsModal;
+
+function isAdminAnalyticsIgnored() {
+    try {
+        return (
+            localStorage.getItem('interventie_analytics_ignore') === '1' ||
+            document.cookie.indexOf('analytics_ignore=1') !== -1
+        );
+    } catch (_) {
+        return false;
+    }
+}
+
+function setAdminAnalyticsIgnored(enabled) {
+    try {
+        if (enabled) {
+            localStorage.setItem('interventie_analytics_ignore', '1');
+            document.cookie = 'analytics_ignore=1; path=/; max-age=31536000; SameSite=Lax';
+        } else {
+            localStorage.removeItem('interventie_analytics_ignore');
+            document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
+        }
+    } catch (_) {}
+    updateAdminOptOutUI();
+}
+
+function updateAdminOptOutUI() {
+    const ignored = isAdminAnalyticsIgnored();
+    const btn = document.getElementById('admin-optout-toggle-btn');
+    const statusText = document.getElementById('admin-optout-status-text');
+    const urlCode = document.getElementById('admin-optout-url');
+    const qrImg = document.getElementById('admin-optout-qr');
+
+    if (btn) {
+        btn.textContent = ignored ? 'METINGEN WEER INSCHAKELEN' : 'EIGEN BEZOEKEN UITSLUITEN';
+        btn.className = ignored ? 'terminal-btn settings-mini-btn' : 'btn btn-primary';
+    }
+    if (statusText) {
+        statusText.textContent = ignored ? 'UITGESLOTEN (Je bezoeken worden niet geteld)' : 'ACTIEF (Je bezoeken tellen momenteel mee)';
+        statusText.style.color = ignored ? '#7dff9a' : '#f8c146';
+    }
+    const optoutUrl = `${window.location.origin}/?optout=1`;
+    if (urlCode) {
+        urlCode.textContent = optoutUrl;
+    }
+    if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(optoutUrl)}`;
+        qrImg.style.display = 'block';
+    }
+}
+
+function toggleAdminAnalyticsOptOut() {
+    setAdminAnalyticsIgnored(!isAdminAnalyticsIgnored());
+}
+
+async function copyAdminOptOutUrl() {
+    const optoutUrl = `${window.location.origin}/?optout=1`;
+    try {
+        await navigator.clipboard.writeText(optoutUrl);
+        alert('Opt-out link gekopieerd naar klembord!');
+    } catch (e) {
+        prompt('Kopieer deze link:', optoutUrl);
+    }
+}
+
+window.isAdminAnalyticsIgnored = isAdminAnalyticsIgnored;
+window.setAdminAnalyticsIgnored = setAdminAnalyticsIgnored;
+window.updateAdminOptOutUI = updateAdminOptOutUI;
+window.toggleAdminAnalyticsOptOut = toggleAdminAnalyticsOptOut;
+window.copyAdminOptOutUrl = copyAdminOptOutUrl;
 
 var analyticsPeriodDays = 30;
 var analyticsShowAllPages = false;
@@ -4796,6 +4866,7 @@ function showUploadSection() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('upload-section').style.display = 'block';
     refreshAdminUXState();
+    setAdminAnalyticsIgnored(true);
 }
 
 // Setup upload form

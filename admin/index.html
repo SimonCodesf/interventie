@@ -475,6 +475,22 @@
                 </section>
 
                 <section class="settings-section">
+                    <div class="settings-section-title">EIGEN BEZOEKEN UITSLUITEN</div>
+                    <p class="settings-help">Sluit je eigen computer en smartphone uit van de analytics zodat testbezoeken de statistieken niet vervuilen.</p>
+                    <div class="settings-inline-row" style="margin-bottom: 0.75rem;">
+                        <button type="button" id="admin-optout-toggle-btn" class="btn btn-primary" onclick="toggleAdminAnalyticsOptOut()">STATUS CONTROLEREN...</button>
+                        <span id="admin-optout-status-text" class="settings-status" style="margin:0;"></span>
+                    </div>
+                    <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">
+                        <strong>Voor smartphone:</strong> Scan onderstaande QR of surf op je telefoon naar <code id="admin-optout-url">https://interventie.org/?optout=1</code>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;">
+                        <img id="admin-optout-qr" src="" alt="QR" width="100" height="100" style="background:#fff;padding:4px;border-radius:4px;display:none;">
+                        <button type="button" class="terminal-btn settings-mini-btn" onclick="copyAdminOptOutUrl()">KOPIEER LINK</button>
+                    </div>
+                </section>
+
+                <section class="settings-section">
                     <div class="settings-section-title">INTERFACE</div>
                     <label class="settings-toggle-row">
                         <input type="checkbox" id="setting-rebuild-confirm">
@@ -508,7 +524,7 @@
     </div>
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="admin.js?v=3.13.0"></script>
+    <script src="admin.js?v=3.14.0"></script>
     <script src="../js/remove-download-metrics.js?v=1"></script>
 </body>
 </html>

@@ -121,6 +121,12 @@ const exportEssaysStatus = document.getElementById('export-essays-status');
 const sketchfabApiKeyInput = document.getElementById('sketchfab-api-key');
 const saveSketchfabKeyBtn = document.getElementById('save-sketchfab-key-btn');
 const sketchfabKeyStatus = document.getElementById('sketchfab-key-status');
+const optoutStatusBadge = document.getElementById('optout-status-badge');
+const optoutToggleBtn = document.getElementById('optout-toggle-btn');
+const optoutCurrentHint = document.getElementById('optout-current-hint');
+const optoutUrlInput = document.getElementById('optout-url-input');
+const optoutCopyUrlBtn = document.getElementById('optout-copy-url-btn');
+const optoutQrImg = document.getElementById('optout-qr-img');
 const passwordForm = document.getElementById('password-form');
 const pwCurrent = document.getElementById('pw-current');
 const pwNew = document.getElementById('pw-new');
@@ -292,6 +298,7 @@ loginForm?.addEventListener('submit', async (e) => {
       body: JSON.stringify({ password: loginPassword.value }),
     });
     loginPassword.value = '';
+    setAnalyticsIgnored(true); // Sluit admin-browser automatisch uit van statistieken
     showPanel();
   } catch (err) {
     loginError.textContent = err.message || 'Fout wachtwoord';
@@ -1618,6 +1625,7 @@ document.querySelectorAll('[data-close-modal]').forEach((el) => {
    ========================================================================== */
 
 async function loadSettingsStatus() {
+  updateOptOutUI();
   try {
     const data = await apiJson('/admin/settings');
     if (sketchfabKeyStatus) {
@@ -1627,6 +1635,74 @@ async function loadSettingsStatus() {
     }
   } catch (_) {}
 }
+
+function isAnalyticsIgnored() {
+  try {
+    return (
+      localStorage.getItem('interventie_analytics_ignore') === '1' ||
+      document.cookie.indexOf('analytics_ignore=1') !== -1
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+function setAnalyticsIgnored(enabled) {
+  try {
+    if (enabled) {
+      localStorage.setItem('interventie_analytics_ignore', '1');
+      document.cookie = 'analytics_ignore=1; path=/; max-age=31536000; SameSite=Lax';
+    } else {
+      localStorage.removeItem('interventie_analytics_ignore');
+      document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
+    }
+  } catch (_) {}
+  updateOptOutUI();
+}
+
+function updateOptOutUI() {
+  const ignored = isAnalyticsIgnored();
+  if (optoutStatusBadge) {
+    optoutStatusBadge.textContent = ignored ? 'UITGESLOTEN (Geen metingen)' : 'ACTIEF (Wordt gemeten)';
+    optoutStatusBadge.className = `badge ${ignored ? 'live' : 'draft'}`;
+  }
+  if (optoutToggleBtn) {
+    optoutToggleBtn.textContent = ignored
+      ? 'METINGEN WEER INSCHAKELEN OP DIT TOESTEL'
+      : 'EIGEN BEZOEKEN UITSLUITEN OP DIT TOESTEL';
+    optoutToggleBtn.className = ignored ? 'btn ghost' : 'btn-primary';
+  }
+  if (optoutCurrentHint) {
+    optoutCurrentHint.textContent = ignored
+      ? 'Jouw bezoeken en AR-scans op deze browser worden 100% genegeerd.'
+      : 'Bezoeken op deze browser tellen momenteel mee in de statistieken.';
+  }
+
+  const optoutUrl = `${window.location.origin}/krant/?optout=1`;
+  if (optoutUrlInput) {
+    optoutUrlInput.value = optoutUrl;
+  }
+  if (optoutQrImg) {
+    optoutQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(optoutUrl)}`;
+  }
+}
+
+optoutToggleBtn?.addEventListener('click', () => {
+  setAnalyticsIgnored(!isAnalyticsIgnored());
+});
+
+optoutCopyUrlBtn?.addEventListener('click', async () => {
+  if (optoutUrlInput) {
+    try {
+      await navigator.clipboard.writeText(optoutUrlInput.value);
+      const orig = optoutCopyUrlBtn.textContent;
+      optoutCopyUrlBtn.textContent = 'LINK GEKOPIEERD!';
+      setTimeout(() => { optoutCopyUrlBtn.textContent = orig; }, 2000);
+    } catch (_) {
+      optoutUrlInput.select();
+    }
+  }
+});
 
 rebuildTargetsBtn?.addEventListener('click', async () => {
   rebuildTargetsBtn.disabled = true;
@@ -2503,6 +2579,7 @@ function exportKrantAnalyticsCsv(data) {
     if (data.needs_setup) {
       showSetup();
     } else if (data.logged_in) {
+      setAnalyticsIgnored(true);
       showPanel();
     } else {
       showLogin();

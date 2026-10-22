@@ -16,8 +16,64 @@
         host === '127.0.0.1' ||
         host === '[::1]'
     ) {
+        initNoopStubs();
         return;
     }
+
+    function initNoopStubs() {
+        if (!window.trackKrantCameraStart) window.trackKrantCameraStart = function () {};
+        if (!window.trackKrantCameraDenied) window.trackKrantCameraDenied = function () {};
+        if (!window.trackKrantEssayScan) window.trackKrantEssayScan = function () {};
+        if (!window.trackKrantEssayDwell) window.trackKrantEssayDwell = function () {};
+        if (!window.trackKrantArPerf) window.trackKrantArPerf = function () {};
+        if (!window.trackKrantArError) window.trackKrantArError = function () {};
+        if (!window.getKrantDeviceHardware) window.getKrantDeviceHardware = function () { return {}; };
+    }
+
+    function showAnalyticsNotice(msg) {
+        function render() {
+            var el = document.createElement('div');
+            el.textContent = msg;
+            el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#141414;color:#f6f4ef;padding:10px 18px;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px;font-weight:600;z-index:999999;box-shadow:0 8px 24px rgba(0,0,0,0.35);letter-spacing:0.02em;text-align:center;pointer-events:none;transition:opacity 0.3s ease;';
+            document.body.appendChild(el);
+            setTimeout(function () {
+                el.style.opacity = '0';
+                setTimeout(function () { el.remove(); }, 350);
+            }, 3500);
+        }
+        if (document.body) {
+            render();
+        } else {
+            window.addEventListener('DOMContentLoaded', render);
+        }
+    }
+
+    // 1b. Admin Opt-Out check & queryparameter-trigger (?optout=1 of ?optin=1)
+    try {
+        var sp = new URLSearchParams(location.search || '');
+        if (sp.get('optout') === '1' || sp.get('analytics_ignore') === '1') {
+            localStorage.setItem('interventie_analytics_ignore', '1');
+            document.cookie = 'analytics_ignore=1; path=/; max-age=31536000; SameSite=Lax';
+            showAnalyticsNotice('Dit toestel is uitgesloten van analytics.');
+            initNoopStubs();
+            return;
+        } else if (sp.get('optin') === '1' || sp.get('analytics_ignore') === '0') {
+            localStorage.removeItem('interventie_analytics_ignore');
+            document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
+            showAnalyticsNotice('Statistieken weer ingeschakeld voor dit toestel.');
+        }
+    } catch (e) {}
+
+    // Sluit bezoeken uit als localStorage of cookie actief is
+    try {
+        if (
+            localStorage.getItem('interventie_analytics_ignore') === '1' ||
+            document.cookie.indexOf('analytics_ignore=1') !== -1
+        ) {
+            initNoopStubs();
+            return;
+        }
+    } catch (e) {}
 
     // Bepaal het collector endpoint relatief aan dit script (werkt zowel op /krant/ als standalone)
     var ENDPOINT = '/krant/track.php';

@@ -6,6 +6,19 @@ require_once __DIR__ . '/includes/stats_controller.php';
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
+// Check of bezoeken van deze client uitgesloten moeten worden (opt-out cookie of actieve admin-sessie)
+if (!empty($_COOKIE['analytics_ignore']) && $_COOKIE['analytics_ignore'] === '1') {
+    http_response_code(204);
+    exit;
+}
+if (session_status() === PHP_SESSION_NONE && !empty($_COOKIE[session_name()])) {
+    @session_start();
+    if (!empty($_SESSION['admin_logged_in'])) {
+        http_response_code(204);
+        exit;
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'OPTIONS') {
     http_response_code(204);

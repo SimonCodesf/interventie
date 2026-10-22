@@ -344,7 +344,36 @@
                         </div>
                     </section>
 
-                    <!-- 4. Wachtwoord wijzigen -->
+                    <!-- 4. Eigen bezoeken uitsluiten van analytics -->
+                    <section class="panel-card">
+                        <div class="panel-card-header">
+                            <span class="panel-card-title">Analytics — Eigen Bezoeken Uitsluiten</span>
+                            <span id="optout-status-badge" class="badge">Laden...</span>
+                        </div>
+                        <div class="panel-card-body">
+                            <p class="bundle-info" style="margin-top:0;">Sluit je eigen computer en smartphone uit van de statistieken zodat ontwikkel- en testbezoeken je bezoekersaantallen en AR-scans niet vervuilen.</p>
+                            <div class="settings-action-row" style="margin-top:10px;">
+                                <button type="button" id="optout-toggle-btn" class="btn-primary">UITSLUITING WIJZIGEN</button>
+                                <span id="optout-current-hint" class="bundle-info" style="margin:0;"></span>
+                            </div>
+
+                            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--paper-subtle);">
+                                <strong>Smartphone / Test-toestel Uitsluiten:</strong>
+                                <p class="bundle-info" style="margin:4px 0 8px;">Scan deze QR-code of open de link op je smartphone om bezoeken en AR-scans vanaf dat toestel direct permanent uit te sluiten:</p>
+                                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                                    <div id="optout-qr-container" style="background:#fff;padding:6px;border:1px solid var(--border);border-radius:4px;display:inline-block;line-height:0;">
+                                        <img id="optout-qr-img" src="" alt="QR code opt-out" width="110" height="110" style="display:block;">
+                                    </div>
+                                    <div style="flex:1;min-width:210px;">
+                                        <input type="text" id="optout-url-input" readonly value="" style="font-size:11px;background:var(--paper);margin-bottom:6px;">
+                                        <button type="button" id="optout-copy-url-btn" class="btn ghost mini-btn">KOPIEER LINK</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. Wachtwoord wijzigen -->
                     <section class="panel-card">
                         <div class="panel-card-header">
                             <span class="panel-card-title">Admin Wachtwoord Wijzigen</span>
@@ -417,6 +446,6 @@
         </div>
     </div>
 
-    <script type="module" src="admin.js?v=18"></script>
+    <script type="module" src="admin.js?v=19"></script>
 </body>
 </html>
