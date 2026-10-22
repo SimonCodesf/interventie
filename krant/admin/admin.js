@@ -1639,7 +1639,9 @@ async function loadSettingsStatus() {
 function isAnalyticsIgnored() {
   try {
     return (
+      localStorage.getItem('interventie_analytics_admin') === '1' ||
       localStorage.getItem('interventie_analytics_ignore') === '1' ||
+      document.cookie.indexOf('analytics_admin=1') !== -1 ||
       document.cookie.indexOf('analytics_ignore=1') !== -1
     );
   } catch (_) {
@@ -1650,10 +1652,14 @@ function isAnalyticsIgnored() {
 function setAnalyticsIgnored(enabled) {
   try {
     if (enabled) {
+      localStorage.setItem('interventie_analytics_admin', '1');
       localStorage.setItem('interventie_analytics_ignore', '1');
+      document.cookie = 'analytics_admin=1; path=/; max-age=31536000; SameSite=Lax';
       document.cookie = 'analytics_ignore=1; path=/; max-age=31536000; SameSite=Lax';
     } else {
+      localStorage.removeItem('interventie_analytics_admin');
       localStorage.removeItem('interventie_analytics_ignore');
+      document.cookie = 'analytics_admin=; path=/; max-age=0; SameSite=Lax';
       document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
     }
   } catch (_) {}
@@ -1663,22 +1669,22 @@ function setAnalyticsIgnored(enabled) {
 function updateOptOutUI() {
   const ignored = isAnalyticsIgnored();
   if (optoutStatusBadge) {
-    optoutStatusBadge.textContent = ignored ? 'UITGESLOTEN (Geen metingen)' : 'ACTIEF (Wordt gemeten)';
+    optoutStatusBadge.textContent = ignored ? 'GEMARKEERD ALS TESTAPPARAAT' : 'NIET GEMARKEERD (PUBLIEK)';
     optoutStatusBadge.className = `badge ${ignored ? 'live' : 'draft'}`;
   }
   if (optoutToggleBtn) {
     optoutToggleBtn.textContent = ignored
-      ? 'METINGEN WEER INSCHAKELEN OP DIT TOESTEL'
-      : 'EIGEN BEZOEKEN UITSLUITEN OP DIT TOESTEL';
+      ? 'ADMIN-MARKERING VERWIJDEREN VAN DIT TOESTEL'
+      : 'DIT TOESTEL MARKEREN ALS ADMIN / TESTAPPARAAT';
     optoutToggleBtn.className = ignored ? 'btn ghost' : 'btn-primary';
   }
   if (optoutCurrentHint) {
     optoutCurrentHint.textContent = ignored
-      ? 'Jouw bezoeken en AR-scans op deze browser worden 100% genegeerd.'
-      : 'Bezoeken op deze browser tellen momenteel mee in de statistieken.';
+      ? 'Bezoeken vanaf dit toestel worden getagd als eigen gebruik. In het Analytics-dashboard kun je deze via de schakelaar "Mijn gebruik" verbergen of juist isoleren.'
+      : 'Bezoeken op deze browser worden geregistreerd als gewone publieke lezer.';
   }
 
-  const optoutUrl = `${window.location.origin}/krant/?optout=1`;
+  const optoutUrl = `${window.location.origin}/krant/?admin=1`;
   if (optoutUrlInput) {
     optoutUrlInput.value = optoutUrl;
   }
@@ -1784,12 +1790,15 @@ wipeAllBtn?.addEventListener('click', async () => {
    BUILT-IN ANALYTICS PAGE (COOKIE-FREE JSONL + AR SCANS)
    ========================================================================== */
 
-async function loadKrantAnalytics(days = 30) {
+let currentAdminFilter = 'exclude'; // 'exclude' (standaard, zonder eigen gebruik), 'all' (inclusief eigen gebruik), 'only' (enkel eigen gebruik)
+
+async function loadKrantAnalytics(days = currentStatsDays, filter = currentAdminFilter) {
   currentStatsDays = days;
+  currentAdminFilter = filter;
   if (!analyticsContent) return;
   analyticsContent.innerHTML = `<div class="panel-card"><div class="panel-card-body"><p class="bundle-info" style="margin:0;">Statistieken voor de afgelopen ${days} dagen laden...</p></div></div>`;
   try {
-    const data = await apiJson(`/admin/stats?days=${days}`);
+    const data = await apiJson(`/admin/stats?days=${days}&admin_filter=${filter}`);
     currentStatsData = data;
     renderKrantAnalytics(data);
   } catch (err) {
@@ -1914,7 +1923,7 @@ function renderKrantAnalytics(data) {
     const scanRate = Number(funnel.scan_rate ?? kpis.scan_conversion?.value) || 0;
     const periodScans = Number(kpis.scans?.period_value ?? funnel.period_scans) || 0;
     const allTimeScans = Number(kpis.scans?.all_time ?? funnel.all_time_scans) || 0;
-    const displayScans = periodScans > 0 ? periodScans : allTimeScans;
+    const displayScans = (currentAdminFilter === 'only') ? periodScans : (periodScans > 0 ? periodScans : allTimeScans);
     const topEssay = funnel.top_essay || (essayMetrics.length > 0 && (essayMetrics[0].period_scans > 0 || essayMetrics[0].scans > 0) ? essayMetrics[0] : null);
 
     const maxDailyVal = Math.max(
@@ -1943,6 +1952,18 @@ function renderKrantAnalytics(data) {
           <span class="bundle-info" style="margin:0;">8th Wall AR-Tracking · Cookie-vrij · AVG/GDPR-proof</span>
         </div>
         <div class="krant-stats-controls">
+          <div class="krant-filter-group" title="Kies of jouw eigen testsessies worden weergegeven">
+            <span class="krant-filter-label">Mijn gebruik:</span>
+            <button type="button" class="admin-filter-pill ${currentAdminFilter === 'exclude' ? 'active' : ''}" data-filter="exclude" title="Filter jouw eigen bezoeken en testscans eruit (enkel publieke lezers)">
+              Niet weergeven
+            </button>
+            <button type="button" class="admin-filter-pill ${currentAdminFilter === 'all' ? 'active' : ''}" data-filter="all" title="Toon alle bezoeken inclusief je eigen testsessies">
+              Wel weergeven
+            </button>
+            <button type="button" class="admin-filter-pill ${currentAdminFilter === 'only' ? 'active' : ''}" data-filter="only" title="Toon uitsluitend jouw eigen testsessies, AR telemetrie en GSM-prestaties">
+              Enkel mijn gebruik
+            </button>
+          </div>
           ${[
             { d: 1, label: '24U' },
             { d: 7, label: '7 DAGEN' },
@@ -1962,6 +1983,16 @@ function renderKrantAnalytics(data) {
           <button type="button" class="btn ghost small-btn" id="krant-refresh-stats-btn">VERVERS</button>
         </div>
       </div>
+
+      <!-- Banner bij filter: Enkel mijn gebruik -->
+      ${currentAdminFilter === 'only' ? `
+        <div class="panel-card" style="margin-bottom:16px;background:var(--paper-alt);border-left:3px solid var(--ink);">
+          <div class="panel-card-body" style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span style="font-size:12px;font-weight:700;">Weergave: Enkel eigen gebruik &amp; AR-telemetrie</span>
+            <span class="bundle-info" style="margin:0;">Je bekijkt nu uitsluitend data van je eigen testsessies. Handig om laadtijden, camera-starts en hardwareprestaties van je eigen telefoon te inspecteren.</span>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- 2. 4 Kern-KPI's voor De Krant AR -->
       <div class="krant-kpi-grid">
@@ -2429,12 +2460,18 @@ function renderKrantAnalytics(data) {
     `;
 
     // Wire up analytics events
+    analyticsContent.querySelectorAll('.admin-filter-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        loadKrantAnalytics(currentStatsDays, btn.dataset.filter || 'exclude');
+      });
+    });
+
     analyticsContent.querySelectorAll('.period-pill').forEach((btn) => {
-      btn.addEventListener('click', () => loadKrantAnalytics(Number(btn.dataset.days)));
+      btn.addEventListener('click', () => loadKrantAnalytics(Number(btn.dataset.days), currentAdminFilter));
     });
 
     document.getElementById('krant-refresh-stats-btn')?.addEventListener('click', () => {
-      loadKrantAnalytics(currentStatsDays);
+      loadKrantAnalytics(currentStatsDays, currentAdminFilter);
     });
 
     document.getElementById('krant-export-csv-btn')?.addEventListener('click', () => {
@@ -2523,7 +2560,7 @@ function renderKrantAnalytics(data) {
           method: 'POST',
           body: JSON.stringify({ page: btn.dataset.page }),
         });
-        await loadKrantAnalytics(currentStatsDays);
+        await loadKrantAnalytics(currentStatsDays, currentAdminFilter);
       });
     });
 
@@ -2532,7 +2569,7 @@ function renderKrantAnalytics(data) {
         method: 'POST',
         body: JSON.stringify({ all: true }),
       });
-      await loadKrantAnalytics(currentStatsDays);
+      await loadKrantAnalytics(currentStatsDays, currentAdminFilter);
     });
   } catch (err) {
     analyticsContent.innerHTML = `<div class="panel-card"><div class="panel-card-body"><p class="error" style="margin:0;">Weergavefout in statistieken: ${escHtml(err.message)}</p></div></div>`;

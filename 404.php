@@ -55,6 +55,20 @@ if (!$isIgnored) {
         $lang = strtolower(substr(preg_replace('/[^a-zA-Z]/', '', (string)$_SERVER['HTTP_ACCEPT_LANGUAGE']), 0, 2));
     }
 
+    $isAdminVisit = 0;
+    if (
+        (!empty($_COOKIE['analytics_admin']) && $_COOKIE['analytics_admin'] === '1') ||
+        (!empty($_COOKIE['analytics_ignore']) && $_COOKIE['analytics_ignore'] === '1')
+    ) {
+        $isAdminVisit = 1;
+    }
+    if ($isAdminVisit === 0 && session_status() === PHP_SESSION_NONE && !empty($_COOKIE[session_name()])) {
+        @session_start();
+        if (!empty($_SESSION['admin_logged_in'])) {
+            $isAdminVisit = 1;
+        }
+    }
+
     writeStatsEvent([
         't'    => time(),
         'sid'  => substr($visitorHash, 0, 12),
@@ -66,6 +80,7 @@ if (!$isIgnored) {
         'sec'  => 0,
         'v'    => $visitorHash,
         'bot'  => $isBot,
+        'adm'  => $isAdminVisit,
     ]);
 }
 

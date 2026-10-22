@@ -680,6 +680,11 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         $days = 30;
     }
 
+    $adminFilter = (string)($_GET['admin_filter'] ?? 'exclude');
+    if (!in_array($adminFilter, ['exclude', 'all', 'only'], true)) {
+        $adminFilter = 'exclude';
+    }
+
     $now = time();
     if ($days === 1) {
         $currentStart = $now - 86400;
@@ -750,11 +755,29 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 $t = (int)($ev['t'] ?? 0);
                 if ($t <= 0) continue;
 
-                if ($t >= $liveThreshold && empty($ev['bot']) && ($ev['type'] ?? '') !== 'err404' && !isKrantScannerPath((string)($ev['page'] ?? '/krant/'))) {
+                $isEvAdmin = !empty($ev['adm']) ? 1 : 0;
+
+                // Live bezoekers (laatste 5 minuten, menselijk verkeer)
+                $includeInLive = true;
+                if ($adminFilter === 'exclude' && $isEvAdmin) {
+                    $includeInLive = false;
+                } elseif ($adminFilter === 'only' && !$isEvAdmin) {
+                    $includeInLive = false;
+                }
+
+                if ($includeInLive && $t >= $liveThreshold && empty($ev['bot']) && ($ev['type'] ?? '') !== 'err404' && !isKrantScannerPath((string)($ev['page'] ?? '/krant/'))) {
                     $v = (string)($ev['v'] ?? '');
                     if ($v !== '') {
                         $liveVisitors[$v] = true;
                     }
+                }
+
+                // Filter events op basis van admin_filter
+                if ($adminFilter === 'exclude' && $isEvAdmin) {
+                    continue;
+                }
+                if ($adminFilter === 'only' && !$isEvAdmin) {
+                    continue;
                 }
 
                 if ($t >= $currentStart && $t <= $now) {
@@ -1375,6 +1398,7 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         'sources'       => $sourcesList,
         'devices'       => $devicesList,
         'languages'     => $langsList,
+        'admin_filter'  => $adminFilter,
         'errors_404'    => $errors404,
         'bot_scans'     => array_slice($botScans, 0, 100),
         'essay_metrics' => $essayMetrics,

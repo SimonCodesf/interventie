@@ -3995,7 +3995,9 @@ window.closeSettingsModal = closeSettingsModal;
 function isAdminAnalyticsIgnored() {
     try {
         return (
+            localStorage.getItem('interventie_analytics_admin') === '1' ||
             localStorage.getItem('interventie_analytics_ignore') === '1' ||
+            document.cookie.indexOf('analytics_admin=1') !== -1 ||
             document.cookie.indexOf('analytics_ignore=1') !== -1
         );
     } catch (_) {
@@ -4006,10 +4008,14 @@ function isAdminAnalyticsIgnored() {
 function setAdminAnalyticsIgnored(enabled) {
     try {
         if (enabled) {
+            localStorage.setItem('interventie_analytics_admin', '1');
             localStorage.setItem('interventie_analytics_ignore', '1');
+            document.cookie = 'analytics_admin=1; path=/; max-age=31536000; SameSite=Lax';
             document.cookie = 'analytics_ignore=1; path=/; max-age=31536000; SameSite=Lax';
         } else {
+            localStorage.removeItem('interventie_analytics_admin');
             localStorage.removeItem('interventie_analytics_ignore');
+            document.cookie = 'analytics_admin=; path=/; max-age=0; SameSite=Lax';
             document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
         }
     } catch (_) {}
@@ -4024,14 +4030,14 @@ function updateAdminOptOutUI() {
     const qrImg = document.getElementById('admin-optout-qr');
 
     if (btn) {
-        btn.textContent = ignored ? 'METINGEN WEER INSCHAKELEN' : 'EIGEN BEZOEKEN UITSLUITEN';
+        btn.textContent = ignored ? 'ADMIN-MARKERING VERWIJDEREN' : 'DIT TOESTEL MARKEREN ALS TESTAPPARAAT';
         btn.className = ignored ? 'terminal-btn settings-mini-btn' : 'btn btn-primary';
     }
     if (statusText) {
-        statusText.textContent = ignored ? 'UITGESLOTEN (Je bezoeken worden niet geteld)' : 'ACTIEF (Je bezoeken tellen momenteel mee)';
+        statusText.textContent = ignored ? 'GEMARKEERD ALS TESTAPPARAAT (Eigen gebruik getagd)' : 'NIET GEMARKEERD (Telt als publieke bezoeker)';
         statusText.style.color = ignored ? '#7dff9a' : '#f8c146';
     }
-    const optoutUrl = `${window.location.origin}/?optout=1`;
+    const optoutUrl = `${window.location.origin}/?admin=1`;
     if (urlCode) {
         urlCode.textContent = optoutUrl;
     }
@@ -4046,10 +4052,10 @@ function toggleAdminAnalyticsOptOut() {
 }
 
 async function copyAdminOptOutUrl() {
-    const optoutUrl = `${window.location.origin}/?optout=1`;
+    const optoutUrl = `${window.location.origin}/?admin=1`;
     try {
         await navigator.clipboard.writeText(optoutUrl);
-        alert('Opt-out link gekopieerd naar klembord!');
+        alert('Opt-out / test link gekopieerd naar klembord!');
     } catch (e) {
         prompt('Kopieer deze link:', optoutUrl);
     }
@@ -4062,6 +4068,7 @@ window.toggleAdminAnalyticsOptOut = toggleAdminAnalyticsOptOut;
 window.copyAdminOptOutUrl = copyAdminOptOutUrl;
 
 var analyticsPeriodDays = 30;
+var analyticsAdminFilter = 'exclude'; // 'exclude', 'all', 'only'
 var analyticsShowAllPages = false;
 var analyticsPageSearch = '';
 var lastAnalyticsStats = null;
@@ -4195,7 +4202,7 @@ async function renderAnalyticsModal() {
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
         const [statsResp, postersResp, memesResp] = await Promise.all([
-            fetch(`${API_URL}/admin/stats?days=${analyticsPeriodDays}`, { headers }),
+            fetch(`${API_URL}/admin/stats?days=${analyticsPeriodDays}&admin_filter=${analyticsAdminFilter}`, { headers }),
             fetch(`${API_URL}/posters`, { headers }),
             fetch(`${API_URL}/admin/memeborden-metrics`, { headers })
         ]);
@@ -4406,6 +4413,15 @@ async function renderAnalyticsModal() {
             return '<button type="button" class="stats-period-btn' + active + '" data-days="' + opt.days + '">' + opt.label + '</button>';
         }).join('');
 
+        const scopeBtnsHtml = [
+            { filter: 'exclude', label: 'Niet weergeven', title: 'Filter jouw eigen bezoeken eruit (enkel publieke bezoekers)' },
+            { filter: 'all', label: 'Wel weergeven', title: 'Toon alle bezoeken inclusief jezelf' },
+            { filter: 'only', label: 'Enkel mijn gebruik', title: 'Toon uitsluitend jouw eigen testsessies' }
+        ].map(function (opt) {
+            const active = analyticsAdminFilter === opt.filter ? ' active' : '';
+            return '<button type="button" class="stats-scope-btn stats-period-btn' + active + '" data-filter="' + opt.filter + '" title="' + opt.title + '">' + opt.label + '</button>';
+        }).join('');
+
         content.innerHTML =
             '<!-- Toolbar -->' +
             '<div class="stats-toolbar">' +
@@ -4414,11 +4430,21 @@ async function renderAnalyticsModal() {
                     '<span>Nu online: <strong>' + liveLabel + '</strong> <span style="opacity:0.6;">(laatste 5m)</span></span>' +
                 '</div>' +
                 '<div class="stats-controls">' +
+                    '<div class="stats-period-group" title="Kies of jouw eigen bezoeken worden meegeteld">' +
+                        '<span class="stats-scope-label">Mijn gebruik:</span>' +
+                        scopeBtnsHtml +
+                    '</div>' +
                     '<div class="stats-period-group">' + periodBtnsHtml + '</div>' +
                     '<button type="button" id="stats-export-csv-btn" class="stats-action-btn" title="Exporteer pagina- en dagstatistieken naar CSV">↓ CSV EXPORT</button>' +
                     '<button type="button" id="stats-refresh-btn" class="stats-action-btn" title="Statistieken verversen">↻ VERVERS</button>' +
                 '</div>' +
             '</div>' +
+
+            (analyticsAdminFilter === 'only'
+                ? '<div style="background:rgba(255,255,255,0.06); border-left:3px solid #7dff9a; padding:10px 14px; margin-bottom:14px; font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;">' +
+                  '<span><strong>Weergave: Enkel eigen gebruik &amp; testsessies</strong> — Je bekijkt nu uitsluitend interacties vanaf je eigen admin- en testtoestellen.</span>' +
+                  '</div>'
+                : '') +
 
             '<!-- 6 KPI Kaarten met Trend Badges -->' +
             '<div class="stats-kpi-grid">' +
@@ -4588,9 +4614,16 @@ async function renderAnalyticsModal() {
             '</div>';
 
         // Event listeners koppelen
-        content.querySelectorAll('.stats-period-btn').forEach(function (btn) {
+        content.querySelectorAll('.stats-period-btn[data-days]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 analyticsPeriodDays = parseInt(btn.dataset.days, 10) || 30;
+                renderAnalyticsModal();
+            });
+        });
+
+        content.querySelectorAll('.stats-scope-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                analyticsAdminFilter = btn.dataset.filter || 'exclude';
                 renderAnalyticsModal();
             });
         });

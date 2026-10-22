@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=18">
+    <link rel="stylesheet" href="admin.css?v=20">
 </head>
 <body>
 
@@ -344,25 +344,25 @@
                         </div>
                     </section>
 
-                    <!-- 4. Eigen bezoeken uitsluiten van analytics -->
+                    <!-- 4. Eigen bezoeken & testapparaten beheren -->
                     <section class="panel-card">
                         <div class="panel-card-header">
-                            <span class="panel-card-title">Analytics — Eigen Bezoeken Uitsluiten</span>
+                            <span class="panel-card-title">Analytics — Eigen Apparaat &amp; Testsessies</span>
                             <span id="optout-status-badge" class="badge">Laden...</span>
                         </div>
                         <div class="panel-card-body">
-                            <p class="bundle-info" style="margin-top:0;">Sluit je eigen computer en smartphone uit van de statistieken zodat ontwikkel- en testbezoeken je bezoekersaantallen en AR-scans niet vervuilen.</p>
+                            <p class="bundle-info" style="margin-top:0;">Je bezoeken en testsessies worden automatisch getagd als eigen gebruik. In het Analytics-dashboard kun je met de schakelaar <strong>"Mijn gebruik"</strong> kiezen tussen: <em>Niet weergeven</em> (enkel publieke lezers), <em>Wel weergeven</em> (alles), of <em>Enkel mijn gebruik</em> (handig voor AR-telemetrie en GSM-diagnostiek).</p>
                             <div class="settings-action-row" style="margin-top:10px;">
-                                <button type="button" id="optout-toggle-btn" class="btn-primary">UITSLUITING WIJZIGEN</button>
+                                <button type="button" id="optout-toggle-btn" class="btn-primary">STATUS WIJZIGEN</button>
                                 <span id="optout-current-hint" class="bundle-info" style="margin:0;"></span>
                             </div>
 
                             <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--paper-subtle);">
-                                <strong>Smartphone / Test-toestel Uitsluiten:</strong>
-                                <p class="bundle-info" style="margin:4px 0 8px;">Scan deze QR-code of open de link op je smartphone om bezoeken en AR-scans vanaf dat toestel direct permanent uit te sluiten:</p>
+                                <strong>Smartphone / Test-toestel Markeren:</strong>
+                                <p class="bundle-info" style="margin:4px 0 8px;">Scan deze QR-code of open de link op je smartphone om dat toestel te markeren als testapparaat:</p>
                                 <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
                                     <div id="optout-qr-container" style="background:#fff;padding:6px;border:1px solid var(--border);border-radius:4px;display:inline-block;line-height:0;">
-                                        <img id="optout-qr-img" src="" alt="QR code opt-out" width="110" height="110" style="display:block;">
+                                        <img id="optout-qr-img" src="" alt="QR code testtoestel" width="110" height="110" style="display:block;">
                                     </div>
                                     <div style="flex:1;min-width:210px;">
                                         <input type="text" id="optout-url-input" readonly value="" style="font-size:11px;background:var(--paper);margin-bottom:6px;">
@@ -446,6 +446,6 @@
         </div>
     </div>
 
-    <script type="module" src="admin.js?v=19"></script>
+    <script type="module" src="admin.js?v=20"></script>
 </body>
 </html>

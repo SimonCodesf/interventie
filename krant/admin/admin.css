@@ -1395,6 +1395,50 @@ td.actions {
   font-weight: 700;
 }
 
+.krant-filter-group {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.krant-filter-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 8px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-filter-pill {
+  padding: 5px 11px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.14s;
+  white-space: nowrap;
+}
+
+.admin-filter-pill:hover {
+  background: var(--paper-alt);
+}
+
+.admin-filter-pill.active {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+}
+
 .krant-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

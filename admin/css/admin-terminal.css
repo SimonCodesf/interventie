@@ -2159,6 +2159,17 @@ input:checked + .toggle-slider:before {
     background: rgba(255,255,255,0.02);
 }
 
+.stats-scope-label {
+    font-family: var(--font-data);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 0 8px;
+    align-self: center;
+    white-space: nowrap;
+}
+
 .stats-period-btn {
     background: transparent;
     color: rgba(255,255,255,0.68);

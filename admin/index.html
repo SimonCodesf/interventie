@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard v4.0 // INTERVENTIE</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="css/admin-terminal.css?v=4.1">
+    <link rel="stylesheet" href="css/admin-terminal.css?v=4.2">
 </head>
 <body>
 
@@ -475,14 +475,14 @@
                 </section>
 
                 <section class="settings-section">
-                    <div class="settings-section-title">EIGEN BEZOEKEN UITSLUITEN</div>
-                    <p class="settings-help">Sluit je eigen computer en smartphone uit van de analytics zodat testbezoeken de statistieken niet vervuilen.</p>
+                    <div class="settings-section-title">EIGEN APPARAAT &amp; TESTSESSIES</div>
+                    <p class="settings-help">Je bezoeken en testsessies worden automatisch getagd als eigen gebruik. In het Analytics-dashboard kun je met de schakelaar <strong>"Mijn gebruik"</strong> kiezen tussen: <em>Niet weergeven</em> (enkel publieke bezoekers), <em>Wel weergeven</em> (alles), of <em>Enkel mijn gebruik</em>.</p>
                     <div class="settings-inline-row" style="margin-bottom: 0.75rem;">
                         <button type="button" id="admin-optout-toggle-btn" class="btn btn-primary" onclick="toggleAdminAnalyticsOptOut()">STATUS CONTROLEREN...</button>
                         <span id="admin-optout-status-text" class="settings-status" style="margin:0;"></span>
                     </div>
                     <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">
-                        <strong>Voor smartphone:</strong> Scan onderstaande QR of surf op je telefoon naar <code id="admin-optout-url">https://interventie.org/?optout=1</code>
+                        <strong>Voor smartphone / testtoestel:</strong> Scan onderstaande QR of surf op je telefoon naar <code id="admin-optout-url">https://interventie.org/?admin=1</code>
                     </div>
                     <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;">
                         <img id="admin-optout-qr" src="" alt="QR" width="100" height="100" style="background:#fff;padding:4px;border-radius:4px;display:none;">
@@ -524,7 +524,7 @@
     </div>
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="admin.js?v=3.14.0"></script>
+    <script src="admin.js?v=3.15.0"></script>
     <script src="../js/remove-download-metrics.js?v=1"></script>
 </body>
 </html>

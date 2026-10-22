@@ -48,31 +48,30 @@
         }
     }
 
-    // 1b. Admin Opt-Out check & queryparameter-trigger (?optout=1 of ?optin=1)
+    // 1b. Admin / testapparaat markering via queryparameters (?admin=1 of ?admin=0, met compatibiliteit voor ?optout=1 / ?optin=1)
     try {
         var sp = new URLSearchParams(location.search || '');
-        if (sp.get('optout') === '1' || sp.get('analytics_ignore') === '1') {
-            localStorage.setItem('interventie_analytics_ignore', '1');
-            document.cookie = 'analytics_ignore=1; path=/; max-age=31536000; SameSite=Lax';
-            showAnalyticsNotice('Dit toestel is uitgesloten van analytics.');
-            initNoopStubs();
-            return;
-        } else if (sp.get('optin') === '1' || sp.get('analytics_ignore') === '0') {
+        if (sp.get('admin') === '1' || sp.get('owner') === '1' || sp.get('test') === '1' || sp.get('optout') === '1' || sp.get('analytics_ignore') === '1') {
+            localStorage.setItem('interventie_analytics_admin', '1');
+            document.cookie = 'analytics_admin=1; path=/; max-age=31536000; SameSite=Lax';
+            showAnalyticsNotice('Dit toestel is gemarkeerd als admin / testapparaat.');
+        } else if (sp.get('admin') === '0' || sp.get('optin') === '1' || sp.get('analytics_ignore') === '0') {
+            localStorage.removeItem('interventie_analytics_admin');
             localStorage.removeItem('interventie_analytics_ignore');
+            document.cookie = 'analytics_admin=; path=/; max-age=0; SameSite=Lax';
             document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
-            showAnalyticsNotice('Statistieken weer ingeschakeld voor dit toestel.');
+            showAnalyticsNotice('Admin-markering verwijderd. Dit toestel telt nu als gewone bezoeker.');
         }
     } catch (e) {}
 
-    // Sluit bezoeken uit als localStorage of cookie actief is
+    var isAdminDevice = false;
     try {
-        if (
+        isAdminDevice = (
+            localStorage.getItem('interventie_analytics_admin') === '1' ||
             localStorage.getItem('interventie_analytics_ignore') === '1' ||
+            document.cookie.indexOf('analytics_admin=1') !== -1 ||
             document.cookie.indexOf('analytics_ignore=1') !== -1
-        ) {
-            initNoopStubs();
-            return;
-        }
+        );
     } catch (e) {}
 
     // Bepaal het collector endpoint relatief aan dit script (werkt zowel op /krant/ als standalone)
@@ -301,6 +300,7 @@
 
     // 6. Verstuur event via navigator.sendBeacon met Image fallback
     function sendPayload(payload) {
+        payload.adm = isAdminDevice ? 1 : 0;
         var body = JSON.stringify(payload);
         var sent = false;
 
@@ -322,6 +322,7 @@
                     dev: payload.dev || 'desktop',
                     lang: payload.lang || '',
                     sec: String(payload.sec || 0),
+                    adm: String(payload.adm || 0),
                     _t: String(Date.now())
                 });
                 var img = new Image(1, 1);

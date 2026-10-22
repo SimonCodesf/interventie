@@ -6,19 +6,6 @@ require_once __DIR__ . '/includes/stats_controller.php';
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-// Check of bezoeken van deze client uitgesloten moeten worden (opt-out cookie of actieve admin-sessie)
-if (!empty($_COOKIE['analytics_ignore']) && $_COOKIE['analytics_ignore'] === '1') {
-    http_response_code(204);
-    exit;
-}
-if (session_status() === PHP_SESSION_NONE && !empty($_COOKIE[session_name()])) {
-    @session_start();
-    if (!empty($_SESSION['admin_logged_in'])) {
-        http_response_code(204);
-        exit;
-    }
-}
-
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'OPTIONS') {
     http_response_code(204);
@@ -129,7 +116,23 @@ if (!empty($payload['err']) && is_array($payload['err'])) {
     ];
 }
 
-// 6. Schrijf JSONL-regel met flock(LOCK_EX)
+// 6. Admin- / eigen testapparaat detectie
+$isAdminVisit = 0;
+if (
+    (!empty($_COOKIE['analytics_admin']) && $_COOKIE['analytics_admin'] === '1') ||
+    (!empty($_COOKIE['analytics_ignore']) && $_COOKIE['analytics_ignore'] === '1') ||
+    (!empty($payload['adm']) && (int)$payload['adm'] === 1)
+) {
+    $isAdminVisit = 1;
+}
+if ($isAdminVisit === 0 && session_status() === PHP_SESSION_NONE && !empty($_COOKIE[session_name()])) {
+    @session_start();
+    if (!empty($_SESSION['admin_logged_in'])) {
+        $isAdminVisit = 1;
+    }
+}
+
+// 7. Schrijf JSONL-regel met flock(LOCK_EX)
 writeKrantStatsEvent([
     't'    => time(),
     'sid'  => $sid,
@@ -141,6 +144,7 @@ writeKrantStatsEvent([
     'sec'  => max(0, min(1800, $sec)),
     'v'    => $visitorHash,
     'bot'  => $isBot,
+    'adm'  => $isAdminVisit,
     'hw'   => $hw,
     'perf' => $perf,
     'err'  => $err,
