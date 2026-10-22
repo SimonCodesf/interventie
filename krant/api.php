@@ -910,5 +910,13 @@ if ($method === 'POST' && ($path === '/admin/stats/dismiss-404' || $path === '/a
     handleKrantDismiss404();
 }
 
+if ($method === 'POST' && ($path === '/admin/stats/claim-device' || $path === '/admin/stats/claim_device')) {
+    handleKrantClaimDevice();
+}
+
+if ($method === 'POST' && ($path === '/admin/stats/unclaim-device' || $path === '/admin/stats/unclaim_device')) {
+    handleKrantUnclaimDevice();
+}
+
 // Onbekende route
 jsonResponse(['message' => 'Onbekend endpoint'], 404);

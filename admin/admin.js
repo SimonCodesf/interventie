@@ -4440,6 +4440,14 @@ async function renderAnalyticsModal() {
                 '</div>' +
             '</div>' +
 
+            (stats.unclaimed_devices && stats.unclaimed_devices.length > 0
+                ? '<div style="background:rgba(16,185,129,0.08); border:1px solid #10b981; border-left:4px solid #10b981; padding:10px 14px; margin-bottom:12px; font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; border-radius:4px;">' +
+                  '<span><strong style="background:#10b981; color:#fff; font-size:9px; padding:2px 6px; border-radius:3px; margin-right:8px; font-family:monospace;">ONGEKOPPELD TOESTEL</strong>' +
+                  '<strong>' + escapeHtmlAttr(stats.unclaimed_devices[0].model || 'Mobiel toestel') + '</strong> (' + stats.unclaimed_devices[0].views + ' views gedetecteerd)</span>' +
+                  '<button type="button" class="stats-claim-device-btn stats-action-btn" data-hash="' + escapeHtmlAttr(stats.unclaimed_devices[0].hash) + '" data-model="' + escapeHtmlAttr(stats.unclaimed_devices[0].model || 'iPhone') + '" style="background:#10b981; color:#fff; border:none; padding:4px 10px; cursor:pointer; font-weight:700;">✓ Koppel als mijn iPhone</button>' +
+                  '</div>'
+                : '') +
+
             (analyticsAdminFilter === 'only'
                 ? '<div style="background:rgba(255,255,255,0.06); border-left:3px solid #7dff9a; padding:8px 12px; margin-bottom:12px; font-size:0.72rem; display:flex; justify-content:space-between; align-items:center;">' +
                   '<span><strong>Weergave: Enkel eigen gebruik &amp; testsessies.</strong> Toont interacties vanaf jouw gekoppelde apparaten of Wi-Fi netwerk.</span>' +
@@ -4625,6 +4633,35 @@ async function renderAnalyticsModal() {
             btn.addEventListener('click', function () {
                 analyticsAdminFilter = btn.dataset.filter || 'exclude';
                 renderAnalyticsModal();
+            });
+        });
+
+        content.querySelectorAll('.stats-claim-device-btn').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                const hash = btn.dataset.hash;
+                const model = btn.dataset.model || 'iPhone';
+                btn.disabled = true;
+                btn.textContent = 'Koppelen...';
+                try {
+                    const token = sessionStorage.getItem('adminToken');
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    };
+                    const resp = await fetch(`${API_URL}/admin/stats/claim-device`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ hash: hash, model: model, label: 'Mijn iPhone' })
+                    });
+                    const res = await resp.json();
+                    if (!res.success) throw new Error(res.message || 'Mislukt');
+                    analyticsAdminFilter = 'only';
+                    renderAnalyticsModal();
+                } catch (e) {
+                    alert('Koppelen mislukt: ' + e.message);
+                    btn.disabled = false;
+                    btn.textContent = '✓ Koppel als mijn iPhone';
+                }
             });
         });
 

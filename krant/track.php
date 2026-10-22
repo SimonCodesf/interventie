@@ -118,23 +118,43 @@ if (!empty($payload['err']) && is_array($payload['err'])) {
 
 // 6. Admin- / eigen testapparaat detectie
 $isAdminVisit = 0;
-if (
-    (!empty($_COOKIE['analytics_admin']) && $_COOKIE['analytics_admin'] === '1') ||
-    (!empty($_COOKIE['analytics_ignore']) && $_COOKIE['analytics_ignore'] === '1') ||
-    (!empty($payload['adm']) && (int)$payload['adm'] === 1)
-) {
-    $isAdminVisit = 1;
-}
-if ($isAdminVisit === 0 && session_status() === PHP_SESSION_NONE && !empty($_COOKIE[session_name()])) {
-    @session_start();
-    if (!empty($_SESSION['admin_logged_in'])) {
+if (!empty($payload['unpair_admin']) || !empty($_GET['unpair_admin'])) {
+    if (function_exists('unregisterKrantAdminDevice')) {
+        unregisterKrantAdminDevice($visitorHash);
+    }
+    $isAdminVisit = 0;
+} else {
+    if (
+        (!empty($_COOKIE['analytics_admin']) && $_COOKIE['analytics_admin'] === '1') ||
+        (!empty($_COOKIE['analytics_ignore']) && $_COOKIE['analytics_ignore'] === '1') ||
+        (!empty($payload['adm']) && (int)$payload['adm'] === 1) ||
+        (!empty($payload['pair_admin']) && (int)$payload['pair_admin'] === 1) ||
+        (!empty($_GET['pair_admin']) && (int)$_GET['pair_admin'] === 1)
+    ) {
         $isAdminVisit = 1;
     }
-}
+    if ($isAdminVisit === 0 && session_status() === PHP_SESSION_NONE && !empty($_COOKIE[session_name()])) {
+        @session_start();
+        if (!empty($_SESSION['admin_logged_in'])) {
+            $isAdminVisit = 1;
+        }
+    }
 
-// Automatische IP-herkenning van actief admin-netwerk (smartphone/tablet op hetzelfde Wi-Fi netwerk)
-if ($isAdminVisit === 0 && function_exists('isKrantActiveAdminIP') && isKrantActiveAdminIP($ip)) {
-    $isAdminVisit = 1;
+    // Automatische IP-herkenning van actief admin-netwerk (smartphone/tablet op hetzelfde Wi-Fi netwerk)
+    if ($isAdminVisit === 0 && function_exists('isKrantActiveAdminIP') && isKrantActiveAdminIP($ip)) {
+        $isAdminVisit = 1;
+    }
+
+    // Automatische herkenning van permanent gekoppelde testapparaten (iPhone / mobiel toestel)
+    if ($isAdminVisit === 0 && function_exists('isKrantAdminDevice') && isKrantAdminDevice($visitorHash, $sid)) {
+        $isAdminVisit = 1;
+    }
+
+    // Registreer of ververs gekoppeld testapparaat op de server
+    if ($isAdminVisit === 1 && function_exists('registerKrantAdminDevice')) {
+        $devModel = !empty($hw['model']) ? $hw['model'] : detectKrantDeviceFromUA($ua);
+        registerKrantAdminDevice($visitorHash, $sid, 'iPhone (Testmodus)', $devModel);
+    }
 }
 
 // 7. Schrijf JSONL-regel met flock(LOCK_EX)

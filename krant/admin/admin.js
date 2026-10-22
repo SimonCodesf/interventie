@@ -1989,11 +1989,29 @@ function renderKrantAnalytics(data) {
         </div>
       </div>
 
+      <!-- Banner bij ongekoppelde scans/toestellen (bv. iPhone scans zonder ?admin=1) -->
+      ${data.unclaimed_devices && data.unclaimed_devices.length > 0 ? `
+        <div class="krant-unclaimed-alert">
+          <div class="krant-unclaimed-info">
+            <span class="krant-unclaimed-badge">ONGEKOPPELD TOESTEL GEVONDEN</span>
+            <span class="krant-unclaimed-text">
+              <strong>${escHtml(data.unclaimed_devices[0].model || 'Mobiel apparaat')}</strong>
+              (${data.unclaimed_devices[0].scans > 0 ? `<strong>${data.unclaimed_devices[0].scans}</strong> AR-scans gedetecteerd` : 'recente activiteit'}, ${formatRelativeOrDate(data.unclaimed_devices[0].last_seen)})
+            </span>
+          </div>
+          <div class="krant-unclaimed-actions">
+            <button type="button" class="btn primary small-btn krant-claim-device-btn" data-hash="${escHtml(data.unclaimed_devices[0].hash)}" data-model="${escHtml(data.unclaimed_devices[0].model || 'iPhone')}">
+              ✓ Koppel als mijn iPhone
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Banner bij filter: Enkel mijn gebruik -->
       ${currentAdminFilter === 'only' ? `
         <div class="krant-filter-alert">
           <span class="krant-filter-alert-dot"></span>
-          <span><strong>Weergave: Enkel eigen gebruik &amp; AR-telemetrie.</strong> Toont data van testsessies vanaf jouw apparaten of Wi-Fi netwerk.</span>
+          <span><strong>Weergave: Enkel eigen gebruik &amp; AR-telemetrie.</strong> Toont data van testsessies vanaf jouw gekoppelde apparaten of Wi-Fi netwerk.</span>
         </div>
       ` : ''}
 
@@ -2469,33 +2487,107 @@ function renderKrantAnalytics(data) {
       });
     });
 
+    // 1-Klik koppeling van gedetecteerd mobiel testapparaat (iPhone)
+    analyticsContent.querySelectorAll('.krant-claim-device-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const targetBtn = e.currentTarget;
+        const hash = targetBtn.dataset.hash;
+        const model = targetBtn.dataset.model || 'iPhone';
+        targetBtn.disabled = true;
+        targetBtn.textContent = 'Koppelen...';
+        try {
+          const resp = await fetch(`${API}?endpoint=/admin/stats/claim-device`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hash, model, label: 'Mijn iPhone' })
+          });
+          const res = await resp.json();
+          if (!res.success) throw new Error(res.message || 'Koppelen mislukt');
+          currentAdminFilter = 'only';
+          await loadKrantAnalytics(currentStatsDays, 'only');
+        } catch (err) {
+          alert('Fout bij koppelen van testapparaat: ' + err.message);
+          targetBtn.disabled = false;
+          targetBtn.textContent = '✓ Koppel als mijn iPhone';
+        }
+      });
+    });
+
+    // GSM Pairing Modal openen (in-DOM modal, geen window.open popups die geblokkeerd worden)
     document.getElementById('krant-phone-pair-btn')?.addEventListener('click', () => {
+      const modal = document.getElementById('krant-pairing-modal');
+      if (!modal) return;
       const url = `${window.location.origin}/krant/?admin=1`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
-      const win = window.open('', 'Koppel Smartphone', 'width=360,height=440');
-      if (win) {
-        win.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Koppel Smartphone voor AR Tests</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 24px 16px; background: #faf9f5; color: #141414; }
-              img { border: 1px solid #ddd; border-radius: 6px; padding: 8px; background: #fff; margin: 12px 0; }
-              p { font-size: 13px; line-height: 1.4; color: #555; }
-              code { font-size: 11px; background: #eee; padding: 4px 6px; border-radius: 4px; word-break: break-all; }
-            </style>
-          </head>
-          <body>
-            <h3 style="margin-top:0;">Koppel Smartphone</h3>
-            <p>Scan deze QR-code met je smartphone camera om AR-testmodus direct te koppelen:</p>
-            <img src="${qrUrl}" width="180" height="180" alt="QR">
-            <div><code>${url}</code></div>
-          </body>
-          </html>
-        `);
-      } else {
-        prompt('Open deze link op je smartphone om AR-testmodus te activeren:', url);
+      const qrImg = document.getElementById('krant-pairing-qr-img');
+      const urlInput = document.getElementById('krant-pairing-url-input');
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(url)}`;
+      }
+      if (urlInput) {
+        urlInput.value = url;
+      }
+
+      // Vul lijst van geregistreerde apparaten
+      const pairedList = document.getElementById('krant-paired-devices-list');
+      if (pairedList) {
+        const devices = data.paired_devices || [];
+        if (devices.length === 0) {
+          pairedList.innerHTML = `<div class="bundle-info" style="margin:0;">Nog geen apparaten gekoppeld. Scan de QR-code met je iPhone of klik op 'Koppel als mijn iPhone' zodra er scans zijn.</div>`;
+        } else {
+          pairedList.innerHTML = devices.map(d => `
+            <div class="krant-paired-device-row">
+              <div class="krant-paired-device-meta">
+                <span class="krant-paired-device-name">${escHtml(d.model || d.label || 'Gekoppeld apparaat')}</span>
+                <span class="krant-paired-device-sub">Laatst actief: ${formatRelativeOrDate(d.last_seen)} · ID: ${escHtml(d.hash.slice(0, 8))}...</span>
+              </div>
+              <button type="button" class="btn ghost small-btn krant-unpair-device-btn" data-hash="${escHtml(d.hash)}" style="color:#ef4444; border-color:rgba(239,68,68,0.3);">
+                Ontkoppel
+              </button>
+            </div>
+          `).join('');
+
+          pairedList.querySelectorAll('.krant-unpair-device-btn').forEach(unpairBtn => {
+            unpairBtn.addEventListener('click', async (ev) => {
+              const b = ev.currentTarget;
+              const h = b.dataset.hash;
+              if (!confirm('Weet je zeker dat je dit apparaat wilt ontkoppelen?')) return;
+              b.disabled = true;
+              try {
+                const resp = await fetch(`${API}?endpoint=/admin/stats/unclaim-device`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ hash: h })
+                });
+                const res = await resp.json();
+                if (!res.success) throw new Error(res.message);
+                modal.classList.add('hidden');
+                loadKrantAnalytics(currentStatsDays, currentAdminFilter);
+              } catch (err) {
+                alert('Ontkoppelen mislukt: ' + err.message);
+                b.disabled = false;
+              }
+            });
+          });
+        }
+      }
+
+      modal.classList.remove('hidden');
+    });
+
+    document.getElementById('krant-pairing-copy-btn')?.addEventListener('click', async () => {
+      const urlInput = document.getElementById('krant-pairing-url-input');
+      const btn = document.getElementById('krant-pairing-copy-btn');
+      if (urlInput) {
+        try {
+          await navigator.clipboard.writeText(urlInput.value);
+          if (btn) {
+            const orig = btn.textContent;
+            btn.textContent = 'GEKOPIEERD!';
+            setTimeout(() => { btn.textContent = orig; }, 1800);
+          }
+        } catch (e) {
+          urlInput.select();
+        }
       }
     });
 

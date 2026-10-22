@@ -446,6 +446,43 @@
         </div>
     </div>
 
-    <script type="module" src="admin.js?v=21"></script>
+    <!-- Smartphone Koppelen Modal (QR Code & Apparaatbeheer) -->
+    <div id="krant-pairing-modal" class="krant-modal hidden">
+        <div class="krant-modal-backdrop" data-close-modal="krant-pairing-modal"></div>
+        <div class="krant-modal-content medium-modal" style="max-width: 540px;">
+            <div class="krant-modal-header">
+                <h3>KOPPEL IPHONE / SMARTPHONE VOOR AR-TESTS</h3>
+                <button type="button" class="krant-modal-close" data-close-modal="krant-pairing-modal">×</button>
+            </div>
+            <div class="krant-modal-body">
+                <p style="font-size: 13px; line-height: 1.5; margin-top: 0; color: var(--muted);">
+                    Scan deze QR-code met de Camera van je iPhone of mobiele toestel om AR-testmodus direct te koppelen. Zodra geopend, telt dit apparaat permanent als jouw testapparaat en verschijnen alle scans onder <strong>Enkel ik</strong>.
+                </p>
+
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 0; background: var(--paper-alt); border-radius: var(--radius-sm); margin: 14px 0;">
+                    <img id="krant-pairing-qr-img" src="" width="200" height="200" alt="AR Testmodus QR Code" style="background:#fff; padding:8px; border-radius:6px; border:1px solid var(--border);">
+                    <div style="margin-top: 12px; display: flex; width: 90%; max-width: 420px; gap: 6px;">
+                        <input type="text" id="krant-pairing-url-input" readonly style="font-family: var(--font-mono); font-size: 11px; flex: 1;">
+                        <button type="button" id="krant-pairing-copy-btn" class="btn ghost small-btn">KOPIEER</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                    <h4 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono); color: var(--muted); margin-bottom: 8px;">
+                        Gekoppelde Testapparaten
+                    </h4>
+                    <div id="krant-paired-devices-list" style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Dynamisch gevuld door admin.js -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 12px 14px; background: var(--paper); border: 1px dashed var(--border); border-radius: var(--radius-sm); font-size: 11px; color: var(--muted); line-height: 1.4;">
+                    <strong>Tip:</strong> Heb je al een scan uitgevoerd zonder deze link? In de analytics verschijnt automatisch een knop <em>'✓ Koppel als mijn iPhone'</em> om recente mobiele scans direct met 1 klik toe te wijzen.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js?v=22"></script>
 </body>
 </html>

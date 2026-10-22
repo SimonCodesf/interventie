@@ -25,6 +25,7 @@ define('STATS_DIR', STATS_DATA_DIR . '/stats');
 define('STATS_SALT_FILE', STATS_DATA_DIR . '/stats_salt');
 define('STATS_DISMISSED_404_FILE', STATS_DIR . '/dismissed_404.json');
 define('STATS_ACTIVE_ADMIN_IPS_FILE', STATS_DATA_DIR . '/active_admin_ips.json');
+define('STATS_ADMIN_DEVICES_FILE', STATS_DATA_DIR . '/admin_devices.json');
 
 /**
  * Registreer IP van ingelogde admin (voor automatische koppeling van testapparaten op hetzelfde Wi-Fi netwerk).
@@ -63,6 +64,101 @@ function isActiveAdminIP(string $ip): bool {
     $data = json_decode((string)@file_get_contents($file), true) ?: [];
     if (!isset($data[$ip])) return false;
     return (time() - (int)$data[$ip]) <= 28800;
+}
+
+/**
+ * Haal geregistreerde testapparaten op uit admin_devices.json.
+ */
+function getStatsAdminDevices(): array {
+    $file = STATS_ADMIN_DEVICES_FILE;
+    if (!file_exists($file)) {
+        return ['hashes' => [], 'sids' => []];
+    }
+    $raw = (string)@file_get_contents($file);
+    $data = json_decode($raw, true);
+    if (!is_array($data)) {
+        return ['hashes' => [], 'sids' => []];
+    }
+    if (!isset($data['hashes']) || !is_array($data['hashes'])) {
+        $data['hashes'] = [];
+    }
+    if (!isset($data['sids']) || !is_array($data['sids'])) {
+        $data['sids'] = [];
+    }
+    return $data;
+}
+
+/**
+ * Registreer een testapparaat permanent op de server via anonieme visitor hash en/of sessie-ID.
+ */
+function registerStatsAdminDevice(string $hash, ?string $sid = null, string $label = '', string $model = ''): void {
+    $hash = trim($hash);
+    if ($hash === '' && empty($sid)) return;
+
+    if (!is_dir(STATS_DATA_DIR)) {
+        @mkdir(STATS_DATA_DIR, 0755, true);
+    }
+    $file = STATS_ADMIN_DEVICES_FILE;
+    $data = getStatsAdminDevices();
+    $now = time();
+
+    if ($hash !== '') {
+        $existing = $data['hashes'][$hash] ?? [];
+        $data['hashes'][$hash] = [
+            'hash'       => $hash,
+            'label'      => $label !== '' ? $label : ($existing['label'] ?? 'iPhone van Simon'),
+            'model'      => $model !== '' ? $model : ($existing['model'] ?? 'Apple iPhone'),
+            'first_seen' => $existing['first_seen'] ?? $now,
+            'last_seen'  => $now,
+        ];
+    }
+
+    if (!empty($sid)) {
+        $cleanSid = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', $sid), 0, 32);
+        if ($cleanSid !== '') {
+            $data['sids'][$cleanSid] = $now;
+            foreach ($data['sids'] as $s => $ts) {
+                if ($now - (int)$ts > 7776000) {
+                    unset($data['sids'][$s]);
+                }
+            }
+        }
+    }
+
+    @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+}
+
+/**
+ * Verwijder een geregistreerd testapparaat.
+ */
+function unregisterStatsAdminDevice(string $hash): void {
+    $hash = trim($hash);
+    if ($hash === '') return;
+    $file = STATS_ADMIN_DEVICES_FILE;
+    $data = getStatsAdminDevices();
+    if (isset($data['hashes'][$hash])) {
+        unset($data['hashes'][$hash]);
+        @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    }
+}
+
+/**
+ * Controleer of een visitor-hash of sessie-ID geregistreerd staat als admin testapparaat.
+ */
+function isStatsAdminDevice(string $hash, ?string $sid = null): bool {
+    $hash = trim($hash);
+    if ($hash === '' && empty($sid)) return false;
+    $data = getStatsAdminDevices();
+    if ($hash !== '' && isset($data['hashes'][$hash])) {
+        return true;
+    }
+    if (!empty($sid)) {
+        $cleanSid = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', $sid), 0, 32);
+        if ($cleanSid !== '' && isset($data['sids'][$cleanSid])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -514,6 +610,56 @@ function handleDismiss404(): void {
 }
 
 /**
+ * Koppel een ongekoppeld testapparaat (bv. iPhone) permanent aan het admin-account.
+ */
+function handleClaimDevice(): void {
+    if (!isAdmin()) {
+        jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    }
+    $raw = (string)@file_get_contents('php://input');
+    $data = json_decode($raw, true) ?: [];
+    $hash = trim((string)($data['hash'] ?? ''));
+    $model = trim((string)($data['model'] ?? ''));
+    $label = trim((string)($data['label'] ?? 'Mijn smartphone'));
+
+    if ($hash === '' || !preg_match('/^[a-f0-9]{8,64}$/i', $hash)) {
+        jsonResponse(['success' => false, 'message' => 'Ongeldige device hash'], 400);
+    }
+
+    registerStatsAdminDevice($hash, null, $label, $model);
+    jsonResponse([
+        'success'      => true,
+        'claimed_hash' => $hash,
+        'label'        => $label,
+        'model'        => $model,
+        'message'      => 'Apparaat succesvol gekoppeld als testapparaat'
+    ]);
+}
+
+/**
+ * Ontkoppel een geregistreerd testapparaat.
+ */
+function handleUnclaimDevice(): void {
+    if (!isAdmin()) {
+        jsonResponse(['message' => 'Niet geautoriseerd'], 401);
+    }
+    $raw = (string)@file_get_contents('php://input');
+    $data = json_decode($raw, true) ?: [];
+    $hash = trim((string)($data['hash'] ?? ''));
+
+    if ($hash === '' || !preg_match('/^[a-f0-9]{8,64}$/i', $hash)) {
+        jsonResponse(['success' => false, 'message' => 'Ongeldige device hash'], 400);
+    }
+
+    unregisterStatsAdminDevice($hash);
+    jsonResponse([
+        'success'        => true,
+        'unclaimed_hash' => $hash,
+        'message'        => 'Testapparaat succesvol ontkoppeld'
+    ]);
+}
+
+/**
  * Bereken procentuele trend tussen huidige en vorige periode.
  */
 function computeKpiTrend(float $current, float $previous): ?float {
@@ -672,6 +818,7 @@ function handleGetAdminStats(?PDO $db = null): void {
     $currentEvents = [];
     $previousEvents = [];
     $liveVisitors = [];
+    $unclaimedCandidates = [];
     $liveThreshold = $now - 300; // Laatste 5 minuten
 
     $adminIP = getStatsClientIP();
@@ -699,10 +846,51 @@ function handleGetAdminStats(?PDO $db = null): void {
                 $t = (int)($ev['t'] ?? 0);
                 if ($t <= 0) continue;
 
+                $evHash = (string)($ev['v'] ?? '');
+                $evSid  = (string)($ev['sid'] ?? '');
+
                 $isEvAdmin = !empty($ev['adm']) ? 1 : 0;
                 // Retroactieve herkenning: eerdere testsessies van huidige admin
-                if (!$isEvAdmin && !empty($ev['v']) && $ev['v'] === $adminVisitorHash) {
+                if (!$isEvAdmin && $evHash !== '' && $evHash === $adminVisitorHash) {
                     $isEvAdmin = 1;
+                }
+                // Retroactieve herkenning: geregistreerde testapparaten (iPhone / smartphone)
+                if (!$isEvAdmin && ($evHash !== '' || $evSid !== '') && isStatsAdminDevice($evHash, $evSid)) {
+                    $isEvAdmin = 1;
+                }
+
+                // Detectie van ongekoppelde testapparaten (iPhone / mobiel toestel)
+                if (!$isEvAdmin && $evHash !== '' && empty($ev['bot']) && $t >= $currentStart) {
+                    $evType = (string)($ev['type'] ?? '');
+                    $isArActivity = in_array($evType, ['scan', 'ar_dwell', 'cam_start', 'ar_perf', 'ar_error'], true);
+                    $isMobile = ($ev['dev'] ?? '') === 'mobile' || ($ev['dev'] ?? '') === 'tablet';
+
+                    if ($isArActivity || $isMobile) {
+                        if (!isset($unclaimedCandidates[$evHash])) {
+                            $unclaimedCandidates[$evHash] = [
+                                'hash'      => $evHash,
+                                'model'     => !empty($ev['hw']['model']) ? $ev['hw']['model'] : ($isMobile ? 'Mobiel toestel' : 'Onbekend'),
+                                'dev'       => $ev['dev'] ?? 'mobile',
+                                'scans'     => 0,
+                                'views'     => 0,
+                                'last_seen' => $t,
+                                'last_page' => (string)($ev['page'] ?? '/'),
+                                'sid'       => $evSid,
+                            ];
+                        }
+                        if ($evType === 'scan') {
+                            $unclaimedCandidates[$evHash]['scans']++;
+                        } elseif ($evType === 'view') {
+                            $unclaimedCandidates[$evHash]['views']++;
+                        }
+                        if ($t >= $unclaimedCandidates[$evHash]['last_seen']) {
+                            $unclaimedCandidates[$evHash]['last_seen'] = $t;
+                            $unclaimedCandidates[$evHash]['last_page'] = (string)($ev['page'] ?? $unclaimedCandidates[$evHash]['last_page']);
+                            if (!empty($ev['hw']['model'])) {
+                                $unclaimedCandidates[$evHash]['model'] = $ev['hw']['model'];
+                            }
+                        }
+                    }
                 }
 
                 // Live bezoekers (laatste 5 minuten, menselijk verkeer)
@@ -1026,11 +1214,34 @@ function handleGetAdminStats(?PDO $db = null): void {
         return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
     });
 
+    // Sorteer ongekoppelde apparaten: apparaten met scans eerst, daarna meest recent actief
+    $unclaimedList = array_values($unclaimedCandidates);
+    usort($unclaimedList, function ($a, $b) {
+        if (($a['scans'] > 0 || $b['scans'] > 0) && $a['scans'] !== $b['scans']) {
+            return $b['scans'] <=> $a['scans'];
+        }
+        return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
+    });
+
+    $storedAdminDevices = getStatsAdminDevices();
+    $pairedDevicesList = [];
+    foreach ($storedAdminDevices['hashes'] as $h => $devMeta) {
+        $pairedDevicesList[] = [
+            'hash'       => $h,
+            'label'      => $devMeta['label'] ?? 'Gekoppeld apparaat',
+            'model'      => $devMeta['model'] ?? 'Mobiel toestel',
+            'first_seen' => $devMeta['first_seen'] ?? 0,
+            'last_seen'  => $devMeta['last_seen'] ?? 0,
+        ];
+    }
+
     $response = [
         'success'     => true,
         'period_days' => $days,
         'generated_at'=> $now,
         'live_online' => count($liveVisitors),
+        'unclaimed_devices' => array_slice($unclaimedList, 0, 5),
+        'paired_devices'    => $pairedDevicesList,
         'kpis'        => [
             'views' => [
                 'value'    => $curMetrics['views'],

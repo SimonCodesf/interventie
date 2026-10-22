@@ -574,6 +574,10 @@ if ($method === 'GET' && $path === '/posters') {
     handleGetAdminStats($db);
 } elseif ($method === 'POST' && ($path === '/admin/stats/dismiss-404' || $path === '/admin/stats/dismiss_404')) {
     handleDismiss404();
+} elseif ($method === 'POST' && ($path === '/admin/stats/claim-device' || $path === '/admin/stats/claim_device')) {
+    handleClaimDevice();
+} elseif ($method === 'POST' && ($path === '/admin/stats/unclaim-device' || $path === '/admin/stats/unclaim_device')) {
+    handleUnclaimDevice();
 } elseif ($method === 'POST' && preg_match('#^/verkeersborden/scan/([^/]+)$#', $path, $matches)) {
     handleMemebordenScan($matches[1]);
 } elseif ($method === 'POST' && preg_match('#^/verkeersborden/view/([^/]+)$#', $path, $matches)) {

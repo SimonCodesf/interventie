@@ -25,6 +25,7 @@ define('KRANT_STATS_DIR', KRANT_STATS_DATA_DIR . '/stats');
 define('KRANT_STATS_SALT_FILE', KRANT_STATS_DATA_DIR . '/stats_salt');
 define('KRANT_STATS_DISMISSED_404_FILE', KRANT_STATS_DIR . '/dismissed_404.json');
 define('KRANT_ACTIVE_ADMIN_IPS_FILE', KRANT_STATS_DATA_DIR . '/active_admin_ips.json');
+define('KRANT_ADMIN_DEVICES_FILE', KRANT_STATS_DATA_DIR . '/admin_devices.json');
 
 /**
  * Registreer IP van ingelogde admin (zodat testsessies op hetzelfde Wi-Fi netwerk automatisch gemarkeerd worden).
@@ -63,6 +64,101 @@ function isKrantActiveAdminIP(string $ip): bool {
     $data = json_decode((string)@file_get_contents($file), true) ?: [];
     if (!isset($data[$ip])) return false;
     return (time() - (int)$data[$ip]) <= 28800; // 8 uur
+}
+
+/**
+ * Haal geregistreerde testapparaten (iPhones / smartphones) op uit admin_devices.json.
+ */
+function getKrantAdminDevices(): array {
+    $file = KRANT_ADMIN_DEVICES_FILE;
+    if (!file_exists($file)) {
+        return ['hashes' => [], 'sids' => []];
+    }
+    $raw = (string)@file_get_contents($file);
+    $data = json_decode($raw, true);
+    if (!is_array($data)) {
+        return ['hashes' => [], 'sids' => []];
+    }
+    if (!isset($data['hashes']) || !is_array($data['hashes'])) {
+        $data['hashes'] = [];
+    }
+    if (!isset($data['sids']) || !is_array($data['sids'])) {
+        $data['sids'] = [];
+    }
+    return $data;
+}
+
+/**
+ * Registreer een testapparaat permanent op de server via anonieme visitor hash en optionele sessie-ID.
+ */
+function registerKrantAdminDevice(string $hash, ?string $sid = null, string $label = '', string $model = ''): void {
+    $hash = trim($hash);
+    if ($hash === '' && empty($sid)) return;
+
+    if (!is_dir(KRANT_STATS_DATA_DIR)) {
+        @mkdir(KRANT_STATS_DATA_DIR, 0755, true);
+    }
+    $file = KRANT_ADMIN_DEVICES_FILE;
+    $data = getKrantAdminDevices();
+    $now = time();
+
+    if ($hash !== '') {
+        $existing = $data['hashes'][$hash] ?? [];
+        $data['hashes'][$hash] = [
+            'hash'       => $hash,
+            'label'      => $label !== '' ? $label : ($existing['label'] ?? 'iPhone van Simon'),
+            'model'      => $model !== '' ? $model : ($existing['model'] ?? 'Apple iPhone'),
+            'first_seen' => $existing['first_seen'] ?? $now,
+            'last_seen'  => $now,
+        ];
+    }
+
+    if (!empty($sid)) {
+        $cleanSid = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', $sid), 0, 32);
+        if ($cleanSid !== '') {
+            $data['sids'][$cleanSid] = $now;
+            foreach ($data['sids'] as $s => $ts) {
+                if ($now - (int)$ts > 7776000) { // 90 dagen
+                    unset($data['sids'][$s]);
+                }
+            }
+        }
+    }
+
+    @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+}
+
+/**
+ * Verwijder een geregistreerd testapparaat.
+ */
+function unregisterKrantAdminDevice(string $hash): void {
+    $hash = trim($hash);
+    if ($hash === '') return;
+    $file = KRANT_ADMIN_DEVICES_FILE;
+    $data = getKrantAdminDevices();
+    if (isset($data['hashes'][$hash])) {
+        unset($data['hashes'][$hash]);
+        @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    }
+}
+
+/**
+ * Controleer of een visitor-hash of sessie-ID geregistreerd staat als admin testapparaat.
+ */
+function isKrantAdminDevice(string $hash, ?string $sid = null): bool {
+    $hash = trim($hash);
+    if ($hash === '' && empty($sid)) return false;
+    $data = getKrantAdminDevices();
+    if ($hash !== '' && isset($data['hashes'][$hash])) {
+        return true;
+    }
+    if (!empty($sid)) {
+        $cleanSid = substr(preg_replace('/[^a-zA-Z0-9_-]/', '', $sid), 0, 32);
+        if ($cleanSid !== '' && isset($data['sids'][$cleanSid])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -532,6 +628,52 @@ function handleKrantDismiss404(): void {
 }
 
 /**
+ * Koppel een ongekoppeld testapparaat (bv. iPhone) permanent aan het admin-account.
+ */
+function handleKrantClaimDevice(): void {
+    requireAuth();
+    $raw = (string)@file_get_contents('php://input');
+    $data = json_decode($raw, true) ?: [];
+    $hash = trim((string)($data['hash'] ?? ''));
+    $model = trim((string)($data['model'] ?? ''));
+    $label = trim((string)($data['label'] ?? 'Mijn iPhone'));
+
+    if ($hash === '' || !preg_match('/^[a-f0-9]{8,64}$/i', $hash)) {
+        jsonResponse(['success' => false, 'message' => 'Ongeldige device hash'], 400);
+    }
+
+    registerKrantAdminDevice($hash, null, $label, $model);
+    jsonResponse([
+        'success'      => true,
+        'claimed_hash' => $hash,
+        'label'        => $label,
+        'model'        => $model,
+        'message'      => 'Apparaat succesvol gekoppeld als AR-testapparaat'
+    ]);
+}
+
+/**
+ * Ontkoppel een geregistreerd testapparaat.
+ */
+function handleKrantUnclaimDevice(): void {
+    requireAuth();
+    $raw = (string)@file_get_contents('php://input');
+    $data = json_decode($raw, true) ?: [];
+    $hash = trim((string)($data['hash'] ?? ''));
+
+    if ($hash === '' || !preg_match('/^[a-f0-9]{8,64}$/i', $hash)) {
+        jsonResponse(['success' => false, 'message' => 'Ongeldige device hash'], 400);
+    }
+
+    unregisterKrantAdminDevice($hash);
+    jsonResponse([
+        'success'        => true,
+        'unclaimed_hash' => $hash,
+        'message'        => 'Testapparaat succesvol ontkoppeld'
+    ]);
+}
+
+/**
  * Bereken procentuele trend tussen huidige en vorige periode.
  */
 function computeKrantKpiTrend(float $current, float $previous): ?float {
@@ -773,6 +915,7 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
     $currentEvents = [];
     $previousEvents = [];
     $liveVisitors = [];
+    $unclaimedCandidates = [];
     $liveThreshold = $now - 300; // Laatste 5 minuten
 
     // Registreer netwerk/IP van huidige ingelogde admin voor automatische koppeling van testsessies
@@ -801,10 +944,52 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 $t = (int)($ev['t'] ?? 0);
                 if ($t <= 0) continue;
 
+                $evHash = (string)($ev['v'] ?? '');
+                $evSid  = (string)($ev['sid'] ?? '');
+
                 $isEvAdmin = !empty($ev['adm']) ? 1 : 0;
                 // Retroactieve herkenning: eerdere testsessies van de huidige admin (zelfde hash)
-                if (!$isEvAdmin && !empty($ev['v']) && $ev['v'] === $adminVisitorHash) {
+                if (!$isEvAdmin && $evHash !== '' && $evHash === $adminVisitorHash) {
                     $isEvAdmin = 1;
+                }
+                // Retroactieve herkenning via permanent geregistreerde admin/test apparaten (bv. iPhone)
+                if (!$isEvAdmin && ($evHash !== '' || $evSid !== '') && isKrantAdminDevice($evHash, $evSid)) {
+                    $isEvAdmin = 1;
+                }
+
+                // Detectie van ongekoppelde testapparaten (iPhone / mobiel toestel met AR-scans of telemetrie)
+                if (!$isEvAdmin && $evHash !== '' && empty($ev['bot']) && $t >= $currentStart) {
+                    $evType = (string)($ev['type'] ?? '');
+                    $isArScan = ($evType === 'scan' || $evType === 'ar_dwell');
+                    $isArActivity = ($isArScan || $evType === 'cam_start' || $evType === 'ar_perf' || $evType === 'ar_error');
+                    $isMobile = ($ev['dev'] ?? '') === 'mobile' || ($ev['dev'] ?? '') === 'tablet';
+
+                    if ($isArActivity || $isMobile) {
+                        if (!isset($unclaimedCandidates[$evHash])) {
+                            $unclaimedCandidates[$evHash] = [
+                                'hash'      => $evHash,
+                                'model'     => !empty($ev['hw']['model']) ? $ev['hw']['model'] : ($isMobile ? 'Mobiel toestel' : 'Onbekend'),
+                                'dev'       => $ev['dev'] ?? 'mobile',
+                                'scans'     => 0,
+                                'views'     => 0,
+                                'last_seen' => $t,
+                                'last_page' => (string)($ev['page'] ?? '/krant/'),
+                                'sid'       => $evSid,
+                            ];
+                        }
+                        if ($evType === 'scan') {
+                            $unclaimedCandidates[$evHash]['scans']++;
+                        } elseif ($evType === 'view') {
+                            $unclaimedCandidates[$evHash]['views']++;
+                        }
+                        if ($t >= $unclaimedCandidates[$evHash]['last_seen']) {
+                            $unclaimedCandidates[$evHash]['last_seen'] = $t;
+                            $unclaimedCandidates[$evHash]['last_page'] = (string)($ev['page'] ?? $unclaimedCandidates[$evHash]['last_page']);
+                            if (!empty($ev['hw']['model'])) {
+                                $unclaimedCandidates[$evHash]['model'] = $ev['hw']['model'];
+                            }
+                        }
+                    }
                 }
 
                 // Live bezoekers (laatste 5 minuten, menselijk verkeer)
@@ -1369,11 +1554,34 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         ? $essayMetrics[0]
         : null;
 
+    // Sorteer ongekoppelde apparaten: apparaten met scans eerst, daarna meest recent actief
+    $unclaimedList = array_values($unclaimedCandidates);
+    usort($unclaimedList, function ($a, $b) {
+        if (($a['scans'] > 0 || $b['scans'] > 0) && $a['scans'] !== $b['scans']) {
+            return $b['scans'] <=> $a['scans'];
+        }
+        return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
+    });
+
+    $storedAdminDevices = getKrantAdminDevices();
+    $pairedDevicesList = [];
+    foreach ($storedAdminDevices['hashes'] as $h => $devMeta) {
+        $pairedDevicesList[] = [
+            'hash'       => $h,
+            'label'      => $devMeta['label'] ?? 'Gekoppeld apparaat',
+            'model'      => $devMeta['model'] ?? 'Mobiel toestel',
+            'first_seen' => $devMeta['first_seen'] ?? 0,
+            'last_seen'  => $devMeta['last_seen'] ?? 0,
+        ];
+    }
+
     $response = [
         'success'       => true,
         'period_days'   => $days,
         'generated_at'  => $now,
         'live_online'   => count($liveVisitors),
+        'unclaimed_devices' => array_slice($unclaimedList, 0, 5),
+        'paired_devices'    => $pairedDevicesList,
         'kpis'          => [
             'scans' => [
                 'value'         => $curMetrics['scans'] > 0 ? $curMetrics['scans'] : $totalAllTimeScans,

@@ -48,13 +48,38 @@
         }
     }
 
+    // Discreet groen badge rechtsboven op het scherm wanneer testmodus actief is
+    function renderAdminTestBadge() {
+        if (document.getElementById('krant-admin-test-badge')) return;
+        function render() {
+            if (document.getElementById('krant-admin-test-badge')) return;
+            var el = document.createElement('div');
+            el.id = 'krant-admin-test-badge';
+            el.setAttribute('role', 'status');
+            el.setAttribute('title', 'AR-Testmodus is actief voor dit apparaat. Tik 3x op de krantkop om uit te schakelen.');
+            el.innerHTML = '<span style="display:inline-block;width:6px;height:6px;background:#7dff9a;border-radius:50%;margin-right:6px;box-shadow:0 0 6px #7dff9a;"></span>AR-TESTMODUS';
+            el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999998;background:rgba(20,20,20,0.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#f6f4ef;border:1px solid rgba(125,255,154,0.35);padding:4px 9px;border-radius:999px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.04em;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.3);';
+            el.addEventListener('click', function () {
+                alert('AR-Testmodus is actief voor dit toestel.\n\nAlle AR-scans en interacties worden getoond onder "Enkel ik" in het admin dashboard.\n\nTip: Tik 3x op de kop "Interventie" om de testmodus uit te schakelen.');
+            });
+            document.body.appendChild(el);
+        }
+        if (document.body) {
+            render();
+        } else {
+            window.addEventListener('DOMContentLoaded', render);
+        }
+    }
+
     // 1b. Admin / testapparaat markering via queryparameters (?admin=1 of ?admin=0, met compatibiliteit voor ?optout=1 / ?optin=1)
+    var wasJustAdminLinked = false;
     try {
         var sp = new URLSearchParams(location.search || '');
         if (sp.get('admin') === '1' || sp.has('admin') || sp.get('owner') === '1' || sp.has('owner') || sp.get('test') === '1' || sp.has('test') || sp.has('dev') || sp.get('optout') === '1' || sp.get('analytics_ignore') === '1') {
             localStorage.setItem('interventie_analytics_admin', '1');
             sessionStorage.setItem('interventie_analytics_admin', '1');
             document.cookie = 'analytics_admin=1; path=/; max-age=31536000; SameSite=Lax';
+            wasJustAdminLinked = true;
             showAnalyticsNotice('Dit toestel is gekoppeld als AR-testapparaat.');
         } else if (sp.get('admin') === '0' || sp.get('optin') === '1' || sp.get('analytics_ignore') === '0') {
             localStorage.removeItem('interventie_analytics_admin');
@@ -80,6 +105,9 @@
     }
 
     var isAdminDevice = checkIsAdminDevice();
+    if (isAdminDevice) {
+        renderAdminTestBadge();
+    }
 
     // Bepaal het collector endpoint relatief aan dit script (werkt zowel op /krant/ als standalone)
     var ENDPOINT = '/krant/track.php';
@@ -307,7 +335,13 @@
 
     // 6. Verstuur event via navigator.sendBeacon met Image fallback
     function sendPayload(payload) {
-        payload.adm = checkIsAdminDevice() ? 1 : 0;
+        var isAdm = checkIsAdminDevice();
+        if (payload.adm === undefined) {
+            payload.adm = isAdm ? 1 : 0;
+        }
+        if (isAdm || wasJustAdminLinked) {
+            payload.pair_admin = 1;
+        }
         var body = JSON.stringify(payload);
         var sent = false;
 
@@ -330,6 +364,7 @@
                     lang: payload.lang || '',
                     sec: String(payload.sec || 0),
                     adm: String(payload.adm || 0),
+                    pair_admin: payload.pair_admin ? '1' : '0',
                     _t: String(Date.now())
                 });
                 var img = new Image(1, 1);
@@ -353,6 +388,7 @@
         dev: deviceType,
         lang: language,
         sec: 0,
+        pair_admin: (isAdminDevice || wasJustAdminLinked) ? 1 : 0,
         hw: getKrantDeviceHardware()
     });
 
@@ -541,4 +577,88 @@
         flushDwell();
         visibleSince = null;
     });
+
+    // 8. 3-tikken gebaar op de krantkop "Interventie" om AR-testmodus direct op iPhone in/uit te schakelen
+    function initMastheadGesture() {
+        var tapCount = 0;
+        var tapTimer = null;
+
+        function onHeaderTap(e) {
+            tapCount++;
+            if (tapTimer) clearTimeout(tapTimer);
+            tapTimer = setTimeout(function () {
+                tapCount = 0;
+            }, 800);
+
+            if (tapCount >= 3) {
+                tapCount = 0;
+                clearTimeout(tapTimer);
+                var currentlyAdmin = checkIsAdminDevice();
+                if (!currentlyAdmin) {
+                    if (confirm('AR-Testmodus inschakelen voor deze iPhone?\n\nJouw scans en telemetrie worden direct gekoppeld aan het admin dashboard onder "Enkel ik".')) {
+                        try {
+                            localStorage.setItem('interventie_analytics_admin', '1');
+                            sessionStorage.setItem('interventie_analytics_admin', '1');
+                            document.cookie = 'analytics_admin=1; path=/; max-age=31536000; SameSite=Lax';
+                        } catch (err) {}
+                        renderAdminTestBadge();
+                        sendPayload({
+                            sid: sid,
+                            type: 'view',
+                            page: currentPage,
+                            ref: 'gesture_pair',
+                            dev: deviceType,
+                            lang: language,
+                            sec: 0,
+                            pair_admin: 1,
+                            adm: 1,
+                            hw: getKrantDeviceHardware()
+                        });
+                        showAnalyticsNotice('Dit toestel is gekoppeld als AR-testapparaat.');
+                    }
+                } else {
+                    if (confirm('AR-Testmodus uitschakelen voor dit toestel?\n\nDit toestel zal weer meetellen als een gewone publieke bezoeker.')) {
+                        try {
+                            localStorage.removeItem('interventie_analytics_admin');
+                            localStorage.removeItem('interventie_analytics_ignore');
+                            sessionStorage.removeItem('interventie_analytics_admin');
+                            document.cookie = 'analytics_admin=; path=/; max-age=0; SameSite=Lax';
+                            document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
+                        } catch (err) {}
+                        var badge = document.getElementById('krant-admin-test-badge');
+                        if (badge) badge.remove();
+                        sendPayload({
+                            sid: sid,
+                            type: 'view',
+                            page: currentPage,
+                            ref: 'gesture_unpair',
+                            dev: deviceType,
+                            lang: language,
+                            sec: 0,
+                            unpair_admin: 1,
+                            adm: 0,
+                            hw: getKrantDeviceHardware()
+                        });
+                        showAnalyticsNotice('Testmarkering verwijderd. Dit toestel telt nu als gewone bezoeker.');
+                    }
+                }
+            }
+        }
+
+        function bindTargets() {
+            var targets = document.querySelectorAll('#masthead, #ar-header, header, .masthead');
+            targets.forEach(function (t) {
+                t.style.cursor = 'pointer';
+                t.addEventListener('click', onHeaderTap);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindTargets);
+        } else {
+            bindTargets();
+        }
+    }
+
+    initMastheadGesture();
 })();
