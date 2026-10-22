@@ -2159,13 +2159,49 @@ input:checked + .toggle-slider:before {
     background: rgba(255,255,255,0.02);
 }
 
+.stats-segmented-toggle {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 3px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.stats-segmented-btn {
+    padding: 3px 8px;
+    font-family: var(--font-data);
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.55);
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.stats-segmented-btn:hover {
+    color: #fff;
+}
+
+.stats-segmented-btn.active {
+    background: #fff;
+    color: #000;
+    font-weight: 700;
+}
+
 .stats-scope-label {
     font-family: var(--font-data);
     font-size: 0.62rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: rgba(255, 255, 255, 0.45);
-    padding: 0 8px;
+    padding: 0 4px;
     align-self: center;
     white-space: nowrap;
 }

@@ -1395,48 +1395,102 @@ td.actions {
   font-weight: 700;
 }
 
-.krant-filter-group {
+/* Compact Segmented Data Filter Toggle */
+.krant-toggle-wrapper {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  padding: 2px 4px;
+}
+
+.krant-toggle-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0 2px;
+}
+
+.krant-segmented-toggle {
+  display: inline-flex;
+  background: var(--paper-alt);
+  border-radius: 3px;
   padding: 2px;
   gap: 2px;
 }
 
-.krant-filter-label {
+.krant-segmented-btn {
+  padding: 3px 8px;
   font-family: var(--font-mono);
   font-size: 10px;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--muted);
-  padding: 0 8px;
-  letter-spacing: 0.04em;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.admin-filter-pill {
-  padding: 5px 11px;
-  font-family: var(--font-mono);
-  font-size: 11px;
   background: transparent;
   border: none;
-  border-radius: calc(var(--radius-sm) - 2px);
+  border-radius: 2px;
   cursor: pointer;
-  color: var(--ink);
-  transition: all 0.14s;
+  transition: all 0.12s ease;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
-.admin-filter-pill:hover {
-  background: var(--paper-alt);
+.krant-segmented-btn:hover {
+  color: var(--ink);
 }
 
-.admin-filter-pill.active {
+.krant-segmented-btn.active {
   background: var(--ink);
   color: var(--paper);
   font-weight: 700;
+}
+
+.krant-mini-icon-btn {
+  padding: 3px 7px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 2px;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.14s;
+}
+
+.krant-mini-icon-btn:hover {
+  background: var(--paper-alt);
+  border-style: solid;
+}
+
+/* Compact status alert when filtering by 'only' */
+.krant-filter-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  background: var(--paper-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+
+.krant-filter-alert-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2563eb;
+  flex-shrink: 0;
 }
 
 .krant-kpi-grid {

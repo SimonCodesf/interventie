@@ -132,6 +132,11 @@ if ($isAdminVisit === 0 && session_status() === PHP_SESSION_NONE && !empty($_COO
     }
 }
 
+// Automatische IP-herkenning van actief admin-netwerk (smartphone/tablet op hetzelfde Wi-Fi netwerk)
+if ($isAdminVisit === 0 && function_exists('isKrantActiveAdminIP') && isKrantActiveAdminIP($ip)) {
+    $isAdminVisit = 1;
+}
+
 // 7. Schrijf JSONL-regel met flock(LOCK_EX)
 writeKrantStatsEvent([
     't'    => time(),

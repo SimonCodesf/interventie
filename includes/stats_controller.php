@@ -24,6 +24,46 @@ define('STATS_DATA_DIR', dirname(__DIR__) . '/data');
 define('STATS_DIR', STATS_DATA_DIR . '/stats');
 define('STATS_SALT_FILE', STATS_DATA_DIR . '/stats_salt');
 define('STATS_DISMISSED_404_FILE', STATS_DIR . '/dismissed_404.json');
+define('STATS_ACTIVE_ADMIN_IPS_FILE', STATS_DATA_DIR . '/active_admin_ips.json');
+
+/**
+ * Registreer IP van ingelogde admin (voor automatische koppeling van testapparaten op hetzelfde Wi-Fi netwerk).
+ */
+function registerActiveAdminIP(?string $ip = null): void {
+    if ($ip === null) {
+        $ip = getStatsClientIP();
+    }
+    if ($ip === '' || $ip === '0.0.0.0' || $ip === '127.0.0.1') return;
+
+    if (!is_dir(STATS_DATA_DIR)) {
+        @mkdir(STATS_DATA_DIR, 0755, true);
+    }
+    $file = STATS_ACTIVE_ADMIN_IPS_FILE;
+    $data = [];
+    if (file_exists($file)) {
+        $data = json_decode((string)@file_get_contents($file), true) ?: [];
+    }
+    $now = time();
+    $data[$ip] = $now;
+    foreach ($data as $storedIp => $ts) {
+        if ($now - (int)$ts > 86400) {
+            unset($data[$storedIp]);
+        }
+    }
+    @file_put_contents($file, json_encode($data), LOCK_EX);
+}
+
+/**
+ * Controleer of een IP recent actief was als ingelogde admin (geldig voor 8 uur).
+ */
+function isActiveAdminIP(string $ip): bool {
+    if ($ip === '' || $ip === '0.0.0.0') return false;
+    $file = STATS_ACTIVE_ADMIN_IPS_FILE;
+    if (!file_exists($file)) return false;
+    $data = json_decode((string)@file_get_contents($file), true) ?: [];
+    if (!isset($data[$ip])) return false;
+    return (time() - (int)$data[$ip]) <= 28800;
+}
 
 /**
  * Zorg dat de stats-map en .htaccess beveiliging bestaan.
@@ -634,6 +674,11 @@ function handleGetAdminStats(?PDO $db = null): void {
     $liveVisitors = [];
     $liveThreshold = $now - 300; // Laatste 5 minuten
 
+    $adminIP = getStatsClientIP();
+    registerActiveAdminIP($adminIP);
+    $adminUA = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $adminVisitorHash = computeVisitorHash($adminIP, $adminUA);
+
     for ($i = $filesToReadDays - 1; $i >= 0; $i--) {
         $dateStr = date('Y-m-d', strtotime("-{$i} days", $now));
         $filePath = STATS_DIR . '/' . $dateStr . '.jsonl';
@@ -655,6 +700,10 @@ function handleGetAdminStats(?PDO $db = null): void {
                 if ($t <= 0) continue;
 
                 $isEvAdmin = !empty($ev['adm']) ? 1 : 0;
+                // Retroactieve herkenning: eerdere testsessies van huidige admin
+                if (!$isEvAdmin && !empty($ev['v']) && $ev['v'] === $adminVisitorHash) {
+                    $isEvAdmin = 1;
+                }
 
                 // Live bezoekers (laatste 5 minuten, menselijk verkeer)
                 $includeInLive = true;

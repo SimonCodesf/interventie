@@ -24,6 +24,46 @@ define('KRANT_STATS_DATA_DIR', dirname(__DIR__) . '/data');
 define('KRANT_STATS_DIR', KRANT_STATS_DATA_DIR . '/stats');
 define('KRANT_STATS_SALT_FILE', KRANT_STATS_DATA_DIR . '/stats_salt');
 define('KRANT_STATS_DISMISSED_404_FILE', KRANT_STATS_DIR . '/dismissed_404.json');
+define('KRANT_ACTIVE_ADMIN_IPS_FILE', KRANT_STATS_DATA_DIR . '/active_admin_ips.json');
+
+/**
+ * Registreer IP van ingelogde admin (zodat testsessies op hetzelfde Wi-Fi netwerk automatisch gemarkeerd worden).
+ */
+function registerKrantActiveAdminIP(?string $ip = null): void {
+    if ($ip === null) {
+        $ip = getKrantStatsClientIP();
+    }
+    if ($ip === '' || $ip === '0.0.0.0' || $ip === '127.0.0.1') return;
+
+    if (!is_dir(KRANT_STATS_DATA_DIR)) {
+        @mkdir(KRANT_STATS_DATA_DIR, 0755, true);
+    }
+    $file = KRANT_ACTIVE_ADMIN_IPS_FILE;
+    $data = [];
+    if (file_exists($file)) {
+        $data = json_decode((string)@file_get_contents($file), true) ?: [];
+    }
+    $now = time();
+    $data[$ip] = $now;
+    foreach ($data as $storedIp => $ts) {
+        if ($now - (int)$ts > 86400) {
+            unset($data[$storedIp]);
+        }
+    }
+    @file_put_contents($file, json_encode($data), LOCK_EX);
+}
+
+/**
+ * Controleer of een IP recent actief was als ingelogde admin (geldig voor 8 uur).
+ */
+function isKrantActiveAdminIP(string $ip): bool {
+    if ($ip === '' || $ip === '0.0.0.0') return false;
+    $file = KRANT_ACTIVE_ADMIN_IPS_FILE;
+    if (!file_exists($file)) return false;
+    $data = json_decode((string)@file_get_contents($file), true) ?: [];
+    if (!isset($data[$ip])) return false;
+    return (time() - (int)$data[$ip]) <= 28800; // 8 uur
+}
 
 /**
  * Zorg dat de stats-map en .htaccess beveiliging (Require all denied) bestaan.
@@ -735,6 +775,12 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
     $liveVisitors = [];
     $liveThreshold = $now - 300; // Laatste 5 minuten
 
+    // Registreer netwerk/IP van huidige ingelogde admin voor automatische koppeling van testsessies
+    $adminIP = getKrantStatsClientIP();
+    registerKrantActiveAdminIP($adminIP);
+    $adminUA = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $adminVisitorHash = computeKrantVisitorHash($adminIP, $adminUA);
+
     for ($i = $filesToReadDays - 1; $i >= 0; $i--) {
         $dateStr = date('Y-m-d', strtotime("-{$i} days", $now));
         $filePath = KRANT_STATS_DIR . '/' . $dateStr . '.jsonl';
@@ -756,6 +802,10 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 if ($t <= 0) continue;
 
                 $isEvAdmin = !empty($ev['adm']) ? 1 : 0;
+                // Retroactieve herkenning: eerdere testsessies van de huidige admin (zelfde hash)
+                if (!$isEvAdmin && !empty($ev['v']) && $ev['v'] === $adminVisitorHash) {
+                    $isEvAdmin = 1;
+                }
 
                 // Live bezoekers (laatste 5 minuten, menselijk verkeer)
                 $includeInLive = true;

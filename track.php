@@ -95,6 +95,11 @@ if ($isAdminVisit === 0 && session_status() === PHP_SESSION_NONE && !empty($_COO
     }
 }
 
+// Automatische IP-herkenning van actief admin-netwerk (smartphone/laptop op hetzelfde Wi-Fi netwerk)
+if ($isAdminVisit === 0 && function_exists('isActiveAdminIP') && isActiveAdminIP($ip)) {
+    $isAdminVisit = 1;
+}
+
 // 6. Schrijf JSONL-regel met flock(LOCK_EX)
 writeStatsEvent([
     't'    => time(),

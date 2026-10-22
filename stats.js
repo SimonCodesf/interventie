@@ -40,28 +40,35 @@
     // 1b. Admin / testapparaat markering via queryparameters (?admin=1 of ?admin=0, met compatibiliteit voor ?optout=1 / ?optin=1)
     try {
         var sp = new URLSearchParams(location.search || '');
-        if (sp.get('admin') === '1' || sp.get('owner') === '1' || sp.get('test') === '1' || sp.get('optout') === '1' || sp.get('analytics_ignore') === '1') {
+        if (sp.get('admin') === '1' || sp.has('admin') || sp.get('owner') === '1' || sp.has('owner') || sp.get('test') === '1' || sp.has('test') || sp.has('dev') || sp.get('optout') === '1' || sp.get('analytics_ignore') === '1') {
             localStorage.setItem('interventie_analytics_admin', '1');
+            sessionStorage.setItem('interventie_analytics_admin', '1');
             document.cookie = 'analytics_admin=1; path=/; max-age=31536000; SameSite=Lax';
-            showAnalyticsNotice('Dit toestel is gemarkeerd als admin / testapparaat.');
+            showAnalyticsNotice('Dit toestel is gekoppeld als testapparaat.');
         } else if (sp.get('admin') === '0' || sp.get('optin') === '1' || sp.get('analytics_ignore') === '0') {
             localStorage.removeItem('interventie_analytics_admin');
             localStorage.removeItem('interventie_analytics_ignore');
+            sessionStorage.removeItem('interventie_analytics_admin');
             document.cookie = 'analytics_admin=; path=/; max-age=0; SameSite=Lax';
             document.cookie = 'analytics_ignore=; path=/; max-age=0; SameSite=Lax';
-            showAnalyticsNotice('Admin-markering verwijderd. Dit toestel telt nu als gewone bezoeker.');
+            showAnalyticsNotice('Testmarkering verwijderd. Dit toestel telt nu als gewone bezoeker.');
         }
     } catch (e) {}
 
-    var isAdminDevice = false;
-    try {
-        isAdminDevice = (
-            localStorage.getItem('interventie_analytics_admin') === '1' ||
-            localStorage.getItem('interventie_analytics_ignore') === '1' ||
-            document.cookie.indexOf('analytics_admin=1') !== -1 ||
-            document.cookie.indexOf('analytics_ignore=1') !== -1
-        );
-    } catch (e) {}
+    function checkIsAdminDevice() {
+        try {
+            var sp = new URLSearchParams(location.search || '');
+            if (sp.has('admin') || sp.has('test') || sp.has('dev') || sp.has('owner')) return true;
+            if (localStorage.getItem('interventie_analytics_admin') === '1') return true;
+            if (localStorage.getItem('interventie_analytics_ignore') === '1') return true;
+            if (sessionStorage.getItem('interventie_analytics_admin') === '1') return true;
+            if (document.cookie.indexOf('analytics_admin=1') !== -1) return true;
+            if (document.cookie.indexOf('analytics_ignore=1') !== -1) return true;
+        } catch (e) {}
+        return false;
+    }
+
+    var isAdminDevice = checkIsAdminDevice();
 
     var ENDPOINT = '/track.php';
     var MAX_DWELL_SECONDS = 1800; // Max 30 min per paginabezoek
@@ -169,7 +176,7 @@
 
     // 6. Verstuur event via navigator.sendBeacon met Image fallback
     function sendPayload(payload) {
-        payload.adm = isAdminDevice ? 1 : 0;
+        payload.adm = checkIsAdminDevice() ? 1 : 0;
         var body = JSON.stringify(payload);
         var sent = false;
 

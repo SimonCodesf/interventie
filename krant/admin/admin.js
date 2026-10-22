@@ -1952,16 +1952,21 @@ function renderKrantAnalytics(data) {
           <span class="bundle-info" style="margin:0;">8th Wall AR-Tracking · Cookie-vrij · AVG/GDPR-proof</span>
         </div>
         <div class="krant-stats-controls">
-          <div class="krant-filter-group" title="Kies of jouw eigen testsessies worden weergegeven">
-            <span class="krant-filter-label">Mijn gebruik:</span>
-            <button type="button" class="admin-filter-pill ${currentAdminFilter === 'exclude' ? 'active' : ''}" data-filter="exclude" title="Filter jouw eigen bezoeken en testscans eruit (enkel publieke lezers)">
-              Niet weergeven
-            </button>
-            <button type="button" class="admin-filter-pill ${currentAdminFilter === 'all' ? 'active' : ''}" data-filter="all" title="Toon alle bezoeken inclusief je eigen testsessies">
-              Wel weergeven
-            </button>
-            <button type="button" class="admin-filter-pill ${currentAdminFilter === 'only' ? 'active' : ''}" data-filter="only" title="Toon uitsluitend jouw eigen testsessies, AR telemetrie en GSM-prestaties">
-              Enkel mijn gebruik
+          <div class="krant-toggle-wrapper">
+            <span class="krant-toggle-label">DATA</span>
+            <div class="krant-segmented-toggle" role="tablist">
+              <button type="button" class="krant-segmented-btn ${currentAdminFilter === 'exclude' ? 'active' : ''}" data-filter="exclude" title="Filter eigen bezoeken eruit (enkel publieke lezers)">
+                Publiek
+              </button>
+              <button type="button" class="krant-segmented-btn ${currentAdminFilter === 'all' ? 'active' : ''}" data-filter="all" title="Toon alle bezoeken inclusief je eigen testsessies">
+                Alles
+              </button>
+              <button type="button" class="krant-segmented-btn ${currentAdminFilter === 'only' ? 'active' : ''}" data-filter="only" title="Toon uitsluitend jouw eigen testsessies, AR telemetrie en GSM-prestaties">
+                Enkel ik
+              </button>
+            </div>
+            <button type="button" id="krant-phone-pair-btn" class="krant-mini-icon-btn" title="Koppel smartphone voor AR-tests via QR-code">
+              GSM
             </button>
           </div>
           ${[
@@ -1986,11 +1991,9 @@ function renderKrantAnalytics(data) {
 
       <!-- Banner bij filter: Enkel mijn gebruik -->
       ${currentAdminFilter === 'only' ? `
-        <div class="panel-card" style="margin-bottom:16px;background:var(--paper-alt);border-left:3px solid var(--ink);">
-          <div class="panel-card-body" style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-            <span style="font-size:12px;font-weight:700;">Weergave: Enkel eigen gebruik &amp; AR-telemetrie</span>
-            <span class="bundle-info" style="margin:0;">Je bekijkt nu uitsluitend data van je eigen testsessies. Handig om laadtijden, camera-starts en hardwareprestaties van je eigen telefoon te inspecteren.</span>
-          </div>
+        <div class="krant-filter-alert">
+          <span class="krant-filter-alert-dot"></span>
+          <span><strong>Weergave: Enkel eigen gebruik &amp; AR-telemetrie.</strong> Toont data van testsessies vanaf jouw apparaten of Wi-Fi netwerk.</span>
         </div>
       ` : ''}
 
@@ -2460,10 +2463,40 @@ function renderKrantAnalytics(data) {
     `;
 
     // Wire up analytics events
-    analyticsContent.querySelectorAll('.admin-filter-pill').forEach((btn) => {
+    analyticsContent.querySelectorAll('.krant-segmented-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         loadKrantAnalytics(currentStatsDays, btn.dataset.filter || 'exclude');
       });
+    });
+
+    document.getElementById('krant-phone-pair-btn')?.addEventListener('click', () => {
+      const url = `${window.location.origin}/krant/?admin=1`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+      const win = window.open('', 'Koppel Smartphone', 'width=360,height=440');
+      if (win) {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Koppel Smartphone voor AR Tests</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 24px 16px; background: #faf9f5; color: #141414; }
+              img { border: 1px solid #ddd; border-radius: 6px; padding: 8px; background: #fff; margin: 12px 0; }
+              p { font-size: 13px; line-height: 1.4; color: #555; }
+              code { font-size: 11px; background: #eee; padding: 4px 6px; border-radius: 4px; word-break: break-all; }
+            </style>
+          </head>
+          <body>
+            <h3 style="margin-top:0;">Koppel Smartphone</h3>
+            <p>Scan deze QR-code met je smartphone camera om AR-testmodus direct te koppelen:</p>
+            <img src="${qrUrl}" width="180" height="180" alt="QR">
+            <div><code>${url}</code></div>
+          </body>
+          </html>
+        `);
+      } else {
+        prompt('Open deze link op je smartphone om AR-testmodus te activeren:', url);
+      }
     });
 
     analyticsContent.querySelectorAll('.period-pill').forEach((btn) => {

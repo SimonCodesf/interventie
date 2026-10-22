@@ -86,6 +86,10 @@ if ($method === 'GET' && $path === '/posters') {
     $input = json_decode(file_get_contents('php://input'), true);
     if (verifyPassword($input['password'] ?? '', ADMIN_PASSWORD)) {
         clearLoginAttempts($clientIP);
+        if (function_exists('registerActiveAdminIP')) {
+            registerActiveAdminIP($clientIP);
+        }
+        @setcookie('analytics_admin', '1', time() + 31536000, '/', '', !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', false);
         $token = generateSecureToken();
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['auth_token'] = $token;

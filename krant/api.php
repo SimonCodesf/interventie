@@ -186,6 +186,12 @@ if ($method === 'POST' && $path === '/admin/logout') {
 if ($method === 'GET' && ($path === '/admin/status' || $path === '/admin/state')) {
     $loggedIn = isValidSession();
     $needsSetup = getAdminHash($db) === null;
+    if ($loggedIn) {
+        if (function_exists('registerKrantActiveAdminIP')) {
+            registerKrantActiveAdminIP();
+        }
+        @setcookie('analytics_admin', '1', time() + 31536000, '/', '', !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', false);
+    }
     jsonResponse([
         'logged_in'     => $loggedIn,
         'authenticated' => $loggedIn,

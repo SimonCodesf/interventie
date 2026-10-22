@@ -4414,12 +4414,12 @@ async function renderAnalyticsModal() {
         }).join('');
 
         const scopeBtnsHtml = [
-            { filter: 'exclude', label: 'Niet weergeven', title: 'Filter jouw eigen bezoeken eruit (enkel publieke bezoekers)' },
-            { filter: 'all', label: 'Wel weergeven', title: 'Toon alle bezoeken inclusief jezelf' },
-            { filter: 'only', label: 'Enkel mijn gebruik', title: 'Toon uitsluitend jouw eigen testsessies' }
+            { filter: 'exclude', label: 'Publiek', title: 'Filter jouw eigen bezoeken eruit (enkel publieke bezoekers)' },
+            { filter: 'all', label: 'Alles', title: 'Toon alle bezoeken inclusief jezelf' },
+            { filter: 'only', label: 'Enkel ik', title: 'Toon uitsluitend jouw eigen testsessies' }
         ].map(function (opt) {
             const active = analyticsAdminFilter === opt.filter ? ' active' : '';
-            return '<button type="button" class="stats-scope-btn stats-period-btn' + active + '" data-filter="' + opt.filter + '" title="' + opt.title + '">' + opt.label + '</button>';
+            return '<button type="button" class="stats-scope-btn stats-segmented-btn' + active + '" data-filter="' + opt.filter + '" title="' + opt.title + '">' + opt.label + '</button>';
         }).join('');
 
         content.innerHTML =
@@ -4430,8 +4430,8 @@ async function renderAnalyticsModal() {
                     '<span>Nu online: <strong>' + liveLabel + '</strong> <span style="opacity:0.6;">(laatste 5m)</span></span>' +
                 '</div>' +
                 '<div class="stats-controls">' +
-                    '<div class="stats-period-group" title="Kies of jouw eigen bezoeken worden meegeteld">' +
-                        '<span class="stats-scope-label">Mijn gebruik:</span>' +
+                    '<div class="stats-segmented-toggle" title="Kies welke data wordt weergegeven">' +
+                        '<span class="stats-scope-label">DATA</span>' +
                         scopeBtnsHtml +
                     '</div>' +
                     '<div class="stats-period-group">' + periodBtnsHtml + '</div>' +
@@ -4441,8 +4441,8 @@ async function renderAnalyticsModal() {
             '</div>' +
 
             (analyticsAdminFilter === 'only'
-                ? '<div style="background:rgba(255,255,255,0.06); border-left:3px solid #7dff9a; padding:10px 14px; margin-bottom:14px; font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;">' +
-                  '<span><strong>Weergave: Enkel eigen gebruik &amp; testsessies</strong> — Je bekijkt nu uitsluitend interacties vanaf je eigen admin- en testtoestellen.</span>' +
+                ? '<div style="background:rgba(255,255,255,0.06); border-left:3px solid #7dff9a; padding:8px 12px; margin-bottom:12px; font-size:0.72rem; display:flex; justify-content:space-between; align-items:center;">' +
+                  '<span><strong>Weergave: Enkel eigen gebruik &amp; testsessies.</strong> Toont interacties vanaf jouw gekoppelde apparaten of Wi-Fi netwerk.</span>' +
                   '</div>'
                 : '') +
 
