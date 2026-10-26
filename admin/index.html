@@ -131,10 +131,8 @@
                             </div>
 
                             <div class="form-group hl-zone poster-only-field" id="ar-marker-field">
-                                <label for="ar-marker-file">AR_MARKER_FILE (.mind)</label>
-                                <input type="file" id="ar-marker-file" accept=".mind">
-                                <div id="mind-size-info" class="file-size-info"></div>
-                                <div id="mind-compile-status" style="margin-top: 0.3rem; font-family: monospace; font-size: 0.75rem; color: rgba(255,255,255,0.5);">AR marker wordt automatisch gecompileerd vanuit de JPEG</div>
+                                <label>8th Wall AR Marker (Auto-Target)</label>
+                                <div id="mind-compile-status" style="margin-top: 0.3rem; font-family: monospace; font-size: 0.75rem; color: #4ade80;">✓ 8th Wall target wordt automatisch gegenereerd vanuit de JPEG</div>
                             </div>
                             
                             <div class="form-row poster-only-field">
@@ -173,7 +171,7 @@
                                 <div id="summary-title" class="summary-item pending">Titel <span>...</span></div>
                                 <div id="summary-description" class="summary-item pending">Beschrijving <span>...</span></div>
                                 <div id="summary-jpeg" class="summary-item pending">JPEG Afbeelding <span>...</span></div>
-                                <div id="summary-mind" class="summary-item pending">AR Marker (.mind) <span>...</span></div>
+                                <div id="summary-mind" class="summary-item ok">8th Wall Marker <span>Auto (JPEG)</span></div>
                                 <div id="summary-pdf-a3" class="summary-item pending">PDF (A3) <span>...</span></div>
                                 <div id="summary-pdf-a0" class="summary-item pending">PDF (A0) <span>...</span></div>
                                 <div id="summary-gallery" class="summary-item pending">Galerij foto's <span>0</span></div>
@@ -314,10 +312,9 @@
                                 </div>
 
                                 <div class="form-group hl-zone">
-                                    <label for="edit-ar-marker-file">AR_MARKER_FILE (.mind)</label>
-                                    <input type="file" id="edit-ar-marker-file" accept=".mind">
+                                    <label>8th Wall AR Marker (Auto-Target)</label>
                                     <p id="edit-ar-marker-current" class="file-info"></p>
-                                    <div id="edit-ar-marker-file-size-info" class="file-size-info"></div>
+                                    <div id="edit-ar-marker-file-size-info" style="font-family: monospace; font-size: 0.75rem; color: #4ade80;">✓ Automatisch gegenereerd vanuit JPEG</div>
                                 </div>
                                 
                                 <div class="form-row">
@@ -436,10 +433,10 @@
             </div>
             <div class="modal-body settings-modal-body">
                 <section class="settings-section">
-                    <div class="settings-section-title">AR BEHEER</div>
-                    <p class="settings-help">Herbouw de AR chunks wanneer je markers of posterbestanden hebt aangepast.</p>
+                    <div class="settings-section-title">8TH WALL AR TARGETS</div>
+                    <p class="settings-help">Controleer en regenereer de 8th Wall targets (`target8w.json` &amp; `target8w.jpg`) vanuit alle poster-JPEGs.</p>
                     <div class="settings-inline-row">
-                        <button type="button" id="settings-rebuild-mind-btn" class="btn btn-primary">AR REBUILD UITVOEREN</button>
+                        <button type="button" id="settings-rebuild-mind-btn" class="btn btn-primary">8W TARGETS CONTROLEREN &amp; HERBOUWEN</button>
                     </div>
                     <div id="settings-rebuild-status" class="settings-status">Klaar om te starten.</div>
                 </section>
@@ -523,8 +520,7 @@
         </div>
     </div>
 
-    <script type="module" src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="admin.js?v=3.16.0"></script>
+    <script src="admin.js?v=3.17.1"></script>
     <script src="../js/remove-download-metrics.js?v=1"></script>
 </body>
 </html>

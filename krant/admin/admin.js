@@ -1989,24 +1989,6 @@ function renderKrantAnalytics(data) {
         </div>
       </div>
 
-      <!-- Banner bij ongekoppelde scans/toestellen (bv. iPhone scans zonder ?admin=1) -->
-      ${data.unclaimed_devices && data.unclaimed_devices.length > 0 ? `
-        <div class="krant-unclaimed-alert">
-          <div class="krant-unclaimed-info">
-            <span class="krant-unclaimed-badge">ONGEKOPPELD TOESTEL GEVONDEN</span>
-            <span class="krant-unclaimed-text">
-              <strong>${escHtml(data.unclaimed_devices[0].model || 'Mobiel apparaat')}</strong>
-              (${data.unclaimed_devices[0].scans > 0 ? `<strong>${data.unclaimed_devices[0].scans}</strong> AR-scans gedetecteerd` : 'recente activiteit'}, ${formatRelativeOrDate(data.unclaimed_devices[0].last_seen)})
-            </span>
-          </div>
-          <div class="krant-unclaimed-actions">
-            <button type="button" class="btn primary small-btn krant-claim-device-btn" data-hash="${escHtml(data.unclaimed_devices[0].hash)}" data-model="${escHtml(data.unclaimed_devices[0].model || 'iPhone')}">
-              ✓ Koppel als mijn iPhone
-            </button>
-          </div>
-        </div>
-      ` : ''}
-
       <!-- Banner bij filter: Enkel mijn gebruik -->
       ${currentAdminFilter === 'only' ? `
         <div class="krant-filter-alert">
@@ -2484,30 +2466,6 @@ function renderKrantAnalytics(data) {
     analyticsContent.querySelectorAll('.krant-segmented-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         loadKrantAnalytics(currentStatsDays, btn.dataset.filter || 'exclude');
-      });
-    });
-
-    // 1-Klik koppeling van gedetecteerd mobiel testapparaat (iPhone)
-    analyticsContent.querySelectorAll('.krant-claim-device-btn').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        const targetBtn = e.currentTarget;
-        const hash = targetBtn.dataset.hash;
-        const model = targetBtn.dataset.model || 'iPhone';
-        targetBtn.disabled = true;
-        targetBtn.textContent = 'Koppelen...';
-        try {
-          const res = await apiJson('/admin/stats/claim-device', {
-            method: 'POST',
-            body: JSON.stringify({ hash, model, label: 'Mijn iPhone' })
-          });
-          if (!res.success) throw new Error(res.message || 'Koppelen mislukt');
-          currentAdminFilter = 'only';
-          await loadKrantAnalytics(currentStatsDays, 'only');
-        } catch (err) {
-          alert('Fout bij koppelen van testapparaat: ' + err.message);
-          targetBtn.disabled = false;
-          targetBtn.textContent = '✓ Koppel als mijn iPhone';
-        }
       });
     });
 

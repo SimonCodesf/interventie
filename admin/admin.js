@@ -9,68 +9,20 @@ let compilingMindPromise = null;     // Nieuw upload formulier
 let editCompilingMindPromise = null; // Edit formulier
 
 /**
- * Compileert een afbeelding naar een .mind bestand via de MindAR browser compiler.
- * Werkt volledig client-side, geen server-side native dependencies nodig.
- * @param {File} imageFile - De JPEG/PNG die als AR marker gecompileerd wordt
- * @param {HTMLElement} statusEl - Element om compilatie voortgang te tonen
- * @param {string} summaryId - ID van het summary element (bijv. 'summary-mind')
- * @returns {Promise<ArrayBuffer|null>} De gecompileerde .mind data, of null bij fout
+ * 8th Wall target status helper (targets worden server-side automatisch gegenereerd).
  */
 async function compileMindFromImage(imageFile, statusEl, summaryId) {
-    if (!window.MINDAR || !window.MINDAR.IMAGE || !window.MINDAR.IMAGE.Compiler) {
-        if (statusEl) statusEl.textContent = 'MindAR compiler niet geladen - upload handmatig een .mind bestand';
-        return null;
-    }
-    
     const summaryEl = summaryId ? document.getElementById(summaryId) : null;
     const summarySpan = summaryEl ? summaryEl.querySelector('span') : null;
     
     if (statusEl) {
-        statusEl.textContent = 'COMPILEREN... (30-60 sec)';
-        statusEl.style.color = 'rgba(255,200,0,0.8)';
+        statusEl.textContent = '✓ 8th Wall target actief (wordt automatisch gegenereerd)';
+        statusEl.style.color = '#4ade80';
     }
-    if (summaryEl) summaryEl.className = 'summary-item pending';
-    if (summarySpan) summarySpan.textContent = 'Compileren...';
+    if (summaryEl) summaryEl.className = 'summary-item ok';
+    if (summarySpan) summarySpan.textContent = 'Auto (JPEG)';
     
-    try {
-        const objectUrl = URL.createObjectURL(imageFile);
-        const img = new Image();
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = () => reject(new Error('Afbeelding laden mislukt'));
-            img.src = objectUrl;
-        });
-        URL.revokeObjectURL(objectUrl);
-        
-        const compiler = new window.MINDAR.IMAGE.Compiler();
-        await compiler.compileImageTargets([img], (progress) => {
-            const pct = Math.round(progress * 100);
-            if (statusEl) statusEl.textContent = `COMPILEREN... ${pct}%`;
-            if (summarySpan) summarySpan.textContent = `${pct}%`;
-        });
-        
-        const buffer = await compiler.exportData();
-        const sizeKB = Math.round(buffer.byteLength / 1024);
-        
-        if (statusEl) {
-            statusEl.textContent = `Automatisch gecompileerd (${sizeKB} KB)`;
-            statusEl.style.color = 'rgba(0,255,0,0.8)';
-        }
-        if (summaryEl) summaryEl.className = 'summary-item ok';
-        if (summarySpan) summarySpan.textContent = `Auto (${sizeKB} KB)`;
-        
-        console.log(`[MIND] Compilatie voltooid: ${sizeKB} KB`);
-        return buffer;
-    } catch (e) {
-        console.error('[MIND] Compilatie fout:', e);
-        if (statusEl) {
-            statusEl.textContent = 'Compilatie mislukt - upload handmatig een .mind bestand';
-            statusEl.style.color = 'rgba(255,80,80,0.8)';
-        }
-        if (summaryEl) summaryEl.className = 'summary-item pending';
-        if (summarySpan) summarySpan.textContent = 'Mislukt';
-        return null;
-    }
+    return null;
 }
 
 // Layer Configuration - centraal beheer van layers
@@ -1603,14 +1555,14 @@ function getUploadRequiredState() {
     const titleFilled = (document.getElementById('poster-title')?.value || '').trim().length > 0;
     const descriptionFilled = (document.getElementById('poster-description')?.value || '').trim().length > 0;
     const jpegSelected = !!document.getElementById('poster-jpeg')?.files?.[0];
-    const markerSelected = !!document.getElementById('ar-marker-file')?.files?.[0] || !!compiledMindBuffer;
+    const markerSelected = jpegSelected || !!document.getElementById('ar-marker-file')?.files?.[0];
 
     return {
         titleFilled,
         descriptionFilled,
         jpegSelected,
         markerSelected,
-        ready: titleFilled && descriptionFilled && jpegSelected && markerSelected
+        ready: titleFilled && descriptionFilled && jpegSelected
     };
 }
 
@@ -3074,9 +3026,13 @@ function setupFileSummaryListeners() {
         const jpegSummary = document.getElementById('summary-jpeg');
         setSummaryState(jpegSummary, 'required-missing', 'verplicht');
     }
-    if (mindInput && (!mindInput.files || !mindInput.files[0])) {
-        const mindSummary = document.getElementById('summary-mind');
-        setSummaryState(mindSummary, 'required-missing', 'verplicht');
+    const mindSummary = document.getElementById('summary-mind');
+    if (mindSummary) {
+        if (jpegInput && jpegInput.files && jpegInput.files[0]) {
+            setSummaryState(mindSummary, 'ok', 'Auto (JPEG)');
+        } else {
+            setSummaryState(mindSummary, 'pending', 'Auto (JPEG)');
+        }
     }
 }
 
@@ -3930,17 +3886,17 @@ async function runArRebuild(rebuildBtn) {
             console.groupEnd();
         }
 
-        if (result.missingMind && result.missingMind.length > 0) {
-            const names = result.missingMind.map(p => `• ${p.title} (${p.id.substring(0, 8)}...)`).join('\n');
-            setRebuildStatus(`${result.missingMind.length} poster(s) missen nog een marker.`, '#ff8f66');
+        if (result.missingJpeg && result.missingJpeg.length > 0) {
+            const names = result.missingJpeg.map(p => `• ${p.title} (${p.id.substring(0, 8)}...)`).join('\n');
+            setRebuildStatus(`${result.missingJpeg.length} poster(s) missen een JPEG.`, '#ff8f66');
             setTimeout(() => alert(
-                `AR Rebuild klaar: ${result.missingMind.length} poster(s) missen nog een AR marker:\n\n${names}\n\nOpen deze posters in Edit, upload de JPEG opnieuw, en sla op.`
+                `8th Wall targets controle klaar: ${result.missingJpeg.length} poster(s) missen een JPEG:\n\n${names}`
             ), 100);
-        } else if (result.success) {
-            setRebuildStatus('AR rebuild voltooid. Alle posters staan in de chunks.', '#7dff9a');
-            setTimeout(() => alert('AR rebuild succesvol!\nAlle posters staan in de chunks.'), 100);
+        } else if (result.success || result.ok) {
+            setRebuildStatus(result.message || '8th Wall targets gereed.', '#7dff9a');
+            setTimeout(() => alert('8th Wall targets gereed!\n' + (result.message || 'Alle posters hebben actieve 8th Wall targets.')), 100);
         } else {
-            setRebuildStatus(result.message || 'AR rebuild mislukt.', '#ff7d7d');
+            setRebuildStatus(result.message || 'Rebuild mislukt.', '#ff7d7d');
             setTimeout(() => alert('Fout: ' + (result.message || 'Onbekende fout')), 100);
         }
     } catch (err) {
@@ -3948,7 +3904,7 @@ async function runArRebuild(rebuildBtn) {
         setTimeout(() => alert('Fout bij rebuild: ' + err.message), 100);
     } finally {
         rebuildBtn.disabled = false;
-        rebuildBtn.textContent = 'AR REBUILD UITVOEREN';
+        rebuildBtn.textContent = '8W TARGETS CONTROLEREN & HERBOUWEN';
     }
 }
 
@@ -4440,14 +4396,6 @@ async function renderAnalyticsModal() {
                 '</div>' +
             '</div>' +
 
-            (stats.unclaimed_devices && stats.unclaimed_devices.length > 0
-                ? '<div style="background:rgba(16,185,129,0.08); border:1px solid #10b981; border-left:4px solid #10b981; padding:10px 14px; margin-bottom:12px; font-size:0.75rem; display:flex; justify-content:space-between; align-items:center; border-radius:4px;">' +
-                  '<span><strong style="background:#10b981; color:#fff; font-size:9px; padding:2px 6px; border-radius:3px; margin-right:8px; font-family:monospace;">ONGEKOPPELD TOESTEL</strong>' +
-                  '<strong>' + escapeHtmlAttr(stats.unclaimed_devices[0].model || 'Mobiel toestel') + '</strong> (' + stats.unclaimed_devices[0].views + ' views gedetecteerd)</span>' +
-                  '<button type="button" class="stats-claim-device-btn stats-action-btn" data-hash="' + escapeHtmlAttr(stats.unclaimed_devices[0].hash) + '" data-model="' + escapeHtmlAttr(stats.unclaimed_devices[0].model || 'iPhone') + '" style="background:#10b981; color:#fff; border:none; padding:4px 10px; cursor:pointer; font-weight:700;">✓ Koppel als mijn iPhone</button>' +
-                  '</div>'
-                : '') +
-
             (analyticsAdminFilter === 'only'
                 ? '<div style="background:rgba(255,255,255,0.06); border-left:3px solid #7dff9a; padding:8px 12px; margin-bottom:12px; font-size:0.72rem; display:flex; justify-content:space-between; align-items:center;">' +
                   '<span><strong>Weergave: Enkel eigen gebruik &amp; testsessies.</strong> Toont interacties vanaf jouw gekoppelde apparaten of Wi-Fi netwerk.</span>' +
@@ -4633,35 +4581,6 @@ async function renderAnalyticsModal() {
             btn.addEventListener('click', function () {
                 analyticsAdminFilter = btn.dataset.filter || 'exclude';
                 renderAnalyticsModal();
-            });
-        });
-
-        content.querySelectorAll('.stats-claim-device-btn').forEach(function (btn) {
-            btn.addEventListener('click', async function () {
-                const hash = btn.dataset.hash;
-                const model = btn.dataset.model || 'iPhone';
-                btn.disabled = true;
-                btn.textContent = 'Koppelen...';
-                try {
-                    const token = sessionStorage.getItem('adminToken');
-                    const headers = {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                    };
-                    const resp = await fetch(`${API_URL}/admin/stats/claim-device`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({ hash: hash, model: model, label: 'Mijn iPhone' })
-                    });
-                    const res = await resp.json();
-                    if (!res.success) throw new Error(res.message || 'Mislukt');
-                    analyticsAdminFilter = 'only';
-                    renderAnalyticsModal();
-                } catch (e) {
-                    alert('Koppelen mislukt: ' + e.message);
-                    btn.disabled = false;
-                    btn.textContent = '✓ Koppel als mijn iPhone';
-                }
             });
         });
 
@@ -5030,40 +4949,11 @@ function setupUploadForm() {
             }
         }
         
-        // Add AR marker file: handmatig heeft prioriteit, anders browser-gecompileerd, anders niets
-        const arMarkerFile = document.getElementById('ar-marker-file').files[0];
-        
-        // Enkele uploadmodus: standaard posterflow
+        // 8th Wall target wordt server-side automatisch gegenereerd uit de JPEG
+        const arMarkerFile = document.getElementById('ar-marker-file')?.files?.[0];
         formData.append('upload_type', 'poster');
-        
         if (arMarkerFile) {
-            // Handmatig geüpload .mind bestand
             formData.append('ar_marker_file', arMarkerFile);
-        } else {
-            // Wacht op lopende compilatie als die nog bezig is
-            if (compilingMindPromise) {
-                const mindStatusEl = document.getElementById('mind-compile-status');
-                if (mindStatusEl) {
-                    mindStatusEl.textContent = 'Upload wacht op AR-marker compilatie...';
-                    mindStatusEl.style.color = 'rgba(255,200,0,0.8)';
-                }
-                btnText.textContent = 'Wachten op compilatie...';
-                try {
-                    await compilingMindPromise;
-                } catch (e) {
-                    console.warn('[MIND] Compilatie fout tijdens wachten:', e);
-                }
-            }
-            
-            if (compiledMindBuffer) {
-                // Browser-gecompileerd .mind bestand (automatisch vanuit JPEG)
-                const mindBlob = new Blob([compiledMindBuffer], { type: 'application/octet-stream' });
-                formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
-                console.log('[MIND] Browser-gecompileerd .mind meegezonden met upload');
-            } else {
-                errorMsg.textContent = 'AR marker is verplicht. Upload een .mind bestand of wacht op automatische compilatie uit de JPEG.';
-                return;
-            }
         }
         
         if (!validateLayerContentTypes(false, errorMsg)) {
@@ -7020,31 +6910,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pdfMediumFile) formData.append('pdfMedium', pdfMediumFile);
             if (pdfLargeFile) formData.append('pdfLarge', pdfLargeFile);
             if (arMarkerFile) {
-                // Handmatig geüpload .mind bestand
                 formData.append('ar_marker_file', arMarkerFile);
-            } else if (jpegFile) {
-                // Wacht op lopende edit compilatie als die nog bezig is
-                if (editCompilingMindPromise) {
-                    const editMindStatusEl = document.getElementById('edit-ar-marker-file-size-info');
-                    if (editMindStatusEl) {
-                        editMindStatusEl.textContent = 'Upload wacht op AR-marker compilatie...';
-                        editMindStatusEl.style.color = 'rgba(255,200,0,0.8)';
-                    }
-                    try {
-                        await editCompilingMindPromise;
-                    } catch (e) {
-                        console.warn('[MIND] Edit compilatie fout tijdens wachten:', e);
-                    }
-                }
-                
-                if (editCompiledMindBuffer) {
-                    // Browser-gecompileerd .mind vanuit de nieuwe JPEG
-                    const mindBlob = new Blob([editCompiledMindBuffer], { type: 'application/octet-stream' });
-                    formData.append('ar_marker_file', mindBlob, 'auto_compiled.mind');
-                    console.log('[MIND] Browser-gecompileerd .mind meegezonden met edit');
-                } else {
-                    console.warn('[MIND] Geen .mind beschikbaar voor edit - AR marker ongewijzigd');
-                }
             }
             
             // Gallery images - verwijderen en toevoegen

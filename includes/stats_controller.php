@@ -818,7 +818,6 @@ function handleGetAdminStats(?PDO $db = null): void {
     $currentEvents = [];
     $previousEvents = [];
     $liveVisitors = [];
-    $unclaimedCandidates = [];
     $liveThreshold = $now - 300; // Laatste 5 minuten
 
     $adminIP = getStatsClientIP();
@@ -857,40 +856,6 @@ function handleGetAdminStats(?PDO $db = null): void {
                 // Retroactieve herkenning: geregistreerde testapparaten (iPhone / smartphone)
                 if (!$isEvAdmin && ($evHash !== '' || $evSid !== '') && isStatsAdminDevice($evHash, $evSid)) {
                     $isEvAdmin = 1;
-                }
-
-                // Detectie van ongekoppelde testapparaten (iPhone / mobiel toestel)
-                if (!$isEvAdmin && $evHash !== '' && empty($ev['bot']) && $t >= $currentStart) {
-                    $evType = (string)($ev['type'] ?? '');
-                    $isArActivity = in_array($evType, ['scan', 'ar_dwell', 'cam_start', 'ar_perf', 'ar_error'], true);
-                    $isMobile = ($ev['dev'] ?? '') === 'mobile' || ($ev['dev'] ?? '') === 'tablet';
-
-                    if ($isArActivity || $isMobile) {
-                        if (!isset($unclaimedCandidates[$evHash])) {
-                            $unclaimedCandidates[$evHash] = [
-                                'hash'      => $evHash,
-                                'model'     => !empty($ev['hw']['model']) ? $ev['hw']['model'] : ($isMobile ? 'Mobiel toestel' : 'Onbekend'),
-                                'dev'       => $ev['dev'] ?? 'mobile',
-                                'scans'     => 0,
-                                'views'     => 0,
-                                'last_seen' => $t,
-                                'last_page' => (string)($ev['page'] ?? '/'),
-                                'sid'       => $evSid,
-                            ];
-                        }
-                        if ($evType === 'scan') {
-                            $unclaimedCandidates[$evHash]['scans']++;
-                        } elseif ($evType === 'view') {
-                            $unclaimedCandidates[$evHash]['views']++;
-                        }
-                        if ($t >= $unclaimedCandidates[$evHash]['last_seen']) {
-                            $unclaimedCandidates[$evHash]['last_seen'] = $t;
-                            $unclaimedCandidates[$evHash]['last_page'] = (string)($ev['page'] ?? $unclaimedCandidates[$evHash]['last_page']);
-                            if (!empty($ev['hw']['model'])) {
-                                $unclaimedCandidates[$evHash]['model'] = $ev['hw']['model'];
-                            }
-                        }
-                    }
                 }
 
                 // Live bezoekers (laatste 5 minuten, menselijk verkeer)
@@ -1214,15 +1179,6 @@ function handleGetAdminStats(?PDO $db = null): void {
         return $cmp !== 0 ? $cmp : ($b['last_seen'] <=> $a['last_seen']);
     });
 
-    // Sorteer ongekoppelde apparaten: apparaten met scans eerst, daarna meest recent actief
-    $unclaimedList = array_values($unclaimedCandidates);
-    usort($unclaimedList, function ($a, $b) {
-        if (($a['scans'] > 0 || $b['scans'] > 0) && $a['scans'] !== $b['scans']) {
-            return $b['scans'] <=> $a['scans'];
-        }
-        return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
-    });
-
     $storedAdminDevices = getStatsAdminDevices();
     $pairedDevicesList = [];
     foreach ($storedAdminDevices['hashes'] as $h => $devMeta) {
@@ -1240,7 +1196,6 @@ function handleGetAdminStats(?PDO $db = null): void {
         'period_days' => $days,
         'generated_at'=> $now,
         'live_online' => count($liveVisitors),
-        'unclaimed_devices' => array_slice($unclaimedList, 0, 5),
         'paired_devices'    => $pairedDevicesList,
         'kpis'        => [
             'views' => [

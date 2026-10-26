@@ -915,7 +915,6 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
     $currentEvents = [];
     $previousEvents = [];
     $liveVisitors = [];
-    $unclaimedCandidates = [];
     $liveThreshold = $now - 300; // Laatste 5 minuten
 
     // Registreer netwerk/IP van huidige ingelogde admin voor automatische koppeling van testsessies
@@ -955,41 +954,6 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
                 // Retroactieve herkenning via permanent geregistreerde admin/test apparaten (bv. iPhone)
                 if (!$isEvAdmin && ($evHash !== '' || $evSid !== '') && isKrantAdminDevice($evHash, $evSid)) {
                     $isEvAdmin = 1;
-                }
-
-                // Detectie van ongekoppelde testapparaten (iPhone / mobiel toestel met AR-scans of telemetrie)
-                if (!$isEvAdmin && $evHash !== '' && empty($ev['bot']) && $t >= $currentStart) {
-                    $evType = (string)($ev['type'] ?? '');
-                    $isArScan = ($evType === 'scan' || $evType === 'ar_dwell');
-                    $isArActivity = ($isArScan || $evType === 'cam_start' || $evType === 'ar_perf' || $evType === 'ar_error');
-                    $isMobile = ($ev['dev'] ?? '') === 'mobile' || ($ev['dev'] ?? '') === 'tablet';
-
-                    if ($isArActivity || $isMobile) {
-                        if (!isset($unclaimedCandidates[$evHash])) {
-                            $unclaimedCandidates[$evHash] = [
-                                'hash'      => $evHash,
-                                'model'     => !empty($ev['hw']['model']) ? $ev['hw']['model'] : ($isMobile ? 'Mobiel toestel' : 'Onbekend'),
-                                'dev'       => $ev['dev'] ?? 'mobile',
-                                'scans'     => 0,
-                                'views'     => 0,
-                                'last_seen' => $t,
-                                'last_page' => (string)($ev['page'] ?? '/krant/'),
-                                'sid'       => $evSid,
-                            ];
-                        }
-                        if ($evType === 'scan') {
-                            $unclaimedCandidates[$evHash]['scans']++;
-                        } elseif ($evType === 'view') {
-                            $unclaimedCandidates[$evHash]['views']++;
-                        }
-                        if ($t >= $unclaimedCandidates[$evHash]['last_seen']) {
-                            $unclaimedCandidates[$evHash]['last_seen'] = $t;
-                            $unclaimedCandidates[$evHash]['last_page'] = (string)($ev['page'] ?? $unclaimedCandidates[$evHash]['last_page']);
-                            if (!empty($ev['hw']['model'])) {
-                                $unclaimedCandidates[$evHash]['model'] = $ev['hw']['model'];
-                            }
-                        }
-                    }
                 }
 
                 // Live bezoekers (laatste 5 minuten, menselijk verkeer)
@@ -1554,15 +1518,6 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         ? $essayMetrics[0]
         : null;
 
-    // Sorteer ongekoppelde apparaten: apparaten met scans eerst, daarna meest recent actief
-    $unclaimedList = array_values($unclaimedCandidates);
-    usort($unclaimedList, function ($a, $b) {
-        if (($a['scans'] > 0 || $b['scans'] > 0) && $a['scans'] !== $b['scans']) {
-            return $b['scans'] <=> $a['scans'];
-        }
-        return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
-    });
-
     $storedAdminDevices = getKrantAdminDevices();
     $pairedDevicesList = [];
     foreach ($storedAdminDevices['hashes'] as $h => $devMeta) {
@@ -1580,7 +1535,6 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         'period_days'   => $days,
         'generated_at'  => $now,
         'live_online'   => count($liveVisitors),
-        'unclaimed_devices' => array_slice($unclaimedList, 0, 5),
         'paired_devices'    => $pairedDevicesList,
         'kpis'          => [
             'scans' => [
