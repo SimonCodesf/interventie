@@ -1,5 +1,5 @@
 // Interventie — AR Posters & Web Platform (A-Frame + 8th Wall XR Engine)
-// Multi-Chunk Engine: ondersteunt alle 237 Belgische verkeersborden + posters.
+// Multi-Chunk Engine: ondersteunt alle 237 Belgische verkeersborden + actieve posters.
 //
 // This product includes the XR Engine software developed by Niantic Spatial, Inc.
 // Copyright © 2026 Niantic Spatial, Inc. All rights reserved.
@@ -17,7 +17,6 @@ let featuredPoster = null;
 let currentPoster = null; // Voor download modal
 let bootStarted = false;
 let bootTime = 0;
-let permissionRetry = false;
 
 // Chunk State & 8th Wall Controller
 let xrControllerInstance = null;
@@ -25,6 +24,10 @@ let arChunks = [];
 let currentChunkIndex = 0;
 window.currentChunkIndex = 0;
 window.chunkLocked = false;
+let isChunkScanning = false;
+let chunkScanTimeout = null;
+let chunkScanInterval = null;
+
 let chunkQuickPickerOpen = false;
 let chunkLongPressTimer = null;
 let chunkLongPressTriggered = false;
@@ -32,12 +35,33 @@ let chunkLongPressTriggered = false;
 // Metingen & Telemetrie
 let foundCount = 0, lostCount = 0, firstFoundAt = 0;
 let jitterSum = 0, jitterCount = 0, frameCount = 0;
-const anchorState = {}; // targetName -> { visible, lastPos, hideTimer, scanRecorded, foundAt }
+const anchorState = {}; // targetName -> { visible, lastPos, hideTimer, foundAt }
 
 // DOM helpers
 const sceneBox = () => document.getElementById('ar-scene');
 
-// ==================== SEQUENTIEEL SCRIPT LADEN ====================
+// ==================== HACKER LOADER LOGGER ====================
+
+function appendLoaderLog(text) {
+    const content = document.getElementById('loader-content');
+    if (content) {
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.textContent = '> ' + text;
+        content.appendChild(line);
+        content.scrollTop = content.scrollHeight;
+    }
+}
+
+function hideLoader() {
+    const loader = document.getElementById('hacker-loader');
+    if (loader) {
+        loader.classList.remove('visible');
+        setTimeout(() => { loader.style.display = 'none'; }, 400);
+    }
+}
+
+// ==================== SCRIPT LADEN / RESOLVEN ====================
 
 const scriptPromises = {};
 let scriptChain = Promise.resolve();
@@ -59,7 +83,7 @@ function loadScript(src, attrs) {
                 Object.keys(attrs).forEach(k => s.setAttribute(k, attrs[k]));
             }
             const to = setTimeout(() => {
-                reject(new Error('Timeout bij het laden van ' + src.split('/').pop()));
+                reject(new Error('Timeout bij laden van ' + src.split('/').pop()));
             }, SCRIPT_TIMEOUT_MS);
             s.onload = () => { clearTimeout(to); resolve(); };
             s.onerror = () => {
@@ -90,16 +114,6 @@ function bootStatus(msg) {
 }
 
 // ==================== CAMERA & ENGINE CONTROLES ====================
-
-async function cameraBlocked() {
-    try {
-        if (navigator.permissions && navigator.permissions.query) {
-            const st = await navigator.permissions.query({ name: 'camera' });
-            return st.state === 'denied';
-        }
-    } catch (e) {}
-    return false;
-}
 
 async function ensureCameraPermission() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -148,36 +162,33 @@ function xrReady() {
 
 function xrControllerReady(XR8, timeoutMs = 20000) {
     return new Promise((resolve, reject) => {
-        if (XR8.XrController) return resolve(XR8.XrController);
-        const start = performance.now();
-        const interval = setInterval(() => {
-            if (XR8.XrController) {
-                clearInterval(interval);
-                return resolve(XR8.XrController);
+        const start = Date.now();
+        (function poll() {
+            if (XR8.XrController) return resolve(XR8.XrController);
+            if (Date.now() - start > timeoutMs) {
+                return reject(new Error('XrController niet gereed (timeout)'));
             }
-            if (performance.now() - start > timeoutMs) {
-                clearInterval(interval);
-                reject(new Error('XrController timeout'));
-            }
-        }, 50);
+            setTimeout(poll, 100);
+        })();
     });
 }
 
 function fatalError(msg) {
     console.error('[AR Fatal]', msg);
     bootStatus('Fout: ' + msg);
+    appendLoaderLog('FATAL: ' + msg);
 }
 
-// ==================== POSE SMOOTHING COMPONENT ====================
+// ==================== POSE SMOOTHING (ANTI-GLITCH FILTER) ====================
 
 function registerAframeComponents() {
     if (!window.AFRAME || AFRAME.components['smooth-anchor']) return;
 
     AFRAME.registerComponent('smooth-anchor', {
         schema: {
-            posFactor: { default: 0.32 },
-            rotFactor: { default: 0.28 },
-            snapThreshold: { default: 0.35 }
+            posFactor: { default: 0.78 },
+            rotFactor: { default: 0.72 },
+            snapThreshold: { default: 0.22 }
         },
         init: function () {
             this.rawPos = new THREE.Vector3();
@@ -186,7 +197,7 @@ function registerAframeComponents() {
             this.smoothedQuat = new THREE.Quaternion();
             this.first = true;
         },
-        tock: function () {
+        tick: function () {
             const obj = this.el.object3D;
             if (!obj || !obj.visible) {
                 this.first = true;
@@ -209,6 +220,28 @@ function registerAframeComponents() {
     });
 }
 
+// ==================== PROPORTIE & AFMETING CALCULATOR ====================
+
+function fitSignDimensions(target) {
+    const p = target && target.properties;
+    const ow = parseFloat(p && (p.originalWidth || p.width)) || 640;
+    const oh = parseFloat(p && (p.originalHeight || p.height)) || 640;
+    const aspect = ow / oh;
+    let w = 1.0;
+    let h = 1.0;
+    if (aspect >= 1) {
+        w = Math.min(1.8, Math.max(1.0, aspect));
+        h = w / aspect;
+    } else {
+        h = Math.min(1.8, Math.max(1.0, 1 / aspect));
+        w = h * aspect;
+    }
+    return {
+        w: Math.round(w * 100) / 100,
+        h: Math.round(h * 100) / 100
+    };
+}
+
 // ==================== POSTER LAGEN OPBOUWEN ====================
 
 function buildLayersHTML(poster) {
@@ -218,39 +251,35 @@ function buildLayersHTML(poster) {
 
     try {
         layers = typeof poster.layers === 'string' ? JSON.parse(poster.layers) : poster.layers;
-    } catch(e) {
+    } catch (e) {
         console.error('Fout bij parsen layers:', e);
         return '';
     }
 
     if (!Array.isArray(layers)) return '';
 
-    for (let index = 0; index < layers.length; index++) {
-        const layer = layers[index];
-        const fileUrl = layer.file.startsWith('http') ? layer.file : `uploads/${layer.file}`;
-        const fileExt = layer.file.split('.').pop().toLowerCase();
-        const baseZ = (index + 1) * 0.02;
+    for (let i = 0; i < layers.length; i++) {
+        const layer = layers[i];
+        const isGif = layer.file && /\.gif(\?|$)/i.test(layer.file);
+        const isModel = layer.file && /\.glb(\?|$)/i.test(layer.file);
+        const fileUrl = `${BASE_URL}/uploads/${poster.id}/${layer.file}`;
+        const baseZ = (i + 1) * 0.02;
 
         let animationStr = '';
-        if (layer.anim_type && layer.anim_type !== 'none') {
-            const dur = (layer.anim_duration || 2) * 1000;
-            const loop = layer.anim_loop !== false ? 'dir: alternate; loop: true;' : 'loop: false;';
+        if (layer.animation) {
+            const anim = layer.animation;
+            const fromX = anim.fromX || 0;
+            const toX = anim.toX || 0;
+            const fromY = anim.fromY || 0;
+            const toY = anim.toY || 0;
+            const fromZ = (anim.fromZ !== undefined) ? anim.fromZ : baseZ;
+            const toZ = (anim.toZ !== undefined) ? anim.toZ : baseZ;
+            const dur = (anim.duration || 2) * 1000;
 
-            if (layer.anim_type === 'float') {
-                const amount = layer.anim_amount || 0.1;
-                animationStr = `animation="property: position; to: 0 ${amount} ${baseZ}; dur: ${dur}; easing: easeInOutSine; ${loop}"`;
-            } else if (layer.anim_type === 'rotate') {
-                const amount = layer.anim_amount || 360;
-                animationStr = `animation="property: rotation; to: 0 0 ${amount}; dur: ${dur}; easing: linear; loop: true;"`;
-            } else if (layer.anim_type === 'pulse') {
-                const amount = layer.anim_amount || 1.1;
-                animationStr = `animation="property: scale; to: ${amount} ${amount} ${amount}; dur: ${dur}; easing: easeInOutSine; ${loop}"`;
-            } else if (layer.anim_type === 'fade') {
-                animationStr = `animation="property: material.opacity; to: 0.2; dur: ${dur}; easing: easeInOutSine; ${loop}"`;
-            }
+            animationStr = `animation="property: position; from: ${fromX} ${fromY} ${fromZ}; to: ${toX} ${toY} ${toZ}; dir: alternate; loop: true; dur: ${dur}; easing: easeInOutQuad"`;
         }
 
-        if (fileExt === 'glb') {
+        if (isModel) {
             layersHTML += `
                 <a-entity
                     gltf-model="${fileUrl}"
@@ -258,7 +287,7 @@ function buildLayersHTML(poster) {
                     scale="0.5 0.5 0.5"
                     ${animationStr}>
                 </a-entity>`;
-        } else if (fileExt === 'gif') {
+        } else if (isGif) {
             layersHTML += `
                 <a-plane
                     position="0 0 ${baseZ}"
@@ -287,7 +316,10 @@ function buildLayersHTML(poster) {
 
 function buildScene(targets) {
     registerAframeComponents();
-    const oldScene = sceneBox().querySelector('a-scene');
+    const box = sceneBox();
+    if (!box) return;
+
+    const oldScene = box.querySelector('a-scene');
     if (oldScene) oldScene.remove();
 
     const scene = document.createElement('a-scene');
@@ -303,7 +335,6 @@ function buildScene(targets) {
     camera.setAttribute('look-controls', 'enabled: false');
     scene.appendChild(camera);
 
-    // Licht
     const ambient = document.createElement('a-light');
     ambient.setAttribute('type', 'ambient');
     ambient.setAttribute('color', '#FFF');
@@ -317,7 +348,6 @@ function buildScene(targets) {
     directional.setAttribute('position', '-0.5 1 1');
     scene.appendChild(directional);
 
-    // Engine foutopvang
     scene.addEventListener('realityerror', (e) => {
         const d = (e && e.detail) || {};
         console.error('[AR] realityerror', d);
@@ -326,14 +356,14 @@ function buildScene(targets) {
         bootStatus('Fout: ' + reason);
     });
 
-    sceneBox().appendChild(scene);
+    box.appendChild(scene);
     updateSceneTargets(targets);
-
-    startJitterLoop();
 }
 
 function updateSceneTargets(targets) {
-    const scene = sceneBox().querySelector('a-scene');
+    const box = sceneBox();
+    if (!box) return;
+    const scene = box.querySelector('a-scene');
     if (!scene) return;
 
     // Verwijder bestaande anchors
@@ -355,39 +385,28 @@ function updateSceneTargets(targets) {
             content.innerHTML = buildLayersHTML(poster);
             anchor.appendChild(content);
 
-            anchorState[item.name] = { visible: false, lastPos: null, hideTimer: 0, scanRecorded: false, foundAt: 0 };
+            anchorState[item.name] = { visible: false, lastPos: null, hideTimer: 0, foundAt: 0 };
 
             anchor.addEventListener('xrextrasfound', () => {
                 const st = anchorState[item.name];
                 if (st && st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
                 foundCount++;
                 if (!firstFoundAt) firstFoundAt = performance.now();
-                if (st) {
-                    if (!st.visible) st.foundAt = Date.now();
-                    st.visible = true;
-                }
+                if (st) st.visible = true;
 
-                console.log(`[AR] Poster GEVONDEN: ${poster.title} (${poster.id})`);
+                console.log(`[AR] Poster GEVONDEN: ${poster.title}`);
                 window.chunkLocked = true;
+                stopChunkScan();
                 hideChunkCycleButton();
 
-                const scanGuide = document.getElementById('scanning-overlay');
-                if (scanGuide) scanGuide.style.display = 'none';
+                document.querySelector('.scan-frame')?.classList.add('hidden');
+                document.getElementById('scanning-indicator')?.classList.add('hidden');
 
                 showSwipeState(2);
                 const titleEl = document.getElementById('detected-poster-title');
                 if (titleEl) titleEl.textContent = poster.title;
 
-                currentTrackedPoster = poster;
-                featuredPoster = poster;
                 currentPoster = poster;
-
-                if (poster.audio_file) playPosterAudio(poster.audio_file);
-
-                if (st && !st.scanRecorded) {
-                    st.scanRecorded = true;
-                    fetch(`${API_URL}/posters/${encodeURIComponent(poster.id)}/scan`, { method: 'POST' }).catch(() => {});
-                }
             });
 
             anchor.addEventListener('xrextraslost', () => {
@@ -405,6 +424,9 @@ function updateSceneTargets(targets) {
                             anchorObj.visible = false;
                             window.chunkLocked = false;
                             showChunkCycleButtonAgain();
+                            document.querySelector('.scan-frame')?.classList.remove('hidden');
+                            document.getElementById('scanning-indicator')?.classList.remove('hidden');
+                            showSwipeState(1);
                         }
                     }, LOST_GRACE_MS);
                 }
@@ -416,12 +438,14 @@ function updateSceneTargets(targets) {
             anchor.setAttribute('data-search-query', item.searchQuery);
             anchor.setAttribute('data-memeborden', 'true');
 
+            const dims = fitSignDimensions(item);
+
             // Rode border plane
             const borderPlane = document.createElement('a-plane');
             borderPlane.setAttribute('data-meme-border', item.signId);
             borderPlane.setAttribute('position', '0 0 0.005');
-            borderPlane.setAttribute('width', '1.3');
-            borderPlane.setAttribute('height', '1.3');
+            borderPlane.setAttribute('width', (dims.w * 1.15).toFixed(2));
+            borderPlane.setAttribute('height', (dims.h * 1.15).toFixed(2));
             borderPlane.setAttribute('color', '#CC0000');
             borderPlane.setAttribute('visible', 'false');
             anchor.appendChild(borderPlane);
@@ -431,8 +455,8 @@ function updateSceneTargets(targets) {
             gifPlane.setAttribute('id', `meme-gif-plane-${item.signId}`);
             gifPlane.setAttribute('data-meme-sign', item.signId);
             gifPlane.setAttribute('position', '0 0 0.01');
-            gifPlane.setAttribute('width', '1.1');
-            gifPlane.setAttribute('height', '1.1');
+            gifPlane.setAttribute('width', dims.w.toFixed(2));
+            gifPlane.setAttribute('height', dims.h.toFixed(2));
             gifPlane.setAttribute('visible', 'false');
             gifPlane.setAttribute('gif', 'autoplay: true; transparent: false');
             anchor.appendChild(gifPlane);
@@ -446,10 +470,11 @@ function updateSceneTargets(targets) {
 
                 console.log(`[Memeborden] Bord GEVONDEN: ${item.signName}`);
                 window.chunkLocked = true;
+                stopChunkScan();
                 hideChunkCycleButton();
 
-                const scanGuide = document.getElementById('scanning-overlay');
-                if (scanGuide) scanGuide.style.display = 'none';
+                document.querySelector('.scan-frame')?.classList.add('hidden');
+                document.getElementById('scanning-indicator')?.classList.add('hidden');
 
                 showSwipeState(2);
                 const titleEl = document.getElementById('detected-poster-title');
@@ -477,6 +502,9 @@ function updateSceneTargets(targets) {
                             gifPlane.setAttribute('visible', 'false');
                             window.chunkLocked = false;
                             showChunkCycleButtonAgain();
+                            document.querySelector('.scan-frame')?.classList.remove('hidden');
+                            document.getElementById('scanning-indicator')?.classList.remove('hidden');
+                            showSwipeState(1);
                         }
                     }, LOST_GRACE_MS);
                 }
@@ -489,71 +517,7 @@ function updateSceneTargets(targets) {
     console.log(`[AR] Anchors actief voor ${targets.length} targets`);
 }
 
-// Jitter & Telemetrie
-function startJitterLoop() {
-    setInterval(() => {
-        const anchors = sceneBox().querySelectorAll('a-entity[xrextras-named-image-target]');
-        anchors.forEach(a => {
-            const nm = a.getAttribute('xrextras-named-image-target');
-            const key = (nm && nm.name) || '';
-            const st = anchorState[key];
-            if (!st || !st.visible || !a.object3D) return;
-            const p = a.object3D.position;
-            if (st.lastPos) {
-                const dx = p.x - st.lastPos.x, dy = p.y - st.lastPos.y, dz = p.z - st.lastPos.z;
-                jitterSum += Math.sqrt(dx * dx + dy * dy + dz * dz);
-                jitterCount++;
-            }
-            st.lastPos = { x: p.x, y: p.y, z: p.z };
-        });
-        frameCount++;
-        if (frameCount % 30 === 0 && jitterCount > 0) {
-            const jit = jitterSum / jitterCount;
-            window.__AR_STATS = { jit, found: foundCount, lost: lostCount };
-        }
-    }, 100);
-}
-
-// ==================== AUDIO AFSPELEN ====================
-
-let activeAudio = null;
-function playPosterAudio(audioFilename) {
-    if (!audioFilename) return;
-    try {
-        if (activeAudio) {
-            activeAudio.pause();
-            activeAudio = null;
-        }
-        const audioUrl = audioFilename.startsWith('http') ? audioFilename : `uploads/audio/${audioFilename}`;
-        activeAudio = new Audio(audioUrl);
-        activeAudio.play().catch(e => console.log('Audio autoplay prevented:', e));
-    } catch(e) {}
-}
-
-// ==================== CHUNK ENGINE & CHUNK KNOP ====================
-
-function injectSpinnerCSS() {
-    if (document.getElementById('scan-spinner-css')) return;
-    const style = document.createElement('style');
-    style.id = 'scan-spinner-css';
-    style.textContent = `
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .scan-spinner {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border: 1.5px solid transparent;
-            border-top-color: #fff;
-            border-right-color: #fff;
-            border-bottom-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-    `;
-    document.head.appendChild(style);
-}
+// ==================== SCAN KNOP & MULTI-CHUNK SCANNER ====================
 
 function injectChunkPickerCSS() {
     if (document.getElementById('chunk-picker-css')) return;
@@ -567,17 +531,16 @@ function injectChunkPickerCSS() {
             transform: translateX(-50%) translateY(10px);
             width: min(92vw, 320px);
             max-height: 48vh;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.96);
             border: 0.5px solid rgba(255, 255, 255, 0.85);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
             z-index: 10001;
             display: none;
             pointer-events: auto;
             color: #fff;
-            font-family: var(--font-data, 'Courier New', monospace);
+            font-family: var(--font-data, 'Roboto Mono', monospace);
             user-select: none;
             -webkit-user-select: none;
-            -webkit-touch-callout: none;
         }
         #chunk-quick-picker.open {
             display: block;
@@ -597,8 +560,8 @@ function injectChunkPickerCSS() {
             background: transparent;
             border: 0.5px solid rgba(255,255,255,0.4);
             color: #fff;
+            font-family: inherit;
             font-size: 0.68rem;
-            line-height: 1;
             padding: 0.15rem 0.4rem;
             cursor: pointer;
         }
@@ -608,13 +571,14 @@ function injectChunkPickerCSS() {
             gap: 0.35rem;
             padding: 0.6rem;
             overflow-y: auto;
-            max-height: calc(48vh - 2rem);
+            max-height: calc(48vh - 2.5rem);
         }
         .chunk-picker-btn {
-            background: rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.06);
             color: #fff;
             border: 0.5px solid rgba(255,255,255,0.35);
-            font-size: 0.68rem;
+            font-family: inherit;
+            font-size: 0.66rem;
             padding: 0.45rem 0.5rem;
             text-align: left;
             cursor: pointer;
@@ -626,27 +590,11 @@ function injectChunkPickerCSS() {
             color: #000;
             border-color: #fff;
         }
-        .chunk-picker-subtle-toggle {
-            position: fixed;
-            left: calc(50% + 54px);
-            bottom: 124px;
-            transform: translateX(-50%);
-            z-index: 10000;
-            background: rgba(0,0,0,0.72);
-            color: #fff;
-            border: 0.5px solid rgba(255,255,255,0.45);
-            padding: 4px 8px;
-            font-size: 0.58rem;
-            letter-spacing: 0.08em;
-            cursor: pointer;
-            opacity: 0.75;
-        }
     `;
     document.head.appendChild(style);
 }
 
 function showChunkCycleButton() {
-    injectSpinnerCSS();
     injectChunkPickerCSS();
 
     let btn = document.getElementById('chunk-cycle-btn');
@@ -677,8 +625,10 @@ function showChunkCycleButton() {
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         touch-action: manipulation;
+        transition: background 0.15s, color 0.15s;
     `;
 
+    // Long-press: open de Quick Picker (450ms)
     btn.addEventListener('pointerdown', () => {
         chunkLongPressTriggered = false;
         clearTimeout(chunkLongPressTimer);
@@ -693,12 +643,13 @@ function showChunkCycleButton() {
         chunkLongPressTimer = null;
     };
 
+    // Tik: start automatische chunk scan loop
     btn.addEventListener('pointerup', () => {
         clearLongPress();
         if (!chunkLongPressTriggered) {
             chunkLongPressTriggered = true;
-            cycleNextChunk();
-            setTimeout(() => { chunkLongPressTriggered = false; }, 400);
+            startChunkScan();
+            setTimeout(() => { chunkLongPressTriggered = false; }, 300);
         }
     });
 
@@ -706,27 +657,11 @@ function showChunkCycleButton() {
     btn.addEventListener('click', (e) => { e.preventDefault(); });
 
     document.body.appendChild(btn);
-
-    // Subtiele toggle knop naast SCAN voor snel openen van de picker
-    let toggleBtn = document.getElementById('chunk-picker-toggle-btn');
-    if (!toggleBtn) {
-        toggleBtn = document.createElement('button');
-        toggleBtn.id = 'chunk-picker-toggle-btn';
-        toggleBtn.className = 'chunk-picker-subtle-toggle';
-        toggleBtn.textContent = 'CHUNKS';
-        toggleBtn.addEventListener('click', () => {
-            if (chunkQuickPickerOpen) closeChunkQuickPicker();
-            else openChunkQuickPicker();
-        });
-        document.body.appendChild(toggleBtn);
-    }
 }
 
 function hideChunkCycleButton() {
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn) btn.style.display = 'none';
-    const toggle = document.getElementById('chunk-picker-toggle-btn');
-    if (toggle) toggle.style.display = 'none';
     closeChunkQuickPicker();
 }
 
@@ -736,17 +671,54 @@ function showChunkCycleButtonAgain() {
         btn.innerHTML = 'SCAN';
         btn.style.display = 'block';
     }
-    const toggle = document.getElementById('chunk-picker-toggle-btn');
-    if (toggle) toggle.style.display = 'block';
 }
 
-async function cycleNextChunk() {
-    if (!arChunks.length) return;
-    const nextIndex = (currentChunkIndex + 1) % arChunks.length;
-    await switchChunk(nextIndex);
+// Start automatische chunk cycle scanner (zoals in originele masterproef)
+function startChunkScan() {
+    if (window.chunkLocked) return;
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (!btn || !arChunks.length) return;
+
+    if (isChunkScanning) {
+        stopChunkScan();
+        return;
+    }
+
+    isChunkScanning = true;
+    let dots = 0;
+    const total = arChunks.length;
+
+    const updateBtn = () => {
+        if (!btn || !isChunkScanning) return;
+        dots = (dots + 1) % 4;
+        btn.innerHTML = `${currentChunkIndex + 1}/${total}` + '.'.repeat(dots);
+    };
+
+    updateBtn();
+    clearInterval(chunkScanInterval);
+    chunkScanInterval = setInterval(updateBtn, 350);
+
+    const stepCycle = async () => {
+        if (!isChunkScanning || window.chunkLocked) return;
+        const nextIndex = (currentChunkIndex + 1) % total;
+        await switchChunk(nextIndex, true);
+        if (isChunkScanning && !window.chunkLocked) {
+            chunkScanTimeout = setTimeout(stepCycle, 2400);
+        }
+    };
+
+    chunkScanTimeout = setTimeout(stepCycle, 2400);
 }
 
-async function switchChunk(index) {
+function stopChunkScan() {
+    isChunkScanning = false;
+    if (chunkScanTimeout) { clearTimeout(chunkScanTimeout); chunkScanTimeout = null; }
+    if (chunkScanInterval) { clearInterval(chunkScanInterval); chunkScanInterval = null; }
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) btn.innerHTML = 'SCAN';
+}
+
+async function switchChunk(index, keepScanRunning = false) {
     if (!xrControllerInstance || !arChunks || !arChunks[index]) return;
     currentChunkIndex = index;
     window.currentChunkIndex = index;
@@ -755,14 +727,9 @@ async function switchChunk(index) {
     const chunk = arChunks[index];
     console.log(`[Chunk] Wisselen naar chunk ${index}: ${chunk.label} (${chunk.targets.length} targets)`);
 
-    const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) {
-        btn.innerHTML = `${chunk.label.toUpperCase()}<span class="scan-spinner"></span>`;
-    }
-
     bootStatus(`Scannen: ${chunk.name}`);
 
-    // Update 8th Wall targets
+    // Update 8th Wall targets via WASM configure
     xrControllerInstance.configure({ imageTargetData: chunk.targets });
 
     // Update A-Frame anchors
@@ -770,9 +737,15 @@ async function switchChunk(index) {
 
     renderChunkQuickPicker();
 
-    setTimeout(() => {
-        if (btn && !window.chunkLocked) btn.innerHTML = 'SCAN';
-    }, 1500);
+    if (!keepScanRunning) {
+        const btn = document.getElementById('chunk-cycle-btn');
+        if (btn) {
+            btn.innerHTML = chunk.label.toUpperCase();
+            setTimeout(() => {
+                if (btn && !window.chunkLocked && !isChunkScanning) btn.innerHTML = 'SCAN';
+            }, 1200);
+        }
+    }
 }
 
 function ensureChunkQuickPicker() {
@@ -801,14 +774,16 @@ function renderChunkQuickPicker() {
     const grid = picker.querySelector('.chunk-picker-grid');
     if (!grid) return;
 
-    grid.innerHTML = arChunks.map((chunk, index) => {
-        const active = index === currentChunkIndex ? ' active' : '';
-        return `<button type="button" class="chunk-picker-btn${active}" data-chunk-index="${index}">${chunk.label}</button>`;
-    }).join('');
+    grid.innerHTML = arChunks.map((c, i) => `
+        <button type="button" class="chunk-picker-btn ${i === currentChunkIndex ? 'active' : ''}" data-chunk-index="${i}">
+            ${c.label} (${c.targets.length})
+        </button>
+    `).join('');
 
     grid.querySelectorAll('.chunk-picker-btn').forEach(b => {
         b.addEventListener('click', async () => {
             const idx = parseInt(b.dataset.chunkIndex, 10);
+            stopChunkScan();
             closeChunkQuickPicker();
             await switchChunk(idx);
         });
@@ -816,55 +791,52 @@ function renderChunkQuickPicker() {
 }
 
 function openChunkQuickPicker() {
-    renderChunkQuickPicker();
+    ensureChunkQuickPicker();
     const picker = document.getElementById('chunk-quick-picker');
-    if (picker) {
-        picker.classList.add('open');
-        chunkQuickPickerOpen = true;
-    }
+    if (!picker) return;
+    renderChunkQuickPicker();
+    picker.classList.add('open');
+    chunkQuickPickerOpen = true;
 }
 
 function closeChunkQuickPicker() {
     const picker = document.getElementById('chunk-quick-picker');
-    if (picker) {
-        picker.classList.remove('open');
-        chunkQuickPickerOpen = false;
-    }
+    if (picker) picker.classList.remove('open');
+    chunkQuickPickerOpen = false;
 }
 
-// ==================== BOOT AR (MOBIELE START) ====================
+// ==================== BOOT AR (ULTRA FAST DIRECT INITIALISATIE) ====================
 
 async function bootAR() {
     if (bootStarted) return;
     bootStarted = true;
     bootTime = performance.now();
 
+    appendLoaderLog('CHECKING_WEBGL_SUPPORT...');
     if (!webglSupported()) {
         fatalError('WEBGL NIET BESCHIKBAAR');
         return;
     }
 
+    appendLoaderLog('REQUESTING_CAMERA_PERMISSION...');
     bootStatus('Cameratoegang controleren…');
     const perm = await ensureCameraPermission();
     if (!perm.ok) {
-        bootStatus('Cameratoegang geweigerd. Geef toestemming in browserinstellingen en herlaad.');
+        bootStatus('Cameratoegang geweigerd. Geef toestemming in instellingen en herlaad.');
+        appendLoaderLog('PERMISSION_DENIED.');
         bootStarted = false;
         return;
     }
+    appendLoaderLog('CAMERA_PERMISSION_GRANTED.');
 
     try {
-        bootStatus('Bibliotheken laden…');
-        await Promise.all([
-            loadScript('js/vendor/aframe.min.js'),
-            loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' }),
-            loadScript('js/vendor/xrextras.js?v=1'),
-            loadScript('js/gif-component.js?v=2')
-        ]);
-
+        appendLoaderLog('INITIALIZING_XR_ENGINE...');
         bootStatus('XR Engine starten…');
         const XR8 = await xrReady();
         xrControllerInstance = await xrControllerReady(XR8, 20000);
+        appendLoaderLog('8TH_WALL_XR_READY.');
 
+        appendLoaderLog('FETCHING_DATASETS...');
         bootStatus('Targets ophalen…');
         const [postersResp, chunksResp] = await Promise.all([
             fetchTimeout(`${API_URL}/posters`).catch(() => ({ ok: false })),
@@ -894,11 +866,11 @@ async function bootAR() {
         arChunks.push({
             id: 'chunk_top',
             name: 'Posters & Top Borden',
-            label: 'Posters + Top',
+            label: 'Top Borden',
             targets: [...posterTargets, ...topSigns]
         });
 
-        // Chunks 1..N: De specifieke series uit chunks8w.json
+        // Chunks 1..N: De gebalanceerde series uit chunks8w.json
         if (signsChunksData && Array.isArray(signsChunksData.chunks)) {
             signsChunksData.chunks.slice(1).forEach(c => {
                 arChunks.push({
@@ -919,35 +891,29 @@ async function bootAR() {
             throw new Error('Geen geldige targets gevonden.');
         }
 
+        appendLoaderLog(`CONFIGURING_TARGETS [${initialTargets.length}_TARGETS]...`);
         bootStatus('Targets configureren…');
         xrControllerInstance.configure({ imageTargetData: initialTargets });
-        console.log(`[AR] 8th Wall geconfigureerd met chunk 0: ${initialTargets.length} targets`);
 
-        bootStatus('Richt je camera op een poster of bord');
+        appendLoaderLog('BUILDING_3D_SCENE...');
         buildScene(initialTargets);
 
+        appendLoaderLog('SYSTEM_ONLINE.');
+        bootStatus('Richt je camera op een poster of bord');
+
         showChunkCycleButton();
+
+        // Verberg de hacker loader nu de AR camera actief draait
+        setTimeout(() => {
+            hideLoader();
+        }, 300);
 
     } catch (e) {
         console.error('[AR Boot Fout]', e);
         bootStatus('Starten mislukt: ' + (e.message || e));
+        appendLoaderLog('ERROR: ' + (e.message || e));
         bootStarted = false;
     }
-}
-
-// ==================== PRELOAD VOORBEREIDING ====================
-
-function preloadAll() {
-    loadScript('js/vendor/aframe.min.js');
-    loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' });
-    loadScript('js/vendor/xrextras.js?v=1');
-    loadScript('js/gif-component.js?v=2');
-}
-
-if (document.readyState === 'complete') {
-    preloadAll();
-} else {
-    window.addEventListener('load', preloadAll);
 }
 
 // ==================== UI & SWIPE BAR CONTROLES ====================
@@ -1073,16 +1039,6 @@ function setupModal() {
     });
 }
 
-// ==================== HACKER LOADER ====================
-
-function hideLoader() {
-    const loader = document.getElementById('hacker-loader');
-    if (loader) {
-        loader.classList.remove('visible');
-        setTimeout(() => { loader.style.display = 'none'; }, 400);
-    }
-}
-
 // ==================== APP INITIALISATIE ====================
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1093,15 +1049,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                      (window.innerWidth <= 850 && ('ontouchstart' in window));
 
     if (isMobile) {
-        console.log('[Mode] Mobiel toestel gedetecteerd — AR camera start automatisch');
+        console.log('[Mode] Mobiel toestel gedetecteerd — AR camera start direct');
         document.getElementById('desktop-view').style.display = 'none';
         document.getElementById('mobile-ar-view').style.display = 'block';
 
         setupSwipeBarControls();
         setupModal();
-        hideLoader();
 
-        // Start AR direct zoals in de originele app
+        // Start AR direct met feedback in de hacker loader
         bootAR();
     } else {
         console.log('[Mode] Desktop browser gedetecteerd — File Manager modus actief');

@@ -1269,7 +1269,7 @@ main {
     background: transparent;
     z-index: 9999;
     pointer-events: none;
-    padding: 75px 0 0 0; /* Top header margin (footer is now outside this container) */
+    padding: 0;
 }
 
 #mobile-ar-view > #ar-header,
@@ -1312,19 +1312,29 @@ main {
     pointer-events: none;
 }
 
-#ar-scene,
-a-scene {
-    position: absolute !important;
+#ar-scene {
+    position: fixed !important;
     top: 11vh !important;
     left: 4vw !important;
     right: 4vw !important;
     bottom: 13vh !important;
     width: calc(100% - 8vw) !important;
     height: calc(100% - 24vh) !important;
-    z-index: 9996 !important;
+    z-index: 1 !important;
     overflow: hidden !important;
     border: none !important;
     box-sizing: border-box !important;
+}
+
+#ar-scene a-scene,
+a-scene {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+    border: none !important;
 }
 
 #static-camera-feed {
@@ -1350,7 +1360,8 @@ video {
 /* High contrast black/white camera feed */
 /* AR scene video's: opacity via JS (hideARScene/revealARScene) */
 #ar-scene video,
-a-scene video {
+a-scene video,
+video.full-window-camera-video {
     filter: grayscale(100%) contrast(2.5) brightness(1) !important;
     height: 100% !important;
     width: 100% !important;
@@ -1368,6 +1379,9 @@ a-scene video {
 #ar-scene canvas,
 a-scene canvas {
     display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100% !important;
     height: 100% !important;
     max-width: 100% !important;
@@ -1404,6 +1418,28 @@ a-scene canvas {
 }
 
 .scan-frame.hidden {
+    opacity: 0;
+}
+
+#scanning-indicator {
+    position: fixed;
+    bottom: calc(13vh + 16px);
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-data, 'Roboto Mono', monospace);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 15;
+    margin: 0;
+    padding: 0 16px;
+    transition: opacity 0.3s ease;
+}
+
+#scanning-indicator.hidden {
     opacity: 0;
 }
 
