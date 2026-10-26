@@ -313,8 +313,6 @@ function buildScene(entries) {
     const oldScene = sceneBox().querySelector('a-scene');
     if (oldScene) oldScene.remove();
 
-    sceneBox().classList.remove('feed-ready');
-
     const scene = document.createElement('a-scene');
     scene.setAttribute('xrweb', 'disableWorldTracking: true');
     scene.setAttribute('color-space', 'sRGB');
@@ -411,7 +409,6 @@ function buildScene(entries) {
             if (!st.visible) st.foundAt = Date.now();
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
-            document.getElementById('feed-loader').style.display = 'none';
             dismissScanGuide();
             if (!st.scanRecorded && entry.week) {
                 st.scanRecorded = true;
