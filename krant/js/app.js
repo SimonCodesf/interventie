@@ -244,6 +244,87 @@ function buildLayers(target, entry) {
     });
 }
 
+// ---- Richtkader (Scan-Guide) voor snellere target lock ----
+let distTipTimer = null;
+
+function showScanGuide() {
+    const guide = document.getElementById('scan-guide');
+    if (!guide) return;
+    guide.classList.remove('locked');
+    guide.style.opacity = '';
+    guide.classList.add('active');
+    updateScanHint('Richt camera op de krantpagina');
+
+    if (distTipTimer) clearTimeout(distTipTimer);
+    distTipTimer = setTimeout(function () {
+        if (!firstFoundAt && guide.classList.contains('active')) {
+            updateScanHint('Houd camera op ~35-40 cm afstand in goed licht');
+        }
+    }, 3800);
+}
+
+function lockScanGuide() {
+    const guide = document.getElementById('scan-guide');
+    if (!guide) return;
+    if (distTipTimer) { clearTimeout(distTipTimer); distTipTimer = null; }
+    guide.classList.add('locked');
+    updateScanHint('Pagina gelockt ✓');
+    setTimeout(function () {
+        guide.style.opacity = '0';
+        setTimeout(function () {
+            guide.classList.remove('active', 'locked');
+            guide.style.opacity = '';
+        }, 350);
+    }, 320);
+}
+
+function updateScanHint(text) {
+    const el = document.getElementById('scan-hint');
+    if (el) el.textContent = text;
+}
+
+// ---- Pose Smoothing Component (reductie van tracking jitter) ----
+function registerAframeComponents() {
+    if (!window.AFRAME || AFRAME.components['smooth-anchor']) return;
+
+    AFRAME.registerComponent('smooth-anchor', {
+        schema: {
+            posFactor: { default: 0.32 },
+            rotFactor: { default: 0.28 },
+            snapThreshold: { default: 0.35 }
+        },
+        init: function () {
+            this.rawPos = new THREE.Vector3();
+            this.rawQuat = new THREE.Quaternion();
+            this.smoothedPos = new THREE.Vector3();
+            this.smoothedQuat = new THREE.Quaternion();
+            this.first = true;
+        },
+        tock: function () {
+            const obj = this.el.object3D;
+            if (!obj || !obj.visible) {
+                this.first = true;
+                return;
+            }
+
+            // 8th Wall xrextras update stelt obj.position en obj.quaternion in
+            this.rawPos.copy(obj.position);
+            this.rawQuat.copy(obj.quaternion);
+
+            if (this.first || this.smoothedPos.distanceTo(this.rawPos) > this.data.snapThreshold) {
+                this.smoothedPos.copy(this.rawPos);
+                this.smoothedQuat.copy(this.rawQuat);
+                this.first = false;
+            } else {
+                this.smoothedPos.lerp(this.rawPos, this.data.posFactor);
+                this.smoothedQuat.slerp(this.rawQuat, this.data.rotFactor);
+                obj.position.copy(this.smoothedPos);
+                obj.quaternion.copy(this.smoothedQuat);
+            }
+        }
+    });
+}
+
 // ---- Scene bouwen (8th Wall anchors) ----
 
 function buildScene(entries) {
@@ -309,6 +390,7 @@ function buildScene(entries) {
     entries.forEach(function (entry) {
         const anchor = document.createElement('a-entity');
         anchor.setAttribute('xrextras-named-image-target', 'name: ' + entry.name);
+        anchor.setAttribute('smooth-anchor', '');
 
         const content = document.createElement('a-entity');
         content.setAttribute('class', 'essay-content');
@@ -348,6 +430,7 @@ function buildScene(entries) {
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
             document.getElementById('feed-loader').style.display = 'none';
+            lockScanGuide();
             if (!st.scanRecorded && entry.week) {
                 st.scanRecorded = true;
                 try {
@@ -374,6 +457,10 @@ function buildScene(entries) {
                 if (anchorObj && !anchorState[entry.name].visible) {
                     anchorObj.visible = false;
                     flushAnchorDwell();
+                    const anyVisible = Object.keys(anchorState).some(function (k) { return anchorState[k].visible; });
+                    if (!anyVisible) {
+                        showScanGuide();
+                    }
                 }
             }, LOST_GRACE_MS);
         });
@@ -527,6 +614,7 @@ async function bootAR() {
             counted(loadScript('js/vendor/xrextras.js?v=1')),
             counted(loadScript('js/vendor/gif-component.js?v=2')),
         ]);
+        registerAframeComponents();
         bootStatus('Engine starten…');
         XR8 = await xrReady();
         XrController = await xrControllerReady(XR8, 20000);
@@ -579,6 +667,7 @@ async function bootAR() {
 
     overlay().style.display = 'none';
     bootStatus('');
+    showScanGuide();
     if (typeof window.trackKrantCameraStart === 'function') {
         window.trackKrantCameraStart();
     }
@@ -595,6 +684,51 @@ if (window.ResizeObserver) {
     }).observe(document.getElementById('ar-scene'));
 }
 
+// ---- Desktop detectie & fallback QR code (voorkomt realityerror op PC) ----
+
+function isDesktopDevice() {
+    const ua = navigator.userAgent || '';
+    const isMobileUa = /mobile|iphone|ipod|ipad|android|blackberry|iemobile|opera mini/i.test(ua);
+    const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    return !isMobileUa && (!hasTouch || window.innerWidth >= 1024);
+}
+
+function initDesktopGuard() {
+    if (!isDesktopDevice()) return;
+    const overlayEl = overlay();
+    if (!overlayEl) return;
+
+    const currentUrl = window.location.href;
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(currentUrl);
+
+    overlayEl.innerHTML = `
+        <div class="desktop-prompt-card">
+            <h2 class="desktop-prompt-title">De Krant in Augmented Reality</h2>
+            <p class="desktop-prompt-text">
+                Deze interactieve lagen zijn ontworpen om via de camera van een smartphone over de fysieke krant te zweven.
+            </p>
+            <div class="desktop-qr-wrap">
+                <img src="${qrUrl}" alt="Scan QR om te openen op smartphone" width="170" height="170">
+            </div>
+            <p class="desktop-prompt-text" style="font-size:0.7rem; color:rgba(20,20,20,0.6);">
+                Scan deze QR-code met de camera van je iPhone of Android-telefoon om de krant te bekijken.
+            </p>
+            <button id="force-desktop-btn" class="desktop-force-link" type="button">
+                Toch met computer-webcam proberen &rarr;
+            </button>
+        </div>
+    `;
+
+    document.getElementById('force-desktop-btn')?.addEventListener('click', function () {
+        overlayEl.innerHTML = `
+            <button id="start-btn">START CAMERA</button>
+            <div id="boot-status" aria-live="polite"></div>
+        `;
+        document.getElementById('start-btn')?.addEventListener('click', bootAR);
+        bootAR();
+    });
+}
+
 // ---- Boot: essentials eerst, preload erna, popup pas na de tap ----
 
 if (document.readyState === 'complete') {
@@ -604,10 +738,11 @@ if (document.readyState === 'complete') {
 }
 
 function preloadAll() {
-    loadScript('js/vendor/aframe.min.js');
+    loadScript('js/vendor/aframe.min.js').then(registerAframeComponents);
     loadScript('js/vendor/xr.js?v=1', { 'data-preload-chunks': 'slam', 'crossorigin': 'anonymous' });
     loadScript('js/vendor/xrextras.js?v=1');
     loadScript('js/vendor/gif-component.js?v=2');
 }
 
-document.getElementById('start-btn').addEventListener('click', bootAR);
+document.getElementById('start-btn')?.addEventListener('click', bootAR);
+initDesktopGuard();

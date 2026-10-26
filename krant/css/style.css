@@ -149,3 +149,155 @@ html {
     text-align: center;
     min-height: 1.1em;
 }
+
+/* Richtkader / Scan-guide voor snellere target lock */
+#scan-guide {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#scan-guide.active {
+    display: flex;
+}
+
+.scan-frame {
+    position: relative;
+    width: 68vw;
+    max-width: 320px;
+    height: 48vh;
+    max-height: 440px;
+    border: 1px dashed rgba(242, 238, 226, 0.4);
+    box-shadow: 0 0 0 9999px rgba(20, 20, 20, 0.22);
+    transition: all 0.25s ease;
+}
+
+/* 4 Hoekmarkeringen (krantenframe) */
+.scan-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: #f2eee2;
+    border-style: solid;
+    transition: border-color 0.2s ease;
+}
+.scan-corner.tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+.scan-corner.tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
+.scan-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
+.scan-corner.br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+
+.scan-laser {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(242, 238, 226, 0.8), transparent);
+    animation: scanLaserAnim 2.2s infinite ease-in-out;
+}
+
+@keyframes scanLaserAnim {
+    0% { top: 4%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { top: 96%; opacity: 0; }
+}
+
+.scan-hint {
+    margin-top: 1.1rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f2eee2;
+    background: rgba(20, 20, 20, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 6px 14px;
+    border-radius: 999px;
+    text-align: center;
+    max-width: 85vw;
+    line-height: 1.3;
+    transition: all 0.25s ease;
+}
+
+/* Bevestiging zodra target gelockt is */
+#scan-guide.locked .scan-frame {
+    border-color: #7dff9a;
+    border-style: solid;
+    box-shadow: 0 0 24px rgba(125, 255, 154, 0.4), 0 0 0 9999px rgba(20, 20, 20, 0.0);
+    transform: scale(1.02);
+}
+#scan-guide.locked .scan-corner {
+    border-color: #7dff9a;
+}
+#scan-guide.locked .scan-laser {
+    display: none;
+}
+#scan-guide.locked .scan-hint {
+    background: rgba(125, 255, 154, 0.92);
+    color: #141414;
+    font-weight: 700;
+}
+
+/* Desktop weergave fallback card */
+.desktop-prompt-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.6rem;
+    max-width: 380px;
+    gap: 0.9rem;
+}
+
+.desktop-prompt-title {
+    font-family: 'Newsreader', 'Times New Roman', serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: #141414;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.desktop-prompt-text {
+    font-size: 0.75rem;
+    color: rgba(20, 20, 20, 0.72);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.desktop-qr-wrap {
+    background: #ffffff;
+    padding: 10px;
+    border: 1px solid rgba(20, 20, 20, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    margin: 0.4rem 0;
+}
+
+.desktop-qr-wrap img {
+    display: block;
+    width: 170px;
+    height: 170px;
+}
+
+.desktop-force-link {
+    font-size: 0.65rem;
+    color: rgba(20, 20, 20, 0.45);
+    background: transparent;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 0.3rem;
+    transition: color 0.15s ease;
+}
+
+.desktop-force-link:hover {
+    color: #141414;
+}
