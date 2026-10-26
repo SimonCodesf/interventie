@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="css/style.css?v=19">
+    <link rel="stylesheet" href="css/style.css?v=20">
 </head>
 <body>
 
@@ -27,16 +27,14 @@
         <div id="ar-scene">
             <div id="feed-loader" aria-hidden="true"><span></span><span></span><span></span></div>
 
-            <!-- Richtkader voor intuïtieve en snellere target lock -->
+            <!-- Subtiele oriëntatiehoekjes (verdwijnen direct en geruisloos bij target lock) -->
             <div id="scan-guide" class="scan-guide" aria-hidden="true">
                 <div class="scan-frame">
                     <span class="scan-corner tl"></span>
                     <span class="scan-corner tr"></span>
                     <span class="scan-corner bl"></span>
                     <span class="scan-corner br"></span>
-                    <div class="scan-laser"></div>
                 </div>
-                <div id="scan-hint" class="scan-hint">Richt camera op de krantpagina</div>
             </div>
         </div>
 
@@ -47,7 +45,7 @@
 
     </div>
 
-    <script src="js/app.js?v=8w12"></script>
+    <script src="js/app.js?v=8w13"></script>
     <script src="stats.js?v=7"></script>
     <script>
     // Dev-paneel (testmatrix, metrics, mind-test, feedback) alleen in dev-modus

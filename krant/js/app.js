@@ -244,43 +244,25 @@ function buildLayers(target, entry) {
     });
 }
 
-// ---- Richtkader (Scan-Guide) voor snellere target lock ----
-let distTipTimer = null;
+// ---- Subtiel richtkader: enkel 4 haarfijne hoekjes bij de eerste start ----
+let hasLockedOnce = false;
 
 function showScanGuide() {
+    if (hasLockedOnce) return;
     const guide = document.getElementById('scan-guide');
     if (!guide) return;
-    guide.classList.remove('locked');
-    guide.style.opacity = '';
     guide.classList.add('active');
-    updateScanHint('Richt camera op de krantpagina');
-
-    if (distTipTimer) clearTimeout(distTipTimer);
-    distTipTimer = setTimeout(function () {
-        if (!firstFoundAt && guide.classList.contains('active')) {
-            updateScanHint('Houd camera op ~35-40 cm afstand in goed licht');
-        }
-    }, 3800);
 }
 
-function lockScanGuide() {
+function dismissScanGuide() {
+    hasLockedOnce = true;
     const guide = document.getElementById('scan-guide');
     if (!guide) return;
-    if (distTipTimer) { clearTimeout(distTipTimer); distTipTimer = null; }
-    guide.classList.add('locked');
-    updateScanHint('Pagina gelockt ✓');
+    guide.style.opacity = '0';
     setTimeout(function () {
-        guide.style.opacity = '0';
-        setTimeout(function () {
-            guide.classList.remove('active', 'locked');
-            guide.style.opacity = '';
-        }, 350);
-    }, 320);
-}
-
-function updateScanHint(text) {
-    const el = document.getElementById('scan-hint');
-    if (el) el.textContent = text;
+        guide.classList.remove('active');
+        guide.style.display = 'none';
+    }, 450);
 }
 
 // ---- Pose Smoothing Component (reductie van tracking jitter) ----
@@ -430,7 +412,7 @@ function buildScene(entries) {
             st.visible = true;
             console.log('[AR] target ' + entry.name + ' GEVONDEN');
             document.getElementById('feed-loader').style.display = 'none';
-            lockScanGuide();
+            dismissScanGuide();
             if (!st.scanRecorded && entry.week) {
                 st.scanRecorded = true;
                 try {
@@ -457,10 +439,6 @@ function buildScene(entries) {
                 if (anchorObj && !anchorState[entry.name].visible) {
                     anchorObj.visible = false;
                     flushAnchorDwell();
-                    const anyVisible = Object.keys(anchorState).some(function (k) { return anchorState[k].visible; });
-                    if (!anyVisible) {
-                        showScanGuide();
-                    }
                 }
             }, LOST_GRACE_MS);
         });
