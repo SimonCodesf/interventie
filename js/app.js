@@ -1,6 +1,5 @@
 // Interventie — AR Posters & Web Platform (A-Frame + 8th Wall XR Engine)
-// Alle targets staan tegelijk geregistreerd; elke poster toont zijn lagen
-// zodra hij in beeld is (geen chunks, geen knop- of chunk-wissel nodig).
+// Multi-Chunk Engine: ondersteunt alle 237 Belgische verkeersborden + posters.
 //
 // This product includes the XR Engine software developed by Niantic Spatial, Inc.
 // Copyright © 2026 Niantic Spatial, Inc. All rights reserved.
@@ -10,7 +9,7 @@
 
 const BASE_URL = window.location.origin;
 const API_URL = `${BASE_URL}/api.php`;
-const LOST_GRACE_MS = 1200; // Grace-periode: voorkomt knipperen/glitch bij korte haperingen
+const LOST_GRACE_MS = 1200; // Grace-periode: voorkomt knipperen bij korte haperingen
 const SCRIPT_TIMEOUT_MS = 45000;
 
 let currentTrackedPoster = null;
@@ -20,6 +19,16 @@ let bootStarted = false;
 let bootTime = 0;
 let permissionRetry = false;
 
+// Chunk State & 8th Wall Controller
+let xrControllerInstance = null;
+let arChunks = [];
+let currentChunkIndex = 0;
+window.currentChunkIndex = 0;
+window.chunkLocked = false;
+let chunkQuickPickerOpen = false;
+let chunkLongPressTimer = null;
+let chunkLongPressTriggered = false;
+
 // Metingen & Telemetrie
 let foundCount = 0, lostCount = 0, firstFoundAt = 0;
 let jitterSum = 0, jitterCount = 0, frameCount = 0;
@@ -27,7 +36,6 @@ const anchorState = {}; // targetName -> { visible, lastPos, hideTimer, scanReco
 
 // DOM helpers
 const sceneBox = () => document.getElementById('ar-scene');
-const overlay = () => document.getElementById('start-overlay');
 
 // ==================== SEQUENTIEEL SCRIPT LADEN ====================
 
@@ -77,8 +85,8 @@ function fetchTimeout(url, ms = 15000) {
 }
 
 function bootStatus(msg) {
-    const el = document.getElementById('boot-status');
-    if (el) el.textContent = msg || '';
+    const el = document.getElementById('scanning-indicator');
+    if (el) el.textContent = msg || 'Richt je camera op een poster';
 }
 
 // ==================== CAMERA & ENGINE CONTROLES ====================
@@ -98,268 +106,70 @@ async function ensureCameraPermission() {
         return { ok: false, reason: 'unsupported' };
     }
     const attempts = [
-        { video: { facingMode: { ideal: 'environment' } }, audio: false },
-        { video: true, audio: false }
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        { video: { facingMode: 'environment' } },
+        { video: true }
     ];
     let lastErr = null;
-    for (let i = 0; i < attempts.length; i++) {
+    for (const constraints of attempts) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(attempts[i]);
-            stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            stream.getTracks().forEach(t => t.stop());
             return { ok: true };
-        } catch (e) {
-            lastErr = e;
-            if (!e || e.name !== 'OverconstrainedError') break;
+        } catch (err) {
+            lastErr = err;
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                return { ok: false, reason: 'denied', error: err };
+            }
         }
     }
-    return { ok: false, reason: (lastErr && lastErr.name) || 'error' };
+    return { ok: false, reason: (lastErr && lastErr.name) || 'unknown', error: lastErr };
 }
 
 function webglSupported() {
     try {
-        const canvas = document.createElement('canvas');
-        return !!(window.WebGLRenderingContext &&
-            (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        const c = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
     } catch (e) {
         return false;
     }
 }
 
 function xrReady() {
+    if (window.XR8) return Promise.resolve(window.XR8);
     return new Promise((resolve, reject) => {
-        if (window.XR8) return resolve(window.XR8);
-        const to = setTimeout(() => reject(new Error('XR8 niet geladen (timeout)')), 20000);
-        window.addEventListener('xrloaded', function onXr() {
-            window.removeEventListener('xrloaded', onXr);
+        const to = setTimeout(() => reject(new Error('8th Wall engine timeout')), 25000);
+        window.addEventListener('xrloaded', () => {
             clearTimeout(to);
             resolve(window.XR8);
-        });
+        }, { once: true });
     });
 }
 
 function xrControllerReady(XR8, timeoutMs = 20000) {
     return new Promise((resolve, reject) => {
-        const start = Date.now();
-        (function poll() {
-            if (XR8.XrController) return resolve(XR8.XrController);
-            if (Date.now() - start > timeoutMs) {
-                reject(new Error('XrController niet beschikbaar (timeout)'));
-                return;
+        if (XR8.XrController) return resolve(XR8.XrController);
+        const start = performance.now();
+        const interval = setInterval(() => {
+            if (XR8.XrController) {
+                clearInterval(interval);
+                return resolve(XR8.XrController);
             }
-            setTimeout(poll, 200);
-        })();
+            if (performance.now() - start > timeoutMs) {
+                clearInterval(interval);
+                reject(new Error('XrController timeout'));
+            }
+        }, 50);
     });
 }
 
 function fatalError(msg) {
-    const btn = document.getElementById('start-btn');
-    if (btn) {
-        btn.textContent = msg;
-        btn.disabled = true;
-    }
-    if (overlay()) overlay().style.display = 'flex';
+    console.error('[AR Fatal]', msg);
+    bootStatus('Fout: ' + msg);
 }
 
-function retryOverlay() {
-    bootStarted = false;
-    bootStatus('');
-    const btn = document.getElementById('start-btn');
-    if (btn) {
-        btn.textContent = 'OPNIEUW PROBEREN';
-        btn.disabled = false;
-    }
-    if (overlay()) overlay().style.display = 'flex';
-}
+// ==================== POSE SMOOTHING COMPONENT ====================
 
-// ==================== LAAG OPBOUW & METADATA ====================
-
-function fitPosterSize(targetData) {
-    let w = 0.707, h = 1; // Standaard A4/A3 verhouding
-    const p = targetData && targetData.properties;
-    const ow = parseFloat(p && (p.originalWidth || p.width));
-    const oh = parseFloat(p && (p.originalHeight || p.height));
-    if (ow > 0 && oh > 0) {
-        const a = ow / oh;
-        if (a <= 1) { w = a; h = 1; } else { w = 1; h = 1 / a; }
-    }
-    return { w: Math.round(w * 1000) / 1000, h: Math.round(h * 1000) / 1000 };
-}
-
-function buildLayersHTML(poster) {
-    let layersHTML = '';
-    const fit = fitPosterSize(poster.target8w);
-
-    // Zwarte achtergrondlaag tenzij expliciet camera feed ingeschakeld
-    if (!poster.ar_camera_feed || !parseInt(poster.ar_camera_feed)) {
-        layersHTML += `
-            <a-plane 
-                id="ar-layer-bg-${poster.id}"
-                position="0 0 -0.01" 
-                height="${fit.h * 1.1}" 
-                width="${fit.w * 1.1}" 
-                rotation="0 0 0"
-                material="color: #000000; transparent: false; side: double; shader: flat;">
-            </a-plane>`;
-    }
-
-    if (poster.layers) {
-        for (let i = 1; i <= 8; i++) {
-            const layerData = poster.layers[`layer_${i}`];
-            if (!layerData) continue;
-
-            const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.05) + (i * 0.01);
-            const posX = parseFloat(layerData.pos_x) || 0;
-            const posY = parseFloat(layerData.pos_y) || 0;
-            const baseScale = parseFloat(layerData.scale) || 1.0;
-            const rotX = parseFloat(layerData.rot_x) || 0;
-            const rotY = parseFloat(layerData.rot_y) || 0;
-            const rotZ = parseFloat(layerData.rot_z) || 0;
-
-            // Animaties
-            let animAttrs = [];
-            const hasPositionAnim = (parseFloat(layerData.anim_x) || parseFloat(layerData.anim_y) || parseFloat(layerData.anim_z)) && parseInt(layerData.anim_pos_duration) > 0;
-            const hasRotationAnim = (parseFloat(layerData.anim_rot_x) || parseFloat(layerData.anim_rot_y) || parseFloat(layerData.anim_rot_z)) && parseInt(layerData.anim_rot_duration) > 0;
-            const hasScaleAnim = (parseFloat(layerData.anim_scale) !== 1.0 || parseFloat(layerData.anim_opacity) !== 1.0) && parseInt(layerData.anim_scale_duration) > 0;
-
-            if (hasPositionAnim) {
-                const animX = parseFloat(layerData.anim_x) || 0;
-                const animY = parseFloat(layerData.anim_y) || 0;
-                const animZ = parseFloat(layerData.anim_z) || 0;
-                const posDur = parseInt(layerData.anim_pos_duration) || 1000;
-                animAttrs.push(`animation="property: position; from: ${posX} ${posY} ${baseZ}; to: ${posX + animX} ${posY + animY} ${baseZ + animZ}; dur: ${posDur}; easing: linear; loop: true; dir: alternate;"`);
-            }
-            if (hasRotationAnim) {
-                const animRotX = parseFloat(layerData.anim_rot_x) || 0;
-                const animRotY = parseFloat(layerData.anim_rot_y) || 0;
-                const animRotZ = parseFloat(layerData.anim_rot_z) || 0;
-                const rotDur = parseInt(layerData.anim_rot_duration) || 1000;
-                animAttrs.push(`animation__rot="property: rotation; from: ${rotX} ${rotY} ${rotZ}; to: ${rotX + animRotX} ${rotY + animRotY} ${rotZ + animRotZ}; dur: ${rotDur}; easing: linear; loop: true; dir: alternate;"`);
-            }
-            if (hasScaleAnim) {
-                const animScale = parseFloat(layerData.anim_scale) || 1.0;
-                const scaleDur = parseInt(layerData.anim_scale_duration) || 1000;
-                animAttrs.push(`animation__scale="property: scale; from: ${baseScale} ${baseScale} ${baseScale}; to: ${baseScale * animScale} ${baseScale * animScale} ${baseScale * animScale}; dur: ${scaleDur}; easing: linear; loop: true; dir: alternate;"`);
-            }
-            const animationStr = animAttrs.join(' ');
-
-            // 1. Live Klipy API GIF
-            if (layerData.api_mode === 'gif_url' && layerData.api_url) {
-                const gifSize = 1.2 * baseScale;
-                const gifUrl = `${API_URL}/verkeersborden/gif-proxy?url=${encodeURIComponent(layerData.api_url)}`;
-                layersHTML += `
-                    <a-plane
-                        id="ar-layer-${poster.id}-${i}"
-                        class="gif-layer api-gif-layer"
-                        gif="autoplay: true; transparent: false; speed: 1;"
-                        data-gif-src="${gifUrl}"
-                        position="${posX} ${posY} ${baseZ}"
-                        rotation="${rotX} ${rotY} ${rotZ}"
-                        height="${gifSize.toFixed(3)}"
-                        width="${gifSize.toFixed(3)}"
-                        material="transparent: false; side: double;"
-                        ${animationStr}>
-                    </a-plane>`;
-                continue;
-            }
-
-            // 2. Sketchfab 3D Model
-            if ((layerData.api_mode === '3d_model' || layerData.api_source === 'sketchfab') && layerData.api_query) {
-                const glbScale = baseScale * 0.1;
-                const modelUrl = `${API_URL}/api-search/3d/model?uid=${encodeURIComponent(layerData.api_query)}`;
-                layersHTML += `
-                    <a-entity
-                        id="ar-layer-${poster.id}-${i}"
-                        class="ar-model api-3d-layer"
-                        gltf-model="${modelUrl}"
-                        position="${posX} ${posY} ${baseZ}"
-                        rotation="${rotX} ${rotY} ${rotZ}"
-                        scale="${glbScale} ${glbScale} ${glbScale}"
-                        ${animationStr}>
-                    </a-entity>`;
-                continue;
-            }
-
-            // 3. Tekstlaag
-            if (layerData.text_enabled && layerData.text_content) {
-                const textPosY = posY + (parseFloat(layerData.text_offset_y) || 0.85);
-                const textEncoded = encodeURIComponent(layerData.text_content);
-                const fontEncoded = encodeURIComponent(layerData.text_font_family || '"Bebas Neue", sans-serif');
-                layersHTML += `
-                    <a-plane
-                        id="ar-text-layer-${poster.id}-${i}"
-                        data-ar-text-layer="1"
-                        data-text-content="${textEncoded}"
-                        data-text-font="${fontEncoded}"
-                        data-text-color="${layerData.text_color || '#ffffff'}"
-                        data-text-outline-color="${layerData.text_outline_color || '#000000'}"
-                        position="${posX} ${textPosY} ${baseZ + 0.03}"
-                        rotation="${rotX} ${rotY} ${rotZ}"
-                        width="${fit.w * baseScale}"
-                        height="0.3"
-                        material="transparent: true; alphaTest: 0.02; side: double;"
-                        ${animationStr}>
-                    </a-plane>`;
-            }
-
-            // 4. Standaard Bestandslaag (Afbeelding, GIF of 3D GLB)
-            if (layerData.filename) {
-                const mediaPath = `uploads/ar-layers/${layerData.filename}`;
-                const isModel = /\.glb(\?|$)/i.test(layerData.filename);
-                const isGif = /\.gif(\?|$)/i.test(layerData.filename);
-                const isTransparent = layerData.transparent !== false;
-
-                if (isModel) {
-                    const glbScale = baseScale * 0.1;
-                    layersHTML += `
-                        <a-entity
-                            id="ar-layer-${poster.id}-${i}"
-                            class="ar-model"
-                            gltf-model="${mediaPath}"
-                            position="${posX} ${posY} ${baseZ}"
-                            rotation="${rotX} ${rotY} ${rotZ}"
-                            scale="${glbScale} ${glbScale} ${glbScale}"
-                            ${animationStr}>
-                        </a-entity>`;
-                } else if (isGif) {
-                    const planeW = fit.w * baseScale;
-                    const planeH = fit.h * baseScale;
-                    layersHTML += `
-                        <a-plane
-                            id="ar-layer-${poster.id}-${i}"
-                            class="gif-layer"
-                            gif="src: ${mediaPath}; autoplay: true; transparent: ${isTransparent};"
-                            position="${posX} ${posY} ${baseZ}"
-                            rotation="${rotX} ${rotY} ${rotZ}"
-                            width="${planeW.toFixed(3)}"
-                            height="${planeH.toFixed(3)}"
-                            material="transparent: ${isTransparent}; side: double;"
-                            ${animationStr}>
-                        </a-plane>`;
-                } else {
-                    const planeW = fit.w * baseScale;
-                    const planeH = fit.h * baseScale;
-                    layersHTML += `
-                        <a-plane
-                            id="ar-layer-${poster.id}-${i}"
-                            src="${mediaPath}"
-                            position="${posX} ${posY} ${baseZ}"
-                            rotation="${rotX} ${rotY} ${rotZ}"
-                            width="${planeW.toFixed(3)}"
-                            height="${planeH.toFixed(3)}"
-                            material="transparent: ${isTransparent}; side: double; shader: flat;"
-                            ${animationStr}>
-                        </a-plane>`;
-                }
-            }
-        }
-    }
-
-    return layersHTML;
-}
-
-// ==================== SCENE OPBOUW (8TH WALL ANCHORS) ====================
-
-// Pose smoothing component (lerp/slerp tracking jitter reductie)
 function registerAframeComponents() {
     if (!window.AFRAME || AFRAME.components['smooth-anchor']) return;
 
@@ -399,7 +209,83 @@ function registerAframeComponents() {
     });
 }
 
-function buildScene(posterEntries, signEntries = []) {
+// ==================== POSTER LAGEN OPBOUWEN ====================
+
+function buildLayersHTML(poster) {
+    if (!poster.layers) return '';
+    let layersHTML = '';
+    let layers = [];
+
+    try {
+        layers = typeof poster.layers === 'string' ? JSON.parse(poster.layers) : poster.layers;
+    } catch(e) {
+        console.error('Fout bij parsen layers:', e);
+        return '';
+    }
+
+    if (!Array.isArray(layers)) return '';
+
+    for (let index = 0; index < layers.length; index++) {
+        const layer = layers[index];
+        const fileUrl = layer.file.startsWith('http') ? layer.file : `uploads/${layer.file}`;
+        const fileExt = layer.file.split('.').pop().toLowerCase();
+        const baseZ = (index + 1) * 0.02;
+
+        let animationStr = '';
+        if (layer.anim_type && layer.anim_type !== 'none') {
+            const dur = (layer.anim_duration || 2) * 1000;
+            const loop = layer.anim_loop !== false ? 'dir: alternate; loop: true;' : 'loop: false;';
+
+            if (layer.anim_type === 'float') {
+                const amount = layer.anim_amount || 0.1;
+                animationStr = `animation="property: position; to: 0 ${amount} ${baseZ}; dur: ${dur}; easing: easeInOutSine; ${loop}"`;
+            } else if (layer.anim_type === 'rotate') {
+                const amount = layer.anim_amount || 360;
+                animationStr = `animation="property: rotation; to: 0 0 ${amount}; dur: ${dur}; easing: linear; loop: true;"`;
+            } else if (layer.anim_type === 'pulse') {
+                const amount = layer.anim_amount || 1.1;
+                animationStr = `animation="property: scale; to: ${amount} ${amount} ${amount}; dur: ${dur}; easing: easeInOutSine; ${loop}"`;
+            } else if (layer.anim_type === 'fade') {
+                animationStr = `animation="property: material.opacity; to: 0.2; dur: ${dur}; easing: easeInOutSine; ${loop}"`;
+            }
+        }
+
+        if (fileExt === 'glb') {
+            layersHTML += `
+                <a-entity
+                    gltf-model="${fileUrl}"
+                    position="0 0 ${baseZ}"
+                    scale="0.5 0.5 0.5"
+                    ${animationStr}>
+                </a-entity>`;
+        } else if (fileExt === 'gif') {
+            layersHTML += `
+                <a-plane
+                    position="0 0 ${baseZ}"
+                    width="1"
+                    height="1.414"
+                    gif="autoplay: true; transparent: true"
+                    src="${fileUrl}"
+                    ${animationStr}>
+                </a-plane>`;
+        } else {
+            layersHTML += `
+                <a-plane
+                    position="0 0 ${baseZ}"
+                    width="1"
+                    height="1.414"
+                    material="src: ${fileUrl}; transparent: true; alphaTest: 0.1"
+                    ${animationStr}>
+                </a-plane>`;
+        }
+    }
+
+    return layersHTML;
+}
+
+// ==================== SCENE OPBOUW (8TH WALL ANCHORS) ====================
+
+function buildScene(targets) {
     registerAframeComponents();
     const oldScene = sceneBox().querySelector('a-scene');
     if (oldScene) oldScene.remove();
@@ -437,162 +323,170 @@ function buildScene(posterEntries, signEntries = []) {
         console.error('[AR] realityerror', d);
         if (firstFoundAt) return;
         const reason = (d.error && d.error.message) || 'Camera kon niet gestart worden';
-        retryOverlay();
         bootStatus('Fout: ' + reason);
     });
 
-    // 1. Posters Anchors toevoegen
-    posterEntries.forEach(poster => {
-        const anchor = document.createElement('a-entity');
-        anchor.setAttribute('xrextras-named-image-target', 'name: ' + poster.id);
-        anchor.setAttribute('smooth-anchor', '');
-
-        const content = document.createElement('a-entity');
-        content.setAttribute('class', 'poster-content');
-        content.setAttribute('data-poster-id', poster.id);
-        content.innerHTML = buildLayersHTML(poster);
-        anchor.appendChild(content);
-
-        anchorState[poster.id] = { visible: false, lastPos: null, hideTimer: 0, scanRecorded: false, foundAt: 0 };
-
-        anchor.addEventListener('xrextrasfound', () => {
-            const st = anchorState[poster.id];
-            if (st && st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
-            foundCount++;
-            if (!firstFoundAt) firstFoundAt = performance.now();
-            if (st) {
-                if (!st.visible) st.foundAt = Date.now();
-                st.visible = true;
-            }
-
-            console.log(`[AR] Poster GEVONDEN: ${poster.title} (${poster.id})`);
-
-            // UI updates
-            const scanGuide = document.getElementById('scanning-overlay');
-            if (scanGuide) scanGuide.style.display = 'none';
-
-            showSwipeState(2);
-            const titleEl = document.getElementById('detected-poster-title');
-            if (titleEl) titleEl.textContent = poster.title;
-
-            currentTrackedPoster = poster;
-            featuredPoster = poster;
-            currentPoster = poster;
-
-            // Audio afspelen indien aanwezig
-            if (poster.audio_file) {
-                playPosterAudio(poster.audio_file);
-            }
-
-            // Scan registreren
-            if (st && !st.scanRecorded) {
-                st.scanRecorded = true;
-                try {
-                    fetch(`${API_URL}/posters/${encodeURIComponent(poster.id)}/scan`, { method: 'POST' }).catch(() => {});
-                } catch(e) {}
-            }
-        });
-
-        anchor.addEventListener('xrextraslost', () => {
-            const st = anchorState[poster.id];
-            lostCount++;
-            if (st) st.visible = false;
-            console.log(`[AR] Poster verloren (grace ${LOST_GRACE_MS}ms): ${poster.title}`);
-
-            // Houd pose tijdelijk vast tegen jitter
-            const anchorObj = anchor.object3D;
-            if (anchorObj) anchorObj.visible = true;
-
-            if (st && st.hideTimer) clearTimeout(st.hideTimer);
-            if (st) {
-                st.hideTimer = setTimeout(() => {
-                    st.hideTimer = 0;
-                    if (anchorObj && !anchorState[poster.id]?.visible) {
-                        anchorObj.visible = false;
-                    }
-                }, LOST_GRACE_MS);
-            }
-        });
-
-        scene.appendChild(anchor);
-    });
-
-    // 2. Verkeersborden Anchors toevoegen (Memeborden)
-    signEntries.forEach(sign => {
-        const anchor = document.createElement('a-entity');
-        anchor.setAttribute('xrextras-named-image-target', 'name: ' + sign.name);
-        anchor.setAttribute('smooth-anchor', '');
-        anchor.setAttribute('data-sign-id', sign.signId);
-        anchor.setAttribute('data-sign-name', sign.signName);
-        anchor.setAttribute('data-search-query', sign.searchQuery);
-        anchor.setAttribute('data-memeborden', 'true');
-
-        // Rode border plane
-        const borderPlane = document.createElement('a-plane');
-        borderPlane.setAttribute('position', '0 0 0.005');
-        borderPlane.setAttribute('width', '1.3');
-        borderPlane.setAttribute('height', '1.3');
-        borderPlane.setAttribute('color', '#CC0000');
-        borderPlane.setAttribute('visible', 'false');
-        anchor.appendChild(borderPlane);
-
-        // GIF plane
-        const gifPlane = document.createElement('a-plane');
-        gifPlane.setAttribute('data-meme-sign', sign.signId);
-        gifPlane.setAttribute('position', '0 0 0.01');
-        gifPlane.setAttribute('width', '1.1');
-        gifPlane.setAttribute('height', '1.1');
-        gifPlane.setAttribute('visible', 'false');
-        gifPlane.setAttribute('gif', 'autoplay: true; transparent: false');
-        anchor.appendChild(gifPlane);
-
-        anchorState[sign.name] = { visible: false, lastPos: null, hideTimer: 0 };
-
-        anchor.addEventListener('xrextrasfound', () => {
-            const st = anchorState[sign.name];
-            if (st && st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
-            if (st) st.visible = true;
-            console.log(`[Memeborden] Bord GEVONDEN: ${sign.signName}`);
-
-            const scanGuide = document.getElementById('scanning-overlay');
-            if (scanGuide) scanGuide.style.display = 'none';
-
-            showSwipeState(2);
-            const titleEl = document.getElementById('detected-poster-title');
-            if (titleEl) titleEl.textContent = sign.signName;
-
-            borderPlane.setAttribute('visible', 'true');
-            if (typeof window.fetchAndDisplayGif === 'function') {
-                window.fetchAndDisplayGif(sign.signId, sign.searchQuery, anchor);
-            }
-        });
-
-        anchor.addEventListener('xrextraslost', () => {
-            const st = anchorState[sign.name];
-            if (st) st.visible = false;
-            const anchorObj = anchor.object3D;
-            if (anchorObj) anchorObj.visible = true;
-
-            if (st && st.hideTimer) clearTimeout(st.hideTimer);
-            if (st) {
-                st.hideTimer = setTimeout(() => {
-                    st.hideTimer = 0;
-                    if (anchorObj && !anchorState[sign.name]?.visible) {
-                        anchorObj.visible = false;
-                        borderPlane.setAttribute('visible', 'false');
-                        gifPlane.setAttribute('visible', 'false');
-                    }
-                }, LOST_GRACE_MS);
-            }
-        });
-
-        scene.appendChild(anchor);
-    });
-
     sceneBox().appendChild(scene);
-    console.log(`[AR] 8th Wall scene gebouwd met ${posterEntries.length} posters en ${signEntries.length} verkeersborden`);
+    updateSceneTargets(targets);
 
     startJitterLoop();
+}
+
+function updateSceneTargets(targets) {
+    const scene = sceneBox().querySelector('a-scene');
+    if (!scene) return;
+
+    // Verwijder bestaande anchors
+    scene.querySelectorAll('a-entity[xrextras-named-image-target]').forEach(el => el.remove());
+
+    targets.forEach(item => {
+        const anchor = document.createElement('a-entity');
+        anchor.setAttribute('xrextras-named-image-target', 'name: ' + item.name);
+        anchor.setAttribute('smooth-anchor', '');
+
+        if (item.isPoster) {
+            // POSTER TARGET
+            const poster = item.poster;
+            anchor.setAttribute('data-poster-id', poster.id);
+
+            const content = document.createElement('a-entity');
+            content.setAttribute('class', 'poster-content');
+            content.setAttribute('data-poster-id', poster.id);
+            content.innerHTML = buildLayersHTML(poster);
+            anchor.appendChild(content);
+
+            anchorState[item.name] = { visible: false, lastPos: null, hideTimer: 0, scanRecorded: false, foundAt: 0 };
+
+            anchor.addEventListener('xrextrasfound', () => {
+                const st = anchorState[item.name];
+                if (st && st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
+                foundCount++;
+                if (!firstFoundAt) firstFoundAt = performance.now();
+                if (st) {
+                    if (!st.visible) st.foundAt = Date.now();
+                    st.visible = true;
+                }
+
+                console.log(`[AR] Poster GEVONDEN: ${poster.title} (${poster.id})`);
+                window.chunkLocked = true;
+                hideChunkCycleButton();
+
+                const scanGuide = document.getElementById('scanning-overlay');
+                if (scanGuide) scanGuide.style.display = 'none';
+
+                showSwipeState(2);
+                const titleEl = document.getElementById('detected-poster-title');
+                if (titleEl) titleEl.textContent = poster.title;
+
+                currentTrackedPoster = poster;
+                featuredPoster = poster;
+                currentPoster = poster;
+
+                if (poster.audio_file) playPosterAudio(poster.audio_file);
+
+                if (st && !st.scanRecorded) {
+                    st.scanRecorded = true;
+                    fetch(`${API_URL}/posters/${encodeURIComponent(poster.id)}/scan`, { method: 'POST' }).catch(() => {});
+                }
+            });
+
+            anchor.addEventListener('xrextraslost', () => {
+                const st = anchorState[item.name];
+                lostCount++;
+                if (st) st.visible = false;
+                const anchorObj = anchor.object3D;
+                if (anchorObj) anchorObj.visible = true;
+
+                if (st && st.hideTimer) clearTimeout(st.hideTimer);
+                if (st) {
+                    st.hideTimer = setTimeout(() => {
+                        st.hideTimer = 0;
+                        if (anchorObj && !anchorState[item.name]?.visible) {
+                            anchorObj.visible = false;
+                            window.chunkLocked = false;
+                            showChunkCycleButtonAgain();
+                        }
+                    }, LOST_GRACE_MS);
+                }
+            });
+        } else {
+            // VERKEERSBORD TARGET
+            anchor.setAttribute('data-sign-id', item.signId);
+            anchor.setAttribute('data-sign-name', item.signName);
+            anchor.setAttribute('data-search-query', item.searchQuery);
+            anchor.setAttribute('data-memeborden', 'true');
+
+            // Rode border plane
+            const borderPlane = document.createElement('a-plane');
+            borderPlane.setAttribute('data-meme-border', item.signId);
+            borderPlane.setAttribute('position', '0 0 0.005');
+            borderPlane.setAttribute('width', '1.3');
+            borderPlane.setAttribute('height', '1.3');
+            borderPlane.setAttribute('color', '#CC0000');
+            borderPlane.setAttribute('visible', 'false');
+            anchor.appendChild(borderPlane);
+
+            // GIF plane
+            const gifPlane = document.createElement('a-plane');
+            gifPlane.setAttribute('id', `meme-gif-plane-${item.signId}`);
+            gifPlane.setAttribute('data-meme-sign', item.signId);
+            gifPlane.setAttribute('position', '0 0 0.01');
+            gifPlane.setAttribute('width', '1.1');
+            gifPlane.setAttribute('height', '1.1');
+            gifPlane.setAttribute('visible', 'false');
+            gifPlane.setAttribute('gif', 'autoplay: true; transparent: false');
+            anchor.appendChild(gifPlane);
+
+            anchorState[item.name] = { visible: false, lastPos: null, hideTimer: 0 };
+
+            anchor.addEventListener('xrextrasfound', () => {
+                const st = anchorState[item.name];
+                if (st && st.hideTimer) { clearTimeout(st.hideTimer); st.hideTimer = 0; }
+                if (st) st.visible = true;
+
+                console.log(`[Memeborden] Bord GEVONDEN: ${item.signName}`);
+                window.chunkLocked = true;
+                hideChunkCycleButton();
+
+                const scanGuide = document.getElementById('scanning-overlay');
+                if (scanGuide) scanGuide.style.display = 'none';
+
+                showSwipeState(2);
+                const titleEl = document.getElementById('detected-poster-title');
+                if (titleEl) titleEl.textContent = item.signName;
+
+                borderPlane.setAttribute('visible', 'true');
+                if (typeof window.fetchAndDisplayGif === 'function') {
+                    window.fetchAndDisplayGif(item.signId, item.searchQuery, anchor);
+                }
+            });
+
+            anchor.addEventListener('xrextraslost', () => {
+                const st = anchorState[item.name];
+                if (st) st.visible = false;
+                const anchorObj = anchor.object3D;
+                if (anchorObj) anchorObj.visible = true;
+
+                if (st && st.hideTimer) clearTimeout(st.hideTimer);
+                if (st) {
+                    st.hideTimer = setTimeout(() => {
+                        st.hideTimer = 0;
+                        if (anchorObj && !anchorState[item.name]?.visible) {
+                            anchorObj.visible = false;
+                            borderPlane.setAttribute('visible', 'false');
+                            gifPlane.setAttribute('visible', 'false');
+                            window.chunkLocked = false;
+                            showChunkCycleButtonAgain();
+                        }
+                    }, LOST_GRACE_MS);
+                }
+            });
+        }
+
+        scene.appendChild(anchor);
+    });
+
+    console.log(`[AR] Anchors actief voor ${targets.length} targets`);
 }
 
 // Jitter & Telemetrie
@@ -636,6 +530,308 @@ function playPosterAudio(audioFilename) {
     } catch(e) {}
 }
 
+// ==================== CHUNK ENGINE & CHUNK KNOP ====================
+
+function injectSpinnerCSS() {
+    if (document.getElementById('scan-spinner-css')) return;
+    const style = document.createElement('style');
+    style.id = 'scan-spinner-css';
+    style.textContent = `
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .scan-spinner {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border: 1.5px solid transparent;
+            border-top-color: #fff;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function injectChunkPickerCSS() {
+    if (document.getElementById('chunk-picker-css')) return;
+    const style = document.createElement('style');
+    style.id = 'chunk-picker-css';
+    style.textContent = `
+        #chunk-quick-picker {
+            position: fixed;
+            left: 50%;
+            bottom: 175px;
+            transform: translateX(-50%) translateY(10px);
+            width: min(92vw, 320px);
+            max-height: 48vh;
+            background: rgba(0, 0, 0, 0.95);
+            border: 0.5px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+            z-index: 10001;
+            display: none;
+            pointer-events: auto;
+            color: #fff;
+            font-family: var(--font-data, 'Courier New', monospace);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        #chunk-quick-picker.open {
+            display: block;
+            transform: translateX(-50%) translateY(0);
+        }
+        .chunk-picker-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.55rem 0.75rem;
+            border-bottom: 0.5px solid rgba(255,255,255,0.25);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .chunk-picker-close {
+            background: transparent;
+            border: 0.5px solid rgba(255,255,255,0.4);
+            color: #fff;
+            font-size: 0.68rem;
+            line-height: 1;
+            padding: 0.15rem 0.4rem;
+            cursor: pointer;
+        }
+        .chunk-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.35rem;
+            padding: 0.6rem;
+            overflow-y: auto;
+            max-height: calc(48vh - 2rem);
+        }
+        .chunk-picker-btn {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            border: 0.5px solid rgba(255,255,255,0.35);
+            font-size: 0.68rem;
+            padding: 0.45rem 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .chunk-picker-btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+        .chunk-picker-subtle-toggle {
+            position: fixed;
+            left: calc(50% + 54px);
+            bottom: 124px;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: rgba(0,0,0,0.72);
+            color: #fff;
+            border: 0.5px solid rgba(255,255,255,0.45);
+            padding: 4px 8px;
+            font-size: 0.58rem;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            opacity: 0.75;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function showChunkCycleButton() {
+    injectSpinnerCSS();
+    injectChunkPickerCSS();
+
+    let btn = document.getElementById('chunk-cycle-btn');
+    if (btn) btn.remove();
+
+    btn = document.createElement('button');
+    btn.id = 'chunk-cycle-btn';
+    btn.type = 'button';
+    btn.innerHTML = 'SCAN';
+    btn.style.cssText = `
+        position: fixed;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.9);
+        color: #fff;
+        border: 0.5px solid #fff;
+        border-radius: 0;
+        padding: 6px 12px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 11px;
+        letter-spacing: 2px;
+        cursor: pointer;
+        min-width: 70px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: manipulation;
+    `;
+
+    btn.addEventListener('pointerdown', () => {
+        chunkLongPressTriggered = false;
+        clearTimeout(chunkLongPressTimer);
+        chunkLongPressTimer = setTimeout(() => {
+            chunkLongPressTriggered = true;
+            openChunkQuickPicker();
+        }, 450);
+    });
+
+    const clearLongPress = () => {
+        clearTimeout(chunkLongPressTimer);
+        chunkLongPressTimer = null;
+    };
+
+    btn.addEventListener('pointerup', () => {
+        clearLongPress();
+        if (!chunkLongPressTriggered) {
+            chunkLongPressTriggered = true;
+            cycleNextChunk();
+            setTimeout(() => { chunkLongPressTriggered = false; }, 400);
+        }
+    });
+
+    btn.addEventListener('pointercancel', clearLongPress);
+    btn.addEventListener('click', (e) => { e.preventDefault(); });
+
+    document.body.appendChild(btn);
+
+    // Subtiele toggle knop naast SCAN voor snel openen van de picker
+    let toggleBtn = document.getElementById('chunk-picker-toggle-btn');
+    if (!toggleBtn) {
+        toggleBtn = document.createElement('button');
+        toggleBtn.id = 'chunk-picker-toggle-btn';
+        toggleBtn.className = 'chunk-picker-subtle-toggle';
+        toggleBtn.textContent = 'CHUNKS';
+        toggleBtn.addEventListener('click', () => {
+            if (chunkQuickPickerOpen) closeChunkQuickPicker();
+            else openChunkQuickPicker();
+        });
+        document.body.appendChild(toggleBtn);
+    }
+}
+
+function hideChunkCycleButton() {
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) btn.style.display = 'none';
+    const toggle = document.getElementById('chunk-picker-toggle-btn');
+    if (toggle) toggle.style.display = 'none';
+    closeChunkQuickPicker();
+}
+
+function showChunkCycleButtonAgain() {
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) {
+        btn.innerHTML = 'SCAN';
+        btn.style.display = 'block';
+    }
+    const toggle = document.getElementById('chunk-picker-toggle-btn');
+    if (toggle) toggle.style.display = 'block';
+}
+
+async function cycleNextChunk() {
+    if (!arChunks.length) return;
+    const nextIndex = (currentChunkIndex + 1) % arChunks.length;
+    await switchChunk(nextIndex);
+}
+
+async function switchChunk(index) {
+    if (!xrControllerInstance || !arChunks || !arChunks[index]) return;
+    currentChunkIndex = index;
+    window.currentChunkIndex = index;
+    window.chunkLocked = false;
+
+    const chunk = arChunks[index];
+    console.log(`[Chunk] Wisselen naar chunk ${index}: ${chunk.label} (${chunk.targets.length} targets)`);
+
+    const btn = document.getElementById('chunk-cycle-btn');
+    if (btn) {
+        btn.innerHTML = `${chunk.label.toUpperCase()}<span class="scan-spinner"></span>`;
+    }
+
+    bootStatus(`Scannen: ${chunk.name}`);
+
+    // Update 8th Wall targets
+    xrControllerInstance.configure({ imageTargetData: chunk.targets });
+
+    // Update A-Frame anchors
+    updateSceneTargets(chunk.targets);
+
+    renderChunkQuickPicker();
+
+    setTimeout(() => {
+        if (btn && !window.chunkLocked) btn.innerHTML = 'SCAN';
+    }, 1500);
+}
+
+function ensureChunkQuickPicker() {
+    if (document.getElementById('chunk-quick-picker')) return;
+    injectChunkPickerCSS();
+
+    const picker = document.createElement('div');
+    picker.id = 'chunk-quick-picker';
+    picker.innerHTML = `
+        <div class="chunk-picker-head">
+            <span>Kies Verkeersborden Serie</span>
+            <button type="button" class="chunk-picker-close">✕</button>
+        </div>
+        <div class="chunk-picker-grid"></div>
+    `;
+
+    picker.querySelector('.chunk-picker-close').addEventListener('click', closeChunkQuickPicker);
+    document.body.appendChild(picker);
+}
+
+function renderChunkQuickPicker() {
+    ensureChunkQuickPicker();
+    const picker = document.getElementById('chunk-quick-picker');
+    if (!picker || !arChunks.length) return;
+
+    const grid = picker.querySelector('.chunk-picker-grid');
+    if (!grid) return;
+
+    grid.innerHTML = arChunks.map((chunk, index) => {
+        const active = index === currentChunkIndex ? ' active' : '';
+        return `<button type="button" class="chunk-picker-btn${active}" data-chunk-index="${index}">${chunk.label}</button>`;
+    }).join('');
+
+    grid.querySelectorAll('.chunk-picker-btn').forEach(b => {
+        b.addEventListener('click', async () => {
+            const idx = parseInt(b.dataset.chunkIndex, 10);
+            closeChunkQuickPicker();
+            await switchChunk(idx);
+        });
+    });
+}
+
+function openChunkQuickPicker() {
+    renderChunkQuickPicker();
+    const picker = document.getElementById('chunk-quick-picker');
+    if (picker) {
+        picker.classList.add('open');
+        chunkQuickPickerOpen = true;
+    }
+}
+
+function closeChunkQuickPicker() {
+    const picker = document.getElementById('chunk-quick-picker');
+    if (picker) {
+        picker.classList.remove('open');
+        chunkQuickPickerOpen = false;
+    }
+}
+
 // ==================== BOOT AR (MOBIELE START) ====================
 
 async function bootAR() {
@@ -648,33 +844,12 @@ async function bootAR() {
         return;
     }
 
-    const btn = document.getElementById('start-btn');
-    if (btn) {
-        btn.textContent = 'LADEN…';
-        btn.disabled = true;
-    }
-
-    if (await cameraBlocked()) {
-        btn.textContent = 'CAMERA TOESTAAN';
-        bootStatus('Geen cameratoegang. Controleer app-machtigingen in je browser.');
+    bootStatus('Cameratoegang controleren…');
+    const perm = await ensureCameraPermission();
+    if (!perm.ok) {
+        bootStatus('Cameratoegang geweigerd. Geef toestemming in browserinstellingen en herlaad.');
         bootStarted = false;
-        btn.disabled = false;
-        permissionRetry = true;
         return;
-    }
-
-    if (permissionRetry) {
-        permissionRetry = false;
-        bootStatus('Camera toestemming vragen…');
-        const perm = await ensureCameraPermission();
-        if (!perm.ok) {
-            btn.textContent = 'CAMERA TOESTAAN';
-            bootStatus('Cameratoegang geweigerd (' + perm.reason + '). Herlaad de pagina na het verlenen.');
-            bootStarted = false;
-            btn.disabled = false;
-            permissionRetry = true;
-            return;
-        }
     }
 
     try {
@@ -686,50 +861,75 @@ async function bootAR() {
             loadScript('js/gif-component.js?v=2')
         ]);
 
-        bootStatus('Engine starten…');
+        bootStatus('XR Engine starten…');
         const XR8 = await xrReady();
-        const XrController = await xrControllerReady(XR8, 20000);
+        xrControllerInstance = await xrControllerReady(XR8, 20000);
 
-        bootStatus('Posters ophalen…');
-        const postersResp = await fetchTimeout(`${API_URL}/posters`);
+        bootStatus('Targets ophalen…');
+        const [postersResp, chunksResp] = await Promise.all([
+            fetchTimeout(`${API_URL}/posters`).catch(() => ({ ok: false })),
+            fetchTimeout('verkeersborden/data/chunks8w.json?v=' + Date.now()).catch(() => ({ ok: false }))
+        ]);
+
         const posters = postersResp.ok ? await postersResp.json() : [];
         window.allPosters = posters;
 
-        // Laad ook verkeersborden targets indien beschikbaar
-        let signTargets = [];
-        try {
-            const signsResp = await fetchTimeout('verkeersborden/data/targets8w.json', 5000);
-            if (signsResp.ok) {
-                signTargets = await signsResp.json();
-            }
-        } catch (e) {}
+        let signsChunksData = null;
+        if (chunksResp.ok) {
+            signsChunksData = await chunksResp.json();
+        }
 
-        // Filter geldige 8th Wall poster targets
+        // Bouw de 8th Wall Chunks
         const validPosters = posters.filter(p => p.target8w && p.target8w.imagePath);
-        const imageTargetData = [
-            ...validPosters.map(p => p.target8w),
-            ...signTargets
-        ];
+        const posterTargets = validPosters.map(p => ({
+            ...p.target8w,
+            isPoster: true,
+            poster: p
+        }));
 
-        if (imageTargetData.length === 0) {
-            throw new Error('Geen AR targets beschikbaar. Upload eerst posters in het admin dashboard.');
+        arChunks = [];
+
+        // Chunk 0: Posters + Top Verkeersborden (Standaard actief)
+        const topSigns = (signsChunksData?.chunks?.[0]?.targets || []).map(t => ({ ...t, isPoster: false }));
+        arChunks.push({
+            id: 'chunk_top',
+            name: 'Posters & Top Borden',
+            label: 'Posters + Top',
+            targets: [...posterTargets, ...topSigns]
+        });
+
+        // Chunks 1..N: De specifieke series uit chunks8w.json
+        if (signsChunksData && Array.isArray(signsChunksData.chunks)) {
+            signsChunksData.chunks.slice(1).forEach(c => {
+                arChunks.push({
+                    id: c.id,
+                    name: c.name,
+                    label: c.label,
+                    targets: c.targets.map(t => ({ ...t, isPoster: false }))
+                });
+            });
+        }
+
+        window.arChunks = arChunks;
+        currentChunkIndex = 0;
+        window.currentChunkIndex = 0;
+
+        const initialTargets = arChunks[0].targets;
+        if (!initialTargets.length) {
+            throw new Error('Geen geldige targets gevonden.');
         }
 
         bootStatus('Targets configureren…');
-        XrController.configure({ imageTargetData });
-        console.log(`[AR] 8th Wall geconfigureerd met ${imageTargetData.length} targets`);
+        xrControllerInstance.configure({ imageTargetData: initialTargets });
+        console.log(`[AR] 8th Wall geconfigureerd met chunk 0: ${initialTargets.length} targets`);
 
-        bootStatus('Camera starten…');
-        buildScene(validPosters, signTargets);
+        bootStatus('Richt je camera op een poster of bord');
+        buildScene(initialTargets);
 
-        if (overlay()) overlay().style.display = 'none';
-        bootStatus('');
+        showChunkCycleButton();
+
     } catch (e) {
         console.error('[AR Boot Fout]', e);
-        if (btn) {
-            btn.textContent = 'OPNIEUW PROBEREN';
-            btn.disabled = false;
-        }
         bootStatus('Starten mislukt: ' + (e.message || e));
         bootStarted = false;
     }
@@ -764,77 +964,71 @@ function showSwipeState(state) {
     }
 }
 
-window.toggleFooter = function() {
-    const swipeBar = document.getElementById('ar-footer-swipe-bar');
-    if (!swipeBar) return;
-    const isExpanded = swipeBar.classList.contains('expanded');
-    if (isExpanded) {
-        swipeBar.classList.remove('expanded');
-    } else {
-        swipeBar.classList.add('expanded');
-        loadGalleryOverlay();
-    }
-};
-
 function setupSwipeBarControls() {
-    const swipeBar = document.getElementById('ar-footer-swipe-bar');
-    const footerHeader = document.querySelector('.footer-header');
-    if (!footerHeader || !swipeBar) return;
+    const footer = document.getElementById('ar-footer-swipe-bar');
+    if (!footer) return;
 
-    let touchStartY = 0;
-    footerHeader.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
+    let startY = 0, currentY = 0;
+
+    footer.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        currentY = startY;
     }, { passive: true });
 
-    footerHeader.addEventListener('touchend', (e) => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const deltaY = touchStartY - touchEndY;
-        if (deltaY > 30) {
-            // Drag omhoog: open galerij
-            swipeBar.classList.add('expanded');
-            loadGalleryOverlay();
-        } else if (deltaY < -30) {
-            // Drag omlaag: sluit galerij
-            swipeBar.classList.remove('expanded');
-        } else {
-            // Tik: toggle
-            window.toggleFooter();
+    footer.addEventListener('touchmove', (e) => {
+        currentY = e.touches[0].clientY;
+        const diff = startY - currentY;
+        if (diff > 50 && !footer.classList.contains('expanded')) {
+            expandFooter();
+        } else if (diff < -50 && footer.classList.contains('expanded')) {
+            collapseFooter();
         }
     }, { passive: true });
+
+    window.toggleFooter = () => {
+        if (footer.classList.contains('expanded')) collapseFooter();
+        else expandFooter();
+    };
 }
 
-function loadGalleryOverlay() {
+function expandFooter() {
+    const footer = document.getElementById('ar-footer-swipe-bar');
+    if (footer) {
+        footer.classList.add('expanded');
+        renderGalleryGrid();
+    }
+}
+
+function collapseFooter() {
+    const footer = document.getElementById('ar-footer-swipe-bar');
+    if (footer) footer.classList.remove('expanded');
+}
+
+function renderGalleryGrid() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
 
-    grid.innerHTML = window.allPosters.map(poster => {
-        const imageUrl = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : 'img/placeholder.png';
-        const hasAR = Boolean(poster.target8w || poster.ar_marker);
-        const arBadge = hasAR ? '<span class="ar-badge" style="background:#4ade80; color:#000; font-size:9px; padding:2px 4px; border-radius:2px; margin-left:4px;">AR</span>' : '';
-
+    grid.innerHTML = window.allPosters.map(p => {
+        const thumb = p.thumbnail ? `${BASE_URL}${p.thumbnail}` : (p.jpeg_filename ? `uploads/${p.jpeg_filename}` : 'img/placeholder.png');
         return `
-            <div class="overlay-poster-card" data-poster-id="${poster.id}" style="cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                <img src="${imageUrl}" alt="${poster.title}" style="width: 100%; aspect-ratio: 1/1.4; object-fit: cover; display: block;" onerror="this.src='img/placeholder.png'">
-                <div class="card-info" style="margin-top: 6px;">
-                    <h3 style="font-size: 11px; margin: 0; color: #fff; font-family: monospace;">${poster.title} ${arBadge}</h3>
-                </div>
+            <div class="gallery-item" onclick="window.openPosterModal && window.openPosterModal('${p.id}')">
+                <img src="${thumb}" alt="${p.title || ''}" loading="lazy">
+                <span class="gallery-item-title">${p.title || 'Poster'}</span>
             </div>
         `;
     }).join('');
-
-    grid.querySelectorAll('.overlay-poster-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const posterId = card.getAttribute('data-poster-id');
-            const poster = window.allPosters.find(p => p.id === posterId);
-            if (poster) openModal(poster);
-        });
-    });
 }
 
-// ==================== MODAL & DOWNLOAD BEHEER ====================
-
-function openModal(poster) {
+window.openPosterModal = (posterId) => {
+    const poster = (window.allPosters || []).find(p => p.id === posterId);
+    if (!poster) return;
     currentPoster = poster;
+    showDownloadModal(poster);
+};
+
+// ==================== DOWNLOAD MODAL ====================
+
+function showDownloadModal(poster) {
     const modal = document.getElementById('download-modal');
     if (!modal) return;
 
@@ -892,27 +1086,23 @@ function hideLoader() {
 // ==================== APP INITIALISATIE ====================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Interventie Platform — 8th Wall XR Initialisatie...');
+    console.log('Interventie Platform — 8th Wall XR Initialisatie (Multi-Chunk)...');
 
     // Device detectie
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                      (window.innerWidth <= 850 && ('ontouchstart' in window));
 
-    // Start-button listener
-    const startBtn = document.getElementById('start-btn');
-    if (startBtn) {
-        startBtn.addEventListener('click', bootAR);
-    }
-
     if (isMobile) {
-        console.log('[Mode] Mobiel toestel gedetecteerd — AR modus gereed');
+        console.log('[Mode] Mobiel toestel gedetecteerd — AR camera start automatisch');
         document.getElementById('desktop-view').style.display = 'none';
         document.getElementById('mobile-ar-view').style.display = 'block';
-        if (overlay()) overlay().style.display = 'flex';
 
         setupSwipeBarControls();
         setupModal();
         hideLoader();
+
+        // Start AR direct zoals in de originele app
+        bootAR();
     } else {
         console.log('[Mode] Desktop browser gedetecteerd — File Manager modus actief');
         document.getElementById('desktop-view').style.display = 'block';

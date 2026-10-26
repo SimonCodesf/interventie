@@ -1365,16 +1365,6 @@ a-scene video {
     object-fit: cover !important;
 }
 
-#ar-scene {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: 1;
-}
-
 #ar-scene canvas,
 a-scene canvas {
     display: block !important;
@@ -1382,51 +1372,6 @@ a-scene canvas {
     height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
-}
-
-#start-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.2rem;
-    background: rgba(10, 10, 10, 0.94);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    pointer-events: auto;
-}
-
-#start-btn {
-    background: transparent;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0.8rem 2rem;
-    cursor: pointer;
-    border-radius: 0;
-    transition: all 0.2s ease;
-}
-
-#start-btn:active,
-#start-btn:hover {
-    background: #ffffff;
-    color: #000000;
-}
-
-#boot-status {
-    font-family: inherit;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.65);
-    max-width: 85%;
-    text-align: center;
-    line-height: 1.4;
 }
 
 .mindar-ui-overlay,
