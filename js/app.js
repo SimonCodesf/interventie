@@ -359,7 +359,48 @@ function buildLayersHTML(poster) {
 
 // ==================== SCENE OPBOUW (8TH WALL ANCHORS) ====================
 
+// Pose smoothing component (lerp/slerp tracking jitter reductie)
+function registerAframeComponents() {
+    if (!window.AFRAME || AFRAME.components['smooth-anchor']) return;
+
+    AFRAME.registerComponent('smooth-anchor', {
+        schema: {
+            posFactor: { default: 0.32 },
+            rotFactor: { default: 0.28 },
+            snapThreshold: { default: 0.35 }
+        },
+        init: function () {
+            this.rawPos = new THREE.Vector3();
+            this.rawQuat = new THREE.Quaternion();
+            this.smoothedPos = new THREE.Vector3();
+            this.smoothedQuat = new THREE.Quaternion();
+            this.first = true;
+        },
+        tock: function () {
+            const obj = this.el.object3D;
+            if (!obj || !obj.visible) {
+                this.first = true;
+                return;
+            }
+            this.rawPos.copy(obj.position);
+            this.rawQuat.copy(obj.quaternion);
+
+            if (this.first || this.smoothedPos.distanceTo(this.rawPos) > this.data.snapThreshold) {
+                this.smoothedPos.copy(this.rawPos);
+                this.smoothedQuat.copy(this.rawQuat);
+                this.first = false;
+            } else {
+                this.smoothedPos.lerp(this.rawPos, this.data.posFactor);
+                this.smoothedQuat.slerp(this.rawQuat, this.data.rotFactor);
+                obj.position.copy(this.smoothedPos);
+                obj.quaternion.copy(this.smoothedQuat);
+            }
+        }
+    });
+}
+
 function buildScene(posterEntries, signEntries = []) {
+    registerAframeComponents();
     const oldScene = sceneBox().querySelector('a-scene');
     if (oldScene) oldScene.remove();
 
@@ -404,6 +445,7 @@ function buildScene(posterEntries, signEntries = []) {
     posterEntries.forEach(poster => {
         const anchor = document.createElement('a-entity');
         anchor.setAttribute('xrextras-named-image-target', 'name: ' + poster.id);
+        anchor.setAttribute('smooth-anchor', '');
 
         const content = document.createElement('a-entity');
         content.setAttribute('class', 'poster-content');
@@ -479,6 +521,7 @@ function buildScene(posterEntries, signEntries = []) {
     signEntries.forEach(sign => {
         const anchor = document.createElement('a-entity');
         anchor.setAttribute('xrextras-named-image-target', 'name: ' + sign.name);
+        anchor.setAttribute('smooth-anchor', '');
         anchor.setAttribute('data-sign-id', sign.signId);
         anchor.setAttribute('data-sign-name', sign.signName);
         anchor.setAttribute('data-search-query', sign.searchQuery);
