@@ -57,7 +57,9 @@ function initDatabaseWithMigrations() {
         'upload_type' => "TEXT DEFAULT 'poster'",
         'created_at' => 'DATETIME DEFAULT CURRENT_TIMESTAMP',
         'scans' => 'INTEGER DEFAULT 0',
-        'views' => 'INTEGER DEFAULT 0'
+        'views' => 'INTEGER DEFAULT 0',
+        'target8w_json' => "TEXT DEFAULT ''",
+        'target8w_image' => "TEXT DEFAULT ''"
     ];
     
     foreach ($columnsToAdd as $column => $type) {
@@ -257,4 +259,110 @@ function logAdminActivity($action, $details = '') {
     $logEntry = "[{$timestamp}] IP: {$ip} | Action: {$action} | Details: {$details} | User-Agent: {$userAgent}" . PHP_EOL;
     
     error_log($logEntry, 3, $logFile);
+}
+
+// ==================== 8TH WALL TARGET HELPERS ====================
+
+// 8th Wall target inline uitleveren: JSON parsen + imagePath absoluut maken
+function posterTarget8wToApi($row, $basePath = '/uploads/targets/', $v = '') {
+    if (empty($row['id'])) return null;
+    $id = (string)$row['id'];
+    $targetDir = defined('TARGETS_DIR') ? TARGETS_DIR . '/' . $id : (dirname(__DIR__) . '/uploads/targets/' . $id);
+    $jsonPath = $targetDir . '/target8w.json';
+    $jpgPath = $targetDir . '/target8w.jpg';
+    
+    // Auto-genereren als target nog niet bestaat maar JPEG wel aanwezig is
+    if ((!is_file($jsonPath) || !is_file($jpgPath)) && !empty($row['jpeg_filename'])) {
+        $srcPath = (defined('UPLOADS_DIR') ? UPLOADS_DIR : (dirname(__DIR__) . '/uploads')) . '/' . basename((string)$row['jpeg_filename']);
+        if (is_file($srcPath)) {
+            autogeneratePosterTarget8w($id, $srcPath);
+        }
+    }
+    
+    if (!is_file($jsonPath) || !is_file($jpgPath)) return null;
+    $content = @file_get_contents($jsonPath);
+    if (!$content) return null;
+    $data = json_decode($content, true);
+    if (!is_array($data) || empty($data['name'])) return null;
+    
+    $vParam = $v !== '' ? ('?v=' . urlencode((string)$v)) : '';
+    $data['imagePath'] = rtrim($basePath, '/') . '/' . rawurlencode($id) . '/target8w.jpg' . $vParam;
+    $data['name'] = $id;
+    return $data;
+}
+
+// 8th Wall target automatisch genereren uit poster-afbeelding:
+// grijswaarde-versie (max 640px, luminance) + metadata-JSON.
+function autogeneratePosterTarget8w($posterId, $srcImagePath) {
+    if (!file_exists($srcImagePath) || !is_file($srcImagePath)) return false;
+    $targetsDir = defined('TARGETS_DIR') ? TARGETS_DIR : (dirname(__DIR__) . '/uploads/targets');
+    $targetDir = $targetsDir . '/' . $posterId;
+    if (!file_exists($targetDir)) {
+        if (!@mkdir($targetDir, 0755, true)) return false;
+    }
+    
+    $ext = strtolower(pathinfo($srcImagePath, PATHINFO_EXTENSION));
+    $src = false;
+    if ($ext === 'jpg' || $ext === 'jpeg') {
+        if (function_exists('imagecreatefromjpeg')) $src = @imagecreatefromjpeg($srcImagePath);
+    } elseif ($ext === 'png') {
+        if (function_exists('imagecreatefrompng')) $src = @imagecreatefrompng($srcImagePath);
+    } elseif ($ext === 'webp') {
+        if (function_exists('imagecreatefromwebp')) $src = @imagecreatefromwebp($srcImagePath);
+    }
+    
+    if (!$src && function_exists('imagecreatefromstring')) {
+        $content = @file_get_contents($srcImagePath);
+        if ($content) $src = @imagecreatefromstring($content);
+    }
+    
+    if (!$src) return false;
+    
+    $w = imagesx($src);
+    $h = imagesy($src);
+    if ($w < 10 || $h < 10) {
+        imagedestroy($src);
+        return false;
+    }
+    
+    $scale = min(1.0, 640 / max($w, $h));
+    $tw = (int)max(1, round($w * $scale));
+    $th = (int)max(1, round($h * $scale));
+    $dst = imagecreatetruecolor($tw, $th);
+    $white = imagecolorallocate($dst, 255, 255, 255);
+    imagefill($dst, 0, 0, $white);
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $tw, $th, $w, $h);
+    imagedestroy($src);
+    
+    if (function_exists('imagefilter')) {
+        imagefilter($dst, IMG_FILTER_GRAYSCALE);
+    }
+    
+    $jpgTarget = $targetDir . '/target8w.jpg';
+    if (!@imagejpeg($dst, $jpgTarget, 85)) {
+        imagedestroy($dst);
+        return false;
+    }
+    imagedestroy($dst);
+    
+    $now = (int)(microtime(true) * 1000);
+    $json = [
+        'imagePath' => 'target8w.jpg',
+        'metadata' => null,
+        'name' => (string)$posterId,
+        'type' => 'PLANAR',
+        'properties' => [
+            'left' => 0, 'top' => 0, 'width' => $w, 'height' => $h,
+            'isRotated' => false, 'originalWidth' => $w, 'originalHeight' => $h,
+        ],
+        'resources' => [
+            'originalImage' => basename($srcImagePath),
+            'luminanceImage' => 'target8w.jpg',
+        ],
+        'created' => $now,
+        'updated' => $now,
+    ];
+    
+    @file_put_contents($targetDir . '/target8w.json', json_encode($json, JSON_UNESCAPED_UNICODE));
+    return true;
 }

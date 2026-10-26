@@ -1,0 +1,4031 @@
+[
+  {
+    "name": "sign_GIII_IJZEL",
+    "signId": "GIII_Ijzel",
+    "signName": "Type III: Onderbord gebruikt samen met A15 om te duiden in welke omstandigheden de weg glibberig is. Ander mogelijke opschriften zijn \"bij nat wegdek\", \"bladerval\" ..",
+    "searchQuery": "ice slipping cold",
+    "imagePath": "verkeersborden/images/GIII_Ijzel.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 642,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 642
+    }
+  },
+  {
+    "name": "sign_GIII_VERVORMD_WEGDEK",
+    "signId": "GIII_Vervormd_wegdek",
+    "signName": "Type III: Onderbord gebruikt samen met A51 om de aard van het gevaar aan te duiden. Ander mogelijke opschriften zijn \"spoorvorming\", \"mist\", \"zachte berm\", \"steengroeve\" ..",
+    "searchQuery": "bumpy road pothole",
+    "imagePath": "verkeersborden/images/GIII_Vervormd_wegdek.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 262,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 262
+    }
+  },
+  {
+    "name": "sign_GIX",
+    "signId": "GIX",
+    "signName": "Type IX: Onderbord gebruikt samen met A7 om te duiden dat de rijbaanversmalling de omvang van een rijstrook heeft. Mogen evenwel vervangen worden door het bord F97 alleen geplaatst",
+    "searchQuery": "lane merging squeeze",
+    "imagePath": "verkeersborden/images/GIX.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1440,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1440
+    }
+  },
+  {
+    "name": "sign_A1A",
+    "signId": "A1a",
+    "signName": "Gevaarlijke bocht naar links",
+    "searchQuery": "sharp left turn",
+    "imagePath": "verkeersborden/images/A1a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A1B",
+    "signId": "A1b",
+    "signName": "Gevaarlijke bocht naar rechts",
+    "searchQuery": "sharp right turn",
+    "imagePath": "verkeersborden/images/A1b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A1C",
+    "signId": "A1c",
+    "signName": "Dubbele bocht of meer dan twee bochten, de eerste naar links",
+    "searchQuery": "winding road",
+    "imagePath": "verkeersborden/images/A1c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A1D",
+    "signId": "A1d",
+    "signName": "Dubbele bocht of meer dan twee bochten, de eerste naar rechts",
+    "searchQuery": "winding road",
+    "imagePath": "verkeersborden/images/A1d.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A3",
+    "signId": "A3",
+    "signName": "Gevaarlijke daling (min. 7%)",
+    "searchQuery": "steep downhill",
+    "imagePath": "verkeersborden/images/A3.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A5",
+    "signId": "A5",
+    "signName": "Steile helling (min. 7%)",
+    "searchQuery": "steep hill climb",
+    "imagePath": "verkeersborden/images/A5.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A7A",
+    "signId": "A7a",
+    "signName": "Rijbaanversmalling",
+    "searchQuery": "road narrows",
+    "imagePath": "verkeersborden/images/A7a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A7B",
+    "signId": "A7b",
+    "signName": "Rijbaanversmalling langs links",
+    "searchQuery": "road squeeze left",
+    "imagePath": "verkeersborden/images/A7b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A9",
+    "signId": "A9",
+    "signName": "Beweegbare brug",
+    "searchQuery": "drawbridge opening",
+    "imagePath": "verkeersborden/images/A9.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_GII_10",
+    "signId": "GII_10",
+    "signName": "Type II: Onderbord gebruikt om de lengte van een gevaarlijk gedeelte van de openbare weg aan te duiden",
+    "searchQuery": "distance road ahead",
+    "imagePath": "verkeersborden/images/GII_10.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 264,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 264
+    }
+  },
+  {
+    "name": "sign_A11",
+    "signId": "A11",
+    "signName": "Uitweg op een kaai of oever",
+    "searchQuery": "cliff edge water",
+    "imagePath": "verkeersborden/images/A11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 448,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 448
+    }
+  },
+  {
+    "name": "sign_A13",
+    "signId": "A13",
+    "signName": "Overdwarse uitholling of ezelsrug",
+    "searchQuery": "speed bump road",
+    "imagePath": "verkeersborden/images/A13.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A14",
+    "signId": "A14",
+    "signName": "Verhoogde inrichting(en)",
+    "searchQuery": "speed bump",
+    "imagePath": "verkeersborden/images/A14.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 843,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 843
+    }
+  },
+  {
+    "name": "sign_A15",
+    "signId": "A15",
+    "signName": "Glibberige rijbaan (slipgevaar)",
+    "searchQuery": "slippery road ice",
+    "imagePath": "verkeersborden/images/A15.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A17",
+    "signId": "A17",
+    "signName": "Kiezelprojectie",
+    "searchQuery": "gravel road",
+    "imagePath": "verkeersborden/images/A17.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A19",
+    "signId": "A19",
+    "signName": "Vallende stenen",
+    "searchQuery": "falling rocks",
+    "imagePath": "verkeersborden/images/A19.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 448,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 448
+    }
+  },
+  {
+    "name": "sign_A21",
+    "signId": "A21",
+    "signName": "Oversteekplaats voor voetgangers",
+    "searchQuery": "pedestrian crossing",
+    "imagePath": "verkeersborden/images/A21.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A23",
+    "signId": "A23",
+    "signName": "Plaats waar speciaal veel kinderen komen",
+    "searchQuery": "children school",
+    "imagePath": "verkeersborden/images/A23.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A25",
+    "signId": "A25",
+    "signName": "Oversteekplaats voor fietsers en bestuurders van tweewielige bromfietsen of plaats waar die bestuurders van een fietspad op de rijbaan komen",
+    "searchQuery": "cyclists crossing",
+    "imagePath": "verkeersborden/images/A25.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A27",
+    "signId": "A27",
+    "signName": "Doortocht van groot wild",
+    "searchQuery": "deer crossing",
+    "imagePath": "verkeersborden/images/A27.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 448,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 448
+    }
+  },
+  {
+    "name": "sign_A29",
+    "signId": "A29",
+    "signName": "Doortocht van vee",
+    "searchQuery": "cows road",
+    "imagePath": "verkeersborden/images/A29.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 448,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 448
+    }
+  },
+  {
+    "name": "sign_A31",
+    "signId": "A31",
+    "signName": "Werken",
+    "searchQuery": "road construction",
+    "imagePath": "verkeersborden/images/A31.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A33",
+    "signId": "A33",
+    "signName": "Verkeerslichten",
+    "searchQuery": "traffic light red",
+    "imagePath": "verkeersborden/images/A33.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A35",
+    "signId": "A35",
+    "signName": "Overtocht van vliegtuigen op geringe hoogte",
+    "searchQuery": "low flying aircraft",
+    "imagePath": "verkeersborden/images/A35.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 448,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 448
+    }
+  },
+  {
+    "name": "sign_A37",
+    "signId": "A37",
+    "signName": "Zijwind",
+    "searchQuery": "strong crosswind",
+    "imagePath": "verkeersborden/images/A37.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 448,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 448
+    }
+  },
+  {
+    "name": "sign_A39",
+    "signId": "A39",
+    "signName": "Verkeer toegelaten in twee richtingen na een gedeelte van de rijbaan met eenrichtingsverkeer",
+    "searchQuery": "two way traffic",
+    "imagePath": "verkeersborden/images/A39.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_A41",
+    "signId": "A41",
+    "signName": "Overweg met slagbomen",
+    "searchQuery": "railway crossing boom",
+    "imagePath": "verkeersborden/images/A41.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 842,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 842
+    }
+  },
+  {
+    "name": "sign_A43",
+    "signId": "A43",
+    "signName": "Overweg zonder slagbomen",
+    "searchQuery": "train crossing",
+    "imagePath": "verkeersborden/images/A43.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 449,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 449
+    }
+  },
+  {
+    "name": "sign_A45",
+    "signId": "A45",
+    "signName": "Overweg voor enkel spoor",
+    "searchQuery": "railway single track",
+    "imagePath": "verkeersborden/images/A45.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 2609,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 2609
+    }
+  },
+  {
+    "name": "sign_A47",
+    "signId": "A47",
+    "signName": "Overweg voor twee of meer sporen",
+    "searchQuery": "railway multi track",
+    "imagePath": "verkeersborden/images/A47.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 3075,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 3075
+    }
+  },
+  {
+    "name": "sign_A49",
+    "signId": "A49",
+    "signName": "Kruising van een openbare weg door een of meer in de rijbaan aangelegde sporen",
+    "searchQuery": "tram tracks road",
+    "imagePath": "verkeersborden/images/A49.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 865,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 865
+    }
+  },
+  {
+    "name": "sign_A50",
+    "signId": "A50",
+    "signName": "File",
+    "searchQuery": "traffic jam rage",
+    "imagePath": "verkeersborden/images/A50.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 848,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 848
+    }
+  },
+  {
+    "name": "sign_A51",
+    "signId": "A51",
+    "signName": "Gevaar dat niet door een speciaal symbool wordt bepaald. Een onderbord duidt de aard van het gevaar aan",
+    "searchQuery": "danger warning",
+    "imagePath": "verkeersborden/images/A51.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_GIA_150",
+    "signId": "GIa_150",
+    "signName": "Type Ia: Onderbord gebruikt om een afstand groter of kleiner dan de standaard 150m tot het gevaar aan te duiden",
+    "searchQuery": "warning distance meters",
+    "imagePath": "verkeersborden/images/GIa_150.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 264,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 264
+    }
+  },
+  {
+    "name": "sign_GVIII",
+    "signId": "GVIII",
+    "signName": "Type VIII: Onderbord om de curve van de weg aan te geven. Het mag geplaatst worden onder de borden B1, B5, B9 en B15",
+    "searchQuery": "curved road turn",
+    "imagePath": "verkeersborden/images/GVIII.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 961,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 961
+    }
+  },
+  {
+    "name": "sign_B1",
+    "signId": "B1",
+    "signName": "Voorrang verlenen",
+    "searchQuery": "yield sign",
+    "imagePath": "verkeersborden/images/B1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_M1",
+    "signId": "M1",
+    "signName": "Onderbord gebruikt samen met B1 en B5 om aan te duiden dat die verkeersborden alleen betrekking hebben op fietsers",
+    "searchQuery": "bicycle rider cycling",
+    "imagePath": "verkeersborden/images/M1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 484,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 484
+    }
+  },
+  {
+    "name": "sign_B3",
+    "signId": "B3",
+    "signName": "Verkeersbord dat het verkeersbord B1 aankondigt op de bij benadering aangeduide afstand",
+    "searchQuery": "yield sign triangle",
+    "imagePath": "verkeersborden/images/B3.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1148,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1148
+    }
+  },
+  {
+    "name": "sign_B5",
+    "signId": "B5",
+    "signName": "Stoppen en voorrang verlenen",
+    "searchQuery": "stop sign",
+    "imagePath": "verkeersborden/images/B5.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_B7",
+    "signId": "B7",
+    "signName": "Verkeersbord dat het verkeersbord B5 aankondigt op de bij benadering aangeduide afstand",
+    "searchQuery": "stop ahead incoming",
+    "imagePath": "verkeersborden/images/B7.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1148,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1148
+    }
+  },
+  {
+    "name": "sign_M8",
+    "signId": "M8",
+    "signName": "Onderbord gebruikt samen met B1 en B5 om aan te duiden dat die verkeersborden alleen betrekking hebben op fietsers en bestuurders van tweewielige bromfietsen",
+    "searchQuery": "moped scooter bike",
+    "imagePath": "verkeersborden/images/M8.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 978,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 978
+    }
+  },
+  {
+    "name": "sign_B9",
+    "signId": "B9",
+    "signName": "Voorrangsweg",
+    "searchQuery": "priority road",
+    "imagePath": "verkeersborden/images/B9.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_M9",
+    "signId": "M9",
+    "signName": "Onderbord gebruikt samen met B1, B5 en B17 om te duiden dat fietsers in de twee rijrichtingen rijden op de dwarslopende openbare weg die men gaat oprijden",
+    "searchQuery": "two way bicycle",
+    "imagePath": "verkeersborden/images/M9.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_M10",
+    "signId": "M10",
+    "signName": "Onderbord gebruikt samen met B1, B5 en B17 om te duiden dat fietsers en bestuurders van tweewielige bromfietsen in de twee rijrichtingen rijden op de dwarslopende openbare weg die men gaat oprijden",
+    "searchQuery": "scooter bicycle road",
+    "imagePath": "verkeersborden/images/M10.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 548,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 548
+    }
+  },
+  {
+    "name": "sign_B11",
+    "signId": "B11",
+    "signName": "Einde van voorrangsweg",
+    "searchQuery": "end priority road",
+    "imagePath": "verkeersborden/images/B11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_B13",
+    "signId": "B13",
+    "signName": "Verkeersbord dat het verkeersbord B11 aankondigt op de bij benadering aangeduide afstand",
+    "searchQuery": "priority ending warning",
+    "imagePath": "verkeersborden/images/B13.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1249,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1249
+    }
+  },
+  {
+    "name": "sign_B15",
+    "signId": "B15",
+    "signName": "Voorrang. De horizontale streep van het symbool mag worden gewijzigd om duidelijker plaatsgesteldheid weer te geven",
+    "searchQuery": "roundabout",
+    "imagePath": "verkeersborden/images/B15.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_B17",
+    "signId": "B17",
+    "signName": "Kruispunt waar de",
+    "searchQuery": "narrow passage yield",
+    "imagePath": "verkeersborden/images/B17.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_B19",
+    "signId": "B19",
+    "signName": "Smalle doorgang, gebod voorrang te verlenen aan de bestuurders die uit de tegenovergestelde richting komen",
+    "searchQuery": "narrow passage priority",
+    "imagePath": "verkeersborden/images/B19.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_B21",
+    "signId": "B21",
+    "signName": "Smalle doorgang, voorrang ten opzichte van de bestuurders die uit de tegenoverstelde richting komen",
+    "searchQuery": "bike right red",
+    "imagePath": "verkeersborden/images/B21.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 770,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 770
+    }
+  },
+  {
+    "name": "sign_B22",
+    "signId": "B22",
+    "signName": "Fietsers mogen de in artikel 61 bedoelde driekleurige verkeerslichten voorbijrijden om rechts af te slaan, wanneer het verkeerslicht op rood of oranjegeel staat, op voorwaarde dat zij hierbij voorrang verlenen aan de andere weggebruikers die zich verplaatsen op de openbare weg of op de rijbaan",
+    "searchQuery": "bike straight red",
+    "imagePath": "verkeersborden/images/B22.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_B23",
+    "signId": "B23",
+    "signName": "Fietsers mogen de in artikel 61 bedoelde driekleurige verkeerslichten voorbijrijden om rechtdoor te rijden, wanneer het verkeerslicht op rood of oranjegeel staat, op voorwaarde dat zij hierbij voorrang verlenen aan de andere weggebruikers die zich verplaatsen op de openbare weg of op de rijbaan vanaf het rode of oranjegele licht",
+    "searchQuery": "bike right red light",
+    "imagePath": "verkeersborden/images/B23.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 839,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 839
+    }
+  },
+  {
+    "name": "sign_GIB_150",
+    "signId": "GIb_150",
+    "signName": "Type Ib: Onderbord gebruikt samen met B1 om bord B5 aan te kondigen",
+    "searchQuery": "stop ahead distance",
+    "imagePath": "verkeersborden/images/GIb_150.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 264,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 264
+    }
+  },
+  {
+    "name": "sign_GVI",
+    "signId": "GVI",
+    "signName": "Type VI: Onderbord gebruikt samen met C43 om een verbod te herhalen",
+    "searchQuery": "speed limit reminder",
+    "imagePath": "verkeersborden/images/GVI.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 277,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 277
+    }
+  },
+  {
+    "name": "sign_C1",
+    "signId": "C1",
+    "signName": "Verboden richting voor iedere bestuurder",
+    "searchQuery": "wrong way",
+    "imagePath": "verkeersborden/images/C1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_M2",
+    "signId": "M2",
+    "signName": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers",
+    "searchQuery": "cyclists exception",
+    "imagePath": "verkeersborden/images/M2.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 732,
+      "isRotated": false,
+      "originalWidth": 1280,
+      "originalHeight": 732
+    }
+  },
+  {
+    "name": "sign_C3",
+    "signId": "C3",
+    "signName": "Verboden toegang, in beide richtingen, voor ieder bestuurder",
+    "searchQuery": "no entry",
+    "imagePath": "verkeersborden/images/C3.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_M3",
+    "signId": "M3",
+    "signName": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van bromfietsen klasse A",
+    "searchQuery": "bikes allowed transit",
+    "imagePath": "verkeersborden/images/M3.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 545,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 545
+    }
+  },
+  {
+    "name": "sign_M3BIS",
+    "signId": "M3bis",
+    "signName": "Onderbord gebruikt samen met C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van bromfietsen klasse A en B, en",
+    "searchQuery": "scooters bicycles allowed",
+    "imagePath": "verkeersborden/images/M3bis.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 549,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 549
+    }
+  },
+  {
+    "name": "sign_C5",
+    "signId": "C5",
+    "signName": "Verboden toegang voor bestuurders van motorvoertuigen met meer dan twee wielen en van motorfietsen met zijspan",
+    "searchQuery": "no cars allowed",
+    "imagePath": "verkeersborden/images/C5.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C6",
+    "signId": "C6",
+    "signName": "Verboden toegang voor bestuurders van motorvoertuigen met vier wielen, geconstrueerd voor onverhard terrein, met een open carrosserie, een stuur als op een motorfiets en een zadel",
+    "searchQuery": "quad bike offroad",
+    "imagePath": "verkeersborden/images/C6.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C7",
+    "signId": "C7",
+    "signName": "Verboden toegang voor bestuurders van motorfietsen",
+    "searchQuery": "no motorcycles",
+    "imagePath": "verkeersborden/images/C7.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C9",
+    "signId": "C9",
+    "signName": "Verboden toegang voor bestuurders van bromfietsen",
+    "searchQuery": "no mopeds",
+    "imagePath": "verkeersborden/images/C9.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C11",
+    "signId": "C11",
+    "signName": "Verboden toegang voor bestuurders van rijwielen",
+    "searchQuery": "no bicycles",
+    "imagePath": "verkeersborden/images/C11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_M11",
+    "signId": "M11",
+    "signName": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van speedpedelecs",
+    "searchQuery": "fast speed pedelec",
+    "imagePath": "verkeersborden/images/M11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 958,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 958
+    }
+  },
+  {
+    "name": "sign_M12",
+    "signId": "M12",
+    "signName": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van bromfietsen klasse A en speedpedelecs",
+    "searchQuery": "speed pedelec moped",
+    "imagePath": "verkeersborden/images/M12.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 642,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 642
+    }
+  },
+  {
+    "name": "sign_C13",
+    "signId": "C13",
+    "signName": "Verboden toegang voor bestuurders van gespannen",
+    "searchQuery": "no horse cart",
+    "imagePath": "verkeersborden/images/C13.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C15",
+    "signId": "C15",
+    "signName": "Verboden toegang voor ruiters",
+    "searchQuery": "no horse riding",
+    "imagePath": "verkeersborden/images/C15.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C17",
+    "signId": "C17",
+    "signName": "Verboden toegang voor bestuurders van handkarren",
+    "searchQuery": "hand cart pushing",
+    "imagePath": "verkeersborden/images/C17.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C19",
+    "signId": "C19",
+    "signName": "Verboden toegang voor voetgangers",
+    "searchQuery": "no pedestrians walking",
+    "imagePath": "verkeersborden/images/C19.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C21",
+    "signId": "C21",
+    "signName": "Verboden toegang voor voertuigen waarvan de massa in beladen toestand hoger is dan de aangeduide massa",
+    "searchQuery": "no heavy trucks",
+    "imagePath": "verkeersborden/images/C21.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_C22",
+    "signId": "C22",
+    "signName": "Verboden toegang voor autocars",
+    "searchQuery": "no buses",
+    "imagePath": "verkeersborden/images/C22.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C23",
+    "signId": "C23",
+    "signName": "Verboden toegang voor bestuurders van voertuigen gebruikt voor het vervoer van zaken",
+    "searchQuery": "no trucks",
+    "imagePath": "verkeersborden/images/C23.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C24A",
+    "signId": "C24a",
+    "signName": "Verboden toegang voor bestuurders van voertuigen die gevaarlijke goederen vervoeren",
+    "searchQuery": "no hazmat",
+    "imagePath": "verkeersborden/images/C24a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_C24B",
+    "signId": "C24b",
+    "signName": "Verboden toegang voor  bestuurders van voertuigen die gevaarlijke ontvlambare of ontplofbare stoffen vervoeren",
+    "searchQuery": "no flammable",
+    "imagePath": "verkeersborden/images/C24b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C24C",
+    "signId": "C24c",
+    "signName": "Verboden toegang voor  bestuurders van voertuigen die gevaarlijke verontreinigende stoffen vervoeren",
+    "searchQuery": "no pollutants",
+    "imagePath": "verkeersborden/images/C24c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C25",
+    "signId": "C25",
+    "signName": "Verboden toegang voor  bestuurders van voertuigen of slepen waarvan de lengte, lading inbegrepen, groter is dan het aangeduide",
+    "searchQuery": "no long vehicles",
+    "imagePath": "verkeersborden/images/C25.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C27",
+    "signId": "C27",
+    "signName": "Verboden toegang voor bestuurders van voertuigen waarvan de breedte, lading inbegrepen, groter is dan het aangeduide",
+    "searchQuery": "no wide load",
+    "imagePath": "verkeersborden/images/C27.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_C29",
+    "signId": "C29",
+    "signName": "Verboden toegang voor bestuurders van voertuigen waarvan de hoogte, lading inbegrepen, groter is dan het aangeduide",
+    "searchQuery": "low bridge truck clearance",
+    "imagePath": "verkeersborden/images/C29.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 964,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 964
+    }
+  },
+  {
+    "name": "sign_C31D",
+    "signId": "C31d",
+    "signName": "Verbod aan het volgend kruispunt af te slaan in de richting door de pijl aangegeven",
+    "searchQuery": "no right turn forbidden",
+    "imagePath": "verkeersborden/images/C31d.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 964,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 964
+    }
+  },
+  {
+    "name": "sign_C31G",
+    "signId": "C31g",
+    "signName": "Verbod aan het volgend kruispunt af te slaan in de richting door de pijl aangegeven",
+    "searchQuery": "no left turn forbidden",
+    "imagePath": "verkeersborden/images/C31g.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 964,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 964
+    }
+  },
+  {
+    "name": "sign_C33",
+    "signId": "C33",
+    "signName": "Vanaf het verkeersbord tot het volgend kruispunt, verbod te keren",
+    "searchQuery": "no pedestrians",
+    "imagePath": "verkeersborden/images/C33.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 954,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 954
+    }
+  },
+  {
+    "name": "sign_C35",
+    "signId": "C35",
+    "signName": "Vanaf het verkeersbord tot het volgend kruispunt, verbod een gespan of een voertuig met meer dan twee wielen, links in te halen",
+    "searchQuery": "no overtaking",
+    "imagePath": "verkeersborden/images/C35.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C37",
+    "signId": "C37",
+    "signName": "Einde verbod opgelegd door het verkeersbord C35",
+    "searchQuery": "end no passing",
+    "imagePath": "verkeersborden/images/C37.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_C39",
+    "signId": "C39",
+    "signName": "Vanaf het verkeersbord tot het volgend kruispunt, verbod voor bestuurders van voertuigen of slepen gebruikt voor het vervoer van zaken, waarvan de maximale toegelaten massa meer dan 3500 kg bedraagt, een gespan of een voertuig met meer dan twee wielen links in te halen",
+    "searchQuery": "no truck passing",
+    "imagePath": "verkeersborden/images/C39.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_C41",
+    "signId": "C41",
+    "signName": "Einde verbod opgelegd door het verkeersbord C39",
+    "searchQuery": "passing allowed overtake",
+    "imagePath": "verkeersborden/images/C41.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C43",
+    "signId": "C43",
+    "signName": "Vanaf het verkeersbord tot het volgend kruispunt, verbod te rijden met een grotere snelheid dan deze die is aangeduid",
+    "searchQuery": "speed limit",
+    "imagePath": "verkeersborden/images/C43.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C45",
+    "signId": "C45",
+    "signName": "Einde van de snelheidsbeperking opgelegd door het verkeersbord C43",
+    "searchQuery": "end speed limit",
+    "imagePath": "verkeersborden/images/C45.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 513,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 513
+    }
+  },
+  {
+    "name": "sign_C46",
+    "signId": "C46",
+    "signName": "Einde van alle plaatselijke verbodsbepalingen opgelegd aan de voertuigen in beweging",
+    "searchQuery": "freedom open road driving",
+    "imagePath": "verkeersborden/images/C46.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_C47",
+    "signId": "C47",
+    "signName": "Tolpost, verbod voorbij te rijden zonder te stoppen",
+    "searchQuery": "all restrictions lifted",
+    "imagePath": "verkeersborden/images/C47.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 513,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 513
+    }
+  },
+  {
+    "name": "sign_C48",
+    "signId": "C48",
+    "signName": "Vanaf het verkeersbord tot het volgend kruispunt, verbod de cruise control of kruissnelheidsregelaar te gebruiken",
+    "searchQuery": "no cruise control driving",
+    "imagePath": "verkeersborden/images/C48.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_C49",
+    "signId": "C49",
+    "signName": "Einde verbod opgelegd door het verkeersbord C48",
+    "searchQuery": "cruise control allowed",
+    "imagePath": "verkeersborden/images/C49.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_D1A",
+    "signId": "D1a",
+    "signName": "Verplichting de door de pijl aangeduide richting te volgen. (hier rechtdoor)",
+    "searchQuery": "go straight ahead",
+    "imagePath": "verkeersborden/images/D1a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 513,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 513
+    }
+  },
+  {
+    "name": "sign_D1B",
+    "signId": "D1b",
+    "signName": "Verplichting de door de pijl aangeduide richting te volgen. (hier links)",
+    "searchQuery": "turn left mandatory",
+    "imagePath": "verkeersborden/images/D1b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_D1D",
+    "signId": "D1d",
+    "signName": "Verplichting de hindernis langs de door de pijl aangeduide richting voorbij te rijden. (hier rechts)",
+    "searchQuery": "pass obstacle right",
+    "imagePath": "verkeersborden/images/D1d.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_D1E",
+    "signId": "D1e",
+    "signName": "Verplichting de door de pijl aangeduide richting te volgen. (hier links)",
+    "searchQuery": "pass obstacle left",
+    "imagePath": "verkeersborden/images/D1e.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_D3B",
+    "signId": "D3b",
+    "signName": "Verplichting een van de door de pijlen aangeduide richtingen te volgen. (hier rechtdoor of rechts)",
+    "searchQuery": "keep left arrow",
+    "imagePath": "verkeersborden/images/D3b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_D4",
+    "signId": "D4",
+    "signName": "Verplichting voor voertuigen die gevaarlijke goederen vervoeren om de door de pijl aangeduide richting te volgen",
+    "searchQuery": "roundabout direction turn",
+    "imagePath": "verkeersborden/images/D4.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1451,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1451
+    }
+  },
+  {
+    "name": "sign_D5",
+    "signId": "D5",
+    "signName": "Verplicht",
+    "searchQuery": "roundabout mandatory",
+    "imagePath": "verkeersborden/images/D5.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_M6",
+    "signId": "M6",
+    "signName": "Onderbord gebruikt samen met D7 als het fietspad gevolgd moet worden door bestuurders van bromfietsen klasse B",
+    "searchQuery": "cyclists only lane",
+    "imagePath": "verkeersborden/images/M6.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 721,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 721
+    }
+  },
+  {
+    "name": "sign_D7",
+    "signId": "D7",
+    "signName": "Verplicht",
+    "searchQuery": "keep right",
+    "imagePath": "verkeersborden/images/D7.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 512,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 512
+    }
+  },
+  {
+    "name": "sign_M7",
+    "signId": "M7",
+    "signName": "Onderbord gebruikt samen met D7 als het fietspad niet mag gevolgd worden door bestuurders van bromfietsen klasse B",
+    "searchQuery": "pedestrians cyclists path",
+    "imagePath": "verkeersborden/images/M7.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 721,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 721
+    }
+  },
+  {
+    "name": "sign_D9A",
+    "signId": "D9a",
+    "signName": "Deel van de openbare weg voorbehouden voor het verkeer van voetgangers, van fietsen en van tweewielige bromfietsen klasse A",
+    "searchQuery": "mandatory direction arrow",
+    "imagePath": "verkeersborden/images/D9a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_D10",
+    "signId": "D10",
+    "signName": "Deel van de openbare weg voorbehouden voor het verkeer van voetgangers en fietsers",
+    "searchQuery": "shared path pedestrians",
+    "imagePath": "verkeersborden/images/D10.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_D11",
+    "signId": "D11",
+    "signName": "Verplichte weg voor voetgangers",
+    "searchQuery": "equestrian horse trail",
+    "imagePath": "verkeersborden/images/D11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_D13",
+    "signId": "D13",
+    "signName": "Verplichte weg voor ruiters",
+    "searchQuery": "segway electric scooter",
+    "imagePath": "verkeersborden/images/D13.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_M13",
+    "signId": "M13",
+    "signName": "Onderbord gebruikt samen met D7 als het fietspad gevolgd moet worden door bestuurders van speedpedelecs",
+    "searchQuery": "moped lane path",
+    "imagePath": "verkeersborden/images/M13.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1358,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1358
+    }
+  },
+  {
+    "name": "sign_M14",
+    "signId": "M14",
+    "signName": "Onderbord gebruikt samen met D7 als het fietspad gevolgd moet worden door bestuurders van bromfietsen klasse B en speedpedelecs",
+    "searchQuery": "moped speed pedelec",
+    "imagePath": "verkeersborden/images/M14.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1358,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1358
+    }
+  },
+  {
+    "name": "sign_M15",
+    "signId": "M15",
+    "signName": "Onderbord gebruikt samen met D7 als het fietspad niet mag gevolgd worden door bestuurders van speedpedelecs",
+    "searchQuery": "scooter bike route",
+    "imagePath": "verkeersborden/images/M15.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1358,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1358
+    }
+  },
+  {
+    "name": "sign_M16",
+    "signId": "M16",
+    "signName": "Onderbord gebruikt samen met D7 als het fietspad niet mag gevolgd worden door bestuurders van bromfietsen klasse B en speedpedelecs",
+    "searchQuery": "cyclists yield crossing",
+    "imagePath": "verkeersborden/images/M16.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1358,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1358
+    }
+  },
+  {
+    "name": "sign_GXA",
+    "signId": "GXa",
+    "signName": "Begin van de reglementering",
+    "searchQuery": "arrows start zone",
+    "imagePath": "verkeersborden/images/GXa.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 3845,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 3845
+    }
+  },
+  {
+    "name": "sign_GXB",
+    "signId": "GXb",
+    "signName": "Einde van een reglementering",
+    "searchQuery": "arrows end zone",
+    "imagePath": "verkeersborden/images/GXb.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 3845,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 3845
+    }
+  },
+  {
+    "name": "sign_GXD",
+    "signId": "GXd",
+    "signName": "Reglementering over een lange afstand (herhaling)",
+    "searchQuery": "parking zone arrows",
+    "imagePath": "verkeersborden/images/GXd.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 3847,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 3847
+    }
+  },
+  {
+    "name": "sign_GXC",
+    "signId": "GXc",
+    "signName": "Reglementering over een korte afstand (≤ 30m)",
+    "searchQuery": "parking repeat arrows",
+    "imagePath": "verkeersborden/images/GXc.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 3847,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 3847
+    }
+  },
+  {
+    "name": "sign_GV_VAN_MAANDAG_TOT_VRIJDAG",
+    "signId": "GV_Van_maandag_tot_vrijdag",
+    "signName": "Type V: Onderbord gebruikt samen met E1, E3 en de E9 reeks dat een periode aanduidt",
+    "searchQuery": "weekday work commute",
+    "imagePath": "verkeersborden/images/GV_Van_maandag_tot_vrijdag.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 277,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 277
+    }
+  },
+  {
+    "name": "sign_GVIIB",
+    "signId": "GVIIb",
+    "signName": "Type VIIb: Onderbord gebruikt samen met E5, E7 en de E9 reeks dat aanduidt dat de parkeertijd beperkt is en dat een",
+    "searchQuery": "cargo loading truck",
+    "imagePath": "verkeersborden/images/GVIIb.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 429,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 429
+    }
+  },
+  {
+    "name": "sign_GVIID_HANDICAP",
+    "signId": "GVIId_Handicap",
+    "signName": "Type VIId: Onderbord gebruikt samen met de E9 reeks dat aanduidt dat de parkeerplaats voorbehouden is voor voertuigen gebruikt worden door personen met een beperking. Het mag ook op het bord E9a afgebeeld worden",
+    "searchQuery": "disabled parking wheelchair",
+    "imagePath": "verkeersborden/images/GVIId_Handicap.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 429,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 429
+    }
+  },
+  {
+    "name": "sign_GVIID_ELEKTRISCHE_WAGENS",
+    "signId": "GVIId_Elektrische_wagens",
+    "signName": "Type VIId: Onderbord gebruikt samen met de E9 reeks dat aanduidt dat de parkeerplaats voorbehouden is voor elektrische voertuigen. Eén of meerdere categorieën voertuigen mag afgebeeld worden",
+    "searchQuery": "tesla electric car charging",
+    "imagePath": "verkeersborden/images/GVIId_Elektrische_wagens.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 429,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 429
+    }
+  },
+  {
+    "name": "sign_GVIID_TAXIS",
+    "signId": "GVIId_Taxis",
+    "signName": "Type VIId: Onderbord gebruikt samen met de E9 reeks met de vermelding van de categorie van voertuigen voor dewelke het parkeren voorbehouden is. Ander mogelijke opschriften zijn o.a. \"- 5t\", \"bewoners\", \"parkeerkaart\", \"autodelen\" ..",
+    "searchQuery": "taxi cab waiting",
+    "imagePath": "verkeersborden/images/GVIId_Taxis.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 277,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 277
+    }
+  },
+  {
+    "name": "sign_E1",
+    "signId": "E1",
+    "signName": "Parkeerverbod",
+    "searchQuery": "no parking",
+    "imagePath": "verkeersborden/images/E1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_E3",
+    "signId": "E3",
+    "signName": "Stilstaan en parkeren verboden",
+    "searchQuery": "no stopping",
+    "imagePath": "verkeersborden/images/E3.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_E5",
+    "signId": "E5",
+    "signName": "E5:",
+    "searchQuery": "no parking odd",
+    "imagePath": "verkeersborden/images/E5.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_E7",
+    "signId": "E7",
+    "signName": "Parkeerverbod van de 16e tot het einde van de maand",
+    "searchQuery": "no parking even",
+    "imagePath": "verkeersborden/images/E7.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_E9",
+    "signId": "E9",
+    "signName": "Parkeren toegelaten",
+    "searchQuery": "car parking lot",
+    "imagePath": "verkeersborden/images/E9.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1424,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1424
+    }
+  },
+  {
+    "name": "sign_E9A",
+    "signId": "E9a",
+    "signName": "voorbehouden parkeerplaats voor persoon met een handicap",
+    "searchQuery": "parking allowed",
+    "imagePath": "verkeersborden/images/E9a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1439,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1439
+    }
+  },
+  {
+    "name": "sign_E9B",
+    "signId": "E9b",
+    "signName": "Parkeren uitsluitend voor motorfietsen, personenauto's, auto's voor dubbelgebruik en minibussen",
+    "searchQuery": "electric car charging",
+    "imagePath": "verkeersborden/images/E9b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E9C",
+    "signId": "E9c",
+    "signName": "Parkeren uitsluitend voor lichte vrachtauto’s en vrachtauto’s",
+    "searchQuery": "handicap parking",
+    "imagePath": "verkeersborden/images/E9c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1452,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1452
+    }
+  },
+  {
+    "name": "sign_E9D",
+    "signId": "E9d",
+    "signName": "Parkeren uitsluitend voor autocars",
+    "searchQuery": "parking disc",
+    "imagePath": "verkeersborden/images/E9d.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1452,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1452
+    }
+  },
+  {
+    "name": "sign_E9E",
+    "signId": "E9e",
+    "signName": "Verplicht parkeren op de berm of op het trottoir",
+    "searchQuery": "cars only parking",
+    "imagePath": "verkeersborden/images/E9e.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E9F",
+    "signId": "E9f",
+    "signName": "Verplicht parkeren deels op de berm of",
+    "searchQuery": "trucks only parking",
+    "imagePath": "verkeersborden/images/E9f.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E9G",
+    "signId": "E9g",
+    "signName": "Verplicht parkeren op de rijbaan",
+    "searchQuery": "bus parking",
+    "imagePath": "verkeersborden/images/E9g.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E9H",
+    "signId": "E9h",
+    "signName": "Parkeren uitsluitend voor kampeerauto's",
+    "searchQuery": "camper motorhome parking",
+    "imagePath": "verkeersborden/images/E9h.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E9I",
+    "signId": "E9i",
+    "signName": "Parkeren uitsluitend voor motorfietsen",
+    "searchQuery": "carpool ride share",
+    "imagePath": "verkeersborden/images/E9i.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E9J",
+    "signId": "E9j",
+    "signName": "Parkeren in bepaalde tijdsperioden voorbehouden voor specifieke categorieën van voertuigen",
+    "searchQuery": "electric car plug",
+    "imagePath": "verkeersborden/images/E9j.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1444,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1444
+    }
+  },
+  {
+    "name": "sign_E11",
+    "signId": "E11",
+    "signName": "E11:",
+    "searchQuery": "residential parking permit",
+    "imagePath": "verkeersborden/images/E11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 961,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 961
+    }
+  },
+  {
+    "name": "sign_M19",
+    "signId": "M19",
+    "signName": "Onderbord gebruikt samen met E9a. Het onderbord duidt duidt aan dat het parkeren voorbehouden is voor speed pedelecs",
+    "searchQuery": "parking zone car",
+    "imagePath": "verkeersborden/images/M19.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1358,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1358
+    }
+  },
+  {
+    "name": "sign_M20",
+    "signId": "M20",
+    "signName": "Onderbord gebruikt samen met E9a. Het onderbord duidt duidt aan dat het parkeren voorbehouden is voor fietsen en speed pedelecs",
+    "searchQuery": "parking zone car",
+    "imagePath": "verkeersborden/images/M20.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1053,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1053
+    }
+  },
+  {
+    "name": "sign_GVIIC_30MIN",
+    "signId": "GVIIc_30min",
+    "signName": "Type VIIc: Onderbord gebruikt samen met de E9 reeks dat aanduidt dat de parkeertijd beperkt is",
+    "searchQuery": "thirty minutes hurry quick",
+    "imagePath": "verkeersborden/images/GVIIc_30min.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 277,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 277
+    }
+  },
+  {
+    "name": "sign_GV_VAN_7_TOT_19U",
+    "signId": "GV_Van_7_tot_19u",
+    "signName": "Type V: Onderbord gebruikt samen met E1, E3 en de E9 reeks dat een periode aanduidt",
+    "searchQuery": "clock time working hours",
+    "imagePath": "verkeersborden/images/GV_Van_7_tot_19u.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 277,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 277
+    }
+  },
+  {
+    "name": "sign_F1BH",
+    "signId": "F1bh",
+    "signName": "Begin van een bebouwde kom",
+    "searchQuery": "city village entrance",
+    "imagePath": "verkeersborden/images/F1bh.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 575,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 575
+    }
+  },
+  {
+    "name": "sign_F1BV",
+    "signId": "F1bv",
+    "signName": "Begin van een bebouwde kom",
+    "searchQuery": "town city limits",
+    "imagePath": "verkeersborden/images/F1bv.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1475,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1475
+    }
+  },
+  {
+    "name": "sign_F1",
+    "signId": "F1",
+    "signName": "Begin van een bebouwde kom. (afgeschaft sinds 2015)",
+    "searchQuery": "entering village town",
+    "imagePath": "verkeersborden/images/F1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 575,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 575
+    }
+  },
+  {
+    "name": "sign_F3BH",
+    "signId": "F3bh",
+    "signName": "Einde van een bebouwde kom",
+    "searchQuery": "leaving town country",
+    "imagePath": "verkeersborden/images/F3bh.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 578,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 578
+    }
+  },
+  {
+    "name": "sign_F3BV",
+    "signId": "F3bv",
+    "signName": "Einde van een bebouwde kom",
+    "searchQuery": "goodbye city country",
+    "imagePath": "verkeersborden/images/F3bv.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1475,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1475
+    }
+  },
+  {
+    "name": "sign_F3",
+    "signId": "F3",
+    "signName": "Einde van een bebouwde kom. (afgeschaft sinds 2015)",
+    "searchQuery": "leaving town",
+    "imagePath": "verkeersborden/images/F3.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 578,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 578
+    }
+  },
+  {
+    "name": "sign_F4A",
+    "signId": "F4a",
+    "signName": "Begin van een zone met een snelheidsbeperking van 30 km per uur",
+    "searchQuery": "slow 30 km speed zone",
+    "imagePath": "verkeersborden/images/F4a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1437,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1437
+    }
+  },
+  {
+    "name": "sign_F4B",
+    "signId": "F4b",
+    "signName": "Einde van een zone met een snelheidsbeperking van 30 km per uur",
+    "searchQuery": "end speed 30 zone",
+    "imagePath": "verkeersborden/images/F4b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F5",
+    "signId": "F5",
+    "signName": "Begin van een autosnelweg",
+    "searchQuery": "highway entrance",
+    "imagePath": "verkeersborden/images/F5.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1436,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1436
+    }
+  },
+  {
+    "name": "sign_F7",
+    "signId": "F7",
+    "signName": "Einde van een autosnelweg",
+    "searchQuery": "highway exit",
+    "imagePath": "verkeersborden/images/F7.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1436,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1436
+    }
+  },
+  {
+    "name": "sign_F8",
+    "signId": "F8",
+    "signName": "F8:",
+    "searchQuery": "highway telephone",
+    "imagePath": "verkeersborden/images/F8.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1421,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1421
+    }
+  },
+  {
+    "name": "sign_F9",
+    "signId": "F9",
+    "signName": "Autoweg",
+    "searchQuery": "cars only road",
+    "imagePath": "verkeersborden/images/F9.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F11",
+    "signId": "F11",
+    "signName": "Einde van een autoweg",
+    "searchQuery": "end car road",
+    "imagePath": "verkeersborden/images/F11.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F12A",
+    "signId": "F12a",
+    "signName": "Begin van een",
+    "searchQuery": "residential living street",
+    "imagePath": "verkeersborden/images/F12a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 644,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 644
+    }
+  },
+  {
+    "name": "sign_F12B",
+    "signId": "F12b",
+    "signName": "Einde van een woonerf of van een erf",
+    "searchQuery": "end living street",
+    "imagePath": "verkeersborden/images/F12b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 647,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 647
+    }
+  },
+  {
+    "name": "sign_F13",
+    "signId": "F13",
+    "signName": "Verkeersbord dat pijlen op een rijbaan aankondigt en de",
+    "searchQuery": "information sign",
+    "imagePath": "verkeersborden/images/F13.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1241,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1241
+    }
+  },
+  {
+    "name": "sign_F14",
+    "signId": "F14",
+    "signName": "F14:",
+    "searchQuery": "dead end street",
+    "imagePath": "verkeersborden/images/F14.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 961,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 961
+    }
+  },
+  {
+    "name": "sign_F15",
+    "signId": "F15",
+    "signName": "Verkeersbord dat de keuze van een richting voorschrijft",
+    "searchQuery": "lane choice",
+    "imagePath": "verkeersborden/images/F15.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 378,
+      "height": 536,
+      "isRotated": false,
+      "originalWidth": 378,
+      "originalHeight": 536
+    }
+  },
+  {
+    "name": "sign_F17",
+    "signId": "F17",
+    "signName": "F17:",
+    "searchQuery": "bus taxi lane bypass",
+    "imagePath": "verkeersborden/images/F17.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 748,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 748
+    }
+  },
+  {
+    "name": "sign_F18",
+    "signId": "F18",
+    "signName": "Bijzondere overrijdbare bedding",
+    "searchQuery": "bus lane tram crossing",
+    "imagePath": "verkeersborden/images/F18.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 748,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 748
+    }
+  },
+  {
+    "name": "sign_F19",
+    "signId": "F19",
+    "signName": "Openbare weg met",
+    "searchQuery": "one way street",
+    "imagePath": "verkeersborden/images/F19.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F21",
+    "signId": "F21",
+    "signName": "Rechts of links voorbijrijden toegelaten",
+    "searchQuery": "end one way",
+    "imagePath": "verkeersborden/images/F21.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 638,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 638
+    }
+  },
+  {
+    "name": "sign_F23A",
+    "signId": "F23a",
+    "signName": "Nummerbord van een gewone weg",
+    "searchQuery": "scenic country road",
+    "imagePath": "verkeersborden/images/F23a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 644,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 644
+    }
+  },
+  {
+    "name": "sign_F23B",
+    "signId": "F23b",
+    "signName": "Nummerbord van een autosnelweg",
+    "searchQuery": "autobahn highway fast",
+    "imagePath": "verkeersborden/images/F23b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 643,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 643
+    }
+  },
+  {
+    "name": "sign_F23C",
+    "signId": "F23c",
+    "signName": "Nummerbord van een internationale weg",
+    "searchQuery": "european international road trip",
+    "imagePath": "verkeersborden/images/F23c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 633,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 633
+    }
+  },
+  {
+    "name": "sign_F23D",
+    "signId": "F23d",
+    "signName": "Nummerbord van een ringweg",
+    "searchQuery": "ring road beltway",
+    "imagePath": "verkeersborden/images/F23d.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 643,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 643
+    }
+  },
+  {
+    "name": "sign_F25",
+    "signId": "F25",
+    "signName": "Voorwegwijzer",
+    "searchQuery": "highway destination sign",
+    "imagePath": "verkeersborden/images/F25.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 868,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 868
+    }
+  },
+  {
+    "name": "sign_F27",
+    "signId": "F27",
+    "signName": "Voorwegwijzer",
+    "searchQuery": "navigation exit sign",
+    "imagePath": "verkeersborden/images/F27.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 869,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 869
+    }
+  },
+  {
+    "name": "sign_F29",
+    "signId": "F29",
+    "signName": "Wegwijzer",
+    "searchQuery": "road trip directions",
+    "imagePath": "verkeersborden/images/F29.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 148,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 148
+    }
+  },
+  {
+    "name": "sign_F31",
+    "signId": "F31",
+    "signName": "Wegwijzer naar een autosnelweg",
+    "searchQuery": "highway entrance ramp",
+    "imagePath": "verkeersborden/images/F31.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 172,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 172
+    }
+  },
+  {
+    "name": "sign_F33A",
+    "signId": "F33a",
+    "signName": "Wegwijzer naar een ringweg",
+    "searchQuery": "beltway detour ring",
+    "imagePath": "verkeersborden/images/F33a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 258,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 258
+    }
+  },
+  {
+    "name": "sign_F33B",
+    "signId": "F33b",
+    "signName": "Wegwijzer naar vallei of waterloop",
+    "searchQuery": "river valley scenic nature",
+    "imagePath": "verkeersborden/images/F33b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 152,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 152
+    }
+  },
+  {
+    "name": "sign_F33C",
+    "signId": "F33c",
+    "signName": "Wegwijzer naar toeristische attracties of sportcentra",
+    "searchQuery": "tourist attraction theme park",
+    "imagePath": "verkeersborden/images/F33c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 193,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 193
+    }
+  },
+  {
+    "name": "sign_F34A",
+    "signId": "F34a",
+    "signName": "Etablissementen van openbaar nut",
+    "searchQuery": "pedestrian crossing zone",
+    "imagePath": "verkeersborden/images/F34a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 120,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 120
+    }
+  },
+  {
+    "name": "sign_F35",
+    "signId": "F35",
+    "signName": "Wegwijzer naar toeristische attracties of sportcentra",
+    "searchQuery": "sports center stadium",
+    "imagePath": "verkeersborden/images/F35.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 123,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 123
+    }
+  },
+  {
+    "name": "sign_F37",
+    "signId": "F37",
+    "signName": "Wegwijzer naar hotels, motels, restaurants (klein formaat)",
+    "searchQuery": "hotel motel restaurant",
+    "imagePath": "verkeersborden/images/F37.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 122,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 122
+    }
+  },
+  {
+    "name": "sign_F39",
+    "signId": "F39",
+    "signName": "Voorwegwijzer wegomlegging",
+    "searchQuery": "detour construction route",
+    "imagePath": "verkeersborden/images/F39.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 959,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 959
+    }
+  },
+  {
+    "name": "sign_F41",
+    "signId": "F41",
+    "signName": "Wegomlegging",
+    "searchQuery": "hospital sign",
+    "imagePath": "verkeersborden/images/F41.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 361,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 361
+    }
+  },
+  {
+    "name": "sign_F43",
+    "signId": "F43",
+    "signName": "Plaatsnaambord",
+    "searchQuery": "tourist information",
+    "imagePath": "verkeersborden/images/F43.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 172,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 172
+    }
+  },
+  {
+    "name": "sign_F45",
+    "signId": "F45",
+    "signName": "F45:",
+    "searchQuery": "tunnel mountain passage",
+    "imagePath": "verkeersborden/images/F45.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1433,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1433
+    }
+  },
+  {
+    "name": "sign_F45B",
+    "signId": "F45b",
+    "signName": "F45b:",
+    "searchQuery": "tunnel fire emergency exit",
+    "imagePath": "verkeersborden/images/F45b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1433,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1433
+    }
+  },
+  {
+    "name": "sign_F47",
+    "signId": "F47",
+    "signName": "Einde van de werken",
+    "searchQuery": "road work finished celebrate",
+    "imagePath": "verkeersborden/images/F47.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 764,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 764
+    }
+  },
+  {
+    "name": "sign_F49",
+    "signId": "F49",
+    "signName": "F49:",
+    "searchQuery": "first aid emergency",
+    "imagePath": "verkeersborden/images/F49.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 515,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 515
+    }
+  },
+  {
+    "name": "sign_F50",
+    "signId": "F50",
+    "signName": "Oversteekplaats voor fietsers",
+    "searchQuery": "cyclists bike lane cross",
+    "imagePath": "verkeersborden/images/F50.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F50BIS",
+    "signId": "F50bis",
+    "signName": "Waarschuwing voor rechtsafslaande bestuurders voor fietsers",
+    "searchQuery": "turning car watch bikes",
+    "imagePath": "verkeersborden/images/F50bis.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 644,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 644
+    }
+  },
+  {
+    "name": "sign_F51",
+    "signId": "F51",
+    "signName": "Ondergrondse of bovengrondse oversteekplaats voor voetgangers",
+    "searchQuery": "gas station",
+    "imagePath": "verkeersborden/images/F51.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1433,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1433
+    }
+  },
+  {
+    "name": "sign_F52",
+    "signId": "F52",
+    "signName": "nooduitgang",
+    "searchQuery": "emergency exit running green",
+    "imagePath": "verkeersborden/images/F52.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 960,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 960
+    }
+  },
+  {
+    "name": "sign_F52BIS",
+    "signId": "F52bis",
+    "signName": "Vluchtroute",
+    "searchQuery": "escape route safety",
+    "imagePath": "verkeersborden/images/F52bis.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 319,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 319
+    }
+  },
+  {
+    "name": "sign_F53",
+    "signId": "F53",
+    "signName": "Verplegingsinrichting",
+    "searchQuery": "car breakdown repair",
+    "imagePath": "verkeersborden/images/F53.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1433,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1433
+    }
+  },
+  {
+    "name": "sign_F55",
+    "signId": "F55",
+    "signName": "Hulppost",
+    "searchQuery": "car wash",
+    "imagePath": "verkeersborden/images/F55.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F56",
+    "signId": "F56",
+    "signName": "F56:",
+    "searchQuery": "breakdown bay highway safe",
+    "imagePath": "verkeersborden/images/F56.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1435,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1435
+    }
+  },
+  {
+    "name": "sign_F57",
+    "signId": "F57",
+    "signName": "Waterloop",
+    "searchQuery": "drinking water",
+    "imagePath": "verkeersborden/images/F57.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 65,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 65
+    }
+  },
+  {
+    "name": "sign_F59",
+    "signId": "F59",
+    "signName": "Aankondiging van een parking",
+    "searchQuery": "public restroom",
+    "imagePath": "verkeersborden/images/F59.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F60",
+    "signId": "F60",
+    "signName": "Aankondiging van een overdekte parking",
+    "searchQuery": "indoor underground parking",
+    "imagePath": "verkeersborden/images/F60.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1432,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1432
+    }
+  },
+  {
+    "name": "sign_F61",
+    "signId": "F61",
+    "signName": "Telefoon",
+    "searchQuery": "electric charging station",
+    "imagePath": "verkeersborden/images/F61.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1433,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1433
+    }
+  },
+  {
+    "name": "sign_F62",
+    "signId": "F62",
+    "signName": "Noodtelefoon",
+    "searchQuery": "emergency phone sos call",
+    "imagePath": "verkeersborden/images/F62.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1422,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1422
+    }
+  },
+  {
+    "name": "sign_F63",
+    "signId": "F63",
+    "signName": "Tankstation",
+    "searchQuery": "hotel motel",
+    "imagePath": "verkeersborden/images/F63.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1433,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1433
+    }
+  },
+  {
+    "name": "sign_F65",
+    "signId": "F65",
+    "signName": "Hotel of motel",
+    "searchQuery": "restaurant eating",
+    "imagePath": "verkeersborden/images/F65.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F67",
+    "signId": "F67",
+    "signName": "Restaurant",
+    "searchQuery": "bar drinks",
+    "imagePath": "verkeersborden/images/F67.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F69",
+    "signId": "F69",
+    "signName": "Drankgelegenheid",
+    "searchQuery": "camping tent",
+    "imagePath": "verkeersborden/images/F69.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F71",
+    "signId": "F71",
+    "signName": "Kampeerterrein",
+    "searchQuery": "youth hostel",
+    "imagePath": "verkeersborden/images/F71.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F73",
+    "signId": "F73",
+    "signName": "Caravanterrein",
+    "searchQuery": "airport plane",
+    "imagePath": "verkeersborden/images/F73.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F75",
+    "signId": "F75",
+    "signName": "Jeugdherberg",
+    "searchQuery": "train station",
+    "imagePath": "verkeersborden/images/F75.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F77",
+    "signId": "F77",
+    "signName": "Trefpunt toeristische informatie",
+    "searchQuery": "harbour port",
+    "imagePath": "verkeersborden/images/F77.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1442,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1442
+    }
+  },
+  {
+    "name": "sign_F79",
+    "signId": "F79",
+    "signName": "Aankondiging vermindering rijstroken",
+    "searchQuery": "merge lanes zipper merge",
+    "imagePath": "verkeersborden/images/F79.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1143,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1143
+    }
+  },
+  {
+    "name": "sign_F81",
+    "signId": "F81",
+    "signName": "Aankondiging uitwijking rijstroken",
+    "searchQuery": "chicane lane detour",
+    "imagePath": "verkeersborden/images/F81.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1137,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1137
+    }
+  },
+  {
+    "name": "sign_F83",
+    "signId": "F83",
+    "signName": "Doorsteek middenberm",
+    "searchQuery": "median crossover highway",
+    "imagePath": "verkeersborden/images/F83.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1137,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1137
+    }
+  },
+  {
+    "name": "sign_F85",
+    "signId": "F85",
+    "signName": "Verkeer toegelaten in beide richtingen op een deel van de rijbaan met eenrichtingsverkeer",
+    "searchQuery": "two way street caution",
+    "imagePath": "verkeersborden/images/F85.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 858,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 858
+    }
+  },
+  {
+    "name": "sign_F87",
+    "signId": "F87",
+    "signName": "Verhoogde inrichting(en)",
+    "searchQuery": "speed hump road jump",
+    "imagePath": "verkeersborden/images/F87.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 961,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 961
+    }
+  },
+  {
+    "name": "sign_F89",
+    "signId": "F89",
+    "signName": "Aankondiging snelheidsbeperking per rijstrook",
+    "searchQuery": "lane speed limit overhead",
+    "imagePath": "verkeersborden/images/F89.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 834,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 834
+    }
+  },
+  {
+    "name": "sign_F91",
+    "signId": "F91",
+    "signName": "Snelheidsbeperking per rijstrook",
+    "searchQuery": "variable speed limit sign",
+    "imagePath": "verkeersborden/images/F91.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 639,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 639
+    }
+  },
+  {
+    "name": "sign_F93",
+    "signId": "F93",
+    "signName": "Radio verkeersinformatie",
+    "searchQuery": "car radio road music",
+    "imagePath": "verkeersborden/images/F93.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1432,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1432
+    }
+  },
+  {
+    "name": "sign_F95",
+    "signId": "F95",
+    "signName": "F95:",
+    "searchQuery": "toll road booth payment",
+    "imagePath": "verkeersborden/images/F95.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1441,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1441
+    }
+  },
+  {
+    "name": "sign_F97",
+    "signId": "F97",
+    "signName": "Versmalling weg",
+    "searchQuery": "lane ends bottleneck merge",
+    "imagePath": "verkeersborden/images/F97.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1439,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1439
+    }
+  },
+  {
+    "name": "sign_F98",
+    "signId": "F98",
+    "signName": "F98:",
+    "searchQuery": "lane layout arrows",
+    "imagePath": "verkeersborden/images/F98.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1429,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1429
+    }
+  },
+  {
+    "name": "sign_F99A",
+    "signId": "F99a",
+    "signName": "Voorbehouden voor voetgangers, fietsers en ruiters",
+    "searchQuery": "bicycle street",
+    "imagePath": "verkeersborden/images/F99a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F99B",
+    "signId": "F99b",
+    "signName": "Voorbehouden voor voetgangers en fietsers",
+    "searchQuery": "end bicycle street",
+    "imagePath": "verkeersborden/images/F99b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F99C",
+    "signId": "F99c",
+    "signName": "Voorbehouden voor landbouwvoertuigen, voetgangers, fietsers en ruiters",
+    "searchQuery": "tractor farm horses nature",
+    "imagePath": "verkeersborden/images/F99c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F101A",
+    "signId": "F101a",
+    "signName": "Einde F99a",
+    "searchQuery": "pedestrian zone",
+    "imagePath": "verkeersborden/images/F101a.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F101B",
+    "signId": "F101b",
+    "signName": "Einde F99b",
+    "searchQuery": "end pedestrian zone",
+    "imagePath": "verkeersborden/images/F101b.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F101C",
+    "signId": "F101c",
+    "signName": "Einde F99c",
+    "searchQuery": "end country lane farm",
+    "imagePath": "verkeersborden/images/F101c.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 962,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 962
+    }
+  },
+  {
+    "name": "sign_F103",
+    "signId": "F103",
+    "signName": "Begin",
+    "searchQuery": "pedestrian precinct walking street",
+    "imagePath": "verkeersborden/images/F103.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1756,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1756
+    }
+  },
+  {
+    "name": "sign_F105",
+    "signId": "F105",
+    "signName": "Einde voetgangerszone",
+    "searchQuery": "end pedestrian precinct",
+    "imagePath": "verkeersborden/images/F105.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1755,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1755
+    }
+  },
+  {
+    "name": "sign_F107",
+    "signId": "F107",
+    "signName": "Inhaaltoelating. (afgeschaft sinds 2019)",
+    "searchQuery": "truck passing lane",
+    "imagePath": "verkeersborden/images/F107.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1439,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1439
+    }
+  },
+  {
+    "name": "sign_F109",
+    "signId": "F109",
+    "signName": "Einde inhaaltoelating. (afgeschaft sinds 2019)",
+    "searchQuery": "end truck passing",
+    "imagePath": "verkeersborden/images/F109.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1438,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1438
+    }
+  },
+  {
+    "name": "sign_F111",
+    "signId": "F111",
+    "signName": "Begin van een",
+    "searchQuery": "speed zone",
+    "imagePath": "verkeersborden/images/F111.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 512,
+      "height": 771,
+      "isRotated": false,
+      "originalWidth": 512,
+      "originalHeight": 771
+    }
+  },
+  {
+    "name": "sign_F113",
+    "signId": "F113",
+    "signName": "Einde van een",
+    "searchQuery": "end bicycle",
+    "imagePath": "verkeersborden/images/F113.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1472,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1472
+    }
+  },
+  {
+    "name": "sign_F117",
+    "signId": "F117",
+    "signName": "Begin van een",
+    "searchQuery": "low emission zone eco green",
+    "imagePath": "verkeersborden/images/F117.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1441,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1441
+    }
+  },
+  {
+    "name": "sign_F118",
+    "signId": "F118",
+    "signName": "Einde van een lage emissiezone",
+    "searchQuery": "end low emission zone",
+    "imagePath": "verkeersborden/images/F118.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1440,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1440
+    }
+  },
+  {
+    "name": "sign_F119",
+    "signId": "F119",
+    "signName": "Begin van een luchthavengebied",
+    "searchQuery": "airplane takeoff airport flight",
+    "imagePath": "verkeersborden/images/F119.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1438,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1438
+    }
+  },
+  {
+    "name": "sign_F120",
+    "signId": "F120",
+    "signName": "Einde van een luchthavengebied",
+    "searchQuery": "leaving airport travel",
+    "imagePath": "verkeersborden/images/F120.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1438,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1438
+    }
+  },
+  {
+    "name": "sign_F34B1",
+    "signId": "F34b1",
+    "signName": "Wegwijzer voor bepaalde weggebruikers",
+    "searchQuery": "cycling bike route path",
+    "imagePath": "verkeersborden/images/F34b1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 121,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 121
+    }
+  },
+  {
+    "name": "sign_F34C1",
+    "signId": "F34c1",
+    "signName": "Wegwijzer voor bepaalde weggebruikers naar toeristische attracties of sportcentra",
+    "searchQuery": "castle monument tourism",
+    "imagePath": "verkeersborden/images/F34c1.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 121,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 121
+    }
+  },
+  {
+    "name": "sign_F34B2",
+    "signId": "F34b2",
+    "signName": "Wegwijzer voor bepaalde weggebruikers (alternatief formaat)",
+    "searchQuery": "hiking trail walking",
+    "imagePath": "verkeersborden/images/F34b2.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1434,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1434
+    }
+  },
+  {
+    "name": "sign_F34C2",
+    "signId": "F34c2",
+    "signName": "Wegwijzer voor bepaalde weggebruikers naar toeristische attracties of sportcentra (alternatief formaat)",
+    "searchQuery": "museum exhibition culture",
+    "imagePath": "verkeersborden/images/F34c2.png",
+    "type": "PLANAR",
+    "properties": {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 1434,
+      "isRotated": false,
+      "originalWidth": 960,
+      "originalHeight": 1434
+    }
+  }
+]

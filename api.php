@@ -112,48 +112,41 @@ if ($method === 'GET' && $path === '/posters') {
 } elseif ($method === 'POST' && $path === '/admin/logout') {
     session_destroy();
     jsonResponse(['message' => 'Uitgelogd']);
-} elseif ($method === 'POST' && $path === '/admin/rebuild-mind') {
-    // Handmatig .mind files herbouwen (admin only)
+} elseif ($method === 'POST' && ($path === '/admin/rebuild-mind' || $path === '/admin/regenerate-8w-targets')) {
+    // 8th Wall targets controleren en herbouwen (admin only)
     if (!isAdmin()) jsonResponse(['message' => 'Niet geautoriseerd'], 401);
     
-    // Trigger MindAR chunk rebuild with output capture
-    $result = triggerMindMerge(true);
-    logAdminActivity('REBUILD_MIND', 'Handmatige rebuild uitgevoerd');
+    $rows = $db->query("SELECT id, title, jpeg_filename FROM posters ORDER BY datetime(created_at) DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $rebuilt = [];
+    $missingJpeg = [];
     
-    // Zoek welke poster IDs zonder .mind zijn (gerapporteerd door merge script)
-    $missingIds = [];
-    foreach ($result['output'] as $line) {
-        if (strpos($line, 'MISSING_MIND_IDS:') === 0) {
-            $ids = explode(',', substr($line, strlen('MISSING_MIND_IDS:')));
-            $missingIds = array_filter(array_map('trim', $ids));
+    foreach ($rows as $r) {
+        $id = $r['id'];
+        $jpeg = $r['jpeg_filename'] ?? '';
+        $srcPath = UPLOADS_DIR . '/' . basename($jpeg);
+        if ($jpeg === '' || !is_file($srcPath)) {
+            $missingJpeg[] = ['id' => $id, 'title' => $r['title']];
+            continue;
+        }
+        if (autogeneratePosterTarget8w($id, $srcPath)) {
+            $db->prepare("UPDATE posters SET target8w_json = 'target8w.json', target8w_image = 'target8w.jpg' WHERE id = ?")
+               ->execute([$id]);
+            $rebuilt[] = ['id' => $id, 'title' => $r['title']];
+        } else {
+            $missingJpeg[] = ['id' => $id, 'title' => $r['title']];
         }
     }
     
-    // Haal titels op voor de missing IDs
-    $missingPosters = [];
-    if (!empty($missingIds)) {
-        try {
-            $db = getDatabase();
-            foreach ($missingIds as $missingId) {
-                $stmt = $db->prepare("SELECT id, title FROM posters WHERE id = ?");
-                $stmt->execute([$missingId]);
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($row) {
-                    $missingPosters[] = ['id' => $row['id'], 'title' => $row['title']];
-                } else {
-                    $missingPosters[] = ['id' => $missingId, 'title' => '(onbekend)'];
-                }
-            }
-        } catch (Exception $e) {
-            // Negeer DB-fout, stuur toch door
-        }
-    }
+    logAdminActivity('REBUILD_8W_TARGETS', count($rebuilt) . ' targets herbouwd');
     
     jsonResponse([
-        'success' => $result['returnVar'] === 0,
-        'message' => 'Mind rebuild ' . ($result['returnVar'] === 0 ? 'succesvol' : 'mislukt'),
-        'output' => $result['output'],
-        'missingMind' => $missingPosters
+        'success' => true,
+        'ok' => true,
+        'message' => count($rebuilt) . ' 8th Wall target(s) gecontroleerd / gegenereerd.',
+        'rebuilt' => $rebuilt,
+        'missingMind' => $missingJpeg,
+        'missingJpeg' => $missingJpeg,
+        'output' => [count($rebuilt) . ' 8th Wall targets gereed']
     ]);
 } elseif ($method === 'GET' && $path === '/admin/settings') {
     // Haal admin-instellingen op (api keys etc.) — opgeslagen in data/settings.json

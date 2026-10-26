@@ -144,33 +144,32 @@ function createMemebordenPosters() {
     const generatedRaw = chunksData?._meta?.generated || null;
     const generatedDate = generatedRaw
         ? (new Date(`${generatedRaw}T00:00:00Z`).toISOString())
-        : '2024-01-01T00:00:00.000Z';
+        : '2026-01-01T00:00:00.000Z';
     
     return chunksData.chunks.map(chunk => {
         const chunkSigns = getSignsForChunk(chunk.id);
         const galleryImages = chunkSigns.map(s => `/${s.image}?v=${MEMEBORDEN_CONFIG.cacheVer}`);
-        const chunkLabel = `MB ${chunk.id}`;
+        const serieShort = chunk.serie || chunk.id.replace('serie', '');
+        const chunkLabel = `MB Serie ${serieShort}`;
         
         return {
             id: `memeborden-${chunk.id}`,
-            title: `MB ${chunk.id}`,
+            title: `MB Serie ${serieShort}`,
             description: `${chunk.name} (${chunk.signs.length} borden)`,
-            location_description: 'Belgie, overal',
+            location_description: 'België, overal',
             created_at: generatedDate,
             upload_date: generatedDate,
             downloads: 0,
             thumbnail: galleryImages.length > 0 ? galleryImages[0] : 'img/placeholder.png',
             gallery_images: galleryImages,
-            ar_marker: 'memeborden',    // Markeer als AR-enabled
+            ar_marker: 'memeborden',
             project: 'memeborden',
-            isMemeborden: true,          // Speciale vlag voor herkenning
-            memebordenChunkId: chunk.id, // Chunk ID voor AR scene koppeling
+            isMemeborden: true,
+            memebordenChunkId: chunk.id,
             memebordenChunkName: chunk.name,
             chunkKey: `memeborden-${chunk.id}`,
             chunkLabel,
-            // Geen layers - Memeborden heeft dynamische GIF overlay
             layers: null,
-            // Geen download bestanden
             jpeg_url: null,
             pdf_a3_url: null,
             pdf_a0_url: null,
@@ -182,8 +181,7 @@ function createMemebordenPosters() {
 
 /**
  * Genereer aangepaste window HTML voor Memeborden poster
- * Per-chunk versie: toont info specifiek voor de chunk van deze poster
- * @param {Object} poster - Het Memeborden poster object (met memebordenChunkId)
+ * @param {Object} poster - Het Memeborden poster object
  * @returns {string} Terminal output HTML
  */
 function getMemebordenTerminalHTML(poster) {
@@ -192,7 +190,7 @@ function getMemebordenTerminalHTML(poster) {
     const chunkSigns = chunkId ? getSignsForChunk(chunkId) : [];
     const totalSigns = allSignsFlat ? allSignsFlat.length : 0;
     
-    // Bouw borden-lijst voor deze chunk
+    // Bouw borden-lijst voor deze serie
     let signsHTML = '';
     if (chunkSigns.length > 0) {
         signsHTML = chunkSigns.map(sign => {
@@ -200,24 +198,27 @@ function getMemebordenTerminalHTML(poster) {
         }).join('');
     }
     
-    const chunkName = chunkMeta ? chunkMeta.name : 'Onbekend';
+    const chunkName = chunkMeta ? chunkMeta.name : (poster.title || 'Onbekend');
     const chunkDesc = chunkMeta ? chunkMeta.description : '';
     
     return `
         <div class="term-line"><span class="term-prompt">$</span> cat ./${chunkId || 'memeborden'}.info</div>
         <div class="term-output">
-            <div class="term-row"><span class="term-key">CHUNK</span><span class="term-val">${chunkName}</span></div>
+            <div class="term-row"><span class="term-key">PROJECT</span><span class="term-val">MEMEBORDEN</span></div>
+            <div class="term-row"><span class="term-key">ENGINE</span><span class="term-val term-ok">8th Wall XR (Universal Tracking)</span></div>
+            <div class="term-row"><span class="term-key">SERIE</span><span class="term-val">${chunkName}</span></div>
             <div class="term-row"><span class="term-key">DESC</span><span class="term-val">${chunkDesc}</span></div>
-            <div class="term-row"><span class="term-key">BORDEN</span><span class="term-val">${chunkSigns.length} van ${totalSigns} totaal</span></div>
+            <div class="term-row"><span class="term-key">BORDEN</span><span class="term-val">${chunkSigns.length} in deze serie (${totalSigns} totaal in catalogus)</span></div>
+            <div class="term-row"><span class="term-key">CHUNKS</span><span class="term-val term-ok">Geen (Direct Multi-Target)</span></div>
             <div class="term-row"><span class="term-key">STATUS</span><span class="term-val term-ok">ONLINE</span></div>
         </div>
         <div class="term-line"><span class="term-prompt">$</span> ls ./borden/</div>
         <div class="term-output">
             ${signsHTML}
         </div>
-        <div class="term-line"><span class="term-prompt">$</span> echo "Scan een van deze borden!"</div>
+        <div class="term-line"><span class="term-prompt">$</span> echo "Scan elk bord in het straatbeeld!"</div>
         <div class="term-output">
-            <div class="term-row"><span class="term-val" style="color: #0f0;">Open op je telefoon en richt de camera op een bord uit deze chunk.</span></div>
+            <div class="term-row"><span class="term-val" style="color: #0f0;">Open op je smartphone en richt de camera op een bord. 8th Wall herkent alle 237 borden tegelijk zonder chunks!</span></div>
         </div>
         <div class="term-line term-cursor"><span class="term-prompt">$</span> <span class="cursor">_</span></div>
     `;
@@ -737,7 +738,7 @@ function getMemebordenManifestChunks() {
  * @returns {Promise<Array<Object>|null>} Array van poster objecten (1 per chunk) of null bij fout
  */
 async function initMemeborden() {
-    console.log('[Memeborden] Module initialiseren (v2 multi-chunk)...');
+    console.log('[Memeborden] Module initialiseren (8th Wall XR - Geen Chunks)...');
     
     await loadSignsData();
     
@@ -747,7 +748,7 @@ async function initMemeborden() {
     }
     
     const posters = createMemebordenPosters();
-    console.log(`[Memeborden] ${posters.length} chunk-posters aangemaakt: ${allSignsFlat.length} borden, ${chunksData.chunks.length} chunks`);
+    console.log(`[Memeborden] ${posters.length} serie-posters aangemaakt met ${allSignsFlat.length} borden totaal (8th Wall)`);
     
     return posters;
 }
@@ -763,3 +764,6 @@ window.getMemebordenChunkIndex = getMemebordenChunkIndex;
 window.getMemebordenTerminalHTML = getMemebordenTerminalHTML;
 window.getMemebordenManifestChunks = getMemebordenManifestChunks;
 window.loadSignsData = loadSignsData;
+window.fetchAndDisplayGif = fetchAndDisplayGif;
+window.hideGifOverlay = hideGifOverlay;
+window.stopManualGifAnimation = stopManualGifAnimation;

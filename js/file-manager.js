@@ -80,18 +80,6 @@ function createFileManagerUI() {
                     </div>
                     
                     <div class="sidebar-section">
-                        <div class="sidebar-box" id="chunk-box">
-                            <div class="box-header"><span class="box-title">AR CHUNKS</span></div>
-                            <div class="box-content">
-                                <nav class="sidebar-nav" id="chunk-nav">
-                                    <!-- Dynamisch gevuld met chunks -->
-                                </nav>
-                            </div>
-                            <div class="box-footer"></div>
-                        </div>
-                    </div>
-
-                    <div class="sidebar-section">
                         <div class="sidebar-box" id="project-box">
                             <div class="box-header"><span class="box-title">PROJECTEN</span></div>
                             <div class="box-content">
@@ -276,39 +264,13 @@ async function loadFilesFromPosters() {
             if (!window.allPosters) window.allPosters = [];
         }
 
-        // Laad chunk manifest en voeg chunk info toe aan posters
-        try {
-            const manifestResp = await fetch(`assets/chunks/manifest.json?t=${Date.now()}`, { cache: 'no-store' });
-            if (manifestResp.ok) {
-                const manifest = await manifestResp.json();
-                window.arManifest = manifest;
-                
-                // Voeg chunk info toe aan elke poster
-                manifest.chunks.forEach((chunk, chunkIndex) => {
-                    chunk.posterIds.forEach(posterId => {
-                        const poster = window.allPosters.find(p => p.id === posterId);
-                        if (poster) {
-                            poster.chunkIndex = chunkIndex;
-                            poster.chunkName = `Chunk ${chunkIndex + 1}`;
-                            poster.chunkKey = `default-${chunkIndex}`;
-                            poster.chunkLabel = `CHUNK_${chunkIndex + 1}`;
-                        }
-                    });
-                });
-                console.log(' Chunk info toegevoegd aan posters (desktop)');
-            }
-        } catch (e) {
-            console.log('Geen chunk manifest gevonden');
-        }
-        
         const posters = window.allPosters || [];
         
-        // Injecteer Memeborden synthetische posters (1 per chunk, indien module geladen)
+        // Injecteer Memeborden synthetische posters (indien module geladen)
         if (typeof window.initMemeborden === 'function') {
             try {
                 const memebordenPosters = await window.initMemeborden();
                 if (Array.isArray(memebordenPosters) && memebordenPosters.length > 0) {
-                    // Voeg elke chunk-poster toe als die nog niet bestaat
                     for (const mbPoster of memebordenPosters) {
                         if (!posters.find(p => p.id === mbPoster.id)) {
                             posters.push(mbPoster);
@@ -316,7 +278,7 @@ async function loadFilesFromPosters() {
                     }
                     posters.sort((a, b) => getPosterTimestamp(b) - getPosterTimestamp(a));
                     window.allPosters = posters;
-                    console.log(`[FileManager] ${memebordenPosters.length} Memeborden chunk-posters geïnjecteerd`);
+                    console.log(`[FileManager] ${memebordenPosters.length} Memeborden posters geïnjecteerd`);
                 }
             } catch (e) {
                 console.warn('[FileManager] Memeborden kon niet geladen worden:', e);
@@ -326,18 +288,14 @@ async function loadFilesFromPosters() {
         // Zorg voor consistente datum-sortering in alle weergaven.
         posters.sort((a, b) => getPosterTimestamp(b) - getPosterTimestamp(a));
         
-        // Update stats
-        // Gebruik manifest total als autoriteit voor AR count (accurater dan ar_marker veld)
-        const manifestArCount = window.arManifest
-            ? window.arManifest.chunks.reduce((sum, c) => sum + c.posterIds.length, 0)
-            : posters.filter(p => p.ar_marker).length;
+        // Update stats (8th Wall AR targets + markers)
+        const arCount = posters.filter(p => p.ar_marker || p.target8w).length;
         document.getElementById('total-files').textContent = posters.length;
-        document.getElementById('total-ar').textContent = manifestArCount;
-        // Download counts are intentionally removed from public UI
+        document.getElementById('total-ar').textContent = arCount;
         
         // Update nav counts
         document.querySelector('[data-filter="all"] .nav-count').textContent = `[${posters.length}]`;
-        document.querySelector('[data-filter="ar"] .nav-count').textContent = `[${manifestArCount}]`;
+        document.querySelector('[data-filter="ar"] .nav-count').textContent = `[${arCount}]`;
         document.querySelector('[data-filter="recent"] .nav-count').textContent = `[${Math.min(10, posters.length)}]`;
         
         // Build location nav
@@ -345,9 +303,6 @@ async function loadFilesFromPosters() {
 
         // Build project nav
         buildProjectNav(posters);
-        
-        // Build chunk nav
-        buildChunkNav(posters);
         
         // Render files
         renderFiles(posters);
@@ -421,15 +376,11 @@ function renderFiles(posters, filter = 'all') {
             filtered = sortedPosters.slice(0, 10);
             break;
         case 'ar':
-            // AR = heeft ar_marker OF zit in manifest (chunkIndex is gezet door manifest loader)
-            filtered = sortedPosters.filter(p => p.ar_marker || p.chunkIndex !== undefined || p.chunkKey !== undefined);
+            // AR = heeft 8th Wall target of ar_marker
+            filtered = sortedPosters.filter(p => p.target8w || p.ar_marker);
             break;
         default:
-            // Check voor chunk filter (chunk-0, chunk-1, etc)
-            if (filter.startsWith('chunkkey-')) {
-                const chunkKey = decodeURIComponent(filter.replace('chunkkey-', ''));
-                filtered = sortedPosters.filter(p => p.chunkKey === chunkKey);
-            } else if (filter.startsWith('project-')) {
+            if (filter.startsWith('project-')) {
                 const projectName = decodeURIComponent(filter.replace('project-', ''));
                 filtered = sortedPosters.filter(p => normalizeProjectName(p) === projectName);
             }
@@ -562,71 +513,6 @@ function buildProjectNav(posters) {
             renderFiles(window.allPosters || [], filter);
         });
     });
-}
-
-// Build chunk navigation from posters
-function buildChunkNav(posters) {
-    const chunkNav = document.getElementById('chunk-nav');
-    if (!chunkNav) return;
-    
-    // Verzamel unieke chunks (standaard + memeborden)
-    const chunks = new Map();
-    posters.forEach(p => {
-        const chunkKey = p.chunkKey !== undefined ? p.chunkKey : (p.chunkIndex !== undefined ? `default-${p.chunkIndex}` : null);
-        if (chunkKey !== null) {
-            if (!chunks.has(chunkKey)) {
-                const defaultLabel = p.chunkLabel || p.chunkName || (p.chunkIndex !== undefined ? `CHUNK_${p.chunkIndex + 1}` : chunkKey);
-                chunks.set(chunkKey, { key: chunkKey, label: defaultLabel, order: p.chunkIndex !== undefined ? p.chunkIndex : Number.MAX_SAFE_INTEGER, count: 0 });
-            }
-            chunks.get(chunkKey).count++;
-        }
-    });
-    
-    // Sorteer op volgorde, daarna label
-    const sortedChunks = Array.from(chunks.values()).sort((a, b) => {
-        if (a.order !== b.order) return a.order - b.order;
-        return a.label.localeCompare(b.label, 'nl');
-    });
-    
-    if (sortedChunks.length === 0) {
-        chunkNav.innerHTML = '<span class="nav-label" style="opacity: 0.5; font-size: 10px;">Geen chunks gevonden</span>';
-        return;
-    }
-    
-    // Genereer nav items
-    chunkNav.innerHTML = sortedChunks.map(chunk => `
-        <a href="#" class="nav-item" data-filter="chunkkey-${encodeURIComponent(chunk.key)}">
-            <span class="nav-icon">▸</span>
-            <span class="nav-label">${chunk.label.toUpperCase().replace(/\s+/g, '_')}/</span>
-            <span class="nav-count">[${chunk.count}]</span>
-        </a>
-    `).join('');
-    
-    // Event listeners voor chunk filters
-    chunkNav.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const filter = item.dataset.filter;
-            
-            // Update active state
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            
-            // Update path
-            const chunkKey = decodeURIComponent(filter.replace('chunkkey-', ''));
-            const activeChunk = sortedChunks.find(c => c.key === chunkKey);
-            const chunkLabel = (activeChunk?.label || chunkKey).toUpperCase().replace(/\s+/g, '_');
-            document.getElementById('current-path').textContent = `~/AR_CHUNKS/${chunkLabel}/`;
-            
-            // Render filtered files
-            renderFiles(window.allPosters || [], filter);
-        });
-    });
-}
-
-// Setup chunk filter navigatie (legacy - wordt nu door buildChunkNav gedaan)
-function setupChunkNavigation() {
-    // Niet meer nodig - buildChunkNav wordt direct aangeroepen na laden
 }
 
 // Update open windows count

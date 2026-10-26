@@ -1,448 +1,1715 @@
 {
   "_meta": {
-    "generated": "2026-03-04",
-    "description": "Memeborden chunk-verdeling: 54 Belgische verkeersborden over 3 AR chunks",
-    "total_signs": 59,
-    "chunks": 3
+    "generated": "2026-10-26",
+    "total_chunks": 6,
+    "total_signs": 237,
+    "engine": "8th Wall XR (Universal Multi-Target)"
   },
   "chunks": [
     {
-      "id": "chunkA",
-      "name": "Gevaar",
+      "id": "serieA",
+      "name": "Serie A: Gevaarsborden",
       "serie": "A",
-      "description": "A: Gevaarsborden (driehoekig, rode rand)",
-      "mindFile": "verkeersborden/chunks/chunkA.mind",
+      "description": "Gevaarsborden in België (driehoekig met rode rand)",
       "signs": [
         {
-          "id": "A1B",
-          "name": "Gevaarlijke bocht naar rechts",
-          "search_query": "Sharp right turn",
-          "image": "verkeersborden/images/A1b.png",
-          "wiki_filename": "Belgian_road_sign_A1b.svg"
+          "id": "GIII_Ijzel",
+          "name": "Type III: Onderbord gebruikt samen met A15 om te duiden in welke omstandigheden de weg glibberig is. Ander mogelijke opschriften zijn \"bij nat wegdek\", \"bladerval\" ..",
+          "search_query": "ice slipping cold",
+          "image": "verkeersborden/images/GIII_Ijzel.png",
+          "top30": false
         },
         {
-          "id": "A1C",
-          "name": "Dubbele bocht, de eerste naar links",
-          "search_query": "Winding road",
+          "id": "GIII_Vervormd_wegdek",
+          "name": "Type III: Onderbord gebruikt samen met A51 om de aard van het gevaar aan te duiden. Ander mogelijke opschriften zijn \"spoorvorming\", \"mist\", \"zachte berm\", \"steengroeve\" ..",
+          "search_query": "bumpy road pothole",
+          "image": "verkeersborden/images/GIII_Vervormd_wegdek.png",
+          "top30": false
+        },
+        {
+          "id": "GIX",
+          "name": "Type IX: Onderbord gebruikt samen met A7 om te duiden dat de rijbaanversmalling de omvang van een rijstrook heeft. Mogen evenwel vervangen worden door het bord F97 alleen geplaatst",
+          "search_query": "lane merging squeeze",
+          "image": "verkeersborden/images/GIX.png",
+          "top30": false
+        },
+        {
+          "id": "A1a",
+          "name": "Gevaarlijke bocht naar links",
+          "search_query": "sharp left turn",
+          "image": "verkeersborden/images/A1a.png",
+          "top30": true
+        },
+        {
+          "id": "A1b",
+          "name": "Gevaarlijke bocht naar rechts",
+          "search_query": "sharp right turn",
+          "image": "verkeersborden/images/A1b.png",
+          "top30": true
+        },
+        {
+          "id": "A1c",
+          "name": "Dubbele bocht of meer dan twee bochten, de eerste naar links",
+          "search_query": "winding road",
           "image": "verkeersborden/images/A1c.png",
-          "wiki_filename": "Belgian_road_sign_A1c.svg"
+          "top30": false
+        },
+        {
+          "id": "A1d",
+          "name": "Dubbele bocht of meer dan twee bochten, de eerste naar rechts",
+          "search_query": "winding road",
+          "image": "verkeersborden/images/A1d.png",
+          "top30": false
         },
         {
           "id": "A3",
-          "name": "Gevaarlijke daling",
-          "search_query": "Steep downhill",
+          "name": "Gevaarlijke daling (min. 7%)",
+          "search_query": "steep downhill",
           "image": "verkeersborden/images/A3.png",
-          "wiki_filename": "Belgian_road_sign_A3.svg"
+          "top30": false
         },
         {
           "id": "A5",
-          "name": "Steile helling",
-          "search_query": "Steep hill",
+          "name": "Steile helling (min. 7%)",
+          "search_query": "steep hill climb",
           "image": "verkeersborden/images/A5.png",
-          "wiki_filename": "Belgian_road_sign_A5.svg"
+          "top30": false
+        },
+        {
+          "id": "A7a",
+          "name": "Rijbaanversmalling",
+          "search_query": "road narrows",
+          "image": "verkeersborden/images/A7a.png",
+          "top30": true
+        },
+        {
+          "id": "A7b",
+          "name": "Rijbaanversmalling langs links",
+          "search_query": "road squeeze left",
+          "image": "verkeersborden/images/A7b.png",
+          "top30": false
         },
         {
           "id": "A9",
           "name": "Beweegbare brug",
-          "search_query": "Opening bridge",
+          "search_query": "drawbridge opening",
           "image": "verkeersborden/images/A9.png",
-          "wiki_filename": "Belgian_road_sign_A9.svg"
+          "top30": false
+        },
+        {
+          "id": "GII_10",
+          "name": "Type II: Onderbord gebruikt om de lengte van een gevaarlijk gedeelte van de openbare weg aan te duiden",
+          "search_query": "distance road ahead",
+          "image": "verkeersborden/images/GII_10.png",
+          "top30": false
         },
         {
           "id": "A11",
           "name": "Uitweg op een kaai of oever",
-          "search_query": "Edge",
+          "search_query": "cliff edge water",
           "image": "verkeersborden/images/A11.png",
-          "wiki_filename": "Belgian_road_sign_A11.svg"
+          "top30": false
         },
         {
           "id": "A13",
-          "name": "Dwarse uitholling of ezelsrug",
-          "search_query": "Uneven road",
+          "name": "Overdwarse uitholling of ezelsrug",
+          "search_query": "speed bump road",
           "image": "verkeersborden/images/A13.png",
-          "wiki_filename": "Belgian_road_sign_A13.svg"
+          "top30": true
         },
         {
           "id": "A14",
-          "name": "Verhoogde inrichting (verkeersdrempel)",
-          "search_query": "Speed bump",
+          "name": "Verhoogde inrichting(en)",
+          "search_query": "speed bump",
           "image": "verkeersborden/images/A14.png",
-          "wiki_filename": "Belgian_road_sign_A14.svg"
+          "top30": true
         },
         {
           "id": "A15",
-          "name": "Glibberige rijbaan",
-          "search_query": "Slippery road",
+          "name": "Glibberige rijbaan (slipgevaar)",
+          "search_query": "slippery road ice",
           "image": "verkeersborden/images/A15.png",
-          "wiki_filename": "Belgian_road_sign_A15.svg"
+          "top30": true
+        },
+        {
+          "id": "A17",
+          "name": "Kiezelprojectie",
+          "search_query": "gravel road",
+          "image": "verkeersborden/images/A17.png",
+          "top30": false
         },
         {
           "id": "A19",
           "name": "Vallende stenen",
-          "search_query": "Falling rocks",
+          "search_query": "falling rocks",
           "image": "verkeersborden/images/A19.png",
-          "wiki_filename": "Belgian_road_sign_A19.svg"
+          "top30": false
         },
         {
           "id": "A21",
           "name": "Oversteekplaats voor voetgangers",
-          "search_query": "Pedestrian crossing",
+          "search_query": "pedestrian crossing",
           "image": "verkeersborden/images/A21.png",
-          "wiki_filename": "Belgian_road_sign_A21.svg"
+          "top30": true
         },
         {
           "id": "A23",
           "name": "Plaats waar speciaal veel kinderen komen",
-          "search_query": "School",
+          "search_query": "children school",
           "image": "verkeersborden/images/A23.png",
-          "wiki_filename": "Belgian_road_sign_A23.svg"
+          "top30": true
         },
         {
           "id": "A25",
-          "name": "Oversteekplaats voor fietsers en bromfietsers",
-          "search_query": "Cyclist crossing",
+          "name": "Oversteekplaats voor fietsers en bestuurders van tweewielige bromfietsen of plaats waar die bestuurders van een fietspad op de rijbaan komen",
+          "search_query": "cyclists crossing",
           "image": "verkeersborden/images/A25.png",
-          "wiki_filename": "Belgian_road_sign_A25.svg"
+          "top30": true
         },
         {
           "id": "A27",
           "name": "Doortocht van groot wild",
-          "search_query": "Deer road",
+          "search_query": "deer crossing",
           "image": "verkeersborden/images/A27.png",
-          "wiki_filename": "Belgian_road_sign_A27.svg"
+          "top30": false
         },
         {
           "id": "A29",
           "name": "Doortocht van vee",
-          "search_query": "Cows road",
+          "search_query": "cows road",
           "image": "verkeersborden/images/A29.png",
-          "wiki_filename": "Belgian_road_sign_A29.svg"
+          "top30": false
         },
         {
           "id": "A31",
-          "name": "Werken in uitvoering",
-          "search_query": "Roadworks",
+          "name": "Werken",
+          "search_query": "road construction",
           "image": "verkeersborden/images/A31.png",
-          "wiki_filename": "Belgian_road_sign_A31.svg"
+          "top30": true
         },
         {
           "id": "A33",
           "name": "Verkeerslichten",
-          "search_query": "Traffic lights",
+          "search_query": "traffic light red",
           "image": "verkeersborden/images/A33.png",
-          "wiki_filename": "Belgian_road_sign_A33.svg"
+          "top30": true
         },
         {
           "id": "A35",
-          "name": "Vliegtuigen op geringe hoogte",
-          "search_query": "Low-flying aircraft",
+          "name": "Overtocht van vliegtuigen op geringe hoogte",
+          "search_query": "low flying aircraft",
           "image": "verkeersborden/images/A35.png",
-          "wiki_filename": "Belgian_road_sign_A35.svg"
+          "top30": false
         },
         {
           "id": "A37",
-          "name": "Gevaarlijke zijwind",
-          "search_query": "Crosswind",
+          "name": "Zijwind",
+          "search_query": "strong crosswind",
           "image": "verkeersborden/images/A37.png",
-          "wiki_filename": "Belgian_road_sign_A37.svg"
+          "top30": false
         },
         {
           "id": "A39",
-          "name": "Verkeer toegelaten in twee richtingen",
-          "search_query": "Two-way traffic",
+          "name": "Verkeer toegelaten in twee richtingen na een gedeelte van de rijbaan met eenrichtingsverkeer",
+          "search_query": "two way traffic",
           "image": "verkeersborden/images/A39.png",
-          "wiki_filename": "Belgian_road_sign_A39.svg"
+          "top30": true
+        },
+        {
+          "id": "A41",
+          "name": "Overweg met slagbomen",
+          "search_query": "railway crossing boom",
+          "image": "verkeersborden/images/A41.png",
+          "top30": false
         },
         {
           "id": "A43",
           "name": "Overweg zonder slagbomen",
-          "search_query": "Train",
+          "search_query": "train crossing",
           "image": "verkeersborden/images/A43.png",
-          "wiki_filename": "Belgian_road_sign_A43.svg"
+          "top30": false
+        },
+        {
+          "id": "A45",
+          "name": "Overweg voor enkel spoor",
+          "search_query": "railway single track",
+          "image": "verkeersborden/images/A45.png",
+          "top30": false
+        },
+        {
+          "id": "A47",
+          "name": "Overweg voor twee of meer sporen",
+          "search_query": "railway multi track",
+          "image": "verkeersborden/images/A47.png",
+          "top30": false
+        },
+        {
+          "id": "A49",
+          "name": "Kruising van een openbare weg door een of meer in de rijbaan aangelegde sporen",
+          "search_query": "tram tracks road",
+          "image": "verkeersborden/images/A49.png",
+          "top30": true
         },
         {
           "id": "A50",
           "name": "File",
-          "search_query": "Traffic jam",
+          "search_query": "traffic jam rage",
           "image": "verkeersborden/images/A50.png",
-          "wiki_filename": "Belgian_road_sign_A50.svg"
+          "top30": true
         },
         {
           "id": "A51",
-          "name": "Gevaar dat niet door een speciaal symbool wordt bepaald",
-          "search_query": "Danger",
+          "name": "Gevaar dat niet door een speciaal symbool wordt bepaald. Een onderbord duidt de aard van het gevaar aan",
+          "search_query": "danger warning",
           "image": "verkeersborden/images/A51.png",
-          "wiki_filename": "Belgian_road_sign_A51.svg"
+          "top30": true
+        },
+        {
+          "id": "GIa_150",
+          "name": "Type Ia: Onderbord gebruikt om een afstand groter of kleiner dan de standaard 150m tot het gevaar aan te duiden",
+          "search_query": "warning distance meters",
+          "image": "verkeersborden/images/GIa_150.png",
+          "top30": false
         }
       ]
     },
     {
-      "id": "chunkBC",
-      "name": "Voorrang / Verbod",
-      "serie": "B+C",
-      "description": "B: Voorrangsborden + C: Verbodsborden",
-      "mindFile": "verkeersborden/chunks/chunkBC.mind",
+      "id": "serieB",
+      "name": "Serie B: Voorrangsborden",
+      "serie": "B",
+      "description": "Voorrangsborden in België (voorrang verlenen, stop, voorrangsweg)",
       "signs": [
         {
+          "id": "GVIII",
+          "name": "Type VIII: Onderbord om de curve van de weg aan te geven. Het mag geplaatst worden onder de borden B1, B5, B9 en B15",
+          "search_query": "curved road turn",
+          "image": "verkeersborden/images/GVIII.png",
+          "top30": false
+        },
+        {
+          "id": "B1",
+          "name": "Voorrang verlenen",
+          "search_query": "yield sign",
+          "image": "verkeersborden/images/B1.png",
+          "top30": true
+        },
+        {
+          "id": "M1",
+          "name": "Onderbord gebruikt samen met B1 en B5 om aan te duiden dat die verkeersborden alleen betrekking hebben op fietsers",
+          "search_query": "bicycle rider cycling",
+          "image": "verkeersborden/images/M1.png",
+          "top30": false
+        },
+        {
+          "id": "B3",
+          "name": "Verkeersbord dat het verkeersbord B1 aankondigt op de bij benadering aangeduide afstand",
+          "search_query": "yield sign triangle",
+          "image": "verkeersborden/images/B3.png",
+          "top30": false
+        },
+        {
           "id": "B5",
-          "name": "Stop, verleen voorrang",
-          "search_query": "Stop",
+          "name": "Stoppen en voorrang verlenen",
+          "search_query": "stop sign",
           "image": "verkeersborden/images/B5.png",
-          "wiki_filename": "Belgian_road_sign_B5.svg"
+          "top30": true
+        },
+        {
+          "id": "B7",
+          "name": "Verkeersbord dat het verkeersbord B5 aankondigt op de bij benadering aangeduide afstand",
+          "search_query": "stop ahead incoming",
+          "image": "verkeersborden/images/B7.png",
+          "top30": false
+        },
+        {
+          "id": "M8",
+          "name": "Onderbord gebruikt samen met B1 en B5 om aan te duiden dat die verkeersborden alleen betrekking hebben op fietsers en bestuurders van tweewielige bromfietsen",
+          "search_query": "moped scooter bike",
+          "image": "verkeersborden/images/M8.png",
+          "top30": false
+        },
+        {
+          "id": "B9",
+          "name": "Voorrangsweg",
+          "search_query": "priority road",
+          "image": "verkeersborden/images/B9.png",
+          "top30": true
+        },
+        {
+          "id": "M9",
+          "name": "Onderbord gebruikt samen met B1, B5 en B17 om te duiden dat fietsers in de twee rijrichtingen rijden op de dwarslopende openbare weg die men gaat oprijden",
+          "search_query": "two way bicycle",
+          "image": "verkeersborden/images/M9.png",
+          "top30": false
+        },
+        {
+          "id": "M10",
+          "name": "Onderbord gebruikt samen met B1, B5 en B17 om te duiden dat fietsers en bestuurders van tweewielige bromfietsen in de twee rijrichtingen rijden op de dwarslopende openbare weg die men gaat oprijden",
+          "search_query": "scooter bicycle road",
+          "image": "verkeersborden/images/M10.png",
+          "top30": false
+        },
+        {
+          "id": "B11",
+          "name": "Einde van voorrangsweg",
+          "search_query": "end priority road",
+          "image": "verkeersborden/images/B11.png",
+          "top30": false
+        },
+        {
+          "id": "B13",
+          "name": "Verkeersbord dat het verkeersbord B11 aankondigt op de bij benadering aangeduide afstand",
+          "search_query": "priority ending warning",
+          "image": "verkeersborden/images/B13.png",
+          "top30": false
+        },
+        {
+          "id": "B15",
+          "name": "Voorrang. De horizontale streep van het symbool mag worden gewijzigd om duidelijker plaatsgesteldheid weer te geven",
+          "search_query": "roundabout",
+          "image": "verkeersborden/images/B15.png",
+          "top30": true
+        },
+        {
+          "id": "B17",
+          "name": "Kruispunt waar de",
+          "search_query": "narrow passage yield",
+          "image": "verkeersborden/images/B17.png",
+          "top30": false
         },
         {
           "id": "B19",
-          "name": "Smalle doorgang: voorrang verlenen aan tegenliggers",
-          "search_query": "Yield",
+          "name": "Smalle doorgang, gebod voorrang te verlenen aan de bestuurders die uit de tegenovergestelde richting komen",
+          "search_query": "narrow passage priority",
           "image": "verkeersborden/images/B19.png",
-          "wiki_filename": "Belgian_road_sign_B19.svg"
+          "top30": false
         },
         {
           "id": "B21",
-          "name": "Smalle doorgang: voorrang op tegenliggers",
-          "search_query": "Priority",
+          "name": "Smalle doorgang, voorrang ten opzichte van de bestuurders die uit de tegenoverstelde richting komen",
+          "search_query": "bike right red",
           "image": "verkeersborden/images/B21.png",
-          "wiki_filename": "Belgian_road_sign_B21.svg"
+          "top30": false
         },
         {
-          "id": "C5",
-          "name": "Verboden toegang in beide richtingen",
-          "search_query": "No cars allowed",
-          "image": "verkeersborden/images/C5.png",
-          "wiki_filename": "Belgian_road_sign_C5.svg"
+          "id": "B22",
+          "name": "Fietsers mogen de in artikel 61 bedoelde driekleurige verkeerslichten voorbijrijden om rechts af te slaan, wanneer het verkeerslicht op rood of oranjegeel staat, op voorwaarde dat zij hierbij voorrang verlenen aan de andere weggebruikers die zich verplaatsen op de openbare weg of op de rijbaan",
+          "search_query": "bike straight red",
+          "image": "verkeersborden/images/B22.png",
+          "top30": false
         },
         {
-          "id": "C7",
-          "name": "Verboden toegang voor motorfietsen",
-          "search_query": "No motorcycles",
-          "image": "verkeersborden/images/C7.png",
-          "wiki_filename": "Belgian_road_sign_C7.svg"
+          "id": "B23",
+          "name": "Fietsers mogen de in artikel 61 bedoelde driekleurige verkeerslichten voorbijrijden om rechtdoor te rijden, wanneer het verkeerslicht op rood of oranjegeel staat, op voorwaarde dat zij hierbij voorrang verlenen aan de andere weggebruikers die zich verplaatsen op de openbare weg of op de rijbaan vanaf het rode of oranjegele licht",
+          "search_query": "bike right red light",
+          "image": "verkeersborden/images/B23.png",
+          "top30": false
         },
         {
-          "id": "C9",
-          "name": "Verboden toegang voor bromfietsen",
-          "search_query": "No mopeds",
-          "image": "verkeersborden/images/C9.png",
-          "wiki_filename": "Belgian_road_sign_C9.svg"
-        },
+          "id": "GIb_150",
+          "name": "Type Ib: Onderbord gebruikt samen met B1 om bord B5 aan te kondigen",
+          "search_query": "stop ahead distance",
+          "image": "verkeersborden/images/GIb_150.png",
+          "top30": false
+        }
+      ]
+    },
+    {
+      "id": "serieC",
+      "name": "Serie C: Verbodsborden",
+      "serie": "C",
+      "description": "Verbodsborden in België (cirkels met rode rand)",
+      "signs": [
         {
-          "id": "C11",
-          "name": "Verboden toegang voor fietsen",
-          "search_query": "No bicycles",
-          "image": "verkeersborden/images/C11.png",
-          "wiki_filename": "Belgian_road_sign_C11.svg"
-        },
-        {
-          "id": "C15",
-          "name": "Verboden toegang voor ruiters",
-          "search_query": "No horses",
-          "image": "verkeersborden/images/C15.png",
-          "wiki_filename": "Belgian_road_sign_C15.svg"
-        },
-        {
-          "id": "C22",
-          "name": "Verboden toegang voor autobussen",
-          "search_query": "No buses",
-          "image": "verkeersborden/images/C22.png",
-          "wiki_filename": "Belgian_road_sign_C22.svg"
-        },
-        {
-          "id": "C23",
-          "name": "Verboden voor voertuigen voor het vervoer van zaken",
-          "search_query": "No trucks",
-          "image": "verkeersborden/images/C23.png",
-          "wiki_filename": "Belgian_road_sign_C23.svg"
-        },
-        {
-          "id": "C24B",
-          "name": "Verboden voor voertuigen met ontvlambare/gevaarlijke stoffen",
-          "search_query": "No flammables",
-          "image": "verkeersborden/images/C24b.png",
-          "wiki_filename": "Belgian_road_sign_C24b.svg"
-        },
-        {
-          "id": "C24C",
-          "name": "Verboden voor voertuigen met waterverontreinigende stoffen",
-          "search_query": "No pollutants",
-          "image": "verkeersborden/images/C24c.png",
-          "wiki_filename": "Belgian_road_sign_C24c.svg"
-        },
-        {
-          "id": "C25",
-          "name": "Verboden voor voertuigen langer dan de aangeduide lengte",
-          "search_query": "no long vehicles",
-          "image": "verkeersborden/images/C25.png",
-          "wiki_filename": "Belgian_road_sign_C25.svg"
-        },
-        {
-          "id": "C35",
-          "name": "Inhaalverbod",
-          "search_query": "No overtaking",
-          "image": "verkeersborden/images/C35.png",
-          "wiki_filename": "Belgian_road_sign_C35.svg"
-        },
-        {
-          "id": "C37",
-          "name": "Einde inhaalverbod",
-          "search_query": "no truck passing",
-          "image": "verkeersborden/images/C37.png",
-          "wiki_filename": "Belgian_road_sign_C37.svg"
-        },
-        {
-          "id": "C43",
-          "name": "Snelheidsbeperking",
-          "search_query": "Speed limit",
-          "image": "verkeersborden/images/C43.png",
-          "wiki_filename": "Belgian_road_sign_C43.svg"
-        },
-        {
-          "id": "C45",
-          "name": "Einde snelheidsbeperking",
-          "search_query": "End speed limit",
-          "image": "verkeersborden/images/C45.png",
-          "wiki_filename": "Belgian_road_sign_C45.svg"
-        },
-        {
-          "id": "C47",
-          "name": "Tolpost, verbod voorbij te rijden zonder te stoppen",
-          "search_query": "Toll booth",
-          "image": "verkeersborden/images/C47.png",
-          "wiki_filename": "Belgian_road_sign_C47.svg"
+          "id": "GVI",
+          "name": "Type VI: Onderbord gebruikt samen met C43 om een verbod te herhalen",
+          "search_query": "speed limit reminder",
+          "image": "verkeersborden/images/GVI.png",
+          "top30": false
         },
         {
           "id": "C1",
           "name": "Verboden richting voor iedere bestuurder",
           "search_query": "wrong way",
           "image": "verkeersborden/images/C1.png",
-          "wiki_filename": "Belgian_road_sign_C1.svg"
+          "top30": true
         },
         {
           "id": "M2",
-          "name": "Onderbord uitgezonderd fietsers",
+          "name": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers",
           "search_query": "cyclists exception",
           "image": "verkeersborden/images/M2.png",
-          "wiki_filename": "Belgian_road_sign_M2.svg"
+          "top30": false
+        },
+        {
+          "id": "C3",
+          "name": "Verboden toegang, in beide richtingen, voor ieder bestuurder",
+          "search_query": "no entry",
+          "image": "verkeersborden/images/C3.png",
+          "top30": true
+        },
+        {
+          "id": "M3",
+          "name": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van bromfietsen klasse A",
+          "search_query": "bikes allowed transit",
+          "image": "verkeersborden/images/M3.png",
+          "top30": false
+        },
+        {
+          "id": "M3bis",
+          "name": "Onderbord gebruikt samen met C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van bromfietsen klasse A en B, en",
+          "search_query": "scooters bicycles allowed",
+          "image": "verkeersborden/images/M3bis.png",
+          "top30": false
+        },
+        {
+          "id": "C5",
+          "name": "Verboden toegang voor bestuurders van motorvoertuigen met meer dan twee wielen en van motorfietsen met zijspan",
+          "search_query": "no cars allowed",
+          "image": "verkeersborden/images/C5.png",
+          "top30": false
+        },
+        {
+          "id": "C6",
+          "name": "Verboden toegang voor bestuurders van motorvoertuigen met vier wielen, geconstrueerd voor onverhard terrein, met een open carrosserie, een stuur als op een motorfiets en een zadel",
+          "search_query": "quad bike offroad",
+          "image": "verkeersborden/images/C6.png",
+          "top30": false
+        },
+        {
+          "id": "C7",
+          "name": "Verboden toegang voor bestuurders van motorfietsen",
+          "search_query": "no motorcycles",
+          "image": "verkeersborden/images/C7.png",
+          "top30": false
+        },
+        {
+          "id": "C9",
+          "name": "Verboden toegang voor bestuurders van bromfietsen",
+          "search_query": "no mopeds",
+          "image": "verkeersborden/images/C9.png",
+          "top30": false
+        },
+        {
+          "id": "C11",
+          "name": "Verboden toegang voor bestuurders van rijwielen",
+          "search_query": "no bicycles",
+          "image": "verkeersborden/images/C11.png",
+          "top30": false
+        },
+        {
+          "id": "M11",
+          "name": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van speedpedelecs",
+          "search_query": "fast speed pedelec",
+          "image": "verkeersborden/images/M11.png",
+          "top30": false
+        },
+        {
+          "id": "M12",
+          "name": "Onderbord gebruikt samen met C1, C3 en C31 om aan te duiden dat het verbod niet geldt voor fietsers en bestuurders van bromfietsen klasse A en speedpedelecs",
+          "search_query": "speed pedelec moped",
+          "image": "verkeersborden/images/M12.png",
+          "top30": false
+        },
+        {
+          "id": "C13",
+          "name": "Verboden toegang voor bestuurders van gespannen",
+          "search_query": "no horse cart",
+          "image": "verkeersborden/images/C13.png",
+          "top30": false
+        },
+        {
+          "id": "C15",
+          "name": "Verboden toegang voor ruiters",
+          "search_query": "no horse riding",
+          "image": "verkeersborden/images/C15.png",
+          "top30": false
+        },
+        {
+          "id": "C17",
+          "name": "Verboden toegang voor bestuurders van handkarren",
+          "search_query": "hand cart pushing",
+          "image": "verkeersborden/images/C17.png",
+          "top30": false
+        },
+        {
+          "id": "C19",
+          "name": "Verboden toegang voor voetgangers",
+          "search_query": "no pedestrians walking",
+          "image": "verkeersborden/images/C19.png",
+          "top30": false
+        },
+        {
+          "id": "C21",
+          "name": "Verboden toegang voor voertuigen waarvan de massa in beladen toestand hoger is dan de aangeduide massa",
+          "search_query": "no heavy trucks",
+          "image": "verkeersborden/images/C21.png",
+          "top30": false
+        },
+        {
+          "id": "C22",
+          "name": "Verboden toegang voor autocars",
+          "search_query": "no buses",
+          "image": "verkeersborden/images/C22.png",
+          "top30": false
+        },
+        {
+          "id": "C23",
+          "name": "Verboden toegang voor bestuurders van voertuigen gebruikt voor het vervoer van zaken",
+          "search_query": "no trucks",
+          "image": "verkeersborden/images/C23.png",
+          "top30": false
+        },
+        {
+          "id": "C24a",
+          "name": "Verboden toegang voor bestuurders van voertuigen die gevaarlijke goederen vervoeren",
+          "search_query": "no hazmat",
+          "image": "verkeersborden/images/C24a.png",
+          "top30": false
+        },
+        {
+          "id": "C24b",
+          "name": "Verboden toegang voor  bestuurders van voertuigen die gevaarlijke ontvlambare of ontplofbare stoffen vervoeren",
+          "search_query": "no flammable",
+          "image": "verkeersborden/images/C24b.png",
+          "top30": false
+        },
+        {
+          "id": "C24c",
+          "name": "Verboden toegang voor  bestuurders van voertuigen die gevaarlijke verontreinigende stoffen vervoeren",
+          "search_query": "no pollutants",
+          "image": "verkeersborden/images/C24c.png",
+          "top30": false
+        },
+        {
+          "id": "C25",
+          "name": "Verboden toegang voor  bestuurders van voertuigen of slepen waarvan de lengte, lading inbegrepen, groter is dan het aangeduide",
+          "search_query": "no long vehicles",
+          "image": "verkeersborden/images/C25.png",
+          "top30": false
+        },
+        {
+          "id": "C27",
+          "name": "Verboden toegang voor bestuurders van voertuigen waarvan de breedte, lading inbegrepen, groter is dan het aangeduide",
+          "search_query": "no wide load",
+          "image": "verkeersborden/images/C27.png",
+          "top30": false
+        },
+        {
+          "id": "C29",
+          "name": "Verboden toegang voor bestuurders van voertuigen waarvan de hoogte, lading inbegrepen, groter is dan het aangeduide",
+          "search_query": "low bridge truck clearance",
+          "image": "verkeersborden/images/C29.png",
+          "top30": false
+        },
+        {
+          "id": "C31d",
+          "name": "Verbod aan het volgend kruispunt af te slaan in de richting door de pijl aangegeven",
+          "search_query": "no right turn forbidden",
+          "image": "verkeersborden/images/C31d.png",
+          "top30": false
+        },
+        {
+          "id": "C31g",
+          "name": "Verbod aan het volgend kruispunt af te slaan in de richting door de pijl aangegeven",
+          "search_query": "no left turn forbidden",
+          "image": "verkeersborden/images/C31g.png",
+          "top30": false
+        },
+        {
+          "id": "C33",
+          "name": "Vanaf het verkeersbord tot het volgend kruispunt, verbod te keren",
+          "search_query": "no pedestrians",
+          "image": "verkeersborden/images/C33.png",
+          "top30": false
+        },
+        {
+          "id": "C35",
+          "name": "Vanaf het verkeersbord tot het volgend kruispunt, verbod een gespan of een voertuig met meer dan twee wielen, links in te halen",
+          "search_query": "no overtaking",
+          "image": "verkeersborden/images/C35.png",
+          "top30": false
+        },
+        {
+          "id": "C37",
+          "name": "Einde verbod opgelegd door het verkeersbord C35",
+          "search_query": "end no passing",
+          "image": "verkeersborden/images/C37.png",
+          "top30": false
+        },
+        {
+          "id": "C39",
+          "name": "Vanaf het verkeersbord tot het volgend kruispunt, verbod voor bestuurders van voertuigen of slepen gebruikt voor het vervoer van zaken, waarvan de maximale toegelaten massa meer dan 3500 kg bedraagt, een gespan of een voertuig met meer dan twee wielen links in te halen",
+          "search_query": "no truck passing",
+          "image": "verkeersborden/images/C39.png",
+          "top30": false
+        },
+        {
+          "id": "C41",
+          "name": "Einde verbod opgelegd door het verkeersbord C39",
+          "search_query": "passing allowed overtake",
+          "image": "verkeersborden/images/C41.png",
+          "top30": false
+        },
+        {
+          "id": "C43",
+          "name": "Vanaf het verkeersbord tot het volgend kruispunt, verbod te rijden met een grotere snelheid dan deze die is aangeduid",
+          "search_query": "speed limit",
+          "image": "verkeersborden/images/C43.png",
+          "top30": true
+        },
+        {
+          "id": "C45",
+          "name": "Einde van de snelheidsbeperking opgelegd door het verkeersbord C43",
+          "search_query": "end speed limit",
+          "image": "verkeersborden/images/C45.png",
+          "top30": false
+        },
+        {
+          "id": "C46",
+          "name": "Einde van alle plaatselijke verbodsbepalingen opgelegd aan de voertuigen in beweging",
+          "search_query": "freedom open road driving",
+          "image": "verkeersborden/images/C46.png",
+          "top30": false
+        },
+        {
+          "id": "C47",
+          "name": "Tolpost, verbod voorbij te rijden zonder te stoppen",
+          "search_query": "all restrictions lifted",
+          "image": "verkeersborden/images/C47.png",
+          "top30": false
+        },
+        {
+          "id": "C48",
+          "name": "Vanaf het verkeersbord tot het volgend kruispunt, verbod de cruise control of kruissnelheidsregelaar te gebruiken",
+          "search_query": "no cruise control driving",
+          "image": "verkeersborden/images/C48.png",
+          "top30": false
+        },
+        {
+          "id": "C49",
+          "name": "Einde verbod opgelegd door het verkeersbord C48",
+          "search_query": "cruise control allowed",
+          "image": "verkeersborden/images/C49.png",
+          "top30": false
         }
       ]
     },
     {
-      "id": "chunkDEFZ",
-      "name": "Gebod / Aanwijzing",
-      "serie": "D+E+F+Z",
-      "description": "D: Gebod + E: Parkeer + F: Aanwijzing + Z: Zonaal",
-      "mindFile": "verkeersborden/chunks/chunkDEFZ.mind",
+      "id": "serieD",
+      "name": "Serie D: Gebodsborden",
+      "serie": "D",
+      "description": "Gebodsborden in België (blauwe cirkels met witte pijlen)",
       "signs": [
         {
-          "id": "D1A",
-          "name": "Verplichte rijrichting rechtdoor",
-          "search_query": "Straight",
+          "id": "D1a",
+          "name": "Verplichting de door de pijl aangeduide richting te volgen. (hier rechtdoor)",
+          "search_query": "go straight ahead",
           "image": "verkeersborden/images/D1a.png",
-          "wiki_filename": "Belgian_road_sign_D01a.svg"
+          "top30": false
         },
         {
-          "id": "D1B",
-          "name": "Verplichte rijrichting rechtsaf",
-          "search_query": "left turn",
+          "id": "D1b",
+          "name": "Verplichting de door de pijl aangeduide richting te volgen. (hier links)",
+          "search_query": "turn left mandatory",
           "image": "verkeersborden/images/D1b.png",
-          "wiki_filename": "Belgian_road_sign_D01b.svg"
+          "top30": false
         },
         {
-          "id": "D1B2",
-          "name": "Verplichte rijrichting schuin rechts",
-          "search_query": "right turn",
-          "image": "verkeersborden/images/D1b2.png",
-          "wiki_filename": "Belgian_road_sign_D1_ru.svg"
+          "id": "D1d",
+          "name": "Verplichting de hindernis langs de door de pijl aangeduide richting voorbij te rijden. (hier rechts)",
+          "search_query": "pass obstacle right",
+          "image": "verkeersborden/images/D1d.png",
+          "top30": false
+        },
+        {
+          "id": "D1e",
+          "name": "Verplichting de door de pijl aangeduide richting te volgen. (hier links)",
+          "search_query": "pass obstacle left",
+          "image": "verkeersborden/images/D1e.png",
+          "top30": false
+        },
+        {
+          "id": "D3b",
+          "name": "Verplichting een van de door de pijlen aangeduide richtingen te volgen. (hier rechtdoor of rechts)",
+          "search_query": "keep left arrow",
+          "image": "verkeersborden/images/D3b.png",
+          "top30": false
+        },
+        {
+          "id": "D4",
+          "name": "Verplichting voor voertuigen die gevaarlijke goederen vervoeren om de door de pijl aangeduide richting te volgen",
+          "search_query": "roundabout direction turn",
+          "image": "verkeersborden/images/D4.png",
+          "top30": false
         },
         {
           "id": "D5",
-          "name": "Rondpunt",
-          "search_query": "Roundabout",
+          "name": "Verplicht",
+          "search_query": "roundabout mandatory",
           "image": "verkeersborden/images/D5.png",
-          "wiki_filename": "Belgian_road_sign_D05.svg"
+          "top30": true
+        },
+        {
+          "id": "M6",
+          "name": "Onderbord gebruikt samen met D7 als het fietspad gevolgd moet worden door bestuurders van bromfietsen klasse B",
+          "search_query": "cyclists only lane",
+          "image": "verkeersborden/images/M6.png",
+          "top30": false
         },
         {
           "id": "D7",
-          "name": "Verplicht fietpad",
-          "search_query": "Bikelane",
+          "name": "Verplicht",
+          "search_query": "keep right",
           "image": "verkeersborden/images/D7.png",
-          "wiki_filename": "Belgian_road_sign_D07.svg"
+          "top30": false
+        },
+        {
+          "id": "M7",
+          "name": "Onderbord gebruikt samen met D7 als het fietspad niet mag gevolgd worden door bestuurders van bromfietsen klasse B",
+          "search_query": "pedestrians cyclists path",
+          "image": "verkeersborden/images/M7.png",
+          "top30": false
+        },
+        {
+          "id": "D9a",
+          "name": "Deel van de openbare weg voorbehouden voor het verkeer van voetgangers, van fietsen en van tweewielige bromfietsen klasse A",
+          "search_query": "mandatory direction arrow",
+          "image": "verkeersborden/images/D9a.png",
+          "top30": false
+        },
+        {
+          "id": "D10",
+          "name": "Deel van de openbare weg voorbehouden voor het verkeer van voetgangers en fietsers",
+          "search_query": "shared path pedestrians",
+          "image": "verkeersborden/images/D10.png",
+          "top30": false
+        },
+        {
+          "id": "D11",
+          "name": "Verplichte weg voor voetgangers",
+          "search_query": "equestrian horse trail",
+          "image": "verkeersborden/images/D11.png",
+          "top30": false
+        },
+        {
+          "id": "D13",
+          "name": "Verplichte weg voor ruiters",
+          "search_query": "segway electric scooter",
+          "image": "verkeersborden/images/D13.png",
+          "top30": false
+        },
+        {
+          "id": "M13",
+          "name": "Onderbord gebruikt samen met D7 als het fietspad gevolgd moet worden door bestuurders van speedpedelecs",
+          "search_query": "moped lane path",
+          "image": "verkeersborden/images/M13.png",
+          "top30": false
+        },
+        {
+          "id": "M14",
+          "name": "Onderbord gebruikt samen met D7 als het fietspad gevolgd moet worden door bestuurders van bromfietsen klasse B en speedpedelecs",
+          "search_query": "moped speed pedelec",
+          "image": "verkeersborden/images/M14.png",
+          "top30": false
+        },
+        {
+          "id": "M15",
+          "name": "Onderbord gebruikt samen met D7 als het fietspad niet mag gevolgd worden door bestuurders van speedpedelecs",
+          "search_query": "scooter bike route",
+          "image": "verkeersborden/images/M15.png",
+          "top30": false
+        },
+        {
+          "id": "M16",
+          "name": "Onderbord gebruikt samen met D7 als het fietspad niet mag gevolgd worden door bestuurders van bromfietsen klasse B en speedpedelecs",
+          "search_query": "cyclists yield crossing",
+          "image": "verkeersborden/images/M16.png",
+          "top30": false
+        }
+      ]
+    },
+    {
+      "id": "serieE",
+      "name": "Serie E: Parkeren- en stilstaanborden",
+      "serie": "E",
+      "description": "Parkeer- en stilstaanborden in België",
+      "signs": [
+        {
+          "id": "GXa",
+          "name": "Begin van de reglementering",
+          "search_query": "arrows start zone",
+          "image": "verkeersborden/images/GXa.png",
+          "top30": false
+        },
+        {
+          "id": "GXb",
+          "name": "Einde van een reglementering",
+          "search_query": "arrows end zone",
+          "image": "verkeersborden/images/GXb.png",
+          "top30": false
+        },
+        {
+          "id": "GXd",
+          "name": "Reglementering over een lange afstand (herhaling)",
+          "search_query": "parking zone arrows",
+          "image": "verkeersborden/images/GXd.png",
+          "top30": false
+        },
+        {
+          "id": "GXc",
+          "name": "Reglementering over een korte afstand (≤ 30m)",
+          "search_query": "parking repeat arrows",
+          "image": "verkeersborden/images/GXc.png",
+          "top30": false
+        },
+        {
+          "id": "GV_Van_maandag_tot_vrijdag",
+          "name": "Type V: Onderbord gebruikt samen met E1, E3 en de E9 reeks dat een periode aanduidt",
+          "search_query": "weekday work commute",
+          "image": "verkeersborden/images/GV_Van_maandag_tot_vrijdag.png",
+          "top30": false
+        },
+        {
+          "id": "GVIIb",
+          "name": "Type VIIb: Onderbord gebruikt samen met E5, E7 en de E9 reeks dat aanduidt dat de parkeertijd beperkt is en dat een",
+          "search_query": "cargo loading truck",
+          "image": "verkeersborden/images/GVIIb.png",
+          "top30": false
+        },
+        {
+          "id": "GVIId_Handicap",
+          "name": "Type VIId: Onderbord gebruikt samen met de E9 reeks dat aanduidt dat de parkeerplaats voorbehouden is voor voertuigen gebruikt worden door personen met een beperking. Het mag ook op het bord E9a afgebeeld worden",
+          "search_query": "disabled parking wheelchair",
+          "image": "verkeersborden/images/GVIId_Handicap.png",
+          "top30": false
+        },
+        {
+          "id": "GVIId_Elektrische_wagens",
+          "name": "Type VIId: Onderbord gebruikt samen met de E9 reeks dat aanduidt dat de parkeerplaats voorbehouden is voor elektrische voertuigen. Eén of meerdere categorieën voertuigen mag afgebeeld worden",
+          "search_query": "tesla electric car charging",
+          "image": "verkeersborden/images/GVIId_Elektrische_wagens.png",
+          "top30": false
+        },
+        {
+          "id": "GVIId_Taxis",
+          "name": "Type VIId: Onderbord gebruikt samen met de E9 reeks met de vermelding van de categorie van voertuigen voor dewelke het parkeren voorbehouden is. Ander mogelijke opschriften zijn o.a. \"- 5t\", \"bewoners\", \"parkeerkaart\", \"autodelen\" ..",
+          "search_query": "taxi cab waiting",
+          "image": "verkeersborden/images/GVIId_Taxis.png",
+          "top30": false
         },
         {
           "id": "E1",
           "name": "Parkeerverbod",
-          "search_query": "No parking",
+          "search_query": "no parking",
           "image": "verkeersborden/images/E1.png",
-          "wiki_filename": "Belgian_road_sign_E1.svg"
+          "top30": true
         },
         {
           "id": "E3",
-          "name": "Stilstaan- en parkeerverbod",
-          "search_query": "No stopping",
+          "name": "Stilstaan en parkeren verboden",
+          "search_query": "no stopping",
           "image": "verkeersborden/images/E3.png",
-          "wiki_filename": "Belgian_road_sign_E3.svg"
+          "top30": true
         },
         {
-          "id": "F1B",
+          "id": "E5",
+          "name": "E5:",
+          "search_query": "no parking odd",
+          "image": "verkeersborden/images/E5.png",
+          "top30": false
+        },
+        {
+          "id": "E7",
+          "name": "Parkeerverbod van de 16e tot het einde van de maand",
+          "search_query": "no parking even",
+          "image": "verkeersborden/images/E7.png",
+          "top30": false
+        },
+        {
+          "id": "E9",
+          "name": "Parkeren toegelaten",
+          "search_query": "car parking lot",
+          "image": "verkeersborden/images/E9.png",
+          "top30": false
+        },
+        {
+          "id": "E9a",
+          "name": "voorbehouden parkeerplaats voor persoon met een handicap",
+          "search_query": "parking allowed",
+          "image": "verkeersborden/images/E9a.png",
+          "top30": false
+        },
+        {
+          "id": "E9b",
+          "name": "Parkeren uitsluitend voor motorfietsen, personenauto's, auto's voor dubbelgebruik en minibussen",
+          "search_query": "electric car charging",
+          "image": "verkeersborden/images/E9b.png",
+          "top30": false
+        },
+        {
+          "id": "E9c",
+          "name": "Parkeren uitsluitend voor lichte vrachtauto’s en vrachtauto’s",
+          "search_query": "handicap parking",
+          "image": "verkeersborden/images/E9c.png",
+          "top30": false
+        },
+        {
+          "id": "E9d",
+          "name": "Parkeren uitsluitend voor autocars",
+          "search_query": "parking disc",
+          "image": "verkeersborden/images/E9d.png",
+          "top30": false
+        },
+        {
+          "id": "E9e",
+          "name": "Verplicht parkeren op de berm of op het trottoir",
+          "search_query": "cars only parking",
+          "image": "verkeersborden/images/E9e.png",
+          "top30": false
+        },
+        {
+          "id": "E9f",
+          "name": "Verplicht parkeren deels op de berm of",
+          "search_query": "trucks only parking",
+          "image": "verkeersborden/images/E9f.png",
+          "top30": false
+        },
+        {
+          "id": "E9g",
+          "name": "Verplicht parkeren op de rijbaan",
+          "search_query": "bus parking",
+          "image": "verkeersborden/images/E9g.png",
+          "top30": false
+        },
+        {
+          "id": "E9h",
+          "name": "Parkeren uitsluitend voor kampeerauto's",
+          "search_query": "camper motorhome parking",
+          "image": "verkeersborden/images/E9h.png",
+          "top30": false
+        },
+        {
+          "id": "E9i",
+          "name": "Parkeren uitsluitend voor motorfietsen",
+          "search_query": "carpool ride share",
+          "image": "verkeersborden/images/E9i.png",
+          "top30": false
+        },
+        {
+          "id": "E9j",
+          "name": "Parkeren in bepaalde tijdsperioden voorbehouden voor specifieke categorieën van voertuigen",
+          "search_query": "electric car plug",
+          "image": "verkeersborden/images/E9j.png",
+          "top30": false
+        },
+        {
+          "id": "E11",
+          "name": "E11:",
+          "search_query": "residential parking permit",
+          "image": "verkeersborden/images/E11.png",
+          "top30": false
+        },
+        {
+          "id": "M19",
+          "name": "Onderbord gebruikt samen met E9a. Het onderbord duidt duidt aan dat het parkeren voorbehouden is voor speed pedelecs",
+          "search_query": "parking zone car",
+          "image": "verkeersborden/images/M19.png",
+          "top30": false
+        },
+        {
+          "id": "M20",
+          "name": "Onderbord gebruikt samen met E9a. Het onderbord duidt duidt aan dat het parkeren voorbehouden is voor fietsen en speed pedelecs",
+          "search_query": "parking zone car",
+          "image": "verkeersborden/images/M20.png",
+          "top30": false
+        },
+        {
+          "id": "GVIIc_30min",
+          "name": "Type VIIc: Onderbord gebruikt samen met de E9 reeks dat aanduidt dat de parkeertijd beperkt is",
+          "search_query": "thirty minutes hurry quick",
+          "image": "verkeersborden/images/GVIIc_30min.png",
+          "top30": false
+        },
+        {
+          "id": "GV_Van_7_tot_19u",
+          "name": "Type V: Onderbord gebruikt samen met E1, E3 en de E9 reeks dat een periode aanduidt",
+          "search_query": "clock time working hours",
+          "image": "verkeersborden/images/GV_Van_7_tot_19u.png",
+          "top30": false
+        }
+      ]
+    },
+    {
+      "id": "serieF",
+      "name": "Serie F: Aanwijzingsborden",
+      "serie": "F",
+      "description": "Aanwijzingsborden in België (blauwe rechthoeken)",
+      "signs": [
+        {
+          "id": "F1bh",
           "name": "Begin van een bebouwde kom",
-          "search_query": "Entering Town",
-          "image": "verkeersborden/images/F1b.png",
-          "wiki_filename": "Belgian_traffic_sign_F1b_horizontaal.svg"
+          "search_query": "city village entrance",
+          "image": "verkeersborden/images/F1bh.png",
+          "top30": false
         },
         {
-          "id": "F3A",
+          "id": "F1bv",
+          "name": "Begin van een bebouwde kom",
+          "search_query": "town city limits",
+          "image": "verkeersborden/images/F1bv.png",
+          "top30": false
+        },
+        {
+          "id": "F1",
+          "name": "Begin van een bebouwde kom. (afgeschaft sinds 2015)",
+          "search_query": "entering village town",
+          "image": "verkeersborden/images/F1.png",
+          "top30": true
+        },
+        {
+          "id": "F3bh",
           "name": "Einde van een bebouwde kom",
-          "search_query": "Leaving town",
-          "image": "verkeersborden/images/F3a.png",
-          "wiki_filename": "Belgian_traffic_sign_F3a_horizontaal.svg"
+          "search_query": "leaving town country",
+          "image": "verkeersborden/images/F3bh.png",
+          "top30": false
         },
         {
-          "id": "F47",
-          "name": "Einde van de werken",
-          "search_query": "End of roadworks",
-          "image": "verkeersborden/images/F47.png",
-          "wiki_filename": "Belgian_road_sign_F47.svg"
+          "id": "F3bv",
+          "name": "Einde van een bebouwde kom",
+          "search_query": "goodbye city country",
+          "image": "verkeersborden/images/F3bv.png",
+          "top30": false
         },
         {
-          "id": "F49",
-          "name": "Oversteekplaats voor voetgangers (aanwijzing)",
-          "search_query": "Pedestrian crossing",
-          "image": "verkeersborden/images/F49.png",
-          "wiki_filename": "Belgian_road_sign_F49.svg"
+          "id": "F3",
+          "name": "Einde van een bebouwde kom. (afgeschaft sinds 2015)",
+          "search_query": "leaving town",
+          "image": "verkeersborden/images/F3.png",
+          "top30": true
         },
         {
-          "id": "F57",
-          "name": "Waterloop",
-          "search_query": "Watercourse",
-          "image": "verkeersborden/images/F57.png",
-          "wiki_filename": "Belgian_road_sign_F57.svg"
+          "id": "F4a",
+          "name": "Begin van een zone met een snelheidsbeperking van 30 km per uur",
+          "search_query": "slow 30 km speed zone",
+          "image": "verkeersborden/images/F4a.png",
+          "top30": false
         },
         {
-          "id": "F111",
-          "name": "Begin van een fietsstraat",
-          "search_query": "Bicycle street",
-          "image": "verkeersborden/images/F111.png",
-          "wiki_filename": "Belgian_road_sign_F111.svg"
+          "id": "F4b",
+          "name": "Einde van een zone met een snelheidsbeperking van 30 km per uur",
+          "search_query": "end speed 30 zone",
+          "image": "verkeersborden/images/F4b.png",
+          "top30": false
+        },
+        {
+          "id": "F5",
+          "name": "Begin van een autosnelweg",
+          "search_query": "highway entrance",
+          "image": "verkeersborden/images/F5.png",
+          "top30": false
+        },
+        {
+          "id": "F7",
+          "name": "Einde van een autosnelweg",
+          "search_query": "highway exit",
+          "image": "verkeersborden/images/F7.png",
+          "top30": false
+        },
+        {
+          "id": "F8",
+          "name": "F8:",
+          "search_query": "highway telephone",
+          "image": "verkeersborden/images/F8.png",
+          "top30": false
+        },
+        {
+          "id": "F9",
+          "name": "Autoweg",
+          "search_query": "cars only road",
+          "image": "verkeersborden/images/F9.png",
+          "top30": false
+        },
+        {
+          "id": "F11",
+          "name": "Einde van een autoweg",
+          "search_query": "end car road",
+          "image": "verkeersborden/images/F11.png",
+          "top30": false
+        },
+        {
+          "id": "F12a",
+          "name": "Begin van een",
+          "search_query": "residential living street",
+          "image": "verkeersborden/images/F12a.png",
+          "top30": false
+        },
+        {
+          "id": "F12b",
+          "name": "Einde van een woonerf of van een erf",
+          "search_query": "end living street",
+          "image": "verkeersborden/images/F12b.png",
+          "top30": false
+        },
+        {
+          "id": "F13",
+          "name": "Verkeersbord dat pijlen op een rijbaan aankondigt en de",
+          "search_query": "information sign",
+          "image": "verkeersborden/images/F13.png",
+          "top30": false
+        },
+        {
+          "id": "F14",
+          "name": "F14:",
+          "search_query": "dead end street",
+          "image": "verkeersborden/images/F14.png",
+          "top30": false
         },
         {
           "id": "F15",
           "name": "Verkeersbord dat de keuze van een richting voorschrijft",
           "search_query": "lane choice",
           "image": "verkeersborden/images/F15.png",
-          "wiki_filename": "Belgian_road_sign_F15.svg"
+          "top30": false
+        },
+        {
+          "id": "F17",
+          "name": "F17:",
+          "search_query": "bus taxi lane bypass",
+          "image": "verkeersborden/images/F17.png",
+          "top30": false
+        },
+        {
+          "id": "F18",
+          "name": "Bijzondere overrijdbare bedding",
+          "search_query": "bus lane tram crossing",
+          "image": "verkeersborden/images/F18.png",
+          "top30": false
+        },
+        {
+          "id": "F19",
+          "name": "Openbare weg met",
+          "search_query": "one way street",
+          "image": "verkeersborden/images/F19.png",
+          "top30": true
+        },
+        {
+          "id": "F21",
+          "name": "Rechts of links voorbijrijden toegelaten",
+          "search_query": "end one way",
+          "image": "verkeersborden/images/F21.png",
+          "top30": false
+        },
+        {
+          "id": "F23a",
+          "name": "Nummerbord van een gewone weg",
+          "search_query": "scenic country road",
+          "image": "verkeersborden/images/F23a.png",
+          "top30": false
+        },
+        {
+          "id": "F23b",
+          "name": "Nummerbord van een autosnelweg",
+          "search_query": "autobahn highway fast",
+          "image": "verkeersborden/images/F23b.png",
+          "top30": false
+        },
+        {
+          "id": "F23c",
+          "name": "Nummerbord van een internationale weg",
+          "search_query": "european international road trip",
+          "image": "verkeersborden/images/F23c.png",
+          "top30": false
+        },
+        {
+          "id": "F23d",
+          "name": "Nummerbord van een ringweg",
+          "search_query": "ring road beltway",
+          "image": "verkeersborden/images/F23d.png",
+          "top30": false
+        },
+        {
+          "id": "F25",
+          "name": "Voorwegwijzer",
+          "search_query": "highway destination sign",
+          "image": "verkeersborden/images/F25.png",
+          "top30": false
+        },
+        {
+          "id": "F27",
+          "name": "Voorwegwijzer",
+          "search_query": "navigation exit sign",
+          "image": "verkeersborden/images/F27.png",
+          "top30": false
+        },
+        {
+          "id": "F29",
+          "name": "Wegwijzer",
+          "search_query": "road trip directions",
+          "image": "verkeersborden/images/F29.png",
+          "top30": false
+        },
+        {
+          "id": "F31",
+          "name": "Wegwijzer naar een autosnelweg",
+          "search_query": "highway entrance ramp",
+          "image": "verkeersborden/images/F31.png",
+          "top30": false
+        },
+        {
+          "id": "F33a",
+          "name": "Wegwijzer naar een ringweg",
+          "search_query": "beltway detour ring",
+          "image": "verkeersborden/images/F33a.png",
+          "top30": false
+        },
+        {
+          "id": "F33b",
+          "name": "Wegwijzer naar vallei of waterloop",
+          "search_query": "river valley scenic nature",
+          "image": "verkeersborden/images/F33b.png",
+          "top30": false
+        },
+        {
+          "id": "F33c",
+          "name": "Wegwijzer naar toeristische attracties of sportcentra",
+          "search_query": "tourist attraction theme park",
+          "image": "verkeersborden/images/F33c.png",
+          "top30": false
+        },
+        {
+          "id": "F34a",
+          "name": "Etablissementen van openbaar nut",
+          "search_query": "pedestrian crossing zone",
+          "image": "verkeersborden/images/F34a.png",
+          "top30": false
+        },
+        {
+          "id": "F35",
+          "name": "Wegwijzer naar toeristische attracties of sportcentra",
+          "search_query": "sports center stadium",
+          "image": "verkeersborden/images/F35.png",
+          "top30": false
+        },
+        {
+          "id": "F37",
+          "name": "Wegwijzer naar hotels, motels, restaurants (klein formaat)",
+          "search_query": "hotel motel restaurant",
+          "image": "verkeersborden/images/F37.png",
+          "top30": false
+        },
+        {
+          "id": "F39",
+          "name": "Voorwegwijzer wegomlegging",
+          "search_query": "detour construction route",
+          "image": "verkeersborden/images/F39.png",
+          "top30": false
+        },
+        {
+          "id": "F41",
+          "name": "Wegomlegging",
+          "search_query": "hospital sign",
+          "image": "verkeersborden/images/F41.png",
+          "top30": false
+        },
+        {
+          "id": "F43",
+          "name": "Plaatsnaambord",
+          "search_query": "tourist information",
+          "image": "verkeersborden/images/F43.png",
+          "top30": false
+        },
+        {
+          "id": "F45",
+          "name": "F45:",
+          "search_query": "tunnel mountain passage",
+          "image": "verkeersborden/images/F45.png",
+          "top30": false
+        },
+        {
+          "id": "F45b",
+          "name": "F45b:",
+          "search_query": "tunnel fire emergency exit",
+          "image": "verkeersborden/images/F45b.png",
+          "top30": false
+        },
+        {
+          "id": "F47",
+          "name": "Einde van de werken",
+          "search_query": "road work finished celebrate",
+          "image": "verkeersborden/images/F47.png",
+          "top30": false
+        },
+        {
+          "id": "F49",
+          "name": "F49:",
+          "search_query": "first aid emergency",
+          "image": "verkeersborden/images/F49.png",
+          "top30": false
+        },
+        {
+          "id": "F50",
+          "name": "Oversteekplaats voor fietsers",
+          "search_query": "cyclists bike lane cross",
+          "image": "verkeersborden/images/F50.png",
+          "top30": false
+        },
+        {
+          "id": "F50bis",
+          "name": "Waarschuwing voor rechtsafslaande bestuurders voor fietsers",
+          "search_query": "turning car watch bikes",
+          "image": "verkeersborden/images/F50bis.png",
+          "top30": false
+        },
+        {
+          "id": "F51",
+          "name": "Ondergrondse of bovengrondse oversteekplaats voor voetgangers",
+          "search_query": "gas station",
+          "image": "verkeersborden/images/F51.png",
+          "top30": false
+        },
+        {
+          "id": "F52",
+          "name": "nooduitgang",
+          "search_query": "emergency exit running green",
+          "image": "verkeersborden/images/F52.png",
+          "top30": false
+        },
+        {
+          "id": "F52bis",
+          "name": "Vluchtroute",
+          "search_query": "escape route safety",
+          "image": "verkeersborden/images/F52bis.png",
+          "top30": false
+        },
+        {
+          "id": "F53",
+          "name": "Verplegingsinrichting",
+          "search_query": "car breakdown repair",
+          "image": "verkeersborden/images/F53.png",
+          "top30": false
+        },
+        {
+          "id": "F55",
+          "name": "Hulppost",
+          "search_query": "car wash",
+          "image": "verkeersborden/images/F55.png",
+          "top30": false
+        },
+        {
+          "id": "F56",
+          "name": "F56:",
+          "search_query": "breakdown bay highway safe",
+          "image": "verkeersborden/images/F56.png",
+          "top30": false
+        },
+        {
+          "id": "F57",
+          "name": "Waterloop",
+          "search_query": "drinking water",
+          "image": "verkeersborden/images/F57.png",
+          "top30": false
+        },
+        {
+          "id": "F59",
+          "name": "Aankondiging van een parking",
+          "search_query": "public restroom",
+          "image": "verkeersborden/images/F59.png",
+          "top30": false
+        },
+        {
+          "id": "F60",
+          "name": "Aankondiging van een overdekte parking",
+          "search_query": "indoor underground parking",
+          "image": "verkeersborden/images/F60.png",
+          "top30": false
+        },
+        {
+          "id": "F61",
+          "name": "Telefoon",
+          "search_query": "electric charging station",
+          "image": "verkeersborden/images/F61.png",
+          "top30": false
+        },
+        {
+          "id": "F62",
+          "name": "Noodtelefoon",
+          "search_query": "emergency phone sos call",
+          "image": "verkeersborden/images/F62.png",
+          "top30": false
+        },
+        {
+          "id": "F63",
+          "name": "Tankstation",
+          "search_query": "hotel motel",
+          "image": "verkeersborden/images/F63.png",
+          "top30": false
+        },
+        {
+          "id": "F65",
+          "name": "Hotel of motel",
+          "search_query": "restaurant eating",
+          "image": "verkeersborden/images/F65.png",
+          "top30": false
+        },
+        {
+          "id": "F67",
+          "name": "Restaurant",
+          "search_query": "bar drinks",
+          "image": "verkeersborden/images/F67.png",
+          "top30": false
+        },
+        {
+          "id": "F69",
+          "name": "Drankgelegenheid",
+          "search_query": "camping tent",
+          "image": "verkeersborden/images/F69.png",
+          "top30": false
+        },
+        {
+          "id": "F71",
+          "name": "Kampeerterrein",
+          "search_query": "youth hostel",
+          "image": "verkeersborden/images/F71.png",
+          "top30": false
+        },
+        {
+          "id": "F73",
+          "name": "Caravanterrein",
+          "search_query": "airport plane",
+          "image": "verkeersborden/images/F73.png",
+          "top30": false
+        },
+        {
+          "id": "F75",
+          "name": "Jeugdherberg",
+          "search_query": "train station",
+          "image": "verkeersborden/images/F75.png",
+          "top30": false
+        },
+        {
+          "id": "F77",
+          "name": "Trefpunt toeristische informatie",
+          "search_query": "harbour port",
+          "image": "verkeersborden/images/F77.png",
+          "top30": false
+        },
+        {
+          "id": "F79",
+          "name": "Aankondiging vermindering rijstroken",
+          "search_query": "merge lanes zipper merge",
+          "image": "verkeersborden/images/F79.png",
+          "top30": false
+        },
+        {
+          "id": "F81",
+          "name": "Aankondiging uitwijking rijstroken",
+          "search_query": "chicane lane detour",
+          "image": "verkeersborden/images/F81.png",
+          "top30": false
+        },
+        {
+          "id": "F83",
+          "name": "Doorsteek middenberm",
+          "search_query": "median crossover highway",
+          "image": "verkeersborden/images/F83.png",
+          "top30": false
+        },
+        {
+          "id": "F85",
+          "name": "Verkeer toegelaten in beide richtingen op een deel van de rijbaan met eenrichtingsverkeer",
+          "search_query": "two way street caution",
+          "image": "verkeersborden/images/F85.png",
+          "top30": false
+        },
+        {
+          "id": "F87",
+          "name": "Verhoogde inrichting(en)",
+          "search_query": "speed hump road jump",
+          "image": "verkeersborden/images/F87.png",
+          "top30": false
+        },
+        {
+          "id": "F89",
+          "name": "Aankondiging snelheidsbeperking per rijstrook",
+          "search_query": "lane speed limit overhead",
+          "image": "verkeersborden/images/F89.png",
+          "top30": false
+        },
+        {
+          "id": "F91",
+          "name": "Snelheidsbeperking per rijstrook",
+          "search_query": "variable speed limit sign",
+          "image": "verkeersborden/images/F91.png",
+          "top30": false
+        },
+        {
+          "id": "F93",
+          "name": "Radio verkeersinformatie",
+          "search_query": "car radio road music",
+          "image": "verkeersborden/images/F93.png",
+          "top30": false
+        },
+        {
+          "id": "F95",
+          "name": "F95:",
+          "search_query": "toll road booth payment",
+          "image": "verkeersborden/images/F95.png",
+          "top30": false
+        },
+        {
+          "id": "F97",
+          "name": "Versmalling weg",
+          "search_query": "lane ends bottleneck merge",
+          "image": "verkeersborden/images/F97.png",
+          "top30": false
+        },
+        {
+          "id": "F98",
+          "name": "F98:",
+          "search_query": "lane layout arrows",
+          "image": "verkeersborden/images/F98.png",
+          "top30": false
+        },
+        {
+          "id": "F99a",
+          "name": "Voorbehouden voor voetgangers, fietsers en ruiters",
+          "search_query": "bicycle street",
+          "image": "verkeersborden/images/F99a.png",
+          "top30": false
+        },
+        {
+          "id": "F99b",
+          "name": "Voorbehouden voor voetgangers en fietsers",
+          "search_query": "end bicycle street",
+          "image": "verkeersborden/images/F99b.png",
+          "top30": false
+        },
+        {
+          "id": "F99c",
+          "name": "Voorbehouden voor landbouwvoertuigen, voetgangers, fietsers en ruiters",
+          "search_query": "tractor farm horses nature",
+          "image": "verkeersborden/images/F99c.png",
+          "top30": false
+        },
+        {
+          "id": "F101a",
+          "name": "Einde F99a",
+          "search_query": "pedestrian zone",
+          "image": "verkeersborden/images/F101a.png",
+          "top30": false
+        },
+        {
+          "id": "F101b",
+          "name": "Einde F99b",
+          "search_query": "end pedestrian zone",
+          "image": "verkeersborden/images/F101b.png",
+          "top30": false
+        },
+        {
+          "id": "F101c",
+          "name": "Einde F99c",
+          "search_query": "end country lane farm",
+          "image": "verkeersborden/images/F101c.png",
+          "top30": false
+        },
+        {
+          "id": "F103",
+          "name": "Begin",
+          "search_query": "pedestrian precinct walking street",
+          "image": "verkeersborden/images/F103.png",
+          "top30": false
+        },
+        {
+          "id": "F105",
+          "name": "Einde voetgangerszone",
+          "search_query": "end pedestrian precinct",
+          "image": "verkeersborden/images/F105.png",
+          "top30": false
+        },
+        {
+          "id": "F107",
+          "name": "Inhaaltoelating. (afgeschaft sinds 2019)",
+          "search_query": "truck passing lane",
+          "image": "verkeersborden/images/F107.png",
+          "top30": false
+        },
+        {
+          "id": "F109",
+          "name": "Einde inhaaltoelating. (afgeschaft sinds 2019)",
+          "search_query": "end truck passing",
+          "image": "verkeersborden/images/F109.png",
+          "top30": false
+        },
+        {
+          "id": "F111",
+          "name": "Begin van een",
+          "search_query": "speed zone",
+          "image": "verkeersborden/images/F111.png",
+          "top30": false
         },
         {
           "id": "F113",
-          "name": "Einde van een fietsstraat",
+          "name": "Einde van een",
           "search_query": "end bicycle",
           "image": "verkeersborden/images/F113.png",
-          "wiki_filename": "Belgian_road_sign_F113.svg"
+          "top30": false
         },
         {
-          "id": "ZC5",
-          "name": "Zonale verboden toegang in beide richtingen",
-          "search_query": "No cars zone",
-          "image": "verkeersborden/images/ZC5.png",
-          "wiki_filename": "Belgian_road_sign_ZC21.svg"
+          "id": "F117",
+          "name": "Begin van een",
+          "search_query": "low emission zone eco green",
+          "image": "verkeersborden/images/F117.png",
+          "top30": false
+        },
+        {
+          "id": "F118",
+          "name": "Einde van een lage emissiezone",
+          "search_query": "end low emission zone",
+          "image": "verkeersborden/images/F118.png",
+          "top30": false
+        },
+        {
+          "id": "F119",
+          "name": "Begin van een luchthavengebied",
+          "search_query": "airplane takeoff airport flight",
+          "image": "verkeersborden/images/F119.png",
+          "top30": false
+        },
+        {
+          "id": "F120",
+          "name": "Einde van een luchthavengebied",
+          "search_query": "leaving airport travel",
+          "image": "verkeersborden/images/F120.png",
+          "top30": false
+        },
+        {
+          "id": "F34b1",
+          "name": "Wegwijzer voor bepaalde weggebruikers",
+          "search_query": "cycling bike route path",
+          "image": "verkeersborden/images/F34b1.png",
+          "top30": false
+        },
+        {
+          "id": "F34c1",
+          "name": "Wegwijzer voor bepaalde weggebruikers naar toeristische attracties of sportcentra",
+          "search_query": "castle monument tourism",
+          "image": "verkeersborden/images/F34c1.png",
+          "top30": false
+        },
+        {
+          "id": "F34b2",
+          "name": "Wegwijzer voor bepaalde weggebruikers (alternatief formaat)",
+          "search_query": "hiking trail walking",
+          "image": "verkeersborden/images/F34b2.png",
+          "top30": false
+        },
+        {
+          "id": "F34c2",
+          "name": "Wegwijzer voor bepaalde weggebruikers naar toeristische attracties of sportcentra (alternatief formaat)",
+          "search_query": "museum exhibition culture",
+          "image": "verkeersborden/images/F34c2.png",
+          "top30": false
         }
       ]
     }

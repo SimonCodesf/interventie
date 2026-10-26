@@ -37,6 +37,7 @@ function handleGetPosters($db) {
             }
 
             $poster['project'] = normalizeProjectName($poster['project_name'] ?? null, $poster['upload_type'] ?? null);
+            $poster['target8w'] = posterTarget8wToApi($poster, '/uploads/targets/', $poster['created_at'] ?? '');
         }
         
         jsonResponse($posters);
@@ -66,6 +67,7 @@ function handleGetPoster($db, $id) {
         }
 
         $poster['project'] = normalizeProjectName($poster['project_name'] ?? null, $poster['upload_type'] ?? null);
+        $poster['target8w'] = posterTarget8wToApi($poster, '/uploads/targets/', $poster['created_at'] ?? '');
         
         jsonResponse($poster);
     } else {
@@ -571,49 +573,12 @@ function handleUploadPoster($db) {
         
         createThumbnail(UPLOADS_DIR . '/' . $jpegFilename, THUMBNAILS_DIR . '/' . $thumbnailFilename);
         
-        // Mind files - save as {id}.mind
-        $arMarkerPath = '';
-        $mindDir = __DIR__ . '/../assets/nft/' . $id;
-        
-        if ($arMarkerFile && $arMarkerFile['error'] === UPLOAD_ERR_OK) {
-            // Handmatig geüploade .mind file
-            if (!file_exists($mindDir)) mkdir($mindDir, 0755, true);
-            $mindFilename = $id . '.mind';
-            move_uploaded_file($arMarkerFile['tmp_name'], $mindDir . '/' . $mindFilename);
-            $arMarkerPath = 'assets/nft/' . $id . '/' . $id;
-        } else {
-            // Geen .mind geüpload - genereer automatisch vanuit JPEG
-            $arMarkerPath = 'assets/nft/' . $id . '/' . $id;
-            error_log("[UPLOAD] Geen .mind bestand meegeleverd voor {$id} (type: {$uploadType}) - auto-genereren");
-            
-            // Zoek node executable
-            $nodePath = 'node';
-            if (file_exists('/opt/alt/alt-nodejs20/root/usr/bin/node')) {
-                $nodePath = '/opt/alt/alt-nodejs20/root/usr/bin/node';
-            } elseif (file_exists('/usr/local/bin/node')) {
-                $nodePath = '/usr/local/bin/node';
-            } elseif (file_exists('/usr/bin/node')) {
-                $nodePath = '/usr/bin/node';
-            }
-            
-            $compileScript = __DIR__ . '/../tools/compile_single_mind.js';
-            $jpegFullPath = UPLOADS_DIR . '/' . $jpegFilename;
-            $cmd = $nodePath . ' ' . escapeshellarg($compileScript) . ' ' . escapeshellarg($id) . ' ' . escapeshellarg($jpegFullPath) . ' 2>&1';
-            
-            error_log("[UPLOAD] .mind compilatie commando: $cmd");
-            exec($cmd, $compileOutput, $compileReturn);
-            $outputStr = implode("\n", $compileOutput);
-            error_log("[UPLOAD] .mind compilatie output: $outputStr");
-            
-            if ($compileReturn === 2) {
-                // Exit code 2 = server-side compilatie niet beschikbaar (geen native build tools)
-                error_log("[UPLOAD] INFO: Server-side .mind compilatie niet beschikbaar voor {$id}. Poster opgeslagen zonder AR tracking.");
-            } elseif ($compileReturn !== 0) {
-                error_log("[UPLOAD] WAARSCHUWING: .mind compilatie mislukt (exit code: $compileReturn) voor {$id}");
-            } else {
-                error_log("[UPLOAD] .mind succesvol gegenereerd voor {$id}");
-            }
-        }
+        // 8th Wall target automatisch genereren vanuit JPEG (luminance target8w.jpg + target8w.json)
+        $target8wSuccess = autogeneratePosterTarget8w($id, UPLOADS_DIR . '/' . $jpegFilename);
+        $target8wJson = $target8wSuccess ? 'target8w.json' : '';
+        $target8wImage = $target8wSuccess ? 'target8w.jpg' : '';
+        $arMarkerPath = 'uploads/targets/' . $id;
+        error_log("[UPLOAD] 8th Wall target " . ($target8wSuccess ? "succesvol gegenereerd" : "mislukt") . " voor {$id}");
         
         // Layers
         $layersData = [];
@@ -776,8 +741,8 @@ function handleUploadPoster($db) {
         // Database insert
         $arCameraFeed = isset($_POST['ar_camera_feed']) && $_POST['ar_camera_feed'] === '1' ? 1 : 0;
         $stmt = $db->prepare("
-            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, project_name, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed, upload_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)
+            INSERT INTO posters (id, title, description, jpeg_filename, pdf_medium_filename, pdf_large_filename, thumbnail, latitude, longitude, location_description, project_name, artikel_link, credits, ar_marker, layers_data, glb_model, audio_file, gallery_images, ar_camera_feed, upload_type, target8w_json, target8w_image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?)
         ");
         
         // Verwerk gallery afbeeldingen
@@ -805,13 +770,11 @@ function handleUploadPoster($db) {
         $stmt->execute([
             $id, $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             '/uploads/thumbnails/' . $thumbnailFilename, $latitude, $longitude, $locationDescription,
-            $projectName, $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed, $uploadType
+            $projectName, $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($galleryImages), $arCameraFeed, $uploadType,
+            $target8wJson, $target8wImage
         ]);
         
         logAdminActivity('UPLOAD_SUCCESS', "$title (ID: $id, type: $uploadType)");
-        
-        // Trigger MindAR chunk rebuild
-        triggerMindMerge();
         
         // Return new poster met geparsede data
         $stmt = $db->prepare("SELECT * FROM posters WHERE id = ?");
@@ -1331,24 +1294,29 @@ function handleUpdatePoster($db, $id) {
         
         error_log("[GALLERY] Final gallery array: " . json_encode($existingGallery));
         
+        // 8th Wall target automatisch genereren indien nodig
+        $target8wSuccess = autogeneratePosterTarget8w($id, UPLOADS_DIR . '/' . $jpegFilename);
+        $target8wJson = $target8wSuccess ? 'target8w.json' : ($poster['target8w_json'] ?? '');
+        $target8wImage = $target8wSuccess ? 'target8w.jpg' : ($poster['target8w_image'] ?? '');
+        $arMarkerPath = 'uploads/targets/' . $id;
+
         $stmt = $db->prepare("
             UPDATE posters SET 
                 title = ?, description = ?, jpeg_filename = ?, pdf_medium_filename = ?, pdf_large_filename = ?,
                 thumbnail = ?, latitude = ?, longitude = ?, location_description = ?, 
-                project_name = ?, artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?, ar_camera_feed = ?
+                project_name = ?, artikel_link = ?, credits = ?, ar_marker = ?, layers_data = ?, gallery_images = ?, ar_camera_feed = ?,
+                target8w_json = ?, target8w_image = ?
             WHERE id = ?
         ");
         
         $stmt->execute([
             $title, $description, $jpegFilename, $pdfMediumFilename, $pdfLargeFilename,
             $thumbnailPath, $latitude, $longitude, $locationDescription,
-            $projectName, $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $arCameraFeed, $id
+            $projectName, $artikelLink, $credits, $arMarkerPath, json_encode($layersData), json_encode($existingGallery), $arCameraFeed,
+            $target8wJson, $target8wImage, $id
         ]);
         
         logAdminActivity('UPDATE_POSTER', "$title (ID: $id)");
-        
-        // Trigger MindAR chunk rebuild
-        triggerMindMerge();
         
         // Return updated poster met geparsede data
         $stmt = $db->prepare("SELECT * FROM posters WHERE id = ?");

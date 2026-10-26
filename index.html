@@ -10,31 +10,24 @@
     <link rel="icon" href="img/Artboard%201logo.svg" type="image/svg+xml">
     
     <!-- Style -->
-    <link rel="stylesheet" href="css/style.css?v=20251216170055">
-    <link rel="stylesheet" href="css/file-manager.css?v=20251216170055">
-    <link rel="stylesheet" href="css/loader.css?v=20251216170055">
-    
-    <!-- AR Libraries -->
-    <script src="js/vendor/aframe.min.js"></script>
-    <script src="js/vendor/mindar-image-aframe.prod.js"></script>
-    
-    <!-- GIF Component voor A-Frame (stabiele GIF animatie in AR) -->
-    <script src="js/gif-component.js?t=202501271740"></script>
+    <link rel="stylesheet" href="css/style.css?v=20261026">
+    <link rel="stylesheet" href="css/file-manager.css?v=20261026">
+    <link rel="stylesheet" href="css/loader.css?v=20261026">
     
     <!-- File Manager -->
-    <script src="js/file-manager.js?v=202503041900"></script>
+    <script src="js/file-manager.js?v=20261026"></script>
     
     <!-- Memeborden Module (verkeersborden AR + GIF) -->
-    <script src="js/memeborden.js?v=202503041900"></script>
+    <script src="js/memeborden.js?v=20261026"></script>
     
     <!-- iPhone Mirror (capture QuickTime venster) -->
-    <script src="js/iphone-mirror.js?v=20250603"></script>
+    <script src="js/iphone-mirror.js?v=20261026"></script>
     
     <!-- Presentatie Slideshow -->
-    <script src="js/slideshow.js?v=20250603"></script>
+    <script src="js/slideshow.js?v=20261026"></script>
     
-    <!-- App Logic -->
-    <script src="js/app.js?v=202503041900"></script>
+    <!-- App Logic (8th Wall XR Engine) -->
+    <script src="js/app.js?v=20261026"></script>
     
     <!-- Loader Style -->
     <link rel="stylesheet" href="css/loader.css">
@@ -68,29 +61,16 @@
             <div class="scan-guide">
                 <div class="scan-frame"></div>
                 <p id="scanning-indicator">Richt je camera op een poster</p>
-                <button id="scan-button" class="scan-button" style="display: none;">Scan</button>
             </div>
         </div>
 
-        <!-- AR Scene -->
-        <a-scene id="ar-scene" mindar-image="imageTargetSrc: assets/all-posters.mind; filterMinCF:0.003; filterBeta: 0.025;" 
-                 color-space="sRGB" 
-                 renderer="colorManagement: true, physicallyCorrectLights" 
-                 vr-mode-ui="enabled: false" 
-                 device-orientation-permission-ui="enabled: false">
-            
-            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-            
-            <a-assets>
-                <!-- Assets worden dynamisch geladen in js/modules/ar.js -->
-            </a-assets>
-            
-            <!-- Targets worden dynamisch toegevoegd -->
-        </a-scene>
-        
-        <!-- Loader -->
-        <div id="arjs-loader" class="arjs-loader" style="display: none;">
-            <div>Loading AR...</div>
+        <!-- 8th Wall AR Scene Container -->
+        <div id="ar-scene"></div>
+
+        <!-- Start Camera Overlay (Mobile) -->
+        <div id="start-overlay" class="start-overlay" style="display: none;">
+            <button id="start-btn" class="start-btn">START CAMERA</button>
+            <div id="boot-status" class="boot-status" aria-live="polite"></div>
         </div>
     </div>
 
