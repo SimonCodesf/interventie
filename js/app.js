@@ -42,24 +42,98 @@ const sceneBox = () => document.getElementById('ar-scene');
 
 // ==================== HACKER LOADER LOGGER ====================
 
-function appendLoaderLog(text) {
-    const content = document.getElementById('loader-content');
-    if (content) {
-        const line = document.createElement('div');
-        line.className = 'log-line';
-        line.textContent = '> ' + text;
-        content.appendChild(line);
-        content.scrollTop = content.scrollHeight;
+const logQueue = [];
+let isProcessingQueue = false;
+let queueTimeout = null;
+
+function processLogQueue() {
+    if (logQueue.length === 0) {
+        isProcessingQueue = false;
+        return;
+    }
+    
+    isProcessingQueue = true;
+    const msg = logQueue.shift();
+    const loaderContent = document.getElementById('loader-content');
+    if (!loaderContent) return;
+    
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.textContent = `> ${msg}`;
+    
+    loaderContent.appendChild(line);
+    loaderContent.scrollLeft = loaderContent.scrollWidth;
+    
+    while (loaderContent.children.length > 5) {
+        loaderContent.removeChild(loaderContent.firstChild);
+    }
+
+    const randomDelay = Math.floor(Math.random() * 380) + 20;
+    queueTimeout = setTimeout(processLogQueue, randomDelay);
+}
+
+function logToLoader(msg, type = 'info') {
+    if (!msg || typeof msg !== 'string') return;
+
+    // 1. Clean Emojis
+    msg = msg.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+
+    // 2. Translate & Simplify (Dutch)
+    if (msg.includes('Fetching posters') || msg.includes('FETCHING_DATASETS')) { msg = 'POSTERS OPHALEN...'; }
+    else if (msg.includes('Fetched') || msg.includes('DATA GELADEN')) { msg = 'DATA GELADEN'; }
+    else if (msg.includes('Switching to AR') || msg.includes('INITIALIZING_XR')) { msg = 'AR STARTEN...'; }
+    else if (msg.includes('CAMERA_PERMISSION_GRANTED') || msg.includes('AR view displayed')) { msg = 'CAMERA ACTIEF'; }
+    else if (msg.includes('CHECKING_WEBGL') || msg.includes('WebGL available')) { msg = 'GPU GEREED'; }
+    else if (msg.includes('8TH_WALL_XR_READY') || msg.includes('MindAR ready')) { msg = 'AR ENGINE GEREED'; }
+    else if (msg.includes('Poster GEVONDEN') || msg.includes('Bord GEVONDEN') || msg.includes('TARGET FOUND')) {
+        const parts = msg.split(':');
+        const title = (parts[1] || '').trim();
+        msg = 'GEVONDEN: ' + (title ? title.substring(0, 16) : 'TARGET');
+    }
+    else if (msg.includes('Poster lost') || msg.includes('Target lost') || msg.includes('verloren') || msg.includes('TARGET LOST')) { msg = 'ZOEKEN...'; }
+    else if (msg.includes('Wisselen naar chunk') || msg.includes('Switching target')) { msg = 'DOEL WISSELEN'; }
+    else if (msg.includes('Starting scan') || msg.includes('Start chunk scan')) { msg = 'SCAN STARTEN...'; }
+    else if (msg.includes('Scan stopped')) { msg = 'SCAN GESTOPT'; }
+    else if (msg.includes('Completed cycle')) { msg = 'CYCLUS VOLTOOID'; }
+    else if (msg.includes('REQUESTING_CAMERA') || msg.includes('Requesting camera')) { msg = 'CAMERA TOEGANG VRAGEN...'; }
+    else if (msg.includes('SYSTEM_READY') || msg.includes('SYSTEM_ONLINE')) { msg = 'SYSTEEM GEREED'; }
+    else if (msg.includes('CONFIGURING_TARGETS')) { msg = 'TARGETS CONFIGUREREN...'; }
+    else if (msg.includes('BUILDING_3D_SCENE')) { msg = '3D SCENE OPBOUWEN...'; }
+    else if (msg.includes('GIF') || msg.includes('Visuals')) { msg = 'VISUALS LADEN...'; }
+
+    if (msg.length < 2) return;
+    
+    logQueue.push(msg.toUpperCase());
+    
+    if (!isProcessingQueue) {
+        processLogQueue();
     }
 }
 
-function hideLoader() {
-    const loader = document.getElementById('hacker-loader');
-    if (loader) {
-        loader.classList.remove('visible');
-        setTimeout(() => { loader.style.display = 'none'; }, 400);
-    }
+function appendLoaderLog(text) {
+    logToLoader(text);
 }
+
+function hideLoader() {
+    // Verberg de ticker nooit: houd actief als statusbalk onderaan
+    logToLoader('SYSTEEM GEREED');
+}
+
+// Hook console.log om automatisch de loader ticker te voeden
+const originalLog = console.log;
+console.log = function(...args) {
+    originalLog.apply(console, args);
+    const msg = args.join(' ');
+    const keywords = [
+        'Fetching', 'Fetched', 'Switching', 'AR view', 'WebGL', 'Chunk', 'Starting', 
+        'Poster', 'Target', 'GIF', 'SYSTEM_READY', 'Camera', 'API', 'Scan', 
+        'TARGET', 'Layers', 'Requesting', 'Bord GEVONDEN', 'Poster GEVONDEN',
+        'verloren', 'INITIALIZING', 'CONFIGURING', 'SYSTEM_ONLINE'
+    ];
+    if (keywords.some(k => msg.includes(k))) {
+        logToLoader(msg);
+    }
+};
 
 // ==================== SCRIPT LADEN / RESOLVEN ====================
 
@@ -186,9 +260,9 @@ function registerAframeComponents() {
 
     AFRAME.registerComponent('smooth-anchor', {
         schema: {
-            posFactor: { default: 0.78 },
-            rotFactor: { default: 0.72 },
-            snapThreshold: { default: 0.22 }
+            posFactor: { default: 0.32 },
+            rotFactor: { default: 0.28 },
+            snapThreshold: { default: 0.35 }
         },
         init: function () {
             this.rawPos = new THREE.Vector3();
@@ -197,7 +271,7 @@ function registerAframeComponents() {
             this.smoothedQuat = new THREE.Quaternion();
             this.first = true;
         },
-        tick: function () {
+        tock: function () {
             const obj = this.el.object3D;
             if (!obj || !obj.visible) {
                 this.first = true;
@@ -227,18 +301,17 @@ function fitSignDimensions(target) {
     const ow = parseFloat(p && (p.originalWidth || p.width)) || 640;
     const oh = parseFloat(p && (p.originalHeight || p.height)) || 640;
     const aspect = ow / oh;
-    let w = 1.0;
-    let h = 1.0;
-    if (aspect >= 1) {
-        w = Math.min(1.8, Math.max(1.0, aspect));
-        h = w / aspect;
+    let w = 1.0, h = 1.0;
+    if (aspect <= 1.0) {
+        w = aspect;
+        h = 1.0;
     } else {
-        h = Math.min(1.8, Math.max(1.0, 1 / aspect));
-        w = h * aspect;
+        w = 1.0;
+        h = 1.0 / aspect;
     }
     return {
-        w: Math.round(w * 100) / 100,
-        h: Math.round(h * 100) / 100
+        w: Math.round(w * 1000) / 1000,
+        h: Math.round(h * 1000) / 1000
     };
 }
 
@@ -257,6 +330,8 @@ function buildLayersHTML(poster) {
     }
 
     if (!Array.isArray(layers)) return '';
+
+    const fit = fitSignDimensions(poster.target8w || { properties: { width: 707, height: 1000 } });
 
     for (let i = 0; i < layers.length; i++) {
         const layer = layers[i];
@@ -291,8 +366,8 @@ function buildLayersHTML(poster) {
             layersHTML += `
                 <a-plane
                     position="0 0 ${baseZ}"
-                    width="1"
-                    height="1.414"
+                    width="${fit.w}"
+                    height="${fit.h}"
                     gif="autoplay: true; transparent: true"
                     src="${fileUrl}"
                     ${animationStr}>
@@ -301,8 +376,8 @@ function buildLayersHTML(poster) {
             layersHTML += `
                 <a-plane
                     position="0 0 ${baseZ}"
-                    width="1"
-                    height="1.414"
+                    width="${fit.w}"
+                    height="${fit.h}"
                     material="src: ${fileUrl}; transparent: true; alphaTest: 0.1"
                     ${animationStr}>
                 </a-plane>`;
@@ -413,22 +488,19 @@ function updateSceneTargets(targets) {
                 const st = anchorState[item.name];
                 lostCount++;
                 if (st) st.visible = false;
-                const anchorObj = anchor.object3D;
-                if (anchorObj) anchorObj.visible = true;
 
                 if (st && st.hideTimer) clearTimeout(st.hideTimer);
                 if (st) {
                     st.hideTimer = setTimeout(() => {
                         st.hideTimer = 0;
-                        if (anchorObj && !anchorState[item.name]?.visible) {
-                            anchorObj.visible = false;
+                        if (!anchorState[item.name]?.visible) {
                             window.chunkLocked = false;
                             showChunkCycleButtonAgain();
                             document.querySelector('.scan-frame')?.classList.remove('hidden');
                             document.getElementById('scanning-indicator')?.classList.remove('hidden');
                             showSwipeState(1);
                         }
-                    }, LOST_GRACE_MS);
+                    }, 250);
                 }
             });
         } else {
@@ -444,8 +516,8 @@ function updateSceneTargets(targets) {
             const borderPlane = document.createElement('a-plane');
             borderPlane.setAttribute('data-meme-border', item.signId);
             borderPlane.setAttribute('position', '0 0 0.005');
-            borderPlane.setAttribute('width', (dims.w * 1.15).toFixed(2));
-            borderPlane.setAttribute('height', (dims.h * 1.15).toFixed(2));
+            borderPlane.setAttribute('width', (dims.w * 1.08).toFixed(3));
+            borderPlane.setAttribute('height', (dims.h * 1.08).toFixed(3));
             borderPlane.setAttribute('color', '#CC0000');
             borderPlane.setAttribute('visible', 'false');
             anchor.appendChild(borderPlane);
@@ -455,8 +527,8 @@ function updateSceneTargets(targets) {
             gifPlane.setAttribute('id', `meme-gif-plane-${item.signId}`);
             gifPlane.setAttribute('data-meme-sign', item.signId);
             gifPlane.setAttribute('position', '0 0 0.01');
-            gifPlane.setAttribute('width', dims.w.toFixed(2));
-            gifPlane.setAttribute('height', dims.h.toFixed(2));
+            gifPlane.setAttribute('width', dims.w.toFixed(3));
+            gifPlane.setAttribute('height', dims.h.toFixed(3));
             gifPlane.setAttribute('visible', 'false');
             gifPlane.setAttribute('gif', 'autoplay: true; transparent: false');
             anchor.appendChild(gifPlane);
@@ -489,15 +561,12 @@ function updateSceneTargets(targets) {
             anchor.addEventListener('xrextraslost', () => {
                 const st = anchorState[item.name];
                 if (st) st.visible = false;
-                const anchorObj = anchor.object3D;
-                if (anchorObj) anchorObj.visible = true;
 
                 if (st && st.hideTimer) clearTimeout(st.hideTimer);
                 if (st) {
                     st.hideTimer = setTimeout(() => {
                         st.hideTimer = 0;
-                        if (anchorObj && !anchorState[item.name]?.visible) {
-                            anchorObj.visible = false;
+                        if (!anchorState[item.name]?.visible) {
                             borderPlane.setAttribute('visible', 'false');
                             gifPlane.setAttribute('visible', 'false');
                             window.chunkLocked = false;
@@ -506,7 +575,7 @@ function updateSceneTargets(targets) {
                             document.getElementById('scanning-indicator')?.classList.remove('hidden');
                             showSwipeState(1);
                         }
-                    }, LOST_GRACE_MS);
+                    }, 250);
                 }
             });
         }
@@ -669,6 +738,9 @@ function showChunkCycleButtonAgain() {
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn) {
         btn.innerHTML = 'SCAN';
+        btn.style.background = 'rgba(0, 0, 0, 0.9)';
+        btn.style.borderColor = '#fff';
+        btn.style.color = '#fff';
         btn.style.display = 'block';
     }
 }
@@ -688,6 +760,11 @@ function startChunkScan() {
     let dots = 0;
     const total = arChunks.length;
 
+    // Direct groene scan styling activeren
+    btn.style.background = 'rgba(255, 255, 255, 0.15)';
+    btn.style.borderColor = '#0f0';
+    btn.style.color = '#0f0';
+
     const updateBtn = () => {
         if (!btn || !isChunkScanning) return;
         dots = (dots + 1) % 4;
@@ -696,18 +773,18 @@ function startChunkScan() {
 
     updateBtn();
     clearInterval(chunkScanInterval);
-    chunkScanInterval = setInterval(updateBtn, 350);
+    chunkScanInterval = setInterval(updateBtn, 300);
 
     const stepCycle = async () => {
         if (!isChunkScanning || window.chunkLocked) return;
         const nextIndex = (currentChunkIndex + 1) % total;
         await switchChunk(nextIndex, true);
         if (isChunkScanning && !window.chunkLocked) {
-            chunkScanTimeout = setTimeout(stepCycle, 2400);
+            chunkScanTimeout = setTimeout(stepCycle, 1800);
         }
     };
 
-    chunkScanTimeout = setTimeout(stepCycle, 2400);
+    chunkScanTimeout = setTimeout(stepCycle, 1800);
 }
 
 function stopChunkScan() {
@@ -715,7 +792,12 @@ function stopChunkScan() {
     if (chunkScanTimeout) { clearTimeout(chunkScanTimeout); chunkScanTimeout = null; }
     if (chunkScanInterval) { clearInterval(chunkScanInterval); chunkScanInterval = null; }
     const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) btn.innerHTML = 'SCAN';
+    if (btn) {
+        btn.innerHTML = 'SCAN';
+        btn.style.background = 'rgba(0, 0, 0, 0.9)';
+        btn.style.borderColor = '#fff';
+        btn.style.color = '#fff';
+    }
 }
 
 async function switchChunk(index, keepScanRunning = false) {
@@ -903,10 +985,8 @@ async function bootAR() {
 
         showChunkCycleButton();
 
-        // Verberg de hacker loader nu de AR camera actief draait
-        setTimeout(() => {
-            hideLoader();
-        }, 300);
+        // Systeem gereed: ticker blijft permanent actief onderaan
+        hideLoader();
 
     } catch (e) {
         console.error('[AR Boot Fout]', e);
