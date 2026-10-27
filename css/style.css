@@ -1278,9 +1278,9 @@ main {
 }
 
 #ar-header {
-    height: 10vh;
-    height: 10dvh;
-    min-height: 60px;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
     background: var(--black);
     display: flex;
     justify-content: center;
@@ -1290,13 +1290,15 @@ main {
     top: 0;
     left: 0;
     width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
 #ar-header .logo,
 #ar-header .ar-logo {
-    max-height: 7vh;
-    min-height: 40px;
-    max-width: 80vw;
+    max-height: 26px;
+    min-height: 20px;
+    max-width: 60vw;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -1314,12 +1316,12 @@ main {
 
 #ar-scene {
     position: fixed !important;
-    top: 11vh !important;
+    top: 54px !important;
     left: 4vw !important;
     right: 4vw !important;
-    bottom: 13vh !important;
+    bottom: 78px !important;
     width: calc(100% - 8vw) !important;
-    height: calc(100% - 24vh) !important;
+    height: calc(100% - 132px) !important;
     z-index: 1 !important;
     overflow: hidden !important;
     border: none !important;
@@ -1406,10 +1408,10 @@ a-scene canvas {
 
 .scan-frame {
     position: fixed;
-    top: 11vh;
+    top: 54px;
     left: 4vw;
     right: 4vw;
-    bottom: 13vh;
+    bottom: 78px;
     border: 0.5px solid #ffffff;
     pointer-events: none;
     z-index: 10;
@@ -1422,25 +1424,10 @@ a-scene canvas {
 }
 
 #scanning-indicator {
-    position: fixed;
-    bottom: calc(13vh + 16px);
-    left: 0;
-    right: 0;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.7);
-    font-family: var(--font-data, 'Roboto Mono', monospace);
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    pointer-events: none;
-    z-index: 15;
-    margin: 0;
-    padding: 0 16px;
-    transition: opacity 0.3s ease;
-}
-
-#scanning-indicator.hidden {
-    opacity: 0;
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 /* Scan button spinner */
@@ -1449,6 +1436,10 @@ a-scene canvas {
     -webkit-user-select: none;
     -webkit-touch-callout: none;
     touch-action: manipulation;
+    outline: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-appearance: none !important;
 }
 
 .scan-spinner {
@@ -1513,8 +1504,8 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: calc(100vh - 70px); /* Full height except header (75px) and logger (30px) */
-    height: calc(100dvh - 70px);
+    height: calc(100vh - 54px - 30px); /* Full height except header (54px) and logger (30px) */
+    height: calc(100dvh - 54px - 30px);
     bottom: 30px; /* Keep above logger */
 }
 
@@ -1526,10 +1517,11 @@ video {
     touch-action: manipulation;
     pointer-events: auto;
     z-index: 1000000;
-    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    -webkit-tap-highlight-color: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
 }
 
 .swipe-indicator {
@@ -1543,31 +1535,57 @@ video {
     position: absolute;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     opacity: 0;
     transition: opacity 0.3s ease;
-    padding: 0 24px;
+    padding: 0 44px;
+    box-sizing: border-box;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     pointer-events: auto;
 }
 
 .swipe-state.active {
-    display: flex;
+    display: flex !important;
     opacity: 1;
 }
 
-#swipe-state-1 {
+#swipe-state-1,
+#swipe-state-2 {
+    display: none;
+    align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 44px;
+    box-sizing: border-box;
 }
 
 .swipe-text {
-    font-family: var(--font-data);
-    font-size: 0.8rem; /* Slightly smaller text */
-    font-weight: 400;
+    font-family: var(--font-data, 'Roboto Mono', monospace);
+    font-size: 0.8rem;
+    font-weight: 500;
     color: var(--white);
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    line-height: 1; /* Ensure vertical centering */
+    line-height: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .chevron-icon {
@@ -1576,11 +1594,16 @@ video {
     opacity: 0.9;
     width: 12px;
     height: 8px;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
     flex-shrink: 0;
 }
 
 #ar-footer-swipe-bar.expanded .chevron-icon {
-    transform: rotate(180deg);
+    transform: translateY(-50%) rotate(180deg);
 }
 
 .footer-text {
@@ -1721,18 +1744,19 @@ video {
 
 #gallery-overlay-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important; /* 2 kolommen op mobile */
-    gap: 2px !important;
-    padding: 8px !important;
-    padding-bottom: 1rem !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* 2 kolommen */
+    gap: 8px !important;
+    padding: 10px 10px 4rem 10px !important;
     background: var(--black) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 @media (min-width: 768px) {
     #gallery-overlay-grid {
-        grid-template-columns: repeat(3, 1fr) !important; /* 3 kolommen op desktop */
-        gap: 2px !important;
-        padding: 10px !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 10px !important;
+        padding: 12px 14px 4rem 14px !important;
     }
 }
 

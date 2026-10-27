@@ -183,8 +183,8 @@ function fetchTimeout(url, ms = 15000) {
 }
 
 function bootStatus(msg) {
-    const el = document.getElementById('scanning-indicator');
-    if (el) el.textContent = msg || 'Richt je camera op een poster';
+    // Geen tekst op het camerabeeld; alle statusupdates lopen via de hacker-loader ticker onderaan
+    if (msg) logToLoader(msg);
 }
 
 // ==================== CAMERA & ENGINE CONTROLES ====================
@@ -475,7 +475,6 @@ function updateSceneTargets(targets) {
                 hideChunkCycleButton();
 
                 document.querySelector('.scan-frame')?.classList.add('hidden');
-                document.getElementById('scanning-indicator')?.classList.add('hidden');
 
                 showSwipeState(2);
                 const titleEl = document.getElementById('detected-poster-title');
@@ -497,7 +496,6 @@ function updateSceneTargets(targets) {
                             window.chunkLocked = false;
                             showChunkCycleButtonAgain();
                             document.querySelector('.scan-frame')?.classList.remove('hidden');
-                            document.getElementById('scanning-indicator')?.classList.remove('hidden');
                             showSwipeState(1);
                         }
                     }, 250);
@@ -546,7 +544,6 @@ function updateSceneTargets(targets) {
                 hideChunkCycleButton();
 
                 document.querySelector('.scan-frame')?.classList.add('hidden');
-                document.getElementById('scanning-indicator')?.classList.add('hidden');
 
                 showSwipeState(2);
                 const titleEl = document.getElementById('detected-poster-title');
@@ -572,7 +569,6 @@ function updateSceneTargets(targets) {
                             window.chunkLocked = false;
                             showChunkCycleButtonAgain();
                             document.querySelector('.scan-frame')?.classList.remove('hidden');
-                            document.getElementById('scanning-indicator')?.classList.remove('hidden');
                             showSwipeState(1);
                         }
                     }, 250);
@@ -675,26 +671,29 @@ function showChunkCycleButton() {
     btn.innerHTML = 'SCAN';
     btn.style.cssText = `
         position: fixed;
-        bottom: 120px;
+        bottom: 105px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 10000;
-        background: rgba(0, 0, 0, 0.9);
-        color: #fff;
-        border: 0.5px solid #fff;
+        background: rgba(0, 0, 0, 0.85);
+        color: #ffffff;
+        border: 1px solid #ffffff;
+        outline: none;
+        box-shadow: none;
         border-radius: 0;
-        padding: 6px 12px;
-        font-family: 'Roboto', sans-serif;
+        padding: 7px 16px;
+        font-family: var(--font-data, 'Roboto Mono', monospace);
         font-size: 11px;
         letter-spacing: 2px;
         cursor: pointer;
-        min-width: 70px;
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+        min-width: 74px;
+        text-align: center;
+        -webkit-appearance: none;
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         touch-action: manipulation;
-        transition: background 0.15s, color 0.15s;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
     `;
 
     // Long-press: open de Quick Picker (450ms)
@@ -738,9 +737,11 @@ function showChunkCycleButtonAgain() {
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn) {
         btn.innerHTML = 'SCAN';
-        btn.style.background = 'rgba(0, 0, 0, 0.9)';
-        btn.style.borderColor = '#fff';
-        btn.style.color = '#fff';
+        btn.style.background = 'rgba(0, 0, 0, 0.85)';
+        btn.style.borderColor = '#ffffff';
+        btn.style.color = '#ffffff';
+        btn.style.boxShadow = 'none';
+        btn.style.outline = 'none';
         btn.style.display = 'block';
     }
 }
@@ -761,9 +762,11 @@ function startChunkScan() {
     const total = arChunks.length;
 
     // Direct groene scan styling activeren
-    btn.style.background = 'rgba(255, 255, 255, 0.15)';
-    btn.style.borderColor = '#0f0';
-    btn.style.color = '#0f0';
+    btn.style.background = 'rgba(0, 255, 0, 0.12)';
+    btn.style.borderColor = '#00ff00';
+    btn.style.color = '#00ff00';
+    btn.style.boxShadow = 'none';
+    btn.style.outline = 'none';
 
     const updateBtn = () => {
         if (!btn || !isChunkScanning) return;
@@ -794,9 +797,11 @@ function stopChunkScan() {
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn) {
         btn.innerHTML = 'SCAN';
-        btn.style.background = 'rgba(0, 0, 0, 0.9)';
-        btn.style.borderColor = '#fff';
-        btn.style.color = '#fff';
+        btn.style.background = 'rgba(0, 0, 0, 0.85)';
+        btn.style.borderColor = '#ffffff';
+        btn.style.color = '#ffffff';
+        btn.style.boxShadow = 'none';
+        btn.style.outline = 'none';
     }
 }
 
@@ -824,7 +829,14 @@ async function switchChunk(index, keepScanRunning = false) {
         if (btn) {
             btn.innerHTML = chunk.label.toUpperCase();
             setTimeout(() => {
-                if (btn && !window.chunkLocked && !isChunkScanning) btn.innerHTML = 'SCAN';
+                if (btn && !window.chunkLocked && !isChunkScanning) {
+                    btn.innerHTML = 'SCAN';
+                    btn.style.background = 'rgba(0, 0, 0, 0.85)';
+                    btn.style.borderColor = '#ffffff';
+                    btn.style.color = '#ffffff';
+                    btn.style.boxShadow = 'none';
+                    btn.style.outline = 'none';
+                }
             }, 1200);
         }
     }
@@ -1057,9 +1069,11 @@ function renderGalleryGrid() {
     grid.innerHTML = window.allPosters.map(p => {
         const thumb = p.thumbnail ? `${BASE_URL}${p.thumbnail}` : (p.jpeg_filename ? `uploads/${p.jpeg_filename}` : 'img/placeholder.png');
         return `
-            <div class="gallery-item" onclick="window.openPosterModal && window.openPosterModal('${p.id}')">
-                <img src="${thumb}" alt="${p.title || ''}" loading="lazy">
-                <span class="gallery-item-title">${p.title || 'Poster'}</span>
+            <div class="overlay-poster-card" onclick="window.openPosterModal && window.openPosterModal('${p.id}')">
+                <img src="${thumb}" alt="${p.title || ''}" loading="lazy" onerror="this.src='img/placeholder.png'">
+                <div class="card-info">
+                    <h3>${p.title || 'Poster'}</h3>
+                </div>
             </div>
         `;
     }).join('');
