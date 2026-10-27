@@ -1278,9 +1278,9 @@ main {
 }
 
 #ar-header {
-    height: 48px;
-    min-height: 48px;
-    max-height: 48px;
+    height: 56px;
+    min-height: 56px;
+    max-height: 56px;
     background: var(--black);
     display: flex;
     justify-content: center;
@@ -1292,13 +1292,14 @@ main {
     width: 100%;
     padding: 0 16px;
     box-sizing: border-box;
+    border-bottom: 0.5px solid var(--white);
 }
 
 #ar-header .logo,
 #ar-header .ar-logo {
-    max-height: 26px;
-    min-height: 20px;
-    max-width: 60vw;
+    max-height: 36px;
+    min-height: 28px;
+    max-width: 70vw;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -1316,12 +1317,12 @@ main {
 
 #ar-scene {
     position: fixed !important;
-    top: 54px !important;
+    top: 56px !important;
     left: 4vw !important;
     right: 4vw !important;
-    bottom: 78px !important;
+    bottom: 74px !important;
     width: calc(100% - 8vw) !important;
-    height: calc(100% - 132px) !important;
+    height: calc(100% - 130px) !important;
     z-index: 1 !important;
     overflow: hidden !important;
     border: none !important;
@@ -1408,10 +1409,10 @@ a-scene canvas {
 
 .scan-frame {
     position: fixed;
-    top: 54px;
+    top: 56px;
     left: 4vw;
     right: 4vw;
-    bottom: 78px;
+    bottom: 74px;
     border: 0.5px solid #ffffff;
     pointer-events: none;
     z-index: 10;
@@ -1490,7 +1491,7 @@ video {
     bottom: 30px; /* Above logger (30px height) */
     left: 0;
     right: 0;
-    height: 40px;
+    height: 44px;
     background: var(--black);
     display: flex;
     flex-direction: column;
@@ -1504,13 +1505,13 @@ video {
 }
 
 #ar-footer-swipe-bar.expanded {
-    height: calc(100vh - 54px - 30px); /* Full height except header (54px) and logger (30px) */
-    height: calc(100dvh - 54px - 30px);
+    height: calc(100vh - 56px - 30px); /* Full height except header (56px) and logger (30px) */
+    height: calc(100dvh - 56px - 30px);
     bottom: 30px; /* Keep above logger */
 }
 
 .footer-header {
-    height: 40px; /* Match footer height */
+    height: 44px; /* Match footer height */
     position: relative;
     flex-shrink: 0;
     cursor: pointer;
@@ -1570,13 +1571,13 @@ video {
 
 .swipe-text {
     font-family: var(--font-data, 'Roboto Mono', monospace);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--white);
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    line-height: 40px;
-    height: 40px;
+    line-height: 44px;
+    height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;

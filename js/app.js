@@ -302,17 +302,11 @@ function fitSignDimensions(target) {
     const p = target && target.properties;
     const ow = parseFloat(p && (p.originalWidth || p.width)) || 640;
     const oh = parseFloat(p && (p.originalHeight || p.height)) || 640;
-    const aspect = ow / oh;
-    let w = 1.0, h = 1.0;
-    if (aspect <= 1.0) {
-        w = aspect;
-        h = 1.0;
-    } else {
-        w = 1.0;
-        h = 1.0 / aspect;
-    }
+    // In 8th Wall XR is de breedte van een planar target genormaliseerd naar 1.0 unit.
+    // De hoogte is oh / ow (voor A4 poster: 1.414, voor vierkant bord: 1.0, etc.)
+    const h = oh / ow;
     return {
-        w: Math.round(w * 1000) / 1000,
+        w: 1.0,
         h: Math.round(h * 1000) / 1000
     };
 }
@@ -320,71 +314,123 @@ function fitSignDimensions(target) {
 // ==================== POSTER LAGEN OPBOUWEN ====================
 
 function buildLayersHTML(poster) {
-    if (!poster.layers) return '';
+    if (!poster || !poster.layers) return '';
     let layersHTML = '';
-    let layers = [];
 
-    try {
-        layers = typeof poster.layers === 'string' ? JSON.parse(poster.layers) : poster.layers;
-    } catch (e) {
-        console.error('Fout bij parsen layers:', e);
-        return '';
+    // Zwarte achtergrond laag als ar_camera_feed niet geactiveerd is
+    if (!poster.ar_camera_feed || !parseInt(poster.ar_camera_feed)) {
+        layersHTML += `
+            <a-plane position="0 0 -0.01" height="1.414" width="1.0" material="color: #000000; transparent: false; side: double; shader: flat;"></a-plane>`;
     }
 
-    if (!Array.isArray(layers)) return '';
+    let layersList = [];
+    let rawLayers = poster.layers;
+    if (typeof rawLayers === 'string') {
+        try { rawLayers = JSON.parse(rawLayers); } catch (e) {}
+    }
+    if (Array.isArray(rawLayers)) {
+        layersList = rawLayers;
+    } else if (typeof rawLayers === 'object' && rawLayers !== null) {
+        for (let i = 1; i <= 8; i++) {
+            if (rawLayers[`layer_${i}`]) {
+                layersList.push({ layerIndex: i, ...rawLayers[`layer_${i}`] });
+            }
+        }
+    }
 
-    const fit = fitSignDimensions(poster.target8w || { properties: { width: 707, height: 1000 } });
+    layersList.forEach((layerData, idx) => {
+        const i = layerData.layerIndex || (idx + 1);
+        const filename = layerData.filename || layerData.file;
+        const baseZ = Math.max(parseFloat(layerData.z) || 0, 0.02) + (i * 0.015);
+        const posX = parseFloat(layerData.pos_x) || parseFloat(layerData.x) || 0;
+        const posY = parseFloat(layerData.pos_y) || parseFloat(layerData.y) || 0;
+        const baseScale = parseFloat(layerData.scale) || 1.0;
+        const rotX = parseFloat(layerData.rot_x) || parseFloat(layerData.rx) || 0;
+        const rotY = parseFloat(layerData.rot_y) || parseFloat(layerData.ry) || 0;
+        const rotZ = parseFloat(layerData.rot_z) || parseFloat(layerData.rz) || 0;
 
-    for (let i = 0; i < layers.length; i++) {
-        const layer = layers[i];
-        const isGif = layer.file && /\.gif(\?|$)/i.test(layer.file);
-        const isModel = layer.file && /\.glb(\?|$)/i.test(layer.file);
-        const fileUrl = `${BASE_URL}/uploads/${poster.id}/${layer.file}`;
-        const baseZ = (i + 1) * 0.02;
-
-        let animationStr = '';
-        if (layer.animation) {
-            const anim = layer.animation;
-            const fromX = anim.fromX || 0;
-            const toX = anim.toX || 0;
-            const fromY = anim.fromY || 0;
-            const toY = anim.toY || 0;
-            const fromZ = (anim.fromZ !== undefined) ? anim.fromZ : baseZ;
-            const toZ = (anim.toZ !== undefined) ? anim.toZ : baseZ;
-            const dur = (anim.duration || 2) * 1000;
-
-            animationStr = `animation="property: position; from: ${fromX} ${fromY} ${fromZ}; to: ${toX} ${toY} ${toZ}; dir: alternate; loop: true; dur: ${dur}; easing: easeInOutQuad"`;
+        let animStr = '';
+        const hasPosAnim = (parseFloat(layerData.anim_x) || parseFloat(layerData.anim_y) || parseFloat(layerData.anim_z)) && parseInt(layerData.anim_pos_duration) > 0;
+        if (hasPosAnim) {
+            const animX = parseFloat(layerData.anim_x) || 0;
+            const animY = parseFloat(layerData.anim_y) || 0;
+            const animZ = parseFloat(layerData.anim_z) || 0;
+            const dur = parseInt(layerData.anim_pos_duration) || 1000;
+            animStr += ` animation="property: position; from: ${posX} ${posY} ${baseZ}; to: ${posX + animX} ${posY + animY} ${baseZ + animZ}; dur: ${dur}; easing: easeInOutSine; loop: true; dir: alternate;"`;
         }
 
-        if (isModel) {
+        if (layerData.glb_model || (filename && /\.glb(\?|$)/i.test(filename))) {
+            const glbFile = layerData.glb_model || filename;
+            const modelUrl = glbFile.startsWith('http') ? glbFile : `${BASE_URL}/uploads/ar-layers/${glbFile}`;
+            const sc = baseScale * 0.5;
             layersHTML += `
                 <a-entity
-                    gltf-model="${fileUrl}"
-                    position="0 0 ${baseZ}"
-                    scale="0.5 0.5 0.5"
-                    ${animationStr}>
+                    id="ar-layer-${i}"
+                    gltf-model="${modelUrl}"
+                    position="${posX} ${posY} ${baseZ}"
+                    rotation="${rotX} ${rotY} ${rotZ}"
+                    scale="${sc} ${sc} ${sc}"
+                    ${animStr}>
                 </a-entity>`;
-        } else if (isGif) {
-            layersHTML += `
-                <a-plane
-                    position="0 0 ${baseZ}"
-                    width="${fit.w}"
-                    height="${fit.h}"
-                    gif="autoplay: true; transparent: true"
-                    src="${fileUrl}"
-                    ${animationStr}>
-                </a-plane>`;
-        } else {
-            layersHTML += `
-                <a-plane
-                    position="0 0 ${baseZ}"
-                    width="${fit.w}"
-                    height="${fit.h}"
-                    material="src: ${fileUrl}; transparent: true; alphaTest: 0.1"
-                    ${animationStr}>
-                </a-plane>`;
+            return;
         }
-    }
+
+        if (filename) {
+            const mediaPath = filename.startsWith('http') ? filename : `${BASE_URL}/uploads/ar-layers/${filename}`;
+            const isGif = /\.gif(\?|$)/i.test(filename);
+            const isVideo = (layerData.is_video === true || /\.(mp4|webm)(\?|$)/i.test(filename)) && !isGif;
+            const isTransparent = layerData.transparent !== false;
+
+            // In 8th Wall, portrait poster target has width = 1.0, height = 1.414
+            const planeW = 1.0 * baseScale;
+            const planeH = 1.414 * baseScale;
+
+            if (isGif) {
+                layersHTML += `
+                    <a-plane
+                        id="ar-layer-${i}"
+                        class="gif-layer"
+                        gif="autoplay: true; transparent: ${isTransparent}"
+                        src="${mediaPath}"
+                        data-gif-src="${mediaPath}"
+                        position="${posX} ${posY} ${baseZ}"
+                        width="${planeW.toFixed(3)}"
+                        height="${planeH.toFixed(3)}"
+                        rotation="${rotX} ${rotY} ${rotZ}"
+                        material="transparent: ${isTransparent}; side: double;"
+                        ${animStr}>
+                    </a-plane>`;
+            } else if (isVideo) {
+                layersHTML += `
+                    <a-video
+                        id="ar-layer-${i}"
+                        src="${mediaPath}"
+                        position="${posX} ${posY} ${baseZ}"
+                        width="${planeW.toFixed(3)}"
+                        height="${(planeW * 9 / 16).toFixed(3)}"
+                        rotation="${rotX} ${rotY} ${rotZ}"
+                        autoplay="true"
+                        loop="true"
+                        muted="true"
+                        playsinline="true"
+                        webkit-playsinline="true"
+                        ${animStr}>
+                    </a-video>`;
+            } else {
+                layersHTML += `
+                    <a-plane
+                        id="ar-layer-${i}"
+                        src="${mediaPath}"
+                        position="${posX} ${posY} ${baseZ}"
+                        width="${planeW.toFixed(3)}"
+                        height="${planeH.toFixed(3)}"
+                        rotation="${rotX} ${rotY} ${rotZ}"
+                        material="transparent: ${isTransparent}; side: double;"
+                        ${animStr}>
+                    </a-plane>`;
+            }
+        }
+    });
 
     return layersHTML;
 }
@@ -516,13 +562,16 @@ function updateSceneTargets(targets) {
             anchor.setAttribute('data-memeborden', 'true');
 
             const dims = fitSignDimensions(item);
+            const gifW = 1.05;
+            const gifH = dims.h * 1.05;
+            const borderPad = 0.16;
 
             // Rode border plane
             const borderPlane = document.createElement('a-plane');
             borderPlane.setAttribute('data-meme-border', item.signId);
             borderPlane.setAttribute('position', '0 0 0.005');
-            borderPlane.setAttribute('width', (dims.w * 1.08).toFixed(3));
-            borderPlane.setAttribute('height', (dims.h * 1.08).toFixed(3));
+            borderPlane.setAttribute('width', (gifW + borderPad).toFixed(3));
+            borderPlane.setAttribute('height', (gifH + borderPad).toFixed(3));
             borderPlane.setAttribute('color', '#CC0000');
             borderPlane.setAttribute('visible', 'false');
             anchor.appendChild(borderPlane);
@@ -532,8 +581,8 @@ function updateSceneTargets(targets) {
             gifPlane.setAttribute('id', `meme-gif-plane-${item.signId}`);
             gifPlane.setAttribute('data-meme-sign', item.signId);
             gifPlane.setAttribute('position', '0 0 0.01');
-            gifPlane.setAttribute('width', dims.w.toFixed(3));
-            gifPlane.setAttribute('height', dims.h.toFixed(3));
+            gifPlane.setAttribute('width', gifW.toFixed(3));
+            gifPlane.setAttribute('height', gifH.toFixed(3));
             gifPlane.setAttribute('visible', 'false');
             gifPlane.setAttribute('gif', 'autoplay: true; transparent: false');
             anchor.appendChild(gifPlane);
@@ -680,7 +729,7 @@ function showChunkCycleButton() {
     btn.innerHTML = 'SCAN';
     btn.style.cssText = `
         position: fixed;
-        bottom: 105px;
+        bottom: 96px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 10000;

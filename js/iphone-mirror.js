@@ -497,7 +497,15 @@ function togglePopup() {
     // ============================
 
     function init() {
-        createTriggerZone();
+        // Nooit activeren op mobiele apparaten (telefoons kunnen geen QuickTime venster recorden)
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                         (window.innerWidth <= 850 && ('ontouchstart' in window));
+        if (isMobile) {
+            console.log('[iPhoneMirror] Uitgeschakeld op mobiel toestel');
+            return;
+        }
+
+        // Alleen keyboard trigger ('scan' typen) om te voorkomen dat onzichtbare click zones de UI blokkeren
         setupKeyboardTrigger();
 
         window.iPhoneMirror = {

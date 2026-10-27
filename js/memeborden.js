@@ -620,19 +620,19 @@ function updateGifPlaneDimensions(gifComp) {
     const signId = el.getAttribute('data-meme-sign');
     const parent = el.parentEl || el.parentNode;
     
-    const gifWidth = 1.1;
+    const gifWidth = 1.05;
     const ratio = gifComp.gifData.height / gifComp.gifData.width;
     const gifHeight = gifWidth * ratio;
-    const borderPad = 0.18;
+    const borderPad = 0.16;
     
-    el.setAttribute('width', gifWidth);
-    el.setAttribute('height', gifHeight);
+    el.setAttribute('width', gifWidth.toFixed(3));
+    el.setAttribute('height', gifHeight.toFixed(3));
     
     if (parent && signId) {
         const border = parent.querySelector(`[data-meme-border="${signId}"]`);
         if (border) {
-            border.setAttribute('width', gifWidth + borderPad);
-            border.setAttribute('height', gifHeight + borderPad);
+            border.setAttribute('width', (gifWidth + borderPad).toFixed(3));
+            border.setAttribute('height', (gifHeight + borderPad).toFixed(3));
             border.setAttribute('visible', 'true');
         }
     }
