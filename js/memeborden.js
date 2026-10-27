@@ -543,44 +543,6 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
     }
 }
 
-// ==================== ACHTERGROND PREFETCHING ====================
-// Laad memes voor de meest voorkomende borden alvast in op de achtergrond
-const PREFETCH_SIGNS = [
-    'B5', 'B1', 'B9', 'C43_50', 'C43_30', 'C1', 'C3', 'D1a', 'D7',
-    'E1', 'F1', 'A1a', 'A1b', 'A14', 'A15', 'B17', 'C46', 'D9a', 'F19'
-];
-
-async function prefetchCommonGifs() {
-    const apiUrl = window.API_URL || (window.location.origin + '/api.php');
-    console.log('[Memeborden] Start achtergrond prefetch van borden...');
-
-    for (const signId of PREFETCH_SIGNS) {
-        if (gifCooldownCache.has(signId)) continue;
-        try {
-            const res = await fetch(`${apiUrl}/verkeersborden/gif?sign=${encodeURIComponent(signId)}`);
-            if (!res.ok) continue;
-            const data = await res.json();
-            if (data.success && data.gif) {
-                const rawUrl = data.gif.preview_url || data.gif.url;
-                const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(rawUrl)}`;
-                gifCooldownCache.set(signId, { url: proxyUrl, timestamp: Date.now() });
-
-                // Pre-decode GIF via gif-component in het geheugen
-                if (typeof window.preloadGifUrl === 'function') {
-                    window.preloadGifUrl(proxyUrl).catch(() => {});
-                } else {
-                    fetch(proxyUrl, { mode: 'cors' }).catch(() => {});
-                }
-            }
-        } catch (e) {}
-        // Rustige interval (150ms) tussen prefetches om netwerk vrij te houden
-        await new Promise(r => setTimeout(r, 150));
-    }
-    console.log('[Memeborden] Achtergrond prefetch voltooid');
-}
-
-window.prefetchCommonGifs = prefetchCommonGifs;
-
 /**
  * Activeer GIF op een A-Frame plane via gif-component + manuele animatie loop.
  */

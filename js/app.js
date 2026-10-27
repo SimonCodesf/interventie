@@ -30,13 +30,6 @@ let isChunkScanning = false;
 let chunkScanTimeout = null;
 let chunkScanInterval = null;
 
-// Universal Simultaneous 237-Target Mode
-let allUniversalTargets = [];
-let isUniversalActive = false;
-let isRadarScanning = false;
-let radarInterval = null;
-let radarTimeout = null;
-
 let chunkQuickPickerOpen = false;
 let chunkLongPressTimer = null;
 let chunkLongPressTriggered = false;
@@ -490,29 +483,16 @@ function buildScene(targets) {
     updateSceneTargets(targets);
 }
 
-function updateSceneTargets(targets, clearExisting = false) {
+function updateSceneTargets(targets) {
     const box = sceneBox();
     if (!box) return;
     const scene = box.querySelector('a-scene');
     if (!scene) return;
 
-    // Verwijder bestaande anchors alleen als expliciet gevraagd (bv. filter naar specifieke chunk)
-    if (clearExisting) {
-        scene.querySelectorAll('a-entity[xrextras-named-image-target]').forEach(el => el.remove());
-    }
-
-    // Verzamel bestaande anchors zodat we die niet opnieuw aanmaken (geen DOM churn / tracking loss)
-    const existingNames = new Set();
-    scene.querySelectorAll('a-entity[xrextras-named-image-target]').forEach(el => {
-        const val = el.getAttribute('xrextras-named-image-target') || '';
-        const name = val.replace('name:', '').trim();
-        if (name) existingNames.add(name);
-    });
+    // Verwijder bestaande anchors voor een schone en snelle scene
+    scene.querySelectorAll('a-entity[xrextras-named-image-target]').forEach(el => el.remove());
 
     targets.forEach(item => {
-        if (existingNames.has(item.name)) return;
-        existingNames.add(item.name);
-
         const anchor = document.createElement('a-entity');
         anchor.setAttribute('xrextras-named-image-target', 'name: ' + item.name);
         anchor.setAttribute('smooth-anchor', '');
@@ -540,7 +520,6 @@ function updateSceneTargets(targets, clearExisting = false) {
                 console.log(`[AR] Poster GEVONDEN: ${poster.title}`);
                 window.chunkLocked = true;
                 stopChunkScan();
-                stopRadarScan();
                 hideChunkCycleButton();
 
                 document.querySelector('.scan-frame')?.classList.add('hidden');
@@ -618,7 +597,6 @@ function updateSceneTargets(targets, clearExisting = false) {
                 console.log(`[Memeborden] Bord GEVONDEN: ${item.signName}`);
                 window.chunkLocked = true;
                 stopChunkScan();
-                stopRadarScan();
                 hideChunkCycleButton();
 
                 document.querySelector('.scan-frame')?.classList.add('hidden');
@@ -659,7 +637,7 @@ function updateSceneTargets(targets, clearExisting = false) {
         scene.appendChild(anchor);
     });
 
-    console.log(`[AR] Anchors in scene geüpdatet (totaal ${existingNames.size} actief)`);
+    console.log(`[AR] Anchors actief voor ${targets.length} targets`);
 }
 
 // ==================== SCAN KNOP & MULTI-CHUNK SCANNER ====================
@@ -827,26 +805,11 @@ function showChunkCycleButtonAgain() {
 }
 
 // Start automatische chunk cycle scanner (zoals in originele masterproef)
-// Start automatische chunk cycle scanner of simultane radar scan
+// Start automatische chunk cycle scanner (snel en responsief)
 function startChunkScan() {
     if (window.chunkLocked) return;
     const btn = document.getElementById('chunk-cycle-btn');
-    if (!btn) return;
-
-    // Als simultane detectie al actief is: trigger direct een actieve radar pulse
-    if (isUniversalActive) {
-        triggerUniversalRadarScan();
-        return;
-    }
-
-    // Als universals beschikbaar zijn maar nog niet geactiveerd: activeer nu direct
-    if (allUniversalTargets && allUniversalTargets.length) {
-        expandToUniversalTargets();
-        triggerUniversalRadarScan();
-        return;
-    }
-
-    if (!arChunks.length) return;
+    if (!btn || !arChunks.length) return;
 
     if (isChunkScanning) {
         stopChunkScan();
@@ -872,57 +835,26 @@ function startChunkScan() {
 
     updateBtn();
     clearInterval(chunkScanInterval);
-    chunkScanInterval = setInterval(updateBtn, 300);
+    chunkScanInterval = setInterval(updateBtn, 250);
 
+    // Snelle automatische cyclus: 850ms per chunk (i.p.v. 1800ms)
+    // Een volledige ronde langs alle 13 series duurt hierdoor slechts ~11 seconden!
     const stepCycle = async () => {
         if (!isChunkScanning || window.chunkLocked) return;
         const nextIndex = (currentChunkIndex + 1) % total;
         await switchChunk(nextIndex, true);
         if (isChunkScanning && !window.chunkLocked) {
-            chunkScanTimeout = setTimeout(stepCycle, 1800);
+            chunkScanTimeout = setTimeout(stepCycle, 850);
         }
     };
 
-    chunkScanTimeout = setTimeout(stepCycle, 1800);
+    chunkScanTimeout = setTimeout(stepCycle, 850);
 }
 
-function triggerUniversalRadarScan() {
-    const btn = document.getElementById('chunk-cycle-btn');
-    if (!btn || window.chunkLocked) return;
-
-    if (isRadarScanning) {
-        stopRadarScan();
-        return;
-    }
-
-    isRadarScanning = true;
-    btn.style.background = 'rgba(0, 255, 0, 0.12)';
-    btn.style.borderColor = '#00ff00';
-    btn.style.color = '#00ff00';
-    btn.style.boxShadow = 'none';
-    btn.style.outline = 'none';
-
-    logToLoader('RADAR SCAN: 237 BORDEN SIMULTAAN...');
-    let dots = 0;
-    btn.innerHTML = 'SCAN' + '.'.repeat(dots);
-
-    clearInterval(radarInterval);
-    radarInterval = setInterval(() => {
-        if (!isRadarScanning || window.chunkLocked) return;
-        dots = (dots + 1) % 4;
-        btn.innerHTML = 'SCAN' + '.'.repeat(dots);
-    }, 300);
-
-    clearTimeout(radarTimeout);
-    radarTimeout = setTimeout(() => {
-        stopRadarScan();
-    }, 7000);
-}
-
-function stopRadarScan() {
-    isRadarScanning = false;
-    if (radarInterval) { clearInterval(radarInterval); radarInterval = null; }
-    if (radarTimeout) { clearTimeout(radarTimeout); radarTimeout = null; }
+function stopChunkScan() {
+    isChunkScanning = false;
+    if (chunkScanTimeout) { clearTimeout(chunkScanTimeout); chunkScanTimeout = null; }
+    if (chunkScanInterval) { clearInterval(chunkScanInterval); chunkScanInterval = null; }
     const btn = document.getElementById('chunk-cycle-btn');
     if (btn && !window.chunkLocked) {
         btn.innerHTML = 'SCAN';
@@ -934,58 +866,8 @@ function stopRadarScan() {
     }
 }
 
-function stopChunkScan() {
-    isChunkScanning = false;
-    if (chunkScanTimeout) { clearTimeout(chunkScanTimeout); chunkScanTimeout = null; }
-    if (chunkScanInterval) { clearInterval(chunkScanInterval); chunkScanInterval = null; }
-    stopRadarScan();
-    const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) {
-        btn.innerHTML = 'SCAN';
-        btn.style.background = 'rgba(0, 0, 0, 0.85)';
-        btn.style.borderColor = '#ffffff';
-        btn.style.color = '#ffffff';
-        btn.style.boxShadow = 'none';
-        btn.style.outline = 'none';
-    }
-}
-
-async function switchToUniversal() {
-    if (!xrControllerInstance || !allUniversalTargets || !allUniversalTargets.length) return;
-    isUniversalActive = true;
-    window.isUniversalActive = true;
-    currentChunkIndex = -1;
-    window.currentChunkIndex = -1;
-    window.chunkLocked = false;
-
-    console.log(`[AR] Handmatige selectie: Alle ${allUniversalTargets.length} targets simultaan actief`);
-    bootStatus('Alle borden actief (237 simultaan)');
-    logToLoader('237 BORDEN SIMULTAAN ACTIEF');
-
-    xrControllerInstance.configure({ imageTargetData: allUniversalTargets });
-    updateSceneTargets(allUniversalTargets, false);
-    renderChunkQuickPicker();
-
-    const btn = document.getElementById('chunk-cycle-btn');
-    if (btn) {
-        btn.innerHTML = 'ALLE BORDEN';
-        setTimeout(() => {
-            if (btn && !window.chunkLocked && !isChunkScanning && !isRadarScanning) {
-                btn.innerHTML = 'SCAN';
-                btn.style.background = 'rgba(0, 0, 0, 0.85)';
-                btn.style.borderColor = '#ffffff';
-                btn.style.color = '#ffffff';
-                btn.style.boxShadow = 'none';
-                btn.style.outline = 'none';
-            }
-        }, 1200);
-    }
-}
-
 async function switchChunk(index, keepScanRunning = false) {
     if (!xrControllerInstance || !arChunks || !arChunks[index]) return;
-    isUniversalActive = false;
-    window.isUniversalActive = false;
     currentChunkIndex = index;
     window.currentChunkIndex = index;
     window.chunkLocked = false;
@@ -994,12 +876,13 @@ async function switchChunk(index, keepScanRunning = false) {
     console.log(`[Chunk] Wisselen naar chunk ${index}: ${chunk.label} (${chunk.targets.length} targets)`);
 
     bootStatus(`Scannen: ${chunk.name}`);
+    logToLoader(`SCAN: ${chunk.label.toUpperCase()}`);
 
     // Update 8th Wall targets via WASM configure
     xrControllerInstance.configure({ imageTargetData: chunk.targets });
 
-    // Update A-Frame anchors (clearExisting = true bij specifieke selectie)
-    updateSceneTargets(chunk.targets, true);
+    // Update A-Frame anchors
+    updateSceneTargets(chunk.targets);
 
     renderChunkQuickPicker();
 
@@ -1008,7 +891,7 @@ async function switchChunk(index, keepScanRunning = false) {
         if (btn) {
             btn.innerHTML = chunk.label.toUpperCase();
             setTimeout(() => {
-                if (btn && !window.chunkLocked && !isChunkScanning && !isRadarScanning) {
+                if (btn && !window.chunkLocked && !isChunkScanning) {
                     btn.innerHTML = 'SCAN';
                     btn.style.background = 'rgba(0, 0, 0, 0.85)';
                     btn.style.borderColor = '#ffffff';
@@ -1018,36 +901,6 @@ async function switchChunk(index, keepScanRunning = false) {
                 }
             }, 1200);
         }
-    }
-}
-
-async function expandToUniversalTargets() {
-    if (!xrControllerInstance || !allUniversalTargets || !allUniversalTargets.length) return;
-    if (isUniversalActive) return;
-
-    console.log(`[AR] Achtergrond: Uitbreiden naar alle ${allUniversalTargets.length} targets simultaan...`);
-    logToLoader('ALLE BORDEN ACTIVEREN...');
-
-    // 1. Configureer alle 237 borden + posters simultaan in 8th Wall XR
-    xrControllerInstance.configure({ imageTargetData: allUniversalTargets });
-
-    // 2. Voeg ontbrekende anchors toe aan de scene zonder bestaande te verstoren
-    updateSceneTargets(allUniversalTargets, false);
-
-    isUniversalActive = true;
-    window.isUniversalActive = true;
-    currentChunkIndex = -1;
-    window.currentChunkIndex = -1;
-
-    console.log(`[AR] Alle ${allUniversalTargets.length} targets actief (simultaan)!`);
-    logToLoader('237 BORDEN SIMULTAAN ACTIEF');
-
-    // 3. Update quick picker
-    renderChunkQuickPicker();
-
-    // 4. Start rustig met het prefetchen van de meest frequente borden GIFs
-    if (typeof window.prefetchCommonGifs === 'function') {
-        window.prefetchCommonGifs();
     }
 }
 
@@ -1077,15 +930,8 @@ function renderChunkQuickPicker() {
     const grid = picker.querySelector('.chunk-picker-grid');
     if (!grid) return;
 
-    const universalCount = allUniversalTargets ? allUniversalTargets.length : 237;
-    const universalBtn = `
-        <button type="button" class="chunk-picker-btn ${isUniversalActive ? 'active' : ''}" data-chunk-index="-1" style="grid-column: 1 / -1; font-weight: bold; text-align: center; border-color: ${isUniversalActive ? '#00ff00' : 'rgba(255,255,255,0.6)'};">
-            ★ ALLE BORDEN (${universalCount} SIMULTAAN)
-        </button>
-    `;
-
-    grid.innerHTML = universalBtn + arChunks.map((c, i) => `
-        <button type="button" class="chunk-picker-btn ${(!isUniversalActive && i === currentChunkIndex) ? 'active' : ''}" data-chunk-index="${i}">
+    grid.innerHTML = arChunks.map((c, i) => `
+        <button type="button" class="chunk-picker-btn ${i === currentChunkIndex ? 'active' : ''}" data-chunk-index="${i}">
             ${c.label} (${c.targets.length})
         </button>
     `).join('');
@@ -1094,13 +940,8 @@ function renderChunkQuickPicker() {
         b.addEventListener('click', async () => {
             const idx = parseInt(b.dataset.chunkIndex, 10);
             stopChunkScan();
-            stopRadarScan();
             closeChunkQuickPicker();
-            if (idx === -1) {
-                await switchToUniversal();
-            } else {
-                await switchChunk(idx);
-            }
+            await switchChunk(idx);
         });
     });
 }
@@ -1178,6 +1019,17 @@ async function bootAR() {
 
         // Chunk 0: Posters + Top Verkeersborden (Standaard actief)
         const topSigns = (signsChunksData?.chunks?.[0]?.targets || []).map(t => ({ ...t, isPoster: false }));
+        // Voeg ook veelvoorkomende borden toe aan chunk_top indien nog niet aanwezig (zoals C43 snelheidslimiet)
+        if (signsChunksData && Array.isArray(signsChunksData.chunks)) {
+            const extraCommon = ['C43', 'B1', 'B5', 'C1', 'C3', 'D1a', 'E1', 'F1'];
+            signsChunksData.chunks.forEach(c => {
+                (c.targets || []).forEach(t => {
+                    if (extraCommon.includes(t.signId) && !topSigns.some(s => s.name === t.name)) {
+                        topSigns.push({ ...t, isPoster: false });
+                    }
+                });
+            });
+        }
         arChunks.push({
             id: 'chunk_top',
             name: 'Posters & Top Borden',
@@ -1201,21 +1053,6 @@ async function bootAR() {
         currentChunkIndex = 0;
         window.currentChunkIndex = 0;
 
-        // Bouw universele lijst met ALLE 237 unieke verkeersborden + actieve posters voor simultaan scannen
-        const uniqueSignsMap = new Map();
-        if (signsChunksData && Array.isArray(signsChunksData.chunks)) {
-            signsChunksData.chunks.forEach(c => {
-                (c.targets || []).forEach(t => {
-                    if (!uniqueSignsMap.has(t.name)) {
-                        uniqueSignsMap.set(t.name, { ...t, isPoster: false });
-                    }
-                });
-            });
-        }
-        const allSigns = Array.from(uniqueSignsMap.values());
-        allUniversalTargets = [...posterTargets, ...allSigns];
-        window.allUniversalTargets = allUniversalTargets;
-
         const initialTargets = arChunks[0].targets;
         if (!initialTargets.length) {
             throw new Error('Geen geldige targets gevonden.');
@@ -1236,10 +1073,8 @@ async function bootAR() {
         // Systeem gereed: ticker blijft permanent actief onderaan
         hideLoader();
 
-        // Start achtergrond expansie: activeer alle 237 borden simultaan na 800ms
-        setTimeout(() => {
-            expandToUniversalTargets();
-        }, 800);
+        // Preload de overige target images rustig in de browser cache (1 per 60ms)
+        preloadTargetImagesInBackground();
 
     } catch (e) {
         console.error('[AR Boot Fout]', e);
@@ -1247,6 +1082,28 @@ async function bootAR() {
         appendLoaderLog('ERROR: ' + (e.message || e));
         bootStarted = false;
     }
+}
+
+// Preload target jpgs discreet in browser disk cache zodat chunk switches instant zijn
+function preloadTargetImagesInBackground() {
+    if (!arChunks || !arChunks.length) return;
+    const allPaths = [];
+    arChunks.forEach(c => {
+        (c.targets || []).forEach(t => {
+            if (t.imagePath && !allPaths.includes(t.imagePath)) {
+                allPaths.push(t.imagePath);
+            }
+        });
+    });
+
+    let i = 0;
+    function loadNext() {
+        if (i >= allPaths.length) return;
+        const img = new Image();
+        img.src = allPaths[i++];
+        setTimeout(loadNext, 60);
+    }
+    setTimeout(loadNext, 1800);
 }
 
 // ==================== UI & SWIPE BAR CONTROLES ====================
