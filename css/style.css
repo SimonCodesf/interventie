@@ -1752,6 +1752,45 @@ video {
     box-sizing: border-box !important;
 }
 
+#gallery-overlay-grid.featured-grid {
+    grid-template-columns: 1fr !important; /* 1 grote kolom voor gescande poster */
+    gap: 12px !important;
+    max-width: 460px !important;
+    margin: 0 auto !important;
+}
+
+#gallery-overlay-grid.featured-grid .overlay-poster-card.featured-mode {
+    aspect-ratio: auto !important;
+    max-height: 70vh !important;
+    border: 1px solid var(--white) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#gallery-overlay-grid.featured-grid .overlay-poster-card.featured-mode img {
+    width: 100% !important;
+    max-height: 55vh !important;
+    object-fit: contain !important;
+    background: #000000 !important;
+}
+
+#gallery-overlay-grid.featured-grid .overlay-poster-card.featured-mode .card-info {
+    position: relative !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    padding: 10px 12px !important;
+}
+
+#gallery-overlay-grid.featured-grid .overlay-poster-card.featured-mode .card-info h3 {
+    font-size: 0.9rem !important;
+    margin-bottom: 4px !important;
+}
+
+#gallery-overlay-grid.featured-grid .overlay-poster-card.featured-mode .card-meta {
+    display: block !important;
+    font-size: 0.75rem !important;
+    color: var(--dim, #888888) !important;
+}
+
 @media (min-width: 768px) {
     #gallery-overlay-grid {
         grid-template-columns: repeat(3, 1fr) !important;
@@ -1782,10 +1821,7 @@ video {
 
 .close-overlay-btn {
     background: transparent;
-    color: var(--white)
-.close-overlay-btn {
-    background: transparent;
-    color: #000;
+    color: var(--white);
     border: none;
     font-size: 1.8rem;
     width: 40px;
@@ -1793,6 +1829,12 @@ video {
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
+    font-weight: 300;
+    line-height: 1;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
     cursor: pointer;
     font-weight: 300;
     line-height: 1;

@@ -15,6 +15,8 @@ const SCRIPT_TIMEOUT_MS = 45000;
 let currentTrackedPoster = null;
 let featuredPoster = null;
 let currentPoster = null; // Voor download modal
+let currentAudioElement = null; // Huidige poster audio
+let audioVolume = 0.5;
 let bootStarted = false;
 let bootTime = 0;
 
@@ -481,6 +483,9 @@ function updateSceneTargets(targets) {
                 if (titleEl) titleEl.textContent = poster.title;
 
                 currentPoster = poster;
+                setFeaturedPoster(poster);
+                playPosterAudio(poster);
+                logToLoader(`GEVONDEN: ${poster.title}`);
             });
 
             anchor.addEventListener('xrextraslost', () => {
@@ -497,8 +502,10 @@ function updateSceneTargets(targets) {
                             showChunkCycleButtonAgain();
                             document.querySelector('.scan-frame')?.classList.remove('hidden');
                             showSwipeState(1);
+                            stopPosterAudio();
+                            logToLoader('ZOEKEN...');
                         }
-                    }, 250);
+                    }, LOST_GRACE_MS);
                 }
             });
         } else {
@@ -548,6 +555,7 @@ function updateSceneTargets(targets) {
                 showSwipeState(2);
                 const titleEl = document.getElementById('detected-poster-title');
                 if (titleEl) titleEl.textContent = item.signName;
+                logToLoader(`GEVONDEN: ${item.signName}`);
 
                 borderPlane.setAttribute('visible', 'true');
                 if (typeof window.fetchAndDisplayGif === 'function') {
@@ -570,8 +578,9 @@ function updateSceneTargets(targets) {
                             showChunkCycleButtonAgain();
                             document.querySelector('.scan-frame')?.classList.remove('hidden');
                             showSwipeState(1);
+                            logToLoader('ZOEKEN...');
                         }
-                    }, 250);
+                    }, LOST_GRACE_MS);
                 }
             });
         }
@@ -1049,6 +1058,104 @@ function setupSwipeBarControls() {
     };
 }
 
+function setFeaturedPoster(poster) {
+    featuredPoster = poster;
+}
+
+function resetFeaturedPoster() {
+    featuredPoster = null;
+}
+
+// ==================== POSTER AUDIO ONDERSTEUNING ====================
+
+function playPosterAudio(poster) {
+    stopPosterAudio();
+    if (!poster) return;
+
+    let audioFile = null;
+    if (poster.layers) {
+        for (let i = 1; i <= 8; i++) {
+            const layerData = poster.layers[`layer_${i}`];
+            if (layerData && layerData.audio_file) {
+                audioFile = layerData.audio_file;
+                break;
+            }
+        }
+    }
+    if (!audioFile && poster.audio_file) {
+        audioFile = poster.audio_file;
+    }
+    if (!audioFile) return;
+
+    const audioPath = `uploads/ar-layers/${audioFile}`;
+    console.log('[AR] Audio starten:', audioPath);
+
+    currentAudioElement = new Audio(audioPath);
+    currentAudioElement.volume = audioVolume;
+    currentAudioElement.loop = true;
+
+    currentAudioElement.play().then(() => {
+        logToLoader('AUDIO GESTART');
+    }).catch(err => {
+        console.warn('[AR] Audio autoplay geblokkeerd:', err);
+        showAudioPlayButton(poster);
+    });
+}
+
+function stopPosterAudio() {
+    if (currentAudioElement) {
+        currentAudioElement.pause();
+        currentAudioElement.currentTime = 0;
+        currentAudioElement = null;
+        console.log('[AR] Audio gestopt');
+    }
+    hideAudioPlayButton();
+}
+
+function showAudioPlayButton(poster) {
+    let btn = document.getElementById('ar-audio-play-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'ar-audio-play-btn';
+        btn.type = 'button';
+        btn.innerHTML = '🔊 SPEEL AUDIO';
+        btn.style.cssText = `
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            padding: 8px 16px;
+            font-family: var(--font-data, 'Roboto Mono', monospace);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            outline: none;
+            box-shadow: none;
+            -webkit-appearance: none;
+            user-select: none;
+            touch-action: manipulation;
+        `;
+        document.body.appendChild(btn);
+    }
+    btn.style.display = 'block';
+    btn.onclick = () => {
+        if (currentAudioElement) {
+            currentAudioElement.play().then(() => {
+                hideAudioPlayButton();
+            }).catch(console.error);
+        }
+    };
+}
+
+function hideAudioPlayButton() {
+    const btn = document.getElementById('ar-audio-play-btn');
+    if (btn) btn.style.display = 'none';
+}
+
 function expandFooter() {
     const footer = document.getElementById('ar-footer-swipe-bar');
     if (footer) {
@@ -1066,17 +1173,56 @@ function renderGalleryGrid() {
     const grid = document.getElementById('gallery-overlay-grid');
     if (!grid || !window.allPosters) return;
 
-    grid.innerHTML = window.allPosters.map(p => {
-        const thumb = p.thumbnail ? `${BASE_URL}${p.thumbnail}` : (p.jpeg_filename ? `uploads/${p.jpeg_filename}` : 'img/placeholder.png');
-        return `
-            <div class="overlay-poster-card" onclick="window.openPosterModal && window.openPosterModal('${p.id}')">
-                <img src="${thumb}" alt="${p.title || ''}" loading="lazy" onerror="this.src='img/placeholder.png'">
-                <div class="card-info">
-                    <h3>${p.title || 'Poster'}</h3>
+    if (featuredPoster) {
+        // FEATURED POSTER MODE: Gescande poster groot in 1 kolom
+        const thumb = featuredPoster.thumbnail ? `${BASE_URL}${featuredPoster.thumbnail}` : (featuredPoster.jpeg_filename ? `uploads/${featuredPoster.jpeg_filename}` : 'img/placeholder.png');
+        const hasAR = window.arPosters && window.arPosters.some(p => p.id == featuredPoster.id);
+        const arBadge = hasAR ? '<span class="ar-badge">AR</span>' : '';
+        const shortId = featuredPoster.id ? featuredPoster.id.substring(0, 6) : '';
+
+        grid.classList.add('featured-grid');
+        grid.innerHTML = `
+            <div class="overlay-poster-card featured-mode" onclick="window.openPosterModal && window.openPosterModal('${featuredPoster.id}')">
+                <img src="${thumb}" alt="${featuredPoster.title || ''}" onerror="this.src='img/placeholder.png'">
+                <div class="card-info featured-info">
+                    <h3>${featuredPoster.title || 'Poster'} ${arBadge}</h3>
+                    <div class="card-meta">
+                        <span>&gt;&gt; ID: ${shortId}</span>
+                    </div>
                 </div>
             </div>
+            <div class="featured-actions" style="grid-column: 1 / -1; text-align: center; padding: 12px 0;">
+                <button type="button" id="show-all-posters-btn" style="background: transparent; border: 1px solid var(--white, #ffffff); color: var(--white, #ffffff); font-family: var(--font-data, 'Roboto Mono', monospace); font-size: 11px; padding: 8px 16px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; -webkit-appearance: none; outline: none;">
+                    ALLE POSTERS BEKIJKEN
+                </button>
+            </div>
         `;
-    }).join('');
+
+        const showAllBtn = document.getElementById('show-all-posters-btn');
+        if (showAllBtn) {
+            showAllBtn.onclick = (e) => {
+                e.stopPropagation();
+                resetFeaturedPoster();
+                renderGalleryGrid();
+            };
+        }
+    } else {
+        // NORMALE GALERIJ MODUS: Alle posters in 2 kolommen
+        grid.classList.remove('featured-grid');
+        grid.innerHTML = window.allPosters.map(p => {
+            const thumb = p.thumbnail ? `${BASE_URL}${p.thumbnail}` : (p.jpeg_filename ? `uploads/${p.jpeg_filename}` : 'img/placeholder.png');
+            const hasAR = window.arPosters && window.arPosters.some(x => x.id == p.id);
+            const arBadge = hasAR ? '<span class="ar-badge">AR</span>' : '';
+            return `
+                <div class="overlay-poster-card" onclick="window.openPosterModal && window.openPosterModal('${p.id}')">
+                    <img src="${thumb}" alt="${p.title || ''}" loading="lazy" onerror="this.src='img/placeholder.png'">
+                    <div class="card-info">
+                        <h3>${p.title || 'Poster'} ${arBadge}</h3>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 window.openPosterModal = (posterId) => {
@@ -1088,9 +1234,35 @@ window.openPosterModal = (posterId) => {
 
 // ==================== DOWNLOAD MODAL ====================
 
+function formatCredits(poster) {
+    if (!poster) return '';
+    let creditItems = [];
+
+    if (poster.credits) {
+        try {
+            let creditsArray = poster.credits;
+            if (typeof creditsArray === 'string') {
+                creditsArray = JSON.parse(creditsArray);
+            }
+            if (Array.isArray(creditsArray) && creditsArray.length > 0) {
+                creditItems = creditsArray.filter(c => c && c.item && c.owner && c.item !== 'None' && c.owner !== 'None');
+            }
+        } catch (e) {
+            console.warn('[Modal] Kon credits niet parsen:', e);
+        }
+    }
+
+    if (creditItems.length === 0 && poster.photographer_credit && poster.photographer_credit !== 'None') {
+        creditItems = [{ item: 'Foto', owner: poster.photographer_credit }];
+    }
+
+    if (creditItems.length === 0) return '';
+    return creditItems.map(c => `${c.item || 'Credit'}: ${c.owner || '-'}`).join(' | ');
+}
+
 function showDownloadModal(poster) {
     const modal = document.getElementById('download-modal');
-    if (!modal) return;
+    if (!modal || !poster) return;
 
     const img = document.getElementById('modal-poster-img');
     const title = document.getElementById('modal-poster-title');
@@ -1101,10 +1273,25 @@ function showDownloadModal(poster) {
 
     if (img) img.src = poster.thumbnail ? `${BASE_URL}${poster.thumbnail}` : (poster.jpeg_filename ? `uploads/${poster.jpeg_filename}` : 'img/placeholder.png');
     if (title) title.textContent = poster.title || 'Zonder titel';
-    if (desc) desc.textContent = poster.description || '';
-    if (loc) loc.textContent = poster.location_description ? `Locatie: ${poster.location_description}` : '';
-    if (art) art.innerHTML = poster.artikel_link ? `<a href="${poster.artikel_link}" target="_blank" rel="noopener">Lees artikel ↗</a>` : '';
-    if (phot) phot.textContent = poster.credits ? `Credits: ${poster.credits}` : '';
+    if (desc) desc.textContent = (poster.description && poster.description !== 'None') ? poster.description : '';
+
+    let locationText = '';
+    if (poster.location_description && poster.location_description !== 'None') {
+        locationText = poster.location_description;
+    }
+    if (poster.latitude && poster.longitude) {
+        locationText += locationText ? ` (${poster.latitude}, ${poster.longitude})` : `${poster.latitude}, ${poster.longitude}`;
+    }
+    if (loc) loc.textContent = locationText ? `Locatie: ${locationText}` : '';
+
+    if (art) {
+        art.innerHTML = (poster.artikel_link && poster.artikel_link !== 'None')
+            ? `<a href="${poster.artikel_link}" target="_blank" rel="noopener">Lees het originele artikel ↗</a>`
+            : '';
+    }
+
+    const creds = formatCredits(poster);
+    if (phot) phot.textContent = creds ? `Credits: ${creds}` : '';
 
     modal.style.display = 'block';
 }
