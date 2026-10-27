@@ -485,16 +485,31 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         return;
     }
     
-    // Check cooldown cache: hergebruik GIF als binnen 20 seconden
+    // Check in-memory of sessionStorage cache voor instant weergave
     const cached = gifCooldownCache.get(signId);
     const now = Date.now();
     
     if (cached && (now - cached.timestamp < MEMEBORDEN_CONFIG.gifCooldownMs)) {
-        console.log(`[Memeborden] Cooldown actief voor ${signId}, hergebruik cached GIF`);
+        console.log(`[Memeborden] Cooldown/Cache hit voor ${signId}, start direct`);
         plane.setAttribute('visible', 'true');
         activateGifOnPlane(plane, cached.url);
         return;
     }
+
+    // Check ook sessionStorage voor eerdere downloads in deze sessie
+    try {
+        const sessionKey = `mb_gif_${signId}`;
+        const stored = sessionStorage.getItem(sessionKey);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (now - parsed.timestamp < 3600000) { // 1 uur geldig
+                gifCooldownCache.set(signId, { url: parsed.url, timestamp: now });
+                plane.setAttribute('visible', 'true');
+                activateGifOnPlane(plane, parsed.url);
+                return;
+            }
+        }
+    } catch (e) {}
     
     try {
         console.log(`[Memeborden] GIF ophalen voor "${searchQuery}"...`);
@@ -504,16 +519,20 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         
         const data = await response.json();
         
-        if (data.success && data.gif && data.gif.url) {
-            // Gebruik gif-proxy om CORS te omzeilen
-            const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(data.gif.url)}`;
+        if (data.success && data.gif) {
+            // Geef prioriteit aan preview_url (120KB vs 1.2MB): 10x snellere download & parsing in AR!
+            const rawUrl = data.gif.preview_url || data.gif.url;
+            const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(rawUrl)}`;
             currentGifUrl = proxyUrl;
-            console.log(`[Memeborden] GIF via proxy: ${data.gif.url.substring(0, 60)}...`);
+            console.log(`[Memeborden] Snelle GIF via proxy: ${rawUrl.substring(0, 60)}...`);
             
-            // Cache de URL met timestamp voor cooldown systeem
+            // Cache de URL in memory en sessionStorage
             gifCooldownCache.set(signId, { url: proxyUrl, timestamp: Date.now() });
+            try {
+                sessionStorage.setItem(`mb_gif_${signId}`, JSON.stringify({ url: proxyUrl, timestamp: Date.now() }));
+            } catch (e) {}
             
-            // Maak plane zichtbaar en laad GIF
+            // Maak plane zichtbaar en start animatie direct
             plane.setAttribute('visible', 'true');
             activateGifOnPlane(plane, proxyUrl);
         } else {
@@ -523,6 +542,44 @@ async function fetchAndDisplayGif(signId, searchQuery, targetEntity) {
         console.error(`[Memeborden] Fout bij ophalen GIF voor ${signId}:`, e);
     }
 }
+
+// ==================== ACHTERGROND PREFETCHING ====================
+// Laad memes voor de meest voorkomende borden alvast in op de achtergrond
+const PREFETCH_SIGNS = [
+    'B5', 'B1', 'B9', 'C43_50', 'C43_30', 'C1', 'C3', 'D1a', 'D7',
+    'E1', 'F1', 'A1a', 'A1b', 'A14', 'A15', 'B17', 'C46', 'D9a', 'F19'
+];
+
+async function prefetchCommonGifs() {
+    const apiUrl = window.API_URL || (window.location.origin + '/api.php');
+    console.log('[Memeborden] Start achtergrond prefetch van borden...');
+
+    for (const signId of PREFETCH_SIGNS) {
+        if (gifCooldownCache.has(signId)) continue;
+        try {
+            const res = await fetch(`${apiUrl}/verkeersborden/gif?sign=${encodeURIComponent(signId)}`);
+            if (!res.ok) continue;
+            const data = await res.json();
+            if (data.success && data.gif) {
+                const rawUrl = data.gif.preview_url || data.gif.url;
+                const proxyUrl = `${apiUrl}/verkeersborden/gif-proxy?url=${encodeURIComponent(rawUrl)}`;
+                gifCooldownCache.set(signId, { url: proxyUrl, timestamp: Date.now() });
+
+                // Pre-decode GIF via gif-component in het geheugen
+                if (typeof window.preloadGifUrl === 'function') {
+                    window.preloadGifUrl(proxyUrl).catch(() => {});
+                } else {
+                    fetch(proxyUrl, { mode: 'cors' }).catch(() => {});
+                }
+            }
+        } catch (e) {}
+        // Rustige interval (150ms) tussen prefetches om netwerk vrij te houden
+        await new Promise(r => setTimeout(r, 150));
+    }
+    console.log('[Memeborden] Achtergrond prefetch voltooid');
+}
+
+window.prefetchCommonGifs = prefetchCommonGifs;
 
 /**
  * Activeer GIF op een A-Frame plane via gif-component + manuele animatie loop.

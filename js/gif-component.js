@@ -167,6 +167,9 @@
         return promise;
     }
     
+    // Exposeer voor achtergrond preloading
+    window.preloadGifUrl = loadGIF;
+    
     AFRAME.registerComponent('gif', {
         schema: {
             src: { type: 'string', default: '' },
