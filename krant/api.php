@@ -115,6 +115,7 @@ if ($method === 'GET' && $path === '/essays/previous') {
         $essays[] = [
             'week'        => $row['week'],
             'title'       => $row['title'],
+            'page_image'  => !empty($row['page_image']) ? $base . rawurlencode($row['page_image']) . $v : '',
             'target8w'    => target8wToApi($row, 'uploads/essays/' . rawurlencode($row['week']) . '/', '?v=' . urlencode((string)$row['updated_at'])),
             'layers'      => $layerList,
         ];
