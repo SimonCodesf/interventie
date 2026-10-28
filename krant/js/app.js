@@ -670,14 +670,8 @@ function isDesktopDevice() {
     const isMobileUa = /mobile|iphone|ipod|android|blackberry|iemobile|opera mini/i.test(ua);
     const isIPad = /ipad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    if (isMobileUa || isIPad) {
-        return false;
-    }
-    return true;
+    return !(isMobileUa || isIPad);
 }
-
-let desktopEssaysList = [];
-let activeDesktopEssay = null;
 
 async function initDesktopGuard() {
     if (!isDesktopDevice()) return;
@@ -687,142 +681,38 @@ async function initDesktopGuard() {
     document.body.classList.add('is-desktop');
     overlayEl.classList.add('desktop-overlay');
 
-    // Mobiele doel-URL voor de QR-code
     let targetUrl = window.location.href;
     if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(window.location.hostname) || window.location.protocol === 'file:') {
         targetUrl = 'https://interventie.org/krant/';
     }
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data=' + encodeURIComponent(targetUrl);
-
-    // Standaard fallback pagina (Offline AI)
     const fallbackImage = 'img/page-fallback.jpg';
-    let initialImage = fallbackImage;
-    let initialTitle = 'Offline AI';
-    let initialWeek = '2026-40';
+    let pageUrl = fallbackImage;
 
     overlayEl.innerHTML = `
-        <div class="desktop-screen">
-            <header class="desktop-header">
-                <div class="desktop-brand">
-                    <span class="desktop-badge">De Standaard &times; Interventie</span>
-                    <h1 class="desktop-title">De Krant in Augmented Reality</h1>
+        <div class="desktop-view">
+            <div class="desktop-panel">
+                <h1 class="desktop-title">Interventie</h1>
+                <p class="desktop-subtitle">Scan met je smartphone en richt op de pagina.</p>
+
+                <div class="desktop-qr">
+                    <img src="${qrUrl}" alt="QR code" width="170" height="170">
                 </div>
-                <div class="desktop-header-meta">
-                    <span class="desktop-edition-pill" id="desktop-edition-tag">Editie: ${initialTitle} (${initialWeek})</span>
-                </div>
-            </header>
 
-            <div class="desktop-body">
-                <aside class="desktop-sidebar">
-                    <div class="desktop-card">
-                        <div class="desktop-step">
-                            <span class="step-num">1</span>
-                            <div class="step-content">
-                                <h3>Scan de QR-code</h3>
-                                <p>Open de camera op je smartphone (iOS of Android) en richt op de QR-code om de AR-kijker te openen.</p>
-                            </div>
-                        </div>
+                <a href="${pageUrl}" download id="desktop-download-link" class="desktop-btn" target="_blank">DOWNLOAD A3</a>
 
-                        <div class="desktop-qr-wrap">
-                            <div class="desktop-qr-card">
-                                <img src="${qrUrl}" alt="Scan QR-code met smartphone" class="desktop-qr-img" width="175" height="175">
-                            </div>
-                            <span class="desktop-qr-note">Geen app-download vereist &bull; WebAR in browser</span>
-                        </div>
-
-                        <div class="desktop-step">
-                            <span class="step-num">2</span>
-                            <div class="step-content">
-                                <h3>Richt op de krantenpagina</h3>
-                                <p>Druk op je smartphone op <strong>Start camera</strong> en richt je lens op de krantenpagina hiernaast op je beeldscherm.</p>
-                            </div>
-                        </div>
-
-                        <div class="desktop-notice">
-                            <span class="notice-icon">&#9658;</span>
-                            <p><strong>Geen printer vereist:</strong> De AR-lagen verschijnen direct zodra je smartphone op dit beeldscherm gericht wordt.</p>
-                        </div>
-
-                        <div id="desktop-edition-wrap" class="desktop-edition-wrap" style="display: none;">
-                            <label for="desktop-edition-select">Kies krantenpagina:</label>
-                            <select id="desktop-edition-select" class="desktop-select"></select>
-                        </div>
-
-                        <div class="desktop-actions">
-                            <button type="button" class="desktop-action-btn primary" id="desktop-expand-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
-                                <span>Volledig scherm</span>
-                            </button>
-                            <a href="${initialImage}" download id="desktop-download-btn" class="desktop-action-btn secondary" target="_blank" rel="noopener">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                <span>Download print (A3)</span>
-                            </a>
-                        </div>
-
-                        <button id="force-desktop-btn" class="desktop-force-link" type="button">
-                            Toch met computer-webcam proberen &rarr;
-                        </button>
-                    </div>
-                </aside>
-
-                <main class="desktop-viewer">
-                    <div class="desktop-target-badge">
-                        <span class="target-dot"></span>
-                        <span>Richt je smartphonecamera op deze pagina</span>
-                    </div>
-
-                    <div class="desktop-newspaper-frame" id="desktop-newspaper-click-target" title="Klik om schermvullend te bekijken">
-                        <div class="desktop-newspaper-paper">
-                            <img src="${initialImage}" alt="Krantenpagina doelwit" id="desktop-newspaper-img" class="desktop-newspaper-img" loading="eager" decoding="async">
-                            <div class="desktop-zoom-overlay">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                                <span>Klik om te vergroten</span>
-                            </div>
-                        </div>
-                    </div>
-                </main>
+                <button id="force-desktop-btn" class="desktop-webcam-link" type="button">Toch webcam proberen</button>
             </div>
 
-            <div id="desktop-lightbox" class="desktop-lightbox" style="display: none;" aria-hidden="true">
-                <div class="desktop-lightbox-backdrop" id="desktop-lightbox-backdrop"></div>
-                <div class="desktop-lightbox-content">
-                    <div class="desktop-lightbox-header">
-                        <div class="lightbox-hint">
-                            <span class="target-dot"></span>
-                            <span>Scanbaar doelwit &mdash; Richt je smartphonecamera op het scherm</span>
-                        </div>
-                        <button type="button" class="desktop-lightbox-close" id="desktop-lightbox-close" aria-label="Sluiten">&times; Sluiten (Esc)</button>
-                    </div>
-                    <div class="desktop-lightbox-img-wrap">
-                        <img src="${initialImage}" alt="Krantenpagina volledig scherm" id="desktop-lightbox-img" class="desktop-lightbox-img">
-                    </div>
-                </div>
+            <div class="desktop-page">
+                <a href="${pageUrl}" target="_blank" id="desktop-page-link" title="Open origineel">
+                    <img src="${pageUrl}" alt="Krantenpagina" id="desktop-newspaper-img" class="desktop-newspaper-img" loading="eager">
+                </a>
             </div>
         </div>
     `;
 
-    // Lightbox modal interactie
-    function openLightbox() {
-        const lb = document.getElementById('desktop-lightbox');
-        if (lb) lb.style.display = 'flex';
-    }
-
-    function closeLightbox() {
-        const lb = document.getElementById('desktop-lightbox');
-        if (lb) lb.style.display = 'none';
-    }
-
-    document.getElementById('desktop-expand-btn')?.addEventListener('click', openLightbox);
-    document.getElementById('desktop-newspaper-click-target')?.addEventListener('click', openLightbox);
-    document.getElementById('desktop-lightbox-close')?.addEventListener('click', closeLightbox);
-    document.getElementById('desktop-lightbox-backdrop')?.addEventListener('click', closeLightbox);
-    window.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeLightbox();
-    });
-
-    // Webcam force fallback
     document.getElementById('force-desktop-btn')?.addEventListener('click', function () {
-        closeLightbox();
         document.body.classList.remove('is-desktop');
         overlayEl.classList.remove('desktop-overlay');
         overlayEl.innerHTML = `
@@ -834,87 +724,22 @@ async function initDesktopGuard() {
         bootAR();
     });
 
-    // Actieve essay pagina instellen in viewer en lightbox
-    function renderSelectedEssay(essay) {
-        if (!essay) return;
-        activeDesktopEssay = essay;
-
-        const imgUrl = essay.page_image || (essay.target8w && essay.target8w.imagePath) || fallbackImage;
-        const title = essay.title || 'Editie ' + (essay.week || '');
-        const week = essay.week || '';
-
-        const imgEl = document.getElementById('desktop-newspaper-img');
-        const lbImgEl = document.getElementById('desktop-lightbox-img');
-        const tagEl = document.getElementById('desktop-edition-tag');
-        const downloadBtn = document.getElementById('desktop-download-btn');
-
-        if (imgEl) {
-            imgEl.src = imgUrl;
-            imgEl.alt = 'Krantenpagina ' + title;
-        }
-        if (lbImgEl) {
-            lbImgEl.src = imgUrl;
-            lbImgEl.alt = 'Krantenpagina ' + title;
-        }
-        if (tagEl) {
-            tagEl.textContent = 'Editie: ' + title + (week ? ' (' + week + ')' : '');
-        }
-        if (downloadBtn) {
-            downloadBtn.href = imgUrl;
-        }
-    }
-
-    // Essays ophalen via API (current + previous)
     try {
-        const [curRes, prevRes] = await Promise.all([
-            fetchTimeout('api.php/essays/current', 6000),
-            fetchTimeout('api.php/essays/previous', 6000),
-        ]);
-
-        desktopEssaysList = [];
+        const curRes = await fetchTimeout('api.php/essays/current', 5000);
         if (curRes && curRes.ok) {
             const curData = await curRes.json();
-            if (curData && (curData.page_image || (curData.target8w && curData.target8w.imagePath))) {
-                desktopEssaysList.push(curData);
+            const liveUrl = curData.page_image || (curData.target8w && curData.target8w.imagePath);
+            if (liveUrl) {
+                const imgEl = document.getElementById('desktop-newspaper-img');
+                const downloadLink = document.getElementById('desktop-download-link');
+                const pageLink = document.getElementById('desktop-page-link');
+                if (imgEl) imgEl.src = liveUrl;
+                if (downloadLink) downloadLink.href = liveUrl;
+                if (pageLink) pageLink.href = liveUrl;
             }
         }
-        if (prevRes && prevRes.ok) {
-            const prevData = await prevRes.json();
-            if (prevData && Array.isArray(prevData.essays)) {
-                prevData.essays.forEach(function (e) {
-                    if (e && (e.page_image || (e.target8w && e.target8w.imagePath))) {
-                        if (!desktopEssaysList.some(function (d) { return d.week === e.week; })) {
-                            desktopEssaysList.push(e);
-                        }
-                    }
-                });
-            }
-        }
-
-        if (desktopEssaysList.length > 0) {
-            renderSelectedEssay(desktopEssaysList[0]);
-
-            if (desktopEssaysList.length > 1) {
-                const wrap = document.getElementById('desktop-edition-wrap');
-                const sel = document.getElementById('desktop-edition-select');
-                if (wrap && sel) {
-                    sel.innerHTML = '';
-                    desktopEssaysList.forEach(function (ess, idx) {
-                        const opt = document.createElement('option');
-                        opt.value = String(idx);
-                        opt.textContent = (ess.title || 'Editie ' + ess.week) + (ess.week ? ' (' + ess.week + ')' : '');
-                        sel.appendChild(opt);
-                    });
-                    sel.addEventListener('change', function () {
-                        const chosen = desktopEssaysList[parseInt(sel.value, 10)];
-                        renderSelectedEssay(chosen);
-                    });
-                    wrap.style.display = 'flex';
-                }
-            }
-        }
-    } catch (err) {
-        console.log('[Desktop] API ophalen mislukt, actieve fallback behouden:', err);
+    } catch (e) {
+        // Fallback is al actief
     }
 }
 
