@@ -1538,9 +1538,9 @@ function handleGetKrantAdminStats(?PDO $db = null): void {
         'paired_devices'    => $pairedDevicesList,
         'kpis'          => [
             'scans' => [
-                'value'         => $curMetrics['scans'] > 0 ? $curMetrics['scans'] : $totalAllTimeScans,
+                'value'         => ($adminFilter === 'exclude' || $adminFilter === 'only') ? $curMetrics['scans'] : ($curMetrics['scans'] > 0 ? $curMetrics['scans'] : $totalAllTimeScans),
                 'period_value'  => $curMetrics['scans'],
-                'all_time'      => max($totalAllTimeScans, $curMetrics['scans']),
+                'all_time'      => $adminFilter === 'only' ? $curMetrics['scans'] : max($totalAllTimeScans, $curMetrics['scans']),
                 'previous'      => $prevMetrics['scans'],
                 'trend'         => computeKrantKpiTrend($curMetrics['scans'], $prevMetrics['scans']),
             ],

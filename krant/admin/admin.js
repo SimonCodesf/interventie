@@ -1923,7 +1923,7 @@ function renderKrantAnalytics(data) {
     const scanRate = Number(funnel.scan_rate ?? kpis.scan_conversion?.value) || 0;
     const periodScans = Number(kpis.scans?.period_value ?? funnel.period_scans) || 0;
     const allTimeScans = Number(kpis.scans?.all_time ?? funnel.all_time_scans) || 0;
-    const displayScans = (currentAdminFilter === 'only') ? periodScans : (periodScans > 0 ? periodScans : allTimeScans);
+    const displayScans = (currentAdminFilter === 'exclude' || currentAdminFilter === 'only') ? periodScans : (periodScans > 0 ? periodScans : allTimeScans);
     const topEssay = funnel.top_essay || (essayMetrics.length > 0 && (essayMetrics[0].period_scans > 0 || essayMetrics[0].scans > 0) ? essayMetrics[0] : null);
 
     const maxDailyVal = Math.max(

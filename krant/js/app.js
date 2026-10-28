@@ -412,9 +412,12 @@ function buildScene(entries) {
             dismissScanGuide();
             if (!st.scanRecorded && entry.week) {
                 st.scanRecorded = true;
-                try {
-                    fetch('api.php/essays/' + encodeURIComponent(entry.week) + '/scan', { method: 'POST' }).catch(function () {});
-                } catch (e) {}
+                const isAdmin = (typeof window.isKrantAdminDevice === 'function' && window.isKrantAdminDevice());
+                if (!isAdmin) {
+                    try {
+                        fetch('api.php/essays/' + encodeURIComponent(entry.week) + '/scan', { method: 'POST' }).catch(function () {});
+                    } catch (e) {}
+                }
                 if (typeof window.trackKrantEssayScan === 'function') {
                     window.trackKrantEssayScan(entry.week);
                 }

@@ -105,6 +105,7 @@
     }
 
     var isAdminDevice = checkIsAdminDevice();
+    window.isKrantAdminDevice = function () { return isAdminDevice; };
     if (isAdminDevice) {
         renderAdminTestBadge();
     }

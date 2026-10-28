@@ -69,20 +69,26 @@ if ($method === 'GET' && $path === '/essays/current') {
     if (!$row) {
         jsonResponse(['message' => 'Nog geen essay gepubliceerd'], 404);
     }
-    try {
-        $db->prepare("UPDATE essays SET views = COALESCE(views, 0) + 1 WHERE week = ?")->execute([$row['week']]);
-        $row['views'] = (int)($row['views'] ?? 0) + 1;
-    } catch (Exception $e) {}
+    $isAdminDevice = !empty($_COOKIE['analytics_admin']) || !empty($_COOKIE['analytics_ignore']);
+    if (!$isAdminDevice) {
+        try {
+            $db->prepare("UPDATE essays SET views = COALESCE(views, 0) + 1 WHERE week = ?")->execute([$row['week']]);
+            $row['views'] = (int)($row['views'] ?? 0) + 1;
+        } catch (Exception $e) {}
+    }
     $row = ensureTarget8w($db, $row);
     jsonResponse(essayToApi($row));
 }
 
 if ($method === 'POST' && preg_match('#^/essays/([^/]+)/scan$#', $path, $m)) {
-    $week = sanitizeWeek($m[1]);
-    try {
-        $stmt = $db->prepare("UPDATE essays SET scans = COALESCE(scans, 0) + 1 WHERE week = ?");
-        $stmt->execute([$week]);
-    } catch (Exception $e) {}
+    $isAdminDevice = !empty($_COOKIE['analytics_admin']) || !empty($_COOKIE['analytics_ignore']);
+    if (!$isAdminDevice) {
+        $week = sanitizeWeek($m[1]);
+        try {
+            $stmt = $db->prepare("UPDATE essays SET scans = COALESCE(scans, 0) + 1 WHERE week = ?");
+            $stmt->execute([$week]);
+        } catch (Exception $e) {}
+    }
     jsonResponse(['ok' => true]);
 }
 
